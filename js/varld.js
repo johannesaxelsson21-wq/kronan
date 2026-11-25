@@ -48,7 +48,7 @@
       // förspelet: ärkebiskopens borg Stäket tills den rivs, belägringslägret, och till sist danskarna utanför Stockholm
       const f0 = S.varld === 0;
       W._dekor('staket', f0 && S.nasta <= idx('sRiv'), () => { const mb = new V.MB(); B.borg(mb, 'liten', 0); const m = B.mesh(mb), p = R.P.staket; m.position.set(p.x, p.y, p.z); m.scale.setScalar(B.K); return m; });
-      W._dekor('staketLager', f0 && S.nasta > idx('sStaket') && S.nasta <= idx('sRiv'), () => lager({ x: R.P.staket.x - 1, z: R.P.staket.z + 4 }, 7));
+      W._dekor('staketLager', f0 && S.nasta > idx('sStaket') && S.nasta <= idx('sRiv'), () => { const q = R.P.staket, c = [[4.6, 2.4], [4.8, 0.4], [3.6, -3], [0, -5]].find(o => Geo.sdAt(q.x + o[0], q.z + o[1]) > 1.6) || [4.6, 2.4]; return lager({ x: q.x + c[0], z: q.z + c[1] }, 7); });
       W._dekor('danskLager', f0 && S.nasta > idx('sUppsala'), () => lager(R.P.brunkeberg, 12));
       W._dekor('danskFlotta', f0 && S.nasta > idx('sUppsala'), () => W._flotta('stockholm', 4, 'danmark'));
       // belägringen av Stockholm, flottor som ligger kvar

@@ -160,6 +160,22 @@
         await vanta(6.5); text('Han kom aldrig till något möte. De sex förs till Danmark som fångar.'); await vanta(7);
         text('En av dem är Gustav Eriksson, 22 år.'); await vanta(6);
       },
+      // 1516. Ärkebiskopen stängs in i sin borg Stäket. Man slår själv läger runt borgen, tält för tält, tills ringen är sluten.
+      async staket() {
+        const K = B.K, p = R.P.staket, ring = []; Scene.setSeason(0.75);
+        for (let i = 0; i < 16; i++) { const a = 1.2 + i * 0.3927, x = p.x + Math.cos(a) * 3.3, z = p.z + Math.sin(a) * 2.7; if (Geo.sdAt(x, z) > 0.45) ring.push([x, z]); }          // bara på land: mot vattnet stänger sjön
+        const per = Math.max(1, Math.ceil(ring.length / 6)); let satta = 0;
+        const talt = () => { const q = ring[satta++]; if (!q) return; const mb = new V.MB(); B.talt(mb); const m = B.mesh(mb); m.position.set(q[0], Geo.groundAt(q[0], q[1]), q[1]); m.rotation.y = satta * 1.7; m.scale.setScalar(K); Scene.scene.add(m); tempM.push(m);
+          const u = Folk.add(q[0] + (p.x - q[0]) * 0.16, q[1] + (p.z - q[1]) * 0.16, satta % 2 ? 'knekt' : 'bonde', { pike: true, ang: Math.atan2(p.x - q[0], p.z - q[1]) }); temp.push(u); Fx.damm(q[0], Geo.groundAt(q[0], q[1]), q[1], 5); };
+        Scene.jump(p.x, p.z + 1.6, 25); plats('Stäket vid Mälaren, 1516');
+        await vanta(2); text('Gustav Trolle är ny ärkebiskop, kyrkans högste man i Sverige, och han håller på Danmarks kung.'); await vanta(7.5);
+        text('Det har blivit krig mellan er. Nu stänger du in honom i hans borg.'); await vanta(5.5);
+        text('Tryck för att slå läger runt borgen');
+        await tryckN('Slå läger', 6, k => { for (let j = 0; j < per; j++) talt(); L.spela('hammare'); L.spela('trumma'); if (k === 2) text(''); }, 18);
+        while (satta < ring.length) talt();
+        text('Nu kommer ingen in och ingen ut. En belägring är att vänta tills den som sitter där inne ger upp.'); await vanta(8.5);
+        text('Det drar ut på tiden. Nästa sommar skickar Danmarks kung soldater för att hjälpa honom.'); await vanta(7.5);
+      },
       // November 1517. Riksmötet har avsatt ärkebiskopen, och alla sätter sitt sigill under brevet. Biskop Brask ska ha lagt en lapp under sitt.
       async sigill() {
         const K = B.K, h = V.Varld.sate(), tx = h.x, tz = h.z + 0.68, gy = Geo.groundAt(tx, tz); Scene.setSeason(0.87);          // bordet står framför Sten Sture, herrarna på rad bredvid honom

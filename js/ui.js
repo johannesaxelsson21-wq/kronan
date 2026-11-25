@@ -147,9 +147,9 @@
         sistaHandl = hk; const box = $('handl'); box.innerHTML = ''; hrows = {};
         hl.forEach((h, i) => {
           const b = el('button', 'hk', '<span class="hk-b">' + IK[h.id] + '<i class="hk-v"></i><b class="hk-s"></b><u class="hk-n">' + (i + 1) + '</u></span><span class="hk-t">' + UI.handlNamn(h).split(' ')[0] + '</span>'); box.appendChild(b); hrows[h.id] = { b, v: b.querySelector('.hk-v'), s: b.querySelector('.hk-s') };
-          b.addEventListener('click', () => { if (G.handla(h.id)) UI.tick(); else UI._nej(b); });
-          b.addEventListener('mouseenter', () => { kortNu = { row: b, t: performance.now(), kort: () => { const o = G.handl(h.id); return '<b>' + UI.handlNamn(h) + '</b>' + (V.pek ? '' : '<span class="kort-n">tangent ' + (i + 1) + '</span>') + '<p>' + h.vad + '</p>' + (o.t > 0 ? '<p class="kort-g">Verkar i ' + Math.ceil(o.t) + ' sekunder till.</p>' : '') + (o.v > 0 ? '<p class="kort-x">Vilar i ' + Math.ceil(o.v) + ' sekunder.</p>' : '<p class="kort-p">Redo.</p>'); } }; UI._kort(); });
-          b.addEventListener('mouseleave', () => { if (kortNu && kortNu.row === b) { kortNu = null; UI._kort(); } });
+          b.addEventListener('click', () => { if (b._hallen) { b._hallen = false; return; } if (G.handla(h.id)) UI.tick(); else UI._nej(b); });
+          UI._svava(b, () => { kortNu = { row: b, t: performance.now(), kort: () => { const o = G.handl(h.id); return '<b>' + UI.handlNamn(h) + '</b>' + (V.pek ? '' : '<span class="kort-n">tangent ' + (i + 1) + '</span>') + '<p>' + h.vad + '</p>' + (o.t > 0 ? '<p class="kort-g">Verkar i ' + Math.ceil(o.t) + ' sekunder till.</p>' : '') + (o.v > 0 ? '<p class="kort-x">Vilar i ' + Math.ceil(o.v) + ' sekunder.</p>' : '<p class="kort-p">Redo.</p>'); } }; UI._kort(); },
+            () => { if (kortNu && kortNu.row === b) { kortNu = null; UI._kort(); } });
         });
         sistaBaser = '';          // bredden på korten beror på hur många handlingar som finns
       }
@@ -175,8 +175,8 @@
       };
       const kort = (sida, cls, ikon, text, klick, hoger) => {
         const row = el('div', 'bas ' + cls, '<div class="k-topp"><i class="k-ikon">' + ikon + '</i><span class="k-namn"></span><b class="k-niva"></b></div><div class="k-rad"><span class="k-ger"></span><span class="k-pris"></span></div><i class="bas-bar"><i></i></i>'); sida.appendChild(row);
-        row.addEventListener('click', () => { klick(row); UI.tick(); }); if (hoger) row.addEventListener('contextmenu', e => { e.preventDefault(); hoger(); });
-        row.addEventListener('mouseenter', () => { kortNu = { row, kort: text, t: performance.now() }; UI._kort(); }); row.addEventListener('mouseleave', () => { if (kortNu && kortNu.row === row) { kortNu = null; UI._kort(); } });
+        row.addEventListener('click', () => { if (row._hallen) { row._hallen = false; return; } klick(row); UI.tick(); }); if (hoger) row.addEventListener('contextmenu', e => { e.preventDefault(); hoger(); });
+        UI._svava(row, () => { kortNu = { row, kort: text, t: performance.now() }; UI._kort(); }, () => { if (kortNu && kortNu.row === row) { kortNu = null; UI._kort(); } });
         return { row, n: row.querySelector('.k-namn'), l: row.querySelector('.k-niva'), v: row.querySelector('.k-ger'), k: row.querySelector('.k-pris'), bar: row.querySelector('.bas-bar i') };
       };
       const fogde = (sida, lista) => { if (!S.las.fogdar) return; const f = { ids: lista, mal: null }; f.r = kort(sida, 'fogdekort', IK.krona, () => '<b>Sätt en fogde</b><p>En fogde är din man på platsen. Han bygger ut den åt dig så fort det finns råd.</p>' + (f.mal ? '<p class="kort-p">Nästa: ' + G.BAS[f.mal].namn + ', ' + IK.mark + tal(G.fogdePris(f.mal)) + ' mark</p>' : ''), row => { if (f.mal && G.kopFogde(f.mal)) V.Ljud && V.Ljud.spela('kop'); else UI._nej(row); }); fogdeKnappar.push(f); };
@@ -216,12 +216,20 @@
       // två rader kort om det får plats på bredden, annars tre
       const fri = innerWidth - 16 - 226 - 104 - ($('handl').offsetWidth || 0) - 8 * 4 - 22; let flest = 0; for (const f in flikar) flest = Math.max(flest, flikar[f].sida.children.length);
       let rader = 2, bredd = 196; for (; rader < 5; rader++) { const kol = Math.ceil(flest / rader); if (kol * (bredd + 5) <= fri) break; if (kol * 181 <= fri) { bredd = 176; break; } }
-      if (innerWidth < 720) { rader = 2; bredd = Math.floor((innerWidth - 12 - 14 - 5) / 2); } else if (innerHeight < 520) { rader = 2; bredd = 176; }          // telefon: två rader, resten bläddrar man fram i sidled
+      if (innerWidth < 720) { rader = flest <= 2 ? 1 : 2; bredd = Math.floor((innerWidth - 12 - 14 - 5) / 2); } else if (innerHeight < 520) { rader = 2; bredd = 176; }          // telefon: två rader, resten bläddrar man fram i sidled
       box.style.setProperty('--rader', rader); box.style.setProperty('--bredd', bredd + 'px');
+    },
+    // När ska rutan om en knapp visas? Med mus: när pekaren är över knappen. På pekskärm: bara när fingret hålls kvar en stund,
+    // och då räknas trycket inte som ett köp. Ett vanligt tryck på telefon köper utan att någon ruta kommer upp.
+    _svava(e, visa, dolj) {
+      if (!V.pek) { e.addEventListener('mouseenter', visa); e.addEventListener('mouseleave', dolj); return; }
+      let tm = null; const slut = () => { clearTimeout(tm); tm = null; if (e._visar) { e._visar = false; dolj(); } };
+      e.addEventListener('pointerdown', () => { e._hallen = false; clearTimeout(tm); tm = setTimeout(() => { e._hallen = true; e._visar = true; visa(); }, 450); });
+      ['pointerup', 'pointerleave', 'pointercancel'].forEach(n => e.addEventListener(n, slut));
     },
     // Kortet som säger exakt vad en knapp ger. Det står ovanför knappen så länge pekaren är där.
     _kort() {
-      const k = $('kort'); if (kortNu && V.pek && performance.now() - (kortNu.t || 0) > 4000) kortNu = null;          // på pekskärm visas kortet en stund efter trycket
+      const k = $('kort');
       if (innerWidth < 720) k.style.setProperty('--kortb', (($('konsol').offsetHeight || 0) + 14) + 'px');
       if (!kortNu || !document.body.contains(kortNu.row)) { if (k.style.display !== 'none') k.style.display = 'none'; return; }
       const h = kortNu.kort(); if (k._h !== h) { k._h = h; k.innerHTML = h; } k.style.display = '';
@@ -315,7 +323,7 @@
       if (g.las && g.las.indexOf('mark') >= 0) x.push('<b>Mark</b> är pengar. Gruvor och städer ger mark, och den behövs till större uppdrag.');
       if (u.vet) x.push(u.vet); if (u.vet2) x.push(u.vet2);
       if (u.id === 'sAbo') x.push('<b>Män</b> är de som följer dig. Du skickar dem ut i strid, och platser som ger män byggs ut med män.');
-      if (g.las && g.las.indexOf('konster') >= 0) x.push('Under fliken <b>Förmågor</b> gör du dina bud och tryck bättre.' + (V.pek ? '' : ' Håll pekaren över ett kort så ser du exakt vad det ger.'));
+      if (g.las && g.las.indexOf('konster') >= 0) x.push('Under fliken <b>Förmågor</b> gör du dina bud och tryck bättre. Håll ' + (V.pek ? 'fingret kvar på' : 'pekaren över') + ' ett kort så ser du exakt vad det ger.');
       if (g.las && g.las.indexOf('sold') >= 0) x.push('Nu kan du <b>värva soldater</b> för mark. De får lön, och du får fler män.');
       if (g.x) for (const r in g.x) x.push('Allt som ger ' + (r === 'man' ? 'män' : 'mark') + ' ger nu ' + String(g.x[r]).replace('.', ',') + ' gånger så mycket.');
       if (g.markTid || g.mark) x.push('Du fick en rejäl summa mark på en gång.');

@@ -171,7 +171,7 @@
       kronika: 'Samma år. Befälhavaren på Åbo slott gick också över till dig. Nu hade du din fars stora slott.' },
     { id: 'sAllmoge', senast: 6, akt: 0, titel: 'Få bönderna på din sida', plats: 'nykoping', ar: 1512, man: 7.7, slag: 'bud', fran: 'stockholm', kostar: { man: 60, mark: 3000 }, ger: { bas: ['nykoping'], titel: 'Riksföreståndare' },
       kronika: '23 juli 1512. Rikets råd, de mäktigaste herrarna, hade valt Erik Trolle att styra. Han ville hålla ihop med Danmark. Men du hade bönderna bakom dig och fick platsen i stället. Du var nu riksföreståndare: den som styr ett rike utan kung.' },
-    { id: 'sStaket', senast: 8.5, akt: 0, titel: 'Stäng in ärkebiskopen i hans borg', plats: 'staket', ar: 1516, man: 10, slag: 'tag', kostar: { man: 250, mark: 7000 }, ger: {},
+    { id: 'sStaket', scen: 'staket', senast: 8.5, akt: 0, titel: 'Stäng in ärkebiskopen i hans borg', plats: 'staket', ar: 1516, man: 10, slag: 'tag', kostar: { man: 250, mark: 7000 }, ger: {},
       kronika: '1516. Erik Trolles son Gustav Trolle hade blivit ärkebiskop, kyrkans högste man i Sverige, och han höll på Danmarks kung. Det blev krig mellan er, och du stängde in honom i hans borg Stäket vid Mälaren.' },
     { id: 'sVadla', senast: 11, akt: 0, titel: 'Stoppa danskarna vid Vädla', plats: 'vadla', ar: 1517, man: 7, slag: 'tag', strid: 'liten', kostar: { man: 600, mark: 10000 }, ger: { x: { mark: 1.5 } },
       kronika: 'Sommaren 1517. Danmarks kung Kristian II skickade soldater för att hjälpa ärkebiskopen. Du slog dem vid Vädla utanför Stockholm.' },
