@@ -35,7 +35,7 @@
       const t = Math.max(30, Math.ceil(n * 1.25 / 10) * 10); if (!(S.tak >= t)) S.tak = t; return S.tak;
     },
     // En bygd kan inte bli större än hären tillåter: kostar nästa nivå fler män än hären rymmer får den vänta tills hären har vuxit.
-    maxad(id) { return BAS[id].ger === 'man' && !!S.bas[id] && G.pris(id) > G.tak(); },
+    maxad(id) { return G.prisRes(id) === 'man' && !!S.bas[id] && G.pris(id) > G.tak(); },
     // ---- baser ------------------------------------------------------------------------------
     niva(id) { return S.bas[id] || 0; },
     stoppad(id) { for (const u in S.uppror) if (S.uppror[u] && D.UPPROR[u].baser.indexOf(id) >= 0) return u; return null; },
@@ -57,7 +57,10 @@
     kanSold() { return !!S.las.sold && S.res.mark >= G.soldPris(); },
     kopSold() { if (!G.kanSold()) return false; S.res.mark -= G.soldPris(); S.sold = (S.sold || 0) + 1; G.ut('sold', { niva: S.sold, dubbel: S.sold % 10 === 0 }); return true; },
     pris(id, L) { const b = P(id), p = b.c0 * Math.pow(b.r, L === undefined ? (S.bas[id] || 0) : L); return p < 1000 ? Math.ceil(p) : p; },
-    prisRes(id) { return BAS[id].ger === 'man' ? 'man' : 'mark'; },
+    // Vad en utbyggnad betalas med. I förspelet är det alltid mark, också för platserna som ger män: marken betalar mat och vapen
+    // åt dem som sluter upp, och män är bara armén (strider och skatt). I Gustavs värld kostar bygderna än så länge män,
+    // eftersom han börjar utan pengar. Det görs om på samma sätt när förspelet sitter (Johannes 2026-11-25).
+    prisRes(id) { return S.varld === 0 ? 'mark' : BAS[id].ger === 'man' ? 'man' : 'mark'; },
     rad(id) { const L = S.bas[id] || 0; return (L + 1) % 10 === 0; },             // är nästa nivå en dubbling?
     kanKopa(id) { return !!S.bas[id] && S.res[G.prisRes(id)] >= G.pris(id); },
     kop(id) {
@@ -105,7 +108,7 @@
       const kraft = Math.min(1, S.sistaTryck);          // det man får laddas upp över en sekund: att hamra ger inte mer än att trycka i lugn takt
       S.fart = Math.min(1, S.fart + 0.17); S.sistaTryck = 0; S.tryck++; S.ryck = Math.min(1, (S.ryck || 0) + 0.5);
       if (S.fart >= 1 && !S.full) { S.full = true; G.ut('full', {}); }
-      const fick = {}, tak = G.tak(), sk = G.skede(); if (sk) { fick.skede = sk; fick.driv = G.driv(kraft, sk); }
+      const fick = {}, tak = G.tak(), sk = G.skede(); if (sk) { fick.skede = sk; S.aktivt.slag = (S.aktivt.slag || 0) + 1; }
       for (const r of ['mark', 'man']) {
         if (r === 'mark' ? !S.las.mark : !Object.keys(S.bas).some(id => BAS[id].ger === 'man')) continue;
         let n = Math.max(1 + S.konst.sigill * 0.25, G.takt(r) * G.tryckSek()) * kraft; if (r === 'man') n = Math.max(0, Math.min(n, tak - S.res.man)); if (n <= 0) continue;
@@ -113,11 +116,11 @@
       }
       G.ut('tryck', fick); return fick;
     },
-    // ---- under ett uppdrag: trycken driver på det som sker -------------------------------------
-    // På vägen går det fortare, i striden avgörs det snabbare. Utgången är historiens, takten är spelarens.
+    // ---- striden: där är spelaren med ------------------------------------------------------------
+    // Medan striden pågår syns varje tryck på kartan (en salva, en stöt). Det går aldrig fortare för det:
+    // inget tryck får göra en resa eller ett moment kortare, man ska alltid se hela vägen (Johannes 2026-11-25).
     KAMP,
-    skede() { const a = S.aktivt; if (!a || a.val) return null; const u = D.UPPDRAG.find(q => q.id === a.id); if (!u || u.slag === 'beslut') return null; return u.strid && a.t / a.dur >= KAMP ? 'strid' : 'vag'; },
-    driv(kraft, skede) { const a = S.aktivt; if (!a || !skede) return 0; const n = (skede === 'strid' ? 0.35 : 0.5) * kraft; a.t = Math.min(a.dur - 0.02, a.t + n); a.driv = (a.driv || 0) + 1; return n; },
+    skede() { const a = S.aktivt; if (!a || a.val) return null; const u = D.UPPDRAG.find(q => q.id === a.id); return u && u.strid && a.t / a.dur >= KAMP ? 'strid' : null; },
     fartNu() { return (0.12 + 0.88 * S.fart) * (1 + (S.ryck || 0)); },          // hur fort hjälten far just nu, som del av toppfarten
 
     // ---- driv in skatt: skicka ut män som kommer hem med mark ---------------------------------

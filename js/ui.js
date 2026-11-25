@@ -23,7 +23,7 @@
   // Vad tillgångarna är, varför man får dem och vad de är till för.
   const RES = {
     mark: { namn: 'Mark', rad: 'Mark är pengar. Städer, gruvor och slott ger mark hela tiden. Du bygger ut och betalar nästa steg med den.' },
-    man: { namn: 'Män', rad: 'Män som följer dig. Du har dem till tre saker: nästa strid, att bygga ut byarna, och att driva in skatt, som ger mark.' }
+    man: { namn: 'Män', get rad() { return G.s.varld === 0 ? 'Män är din armé. Du har dem till två saker: nästa strid, och att driva in skatt, som ger mark. Fler män får du genom att bygga ut platserna som ger män.' : 'Män som följer dig. Du har dem till tre saker: nästa strid, att bygga ut byarna, och att driva in skatt, som ger mark.'; } }
   };
   // En liten bild för varje slags bas.
   const SLAG = {
@@ -154,7 +154,7 @@
         sistaBaser = '';          // bredden på korten beror på hur många handlingar som finns
       }
       for (const h of hl) { const r = hrows[h.id], o = G.handl(h.id); r.b.classList.toggle('vilar', o.v > 0 && o.t <= 0); r.b.classList.toggle('verkar', o.t > 0); r.b.classList.toggle('redo', o.v <= 0); r.v.style.height = (o.t > 0 ? 0 : Math.min(100, o.v / h.vila * 100)) + '%'; const s = o.t > 0 ? Math.ceil(o.t) : o.v > 0 ? Math.ceil(o.v) : ''; if (r._s !== s) { r._s = s; r.s.textContent = s; } }
-      // under ett uppdrag är den runda knappen spelarens del i det som sker
+      // medan striden pågår är den runda knappen spelarens del i den
       { const sk = G.skede(), ord = sk && u ? UI.drivOrd(u, sk) : null, nyckel = ord ? ord[0] : '';
         if (UI._akOrd !== nyckel) { UI._akOrd = nyckel; $('ak-txt').innerHTML = ord ? ord[0] : 'Skicka<br>bud'; $('ak-hint').textContent = ord ? ord[1] : HALL; $('akwrap').classList.toggle('driv', !!ord); $('akwrap').classList.toggle('strid', !!ord && sk === 'strid'); } }
       // farten
@@ -277,10 +277,10 @@
       }
       if (caption) { capT -= 1 / 60; if (capT <= 0) { caption.classList.add('bort'); const c = caption; caption = null; setTimeout(() => c.remove(), 900); } }
     },
-    // Vad den runda knappen heter medan ett uppdrag pågår: [ordet på knappen, raden under]
+    // Vad den runda knappen heter medan striden pågår: [ordet på knappen, raden under]. På vägen dit heter den som vanligt.
     drivOrd(u, sk) {
-      if (sk === 'strid') return u.strid === 'nederlag' ? ['Håll<br>emot', 'tryck: håll emot'] : u.strid === 'pilar' ? ['Skjut!', 'tryck: en salva'] : u.strid === 'kanoner' || u.strid === 'sjo' ? ['Skjut!', 'tryck: kanonerna'] : ['Anfall!', 'tryck: anfall'];
-      return { tag: ['Marsch!', 'tryck: fortare'], bud: ['Skynda<br>budet', 'tryck: fortare'], rid: ['Rid!', 'tryck: fortare'], flotta: ['Segla!', 'tryck: fortare'], bygg: ['Bygg!', 'tryck: fortare'] }[u.slag] || null;
+      if (sk !== 'strid') return null;
+      return u.strid === 'nederlag' ? ['Håll<br>emot', 'tryck: håll emot'] : u.strid === 'pilar' ? ['Skjut!', 'tryck: en salva'] : u.strid === 'kanoner' || u.strid === 'sjo' ? ['Skjut!', 'tryck: kanonerna'] : ['Anfall!', 'tryck: anfall'];
     },
     // Siffra som stiger upp från en plats i världen.
     flyt(x, y, z, txt, cls) {
@@ -321,8 +321,9 @@
       const S = G.s, g = u.ger || {}, x = [];
       (g.bas || []).forEach(id => x.push(basRad(id)));
       if (g.las && g.las.indexOf('mark') >= 0) x.push('<b>Mark</b> är pengar. Gruvor och städer ger mark, och den behövs till större uppdrag.');
-      if (u.vet) x.push(u.vet); if (u.vet2) x.push(u.vet2);
-      if (u.id === 'sAbo') x.push('<b>Män</b> är de som följer dig. Du skickar dem ut i strid, och platser som ger män byggs ut med män.');
+      const scen = !!(u.scen || u.valScen), sagt = scen && u.sagt || [];          // det scenen just visade sägs inte en gång till i rutan
+      if (u.vet && sagt.indexOf('vet') < 0) x.push(u.vet); if (u.vet2 && sagt.indexOf('vet2') < 0) x.push(u.vet2);
+      if (u.id === 'sAbo') x.push('<b>Män</b> är din armé. Du skickar dem ut i strid och för att driva in skatt. Allt bygger du ut med mark, också platserna som ger män.');
       if (g.las && g.las.indexOf('konster') >= 0) x.push('Under fliken <b>Förmågor</b> gör du dina bud och tryck bättre. Håll ' + (V.pek ? 'fingret kvar på' : 'pekaren över') + ' ett kort så ser du exakt vad det ger.');
       if (g.las && g.las.indexOf('sold') >= 0) x.push('Nu kan du <b>värva soldater</b> för mark. De får lön, och du får fler män.');
       if (g.x) for (const r in g.x) x.push('Allt som ger ' + (r === 'man' ? 'män' : 'mark') + ' ger nu ' + String(g.x[r]).replace('.', ',') + ' gånger så mycket.');
@@ -341,8 +342,8 @@
       const hn = G.handlingar(); if (!S.handlSedda) { S.handlSedda = {}; if (S.handlSagt) hn.forEach(h => { S.handlSedda[h.id] = 1; }); }          // äldre sparfiler räknade bara antalet
       hn.filter(h => !S.handlSedda[h.id]).forEach(h => { S.handlSedda[h.id] = 1; x.push('Ny handling ' + (innerWidth < 720 ? 'ovanför' : 'bredvid') + ' den runda knappen: <b>' + UI.handlNamn(h) + '</b>. ' + h.vad + ' Sedan behöver du vila.'); });
       if (G.harSkatt() && !S.skattSagt) { S.skattSagt = 1; x.push('Med det gröna kortet <b>Driv in skatt</b> (under fliken med män) skickar du ut män. De kommer hem med mark, och tre lag kan vara ute samtidigt. Det är så män blir till mark.'); }
-      if (g.hjalte) x.push('Du är nu <b>Kristina Gyllenstierna</b>, hans änka. De flesta herrar går över till Kristian, men du håller Stockholms slott och skriver till bönderna. Fortsätt skicka bud.');
-      UI.berattar(UI.platsnamn(u.plats) + ' ' + u.ar, [u.kronika].concat(x));
+      if (g.hjalte) x.push('Du är nu <b>Kristina Gyllenstierna</b>, hans änka. Du håller Stockholms slott och skriver till bönderna. Fortsätt skicka bud.');
+      UI.berattar(UI.platsnamn(u.plats) + ' ' + u.ar, [scen && u.efter ? u.efter : u.kronika].concat(x));
     },
     // Rutan i början: vem du är, hur läget ser ut och vad du ska göra. Går att ta fram igen med frågetecknet.
     forklara(varld, igen) {
@@ -366,7 +367,7 @@
         ['full', '#ak', 'Fortsätt trycka, eller håll in. Full mätare ger dubbelt av allt och håller i sig en stund.', S.tryck >= 5 && !S.full && S.nasta < 2, S.full],
         ['kop', '#baser .bas:not(.skatt)', 'Bygg ut ' + G.BAS[forst].namn + ' här, eller ' + KLICKA + ' på den på kartan.', G.kanKopa(forst) && S.bas[forst] === 1, S.bas[forst] > 1],
         ['upp', '#uppdrag', 'Nästa steg i historien. Tryck på knappen när du har råd.', S.nasta === 0 && G.kanSkicka(), S.nasta > 0 || !!S.aktivt],
-        ['driv', '#ak', 'Nu är du med själv. Tryck så går det fortare, och i striden anfaller dina män.', !!G.skede(), !!(S.aktivt && S.aktivt.driv >= 3)],
+        ['driv', '#ak', 'Striden har börjat. Tryck så anfaller dina män.', !!G.skede(), !!(S.aktivt && S.aktivt.slag >= 3)],
         ['skatt', '#skatt', 'Skicka ut män här. De kommer hem med mark.', G.kanSkatt() && !S.skattN, !!S.skatt || S.skattN > 0],
         ['tak', '#res-man', 'Armén är full. Driv in skatt (det gröna kortet) så blir männen till mark.', S.res.man >= G.tak() * 0.999 && S.nasta >= 2 && !S.aktivt, S.res.man < G.tak() * 0.9]
       ];

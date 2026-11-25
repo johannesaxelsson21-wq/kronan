@@ -168,21 +168,16 @@
       const dist = skattVis.len * Math.min(1, s.t / s.dur);
       skattVis.enh.forEach((e, i) => { const a = R.along(skattVis.pts, Math.max(0, dist - Math.floor(i / 2) * 0.36)), kol = ((i % 2) - 0.5) * 0.3; e.x = a.x + Math.cos(a.ang) * kol; e.z = a.z - Math.sin(a.ang) * kol; e.ang = a.ang; e.gar = true; e.skidar = false; });
     },
-    // Spelaren trycker under ett uppdrag. På vägen dammar det om fötterna och trumman går, i striden går en salva eller en stöt.
+    // Spelaren trycker medan striden pågår: en salva pilar, kanonerna eller en stöt framåt. Striden blir inte kortare av det.
     _drag(skede) {
-      if (!vis) return; const u = vis.u, Lj = V.Ljud, slump = l => l[Math.floor(Math.random() * l.length)], gy = e => Geo.groundAt(e.x, e.z);
-      if (skede === 'strid') {
+      if (!vis || skede !== 'strid') return; const u = vis.u, Lj = V.Ljud, slump = l => l[Math.floor(Math.random() * l.length)], gy = e => Geo.groundAt(e.x, e.z);
+      {
         if (u.slag === 'flotta') { for (let k = 0; k < 2; k++) { const s = slump(vis.skepp).position; Fx.krut(s.x, 0.4, s.z); } Lj && Lj.spela('kanon'); Scene.shake(0.2); return; }
         if (!vis.enh.length) return;
         if (u.strid === 'kanoner') { for (let k = 0; k < 2; k++) { const e = slump(vis.enh); Fx.krut(e.x, gy(e) + 0.25, e.z); } Lj && Lj.spela('kanon'); Scene.shake(0.3); return; }
         if (vis.fi.length) { const n = u.strid === 'pilar' ? 10 : 5; for (let k = 0; k < n; k++) { const e = slump(vis.enh), m = slump(vis.fi); Fx.pil(e.x, gy(e) + 0.35, e.z, m.x + (Math.random() - 0.5) * 0.3, 0.2, m.z + (Math.random() - 0.5) * 0.3); } }
         if (u.strid === 'pilar') Lj && Lj.spela('pil'); else { vis.stot = 1; Scene.shake(0.12); Lj && Lj.spela('svard'); const e = slump(vis.enh); Fx.damm(e.x, gy(e), e.z, 3); }
-        return;
       }
-      if (u.slag === 'flotta') vis.skepp.forEach(s => { for (let k = 0; k < 3; k++) Fx.spawn({ x: s.position.x - Math.sin(s.rotation.y) * 0.9 + (Math.random() - 0.5) * 0.5, y: 0.06, z: s.position.z - Math.cos(s.rotation.y) * 0.9 + (Math.random() - 0.5) * 0.5, vy: 0.5 + Math.random() * 0.4, size: 0.2, grow: 0.5, r: 0.92, gr: 0.96, b: 1, a: 0.7, max: 0.8 }); });
-      else if (u.slag === 'bygg') { if (vis.stallning) { const q = vis.stallning.position; Fx.damm(q.x + (Math.random() - 0.5), q.y + 0.2, q.z + (Math.random() - 0.5), 4); } }
-      else { for (let k = 0; k < Math.min(5, vis.enh.length); k++) { const e = slump(vis.enh); Fx.damm(e.x, gy(e), e.z, 1); } if (vis.gustav && V.Gustav.g.visible) Fx.damm(V.Gustav.x, Geo.groundAt(V.Gustav.x, V.Gustav.z), V.Gustav.z, 3); }
-      Lj && Lj.spela(u.slag === 'tag' ? 'trumma' : u.slag === 'flotta' ? 'vag' : u.slag === 'bygg' ? 'hammare' : V.Bud.sno ? 'skida' : 'hov');
     },
     // Kameran följer det som är ute på uppdrag, tills spelaren själv flyttar kartan.
     _folj(x, z, d) { const c = Scene.cam; if (V.tyst || !vis || c.fly || c.user > vis.start) return; c.tx = x; c.tz = z + (Scene.lyft ? 0 : 1); c.td += (d - c.td) * 0.03; },

@@ -16,7 +16,7 @@
   function tryck() {
     if (V.Intro && V.Intro.tar) { V.Ljud.vakna(); V.Intro.tar(); return; }          // i filmen och i scenerna är trycket det som scenen säger
     if (!spelar || (V.Intro && V.Intro.aktiv)) return; V.Ljud.vakna();
-    const f = G.tryck(); if (f && !f.skede) V.Ljud.spela(V.Bud && V.Bud.sno ? 'skida' : 'hov');          // under ett uppdrag låter världen själv (Varld._drag)
+    const f = G.tryck(); if (f && !f.skede) V.Ljud.spela(V.Bud && V.Bud.sno ? 'skida' : 'hov');          // i striden låter världen själv (Varld._drag)
   }
   let haller = false, hallT = 0;          // mellanslag eller knappen hålls in: buden går i jämn takt utan att man behöver hamra
   function handelse(typ, d) {
@@ -68,7 +68,7 @@
       const u = D.UPPDRAG[G.s.nasta]; G.s.res.man = G.tak(); G.s.res.mark = Math.max(G.s.res.mark, (G.kostnad(u).mark || 0) * 1.01, 1e3); if (!G.s.aktivt) G.skicka(0.01); G.steg(0.05); if (G.s.aktivt && G.s.aktivt.val) G.valj();
       for (const id in G.s.bas) for (let k = 0; k < 3; k++) { G.s.res[G.prisRes(id)] = Math.max(G.s.res[G.prisRes(id)], G.pris(id)); G.kop(id); }
     }
-    G.s.res.man = G.tak() * 0.7; G.s.tryck = 10; G.s.tips = { ak: 1, full: 1, kop: 1, upp: 1, tak: 1, skatt: 1 }; G.s.handlSagt = 3; if (G.s.nasta > 4) G.s.las.sold = true; G.s.skattSagt = 1; V.tyst = false; Varld.sync(true);
+    G.s.res.man = G.tak() * 0.7; G.s.tryck = 10; G.s.tips = { ak: 1, full: 1, kop: 1, upp: 1, tak: 1, skatt: 1 }; G.s.handlSagt = 3; if (G.s.varld === 1 && G.s.nasta > 4) G.s.las.sold = true; G.s.skattSagt = 1; V.tyst = false; Varld.sync(true);
   };
 
   function hemma() { return Varld.pos(G.s.varld === 0 ? 'stockholm' : 'mora'); }
