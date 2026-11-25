@@ -18,6 +18,7 @@
     if (!spelar || (V.Intro && V.Intro.aktiv)) return; V.Ljud.vakna();
     const f = G.tryck(); if (f && !f.skede) V.Ljud.spela(V.Bud && V.Bud.sno ? 'skida' : 'hov');          // i striden låter världen själv (Varld._drag)
   }
+  const UTSIKT = 32;          // en bra nivå att se sig omkring från: dit zoomar kameran ut efter ett inzoomat moment
   let haller = false, hallT = 0;          // mellanslag eller knappen hålls in: buden går i jämn takt utan att man behöver hamra
   function handelse(typ, d) {
     Varld.handelse(typ, d);
@@ -32,13 +33,14 @@
     else if (typ === 'niva' && d.dubbel) UI.skylt(UI.byggnad(d.bas, d.niva));
     else if (typ === 'konst' && d.dubbel) UI.skylt(UI.konst(d.id)[0] + ': dubbelt upp');
     else if (typ === 'full') V.Ljud.spela('full');
-    else if (typ === 'skickat') V.Ljud.spela(d.u.slag === 'beslut' ? 'klocka' : 'horn');
+    else if (typ === 'skickat') { V.Ljud.spela(d.u.slag === 'beslut' ? 'klocka' : 'horn'); if (V.Musik && (d.u.slag === 'tag' || d.u.strid)) V.Musik.spar('krig'); }
     else if (typ === 'val') {
       const visa = () => { if (!V.tyst) UI.text(d.u.valText || 'Biskop Brask säger nej. Riksdagen tvekar.', 30); V.Ljud.spela('sorl'); };
       if (d.u.valScen && !V.tyst && V.Intro && V.Intro.scener[d.u.valScen]) V.Intro.scen(d.u.valScen, visa); else visa();          // först scenen, sedan valet
     }
     else if (typ === 'klart') {
-      const u = d.u; V.Ljud.spela(u.strid === 'nederlag' ? 'nej' : 'klart');
+      const u = d.u; V.Ljud.spela(u.strid === 'nederlag' ? 'nej' : 'klart'); if (V.Musik) V.Musik.spar(V.Musik.grund());
+      if (!V.tyst && Scene.cam.d < UTSIKT - 2 && !Scene.cam.locked) Scene.flyTo(Scene.cam.x, Scene.cam.z, UTSIKT, 1.8);
       if (!V.tyst) { if (u.scen && V.Intro && V.Intro.scener[u.scen]) setTimeout(() => V.Intro.scen(u.scen, () => UI.klart(u)), 1800); else UI.klart(u); }          // först scenen, sedan rutan som säger vad som hände
       if (u.ger && u.ger.titel && !V.tyst) setTimeout(() => UI.skylt(u.ger.titel === 'Kung' ? 'Sveriges kung' : u.ger.titel), 900);
       if (u.ger && u.ger.slut) setTimeout(() => UI.slut(), 5000);
@@ -84,12 +86,13 @@
     const hade = !q.has('ny') && ladda();
     if (!hade) G.nyVarld(q.has('varld') ? +q.get('varld') : q.has('fusk') ? 1 : 0);
     UI.init(); Varld.init(Scene.scene);
-    G.ut = handelse; V.Ljud.init(); V.Ljud.pa(G.s.ljud);
+    G.ut = handelse; V.Ljud.init(); V.Ljud.pa(G.s.ljud); if (V.Musik) { V.Musik.satt(G.s.ljud && G.s.musik !== false); V.Musik.spar(V.Musik.grund()); }
     if (q.has('fusk')) V.fusk(+q.get('fusk'));
     Varld.sync(true);
     arstid = hade && G.s.arstid >= 0 && !q.has('fusk') ? G.s.arstid % 1 : ((senaste().man - 1) / 12) % 1; Scene.setSeason(q.has('season') ? +q.get('season') : arstid);
     const p = q.has('lon') ? Geo.place(+q.get('lon'), +q.get('lat')) : hemma(); Scene.jump(p.x, p.z + 1.5, +q.get('d') || 30);
     UI.onTryck = tryck; UI.onSkicka = () => Varld.skicka(); UI.onSkatt = () => G.skatt();
+    UI.onHitta = () => { const w = Varld.gustavVid(); Scene.cam.user = performance.now(); Scene.flyTo(w.x, w.z + 1.2, UTSIKT, 0.9); };          // knappen Hitta mig
     UI.onVisaBas = id => { const w = Varld.pos(id); Scene.flyTo(w.x, w.z + 1.2, Math.min(Scene.cam.d, 30), 0.9); };
     UI.onBorjaOm = () => { byter = true; try { localStorage.removeItem(SPAR); } catch (e) { /* inget */ } laddaOm(); };
     UI.onIgen = arv => { byter = true; G.s.arv += arv; G.s.varv++; const s = G.ny(true); s.intro = true; skriv(); laddaOm(); };

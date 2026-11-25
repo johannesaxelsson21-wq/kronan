@@ -198,7 +198,10 @@
       this.fart += (fart - this.fart) * Math.min(1, dt * 6); this.sno = sno; const f = this.fart; this.steg += dt * (sno ? 4 + f * 6 : 5 + f * 9); const w = this.steg, s = Math.sin(w), ror = Math.min(1, f * 3);
       this.g.visible = !tillSjoss; this.g.position.set(x, gy, z); this.g.rotation.y = this.ang;
       d.skV.visible = d.skH.visible = d.stavV.visible = d.stavH.visible = sno; d.hast.visible = !sno && !tillFots; d.ring.visible = !tillFots;
-      if (tillFots) {       // står och ser ut över sitt folk
+      if (tillFots && f > 0.04) {       // går till fots (scenerna om Gustav Eriksson före 1520)
+        const gg = Math.min(1, f * 4); d.kropp.position.set(0, 0.02 + Math.abs(s) * 0.02 * gg, 0); d.kropp.rotation.set(0.08 * gg, 0, 0);
+        d.benV.rotation.set(s * 0.55 * gg, 0, 0); d.benH.rotation.set(-s * 0.55 * gg, 0, 0); d.armV.rotation.set(-s * 0.45 * gg, 0, 0.1); d.armH.rotation.set(s * 0.45 * gg, 0, -0.1);
+      } else if (tillFots) {       // står och ser ut över sitt folk
         d.kropp.position.set(0, 0.02 + Math.sin(t * 1.6) * 0.006, 0); d.kropp.rotation.set(0, Math.sin(t * 0.5) * 0.12, 0);
         d.benV.rotation.set(0, 0, 0); d.benH.rotation.set(0, 0, 0); d.armV.rotation.set(0.05, 0, 0.1); d.armH.rotation.set(-0.25 + Math.sin(t * 1.6) * 0.03, 0, -0.1);
       } else if (sno) {            // diagonalåkning: ben och motsatt arm fram, stavarna i snön

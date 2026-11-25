@@ -69,6 +69,7 @@
           <div id="akwrap"><button id="ak"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" class="spar"/><circle cx="60" cy="60" r="54" id="ak-ring" class="ring"/></svg><span id="ak-txt">Skicka<br>bud</span><span id="fullx"></span></button><div id="ak-hint">${HALL}</div></div>
           <div id="handl"></div>
           <div id="baser"></div>
+          <button id="hitta" title="Visa var du är på kartan">${IK.sikte}<span>Hitta mig</span></button>
         </div>
         <div id="kort" style="display:none"></div>
         <div id="berattar" style="display:none"></div>
@@ -77,8 +78,9 @@
         <div id="ruta" style="display:none"></div>`;
       $('ak').addEventListener('pointerdown', e => { e.preventDefault(); UI.onTryck && UI.onTryck(); });
       $('upp-knapp').addEventListener('click', () => { const a = G.s.aktivt; if (a && a.val) { G.valj(); V.Ljud && V.Ljud.spela('klocka'); } else UI.onSkicka && UI.onSkicka(); });
+      $('hitta').addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); UI.onHitta && UI.onHitta(); });
       $('m-bok').addEventListener('click', UI.kronika); $('m-krona').addEventListener('click', UI.regenter); $('m-kugg').addEventListener('click', UI.installningar); $('m-fraga').addEventListener('click', () => UI.forklara(G.s.varld, true));
-      $('m-ljud').addEventListener('click', () => { G.s.ljud = !G.s.ljud; V.Ljud && V.Ljud.pa(G.s.ljud); UI.tick(true); });
+      $('m-ljud').addEventListener('click', () => { G.s.ljud = !G.s.ljud; V.Ljud && V.Ljud.pa(G.s.ljud); V.Musik && V.Musik.satt(G.s.ljud && G.s.musik !== false); UI.tick(true); });
       $('ruta').addEventListener('click', e => { if (e.target.id === 'ruta' && !UI._last) UI.stang(); });
       root.addEventListener('pointerdown', e => { if (e.target.closest('button, .bas')) V.Ljud && V.Ljud.vakna(); }, true);
       window.addEventListener('resize', () => { sistaBaser = ''; });
@@ -397,7 +399,9 @@
       UI.ruta(h + '</div><p class="svag">Varje regent blir en egen värld. Det du bygger går i arv till nästa.</p><button class="stang">Stäng</button>');
     },
     installningar() {
-      UI.ruta('<h2>Inställningar</h2><p class="svag">Spelet sparas av sig självt i den här webbläsaren.</p><button id="nollstall" class="fara">Börja om från början</button><button class="stang">Stäng</button>');
+      const musikText = () => 'Musik: ' + (G.s.musik !== false ? 'på' : 'av');
+      UI.ruta('<h2>Inställningar</h2><p class="svag">Spelet sparas av sig självt i den här webbläsaren.</p>' + (V.Musik && V.Musik.finns() ? '<button id="musik-knapp">' + musikText() + '</button>' : '') + '<button id="nollstall" class="fara">Börja om från början</button><button class="stang">Stäng</button>');
+      if ($('musik-knapp')) $('musik-knapp').addEventListener('click', () => { G.s.musik = G.s.musik === false; V.Musik && V.Musik.satt(G.s.ljud && G.s.musik !== false); $('musik-knapp').textContent = musikText(); });
       $('nollstall').addEventListener('click', () => { if (confirm('Börja om från 1512? Allt du byggt försvinner.')) UI.onBorjaOm && UI.onBorjaOm(); });
     },
     borta(b) {

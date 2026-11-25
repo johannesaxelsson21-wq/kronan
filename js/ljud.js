@@ -1,13 +1,15 @@
-﻿// Ljud: allt görs i webbläsaren (inga ljudfiler). Vind i bakgrunden, klockor, horn, mynt och skidor.
+﻿// Ljud: allt utom musiken görs i webbläsaren (inga ljudfiler). Vind i bakgrunden, klockor, horn, mynt och skidor. Musiken ligger i musik.js.
 (function () {
   'use strict';
   const V = window.VASA;
   let ac = null, master = null, pa = true, vind = null, brus = null;
   const L = V.Ljud = {
     init() { /* ljudet vaknar vid första trycket, det kräver webbläsaren */ },
+    get ac() { return ac; },
     vakna() {
-      if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
-      try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+      if (ac) { if (ac.state === 'suspended') ac.resume(); if (V.Musik) V.Musik.vakna(); return; }
+      try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { if (V.Musik) V.Musik.vakna(); return; }
+      setTimeout(() => { if (V.Musik) V.Musik.vakna(); }, 0);
       master = ac.createGain(); master.gain.value = pa ? 0.5 : 0; master.connect(ac.destination);
       const n = ac.sampleRate * 2; brus = ac.createBuffer(1, n, ac.sampleRate); const d = brus.getChannelData(0); for (let k = 0; k < n; k++) d[k] = Math.random() * 2 - 1;
       // vinden: brus genom ett filter som andas långsamt

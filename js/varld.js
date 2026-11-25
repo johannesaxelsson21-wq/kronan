@@ -99,7 +99,8 @@
       W._ruttKlar = true;
       lopare.forEach((l, i) => { l.seg = Math.floor(i * route.length / Math.max(1, lopare.length)) % route.length; l.d = 0; });
     },
-    gustavVid() { return { x: V.Gustav.x, z: V.Gustav.z }; },
+    // Var spelarens egen figur är just nu (Kristina efter Sten Stures död)
+    gustavVid() { const k = G.s.hjalte === 'kristina' && W._kristina; return k ? { x: k.x, z: k.z } : { x: V.Gustav.x, z: V.Gustav.z }; },
     // Var hjälten står när han inte själv är ute: där källorna har honom, i grova drag.
     // Sten Sture på Stockholms slott. Gustav i Mora, sedan med hären (Kopparberget, Hedemora, Västerås, Uppsala, lägret på Brunkeberg) och från midsommar 1523 i Stockholm.
     sate() {
@@ -117,9 +118,13 @@
       const man = S.res.man; let pts = null, dur = null, fran = u.fran;
       if (u.slag === 'flotta') { pts = R.seaPath(fran, u.plats); dur = Math.max(10, Math.min(24, R.length(pts) / 7)) + (u.strid ? 8 : 0); }
       else if (u.slag === 'tag' || u.slag === 'bud' || u.slag === 'rid') {
-        if (u.slag === 'rid') fran = null;
+        const sjalv = u.slag === 'rid' || (u.slag === 'tag' && !!u.med);          // hjälten är själv med: då går tåget från platsen där han står
+        if (sjalv) fran = null;
         else if (!fran) { let bd = 1e9; for (const id in S.bas) { if (G.BAS[id].ger !== 'man' || ['abo'].indexOf(id) >= 0) continue; const p = R.P[id], q = R.P[u.plats], d = Math.hypot(p.x - q.x, p.z - q.z); if (d < bd && d > 1) { bd = d; fran = id; } } }
-        if (u.slag === 'rid') { W.sate(); const a = grafHar(W._sateId) ? W._sateId : sistaBas, full = R.path(a, R.P[u.plats] && grafHar(u.plats) ? u.plats : a); pts = grafHar(u.plats) ? [[V.Gustav.x, V.Gustav.z]].concat(full) : [[V.Gustav.x, V.Gustav.z], [R.P[u.plats].x, R.P[u.plats].z]]; }
+        if (sjalv) { W.sate(); const a = grafHar(W._sateId) ? W._sateId : sistaBas, full = R.path(a, R.P[u.plats] && grafHar(u.plats) ? u.plats : a); const mal = R.P[u.plats];
+          if (u.slag === 'rid') pts = grafHar(u.plats) ? [[V.Gustav.x, V.Gustav.z]].concat(full) : [[V.Gustav.x, V.Gustav.z], [mal.x, mal.z]];
+          else { const ut = W._utanfor(W._sateId, mal), c = R.P[W._sateId], rr = Math.hypot(ut[0] - c.x, ut[1] - c.z) + 0.5; pts = [ut].concat(grafHar(u.plats) ? full.filter(q => Math.hypot(q[0] - c.x, q[1] - c.z) > rr) : [[mal.x, mal.z]]); if (pts.length < 2) pts.push([mal.x, mal.z]); }          // armén samlas utanför staden, på den sida som vetter mot målet
+        }
         else pts = grafHar(u.plats) && grafHar(fran) ? R.path(fran, u.plats) : [[R.P[fran].x, R.P[fran].z], [R.P[u.plats].x, R.P[u.plats].z]];
         const sp = u.slag === 'bud' ? 4.5 : u.slag === 'rid' ? 5 : 3.4, lim = u.slag === 'bud' ? [5, 12] : [9, 26];
         dur = Math.max(lim[0], Math.min(lim[1], R.length(pts) / sp)) + (u.strid ? 10 : 0);
@@ -128,10 +133,13 @@
       W._startVis(u, pts, fran, man);
       return true;
     },
+    // Går det ingen väg dit samlas tåget strax utanför platsen där hjälten står, på den sida som vetter mot målet (annars går det rakt genom husen)
+    _utanfor(id, mal) { const p = R.P[id], dx = mal.x - p.x, dz = mal.z - p.z, L = Math.hypot(dx, dz) || 1, r = Math.max(1.5, Math.min((tomt[id] ? tomt[id].R * 0.8 : 2) + 0.6, L - 2.4)); return [p.x + dx / L * r, p.z + dz / L * r]; },
     _startVis(u, pts, fran, man) {
       W._slutVis(); const p = R.P[u.plats];
       vis = { u, pts, len: pts ? R.length(pts) : 0, enh: [], fi: [], skepp: [], t0: V.U.uTime.value, start: performance.now() };
       if (u.slag === 'tag') {
+        vis.gustav = !!u.med;
         const n = Math.max(8, Math.min(40, Math.round(4 + Math.log10(Math.max(10, u.kostar.man || 100)) * 8)));
         for (let k = 0; k < n; k++) { const kn = G.s.las.flotta && k % 3 === 0; vis.enh.push(Folk.add(pts[0][0], pts[0][1], kn ? 'knekt' : 'bonde', { pike: k % 2 === 0, rad: Math.floor(k / 4), kol: k % 4 - 1.5, gar: true })); }
         const f = B.flagga(G.s.titel === 'Kung' || G.s.varld === 0 ? 'sverige' : 'vasa'); f.scale.setScalar(0.8); scene.add(f); vis.fana = f;
@@ -276,7 +284,7 @@
       const u = vis.u, f = Math.min(1, a.t / a.dur), p = R.P[u.plats], strid = !!u.strid, K0 = G.KAMP, gf = strid ? Math.min(1, f / K0) : f, kamp = strid && f > K0, kf = strid ? Math.max(0, (f - K0) / (1 - K0)) : 0;
       if (vis.stot > 0) vis.stot = Math.max(0, vis.stot - dt * 2.5);
       if (vis.pts && (u.slag === 'tag' || u.slag === 'bud' || u.slag === 'rid')) {
-        const stopp = strid ? (u.strid === 'pilar' ? 2.2 : u.strid === 'kanoner' ? 1.6 : 0.9) : 0, dist = Math.max(0, vis.len - stopp) * gf;
+        const stopp = strid ? (u.strid === 'pilar' ? 2.2 : u.strid === 'kanoner' ? 1.6 : 0.9) : u.slag === 'tag' ? 1.8 : 0, dist = Math.max(0, vis.len - stopp) * gf;
         const lead = R.along(vis.pts, dist);
         if (kamp && vis.fi.length) { const m0 = vis.fi[0], m1 = vis.fi[vis.fi.length - 1], v = (m, k) => m['b' + k] !== undefined ? m['b' + k] : m[k]; W._folj((lead.x * 2 + v(m0, 'x') + v(m1, 'x')) / 4, (lead.z * 2 + v(m0, 'z') + v(m1, 'z')) / 4 + 0.6, 21); }          // i striden ska båda sidor synas
         else W._folj(lead.x, lead.z, u.slag === 'rid' ? 24 : 30);

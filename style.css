@@ -308,3 +308,10 @@ button { font-family: inherit; cursor: pointer; }
   #film-knapp { bottom: calc(10vh + 52px); } .filmknapp { padding: 9px 24px; font-size: 19px; } .filmknapp.rund { width: 96px; height: 96px; font-size: 23px; }
   .text { font-size: 15px; padding: 6px 14px; }
 }
+
+/* Hitta mig: visar var ens egen figur är på kartan */
+#hitta { position: absolute; left: 0; bottom: 100%; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px 0 8px; color: #e9dcc0; font-size: 13.5px; letter-spacing: 0.03em;
+  background: linear-gradient(180deg, var(--tra2), var(--tra)); border: 1px solid #1a130d; border-radius: 8px; box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.55) inset, 0 3px 12px rgba(0, 0, 0, 0.5); }
+#hitta svg { width: 20px; height: 20px; }
+#hitta:hover { filter: brightness(1.15); } #hitta:active { transform: translateY(1px); }
+@media (max-width: 720px) { #hitta { height: 38px; font-size: 13px; margin-bottom: 6px; } }
