@@ -1,0 +1,280 @@
+﻿// Introt: Stockholms blodbad, flykten till Dalarna och skidfärden mot Norge.
+// En kort film som inte går att hoppa över. Spelaren får trycka, men kan inte stoppa det som sker.
+// Varje rad bygger på docs/historia.md.
+(function () {
+  'use strict';
+  const V = window.VASA, Geo = V.Geo, R = V.Rike, Scene = V.Scene, Fx = V.Fx, Folk = V.Folk, B = V.Bygge;
+  let UI, L, waits = [], hooks = [], temp = [], tempM = [], regn = false, aka = null, tid = 0;
+  const vanta = s => new Promise(r => waits.push({ t: s, r }));
+  const text = t => UI.film.text(t), plats = t => UI.film.plats(t);
+  function gubbar(n, cx, cz, slag, rad) { const list = []; for (let k = 0; k < n; k++) { const a = Math.random() * 6.283, d = 0.5 + Math.random() * (rad || 2); const u = Folk.add(cx + Math.cos(a) * d, cz + Math.sin(a) * d * 0.8, slag); list.push(u); temp.push(u); } return list; }
+  function rensa() { temp.forEach(u => Folk.remove(u)); temp = []; tempM.forEach(m => Scene.scene.remove(m)); tempM = []; }
+
+  // Släden som Sten Sture kördes hem i, februari 1520
+  function slade() {
+    const mb = new V.MB(); mb.snow = 0;
+    for (const s of [-1, 1]) { mb.box(s * 0.17, 0, 0, 0.035, 0.04, 1.05, '#5d4a38'); mb.push().move(s * 0.17, 0.02, 0.55).rotX(-0.6); mb.box(0, 0, 0, 0.035, 0.04, 0.2, '#5d4a38'); mb.pop(); mb.box(s * 0.15, 0.3, 0.72, 0.022, 0.022, 0.66, '#5d4a38'); }      // medar och skaklar
+    mb.box(0, 0.09, -0.03, 0.44, 0.05, 0.9, '#8a6a44', { low: '#6b5030' }); mb.box(0, 0.14, -0.46, 0.44, 0.24, 0.05, '#8a6a44', { low: '#6b5030' });                    // flak och ryggstöd
+    mb.box(0, 0.14, 0.03, 0.36, 0.12, 0.7, '#2f4f8a', { low: '#223c6c' });                                                                                       // den sårade under sin blå mantel
+    mb.blob(0, 0.31, -0.3, 0.085, 0.085, 0.085, '#e2b48e', { snow: 0 }); mb.blob(0, 0.34, -0.34, 0.09, 0.07, 0.075, '#6a4a2a', { snow: 0 });
+    return B.mesh(mb);
+  }
+  // Spelaren trycker, och den som scenen handlar om rör sig. Löfte som blir klart när den är framme.
+  // o.satt(a, v, t, dt) flyttar något annat än hjälten (ett skepp, en släde, en man till fots). o.kd = kamerans avstånd.
+  function akFard(pts, d0, d1, fartX, knapp, rad, o) {
+    return new Promise(res => {
+      o = o || {}; aka = { pts, d: d0, d0, d1, v: 0, fartX: fartX || 1, res, stilla: 0, rad: rad || 'Tryck för att åka', satt: o.satt, kd: o.kd || 19, ljud: o.ljud, ork: 1 };
+      UI.film.text(aka.rad); UI.film.knapp(knapp || 'Åk', () => I.tar && I.tar());
+      I.tar = () => { if (!aka) return; aka.v = Math.min(3.4, aka.v + 0.8 * aka.ork); aka.stilla = 0; L.spela(aka.ljud || (V.Gustav.sno === false ? 'hov' : 'skida')); };
+    });
+  }
+  let autoT = 0;
+  // Spelaren trycker n gånger på knappen (eller väntar ut tiden). vid(k) körs för varje tryck. Löfte som blir klart när det är gjort.
+  function tryckN(knapp, n, vid, sek) {
+    return new Promise(res => {
+      let k = 0, klar = false; const slut = () => { if (klar) return; klar = true; UI.film.knapp(null); I.tar = null; res(k); };
+      UI.film.knapp(knapp, () => I.tar && I.tar()); I.tar = () => { if (klar) return; k++; vid(k); if (k >= n) slut(); }; vanta(sek || 20).then(slut);
+    });
+  }
+  const I = V.Intro = {
+    tar: null, fart: +new URLSearchParams(location.search).get('introfart') || 1,          // ?introfart=4 spolar filmen (för prov)
+    // Titelskärmen för ett helt nytt spel. Sedan börjar förspelet direkt.
+    titel(klar) {
+      UI = V.UI; L = V.Ljud; Scene.cam.locked = true; UI.visa(false); UI.film.svart(1, 0);
+      UI.film.text('<span class="titel">Kronan</span><span class="under">Sveriges regenter, en värld i taget</span>'); document.getElementById('film-text').classList.add('mitt');
+      UI.film.knapp('Börja', () => { UI.film.knapp(null); document.getElementById('film-text').classList.remove('mitt'); text(''); UI.film.svart(0, 2.5); Scene.cam.locked = false; klar(); });
+    },
+    // Gustavs värld börjar med filmen om blodbadet.
+    kor(klar) {
+      UI = V.UI; L = V.Ljud; Scene.cam.locked = true; UI.visa(false); UI.film.svart(1, 0);
+      const sth = R.P.stockholm; Scene.setSeason(0.835); Scene.jump(sth.x - 8, sth.z + 9, 120); Fx.sno = false;
+      UI.film.text('<span class="under">Två månader efter att portarna öppnades</span>'); document.getElementById('film-text').classList.add('mitt');
+      UI.film.knapp('Fortsätt', () => { UI.film.knapp(null); document.getElementById('film-text').classList.remove('mitt'); text(''); I.film(klar).catch(e => { console.error(e); I.slut(klar); }); });
+    },
+    async film(klar) {
+      const sth = R.P.stockholm, K = B.K, slott = { x: sth.x + 2.6 * K, z: sth.z - 2.2 * K };
+      UI.film.pa(true); gubbar(12, sth.x, sth.z + 0.5, 'borgare', 3);
+      await vanta(0.6);
+      // ---- Stockholm, november 1520 ----
+      UI.film.svart(0.32, 3); plats('Stockholm, november 1520'); Scene.flyTo(sth.x + 1, sth.z + 2, 46, 15); regn = true;
+      await vanta(2.5); text('Den 4 november kröns Kristian II till Sveriges kung. Kronan sätts på hans huvud av ärkebiskop Gustav Trolle.'); for (let k = 0; k < 6; k++) setTimeout(() => L.klockton(k % 2 ? 294 : 392, undefined, 0.16), k * 700);
+      await vanta(8); text('I tre dagar firar kungen med rikets främsta på slottet. Han har lovat att ingen ska straffas.');
+      await vanta(7.5); plats('Slottet, 7 november'); Scene.flyTo(slott.x, slott.z + 2.5, 22, 5); text('Mitt på dagen stängs portarna.');
+      await vanta(2.6); L.spela('port'); Scene.shake(0.5); UI.film.svart(0.46, 1.5);
+      await vanta(4); text('Ärkebiskopen anklagar dem som avsatte honom och rev hans borg. Han kallar dem kättare: fiender till kyrkan.');
+      await vanta(8); text('Kungens löfte gäller inte den som kyrkan dömer. Nästa dag dömer fjorton kyrkomän dem alla.');
+      await vanta(8.5); plats('Stortorget, 8 november'); Scene.flyTo(sth.x - 0.5, sth.z + 2, 17, 5); text('');
+      await vanta(3);
+      // räkningen går av sig själv. Trycker man händer ingenting, bara ett dovt slag.
+      I.tar = () => L.spela('trumma');
+      const namn = { 1: 'Biskop Mattias av Strängnäs', 2: 'Biskop Vincent av Skara', 7: 'Erik Johansson, Gustavs far', 12: 'Joakim Brahe, hans svåger', 20: 'Rikets herrar', 36: 'Stockholms borgmästare och råd', 56: 'Tjänare och drängar' };
+      for (let n = 1; n <= 82; n++) {
+        UI.film.tal(n); if (namn[n]) text(namn[n]); if (n <= 12 || n % 4 === 0) L.spela('klocka');
+        await vanta(n <= 2 ? 2.2 : n <= 12 ? 0.75 : n <= 40 ? 0.24 : 0.14);
+      }
+      text('Åttiotvå, räknar bödeln.'); await vanta(5.5);
+      UI.film.tal(null); I.tar = null; plats('Södermalm, 10 november'); Scene.flyTo(sth.x - 1, sth.z + 7, 30, 5); text('Kropparna bränns på Södermalm.');
+      const bal = { x: sth.x - 1.5, z: sth.z + 8.5 }; hooks.push(dt => { if (Math.random() < dt * 26) Fx.spawn({ x: bal.x + (Math.random() - 0.5) * 0.8, y: Geo.groundAt(bal.x, bal.z) + 0.2, z: bal.z + (Math.random() - 0.5) * 0.6, vx: 0.5 + Math.random() * 0.3, vy: 1.1 + Math.random() * 0.7, vz: 0.1, size: 0.35, grow: 0.7, r: 0.1, gr: 0.09, b: 0.09, a: 0.6, max: 4.5 }); if (Math.random() < dt * 14) Fx.gnista(bal.x, Geo.groundAt(bal.x, bal.z) + 0.15, bal.z); });
+      await vanta(7); UI.film.svart(1, 2); text(''); plats(''); await vanta(2.3);
+      // ---- Räfsnäs ----
+      hooks = []; rensa(); regn = false; const raf = R.P.rafsnas; Scene.setSeason(0.87); Scene.jump(raf.x, raf.z + 1.5, 20);
+      V.Gustav.place(raf.x, raf.z, 2.2, 0, 0, 1, false); V.Gustav.g.visible = true; Scene.flyTo(raf.x, raf.z + 1, 13, 14);
+      UI.film.svart(0.2, 2.5); plats('Räfsnäs vid Mälaren'); await vanta(2.2); text('Gustav Eriksson är 24 år. Hans far var en av dem.');
+      await vanta(7); text('Själv togs han som gisslan efter Brännkyrka. Han flydde från Danmark till Lübeck och kom hem över havet i maj.');
+      await vanta(8.5);
+      // flykten är det första spelaren gör själv i Gustavs värld
+      const p0 = R.path('rafsnas', 'strangnas'), len0 = R.length(p0);
+      await akFard(p0, 0.2, Math.min(len0 - 1, 9), 1.3, 'Fly', 'Tryck för att fly');
+      UI.film.knapp(null); I.tar = null; text('Han flyr norrut, till Dalarna.'); await vanta(3.5); UI.film.svart(1, 1.5); text(''); plats(''); await vanta(1.8);
+      // ---- flykten genom Dalarna, plats för plats, så som den berättas. Platserna är sägen (docs/historia.md), och filmen säger det. ----
+      Scene.setSeason(0.965); Fx.sno = true;
+      const st = [[15.75, 60.45, 'Rankhyttan', 'Det berättas att han gömde sig som dräng här och tröskade säd.'], [15.54, 60.51, 'Ornäs', 'Det berättas att husets fru varnade honom, och att han flydde i släde över sjön.'],
+        [15.87, 60.71, 'Isala', 'Det berättas att en bonde gömde honom i sin lada.'], [15.72, 60.84, 'Marnäs', 'Det berättas att han kördes förbi danskarna, gömd i ett lass med hö.']].map(s => ({ p: Geo.place(s[0], s[1]), namn: s[2], rad: s[3] }));
+      st.forEach(s => {          // en gård på varje plats
+        const mb = new V.MB(); B.stuga(mb, 0.95, 0.62, 0.34, 'torv', { skorsten: 1, ljus: 1 }); mb.push().move(1.35, 0, 0.5).rotY(0.6); B.stuga(mb, 1.15, 0.7, 0.4, 'span', {}); mb.pop();
+        const m = B.mesh(mb), x = s.p.x + 0.9, z = s.p.z - 0.9; m.position.set(x, Geo.groundAt(x, z), z); m.scale.setScalar(K); Scene.scene.add(m); tempM.push(m);
+      });
+      let fran = [st[0].p.x - 1.5, st[0].p.z + 3];
+      V.Gustav.place(fran[0], fran[1], 3.1, 0, 0, 1, false); Scene.jump(fran[0], fran[1] + 1.5, 19); UI.film.svart(0, 2.5); plats('Dalarna, november 1520');
+      await vanta(2); text('Han tar sig till Dalarna. Kungens män letar efter honom.'); await vanta(6);
+      text('Vad som hände på vägen vet vi bara genom berättelser som skrevs ned långt senare.'); await vanta(7);
+      for (const s of st) {
+        const pts = [fran, [s.p.x, s.p.z]]; await akFard(pts, 0, Math.max(0.5, R.length(pts) - 0.5), 1.7);
+        UI.film.knapp(null); I.tar = null; plats(s.namn); text(s.rad); await vanta(7); fran = [s.p.x, s.p.z];
+      }
+      text('Så kom han till byarna vid sjön Siljan.'); await vanta(4); UI.film.svart(1, 1.5); text(''); plats(''); await vanta(1.8); tempM.forEach(m => Scene.scene.remove(m)); tempM = [];
+      // ---- Dalarna: åk mot Mora ----
+      Scene.setSeason(0.975); Fx.sno = true; const p1 = R.path('rattvik', 'mora'), len1 = R.length(p1), s1 = Math.max(0, len1 - 11), a0 = R.along(p1, s1);
+      V.Gustav.place(a0.x, a0.z, a0.ang, 0, 0, 1, false); Scene.jump(a0.x, a0.z + 1.5, 19); UI.film.svart(0, 2.5); plats('Dalarna, julen 1520');
+      await vanta(1.5); L.vindstyrka(0.11);
+      await akFard(p1, s1, len1 - 1.2, 1);
+      // ---- Mora: talet ----
+      UI.film.knapp(null); I.tar = null; const mora = R.P.mora, fz = mora.z + 0.5 * K; plats('Mora'); text('Han talar till männen i Mora.');
+      const hopen = []; for (let k = 0; k < 18; k++) { const a = 0.5 + k / 18 * 2.2, d = 1.6 + (k % 3) * 0.5, u = Folk.add(mora.x + Math.cos(a) * d * 1.3, fz + 0.4 + Math.sin(a) * d * 0.7, 'bonde', { ang: Math.PI }); hopen.push(u); temp.push(u); }
+      Scene.flyTo(mora.x, fz + 1, 15, 3); V.Gustav.place(mora.x, fz - 1.3, 0, 0, 0, 1, false);
+      await vanta(2.5);
+      await new Promise(res => { let n = 0; const b = UI.film.knapp('Tala', () => { n++; L.spela('sorl'); hopen.forEach((u, i) => { if (i % 3 === n % 3) u.y = 0.08; setTimeout(() => { u.y = 0; }, 160); }); if (n >= 5) { UI.film.knapp(null); res(); } }); I.tar = () => b && b.dispatchEvent(new Event('pointerdown')); });
+      I.tar = null; await vanta(1.2); L.spela('nej'); text('Männen tvekar. De vill inte ha ett uppror till.');
+      const gaHem = dt => hopen.forEach((u, i) => { u.gar = true; u.ang = 0.5 + i * 0.35; u.x += Math.sin(u.ang) * 0.7 * dt; u.z += Math.cos(u.ang) * 0.7 * dt; }); hooks.push(gaHem);
+      await vanta(6.5); hooks = []; rensa(); text('Han ger upp och åker västerut, mot Norge.'); await vanta(4);
+      // ---- mot Sälen ----
+      const p2 = R.path('mora', 'salen'), len2 = R.length(p2); plats(''); Scene.flyTo(mora.x, mora.z, 22, 1.5);
+      await akFard(p2, 0.5, len2 - 1.5, 2.6);
+      UI.film.knapp(null); I.tar = null; plats('Sälen'); text('');
+      const jag = [0, 1].map(k => { const u = Folk.add(0, 0, 'bonde', { gar: true, skidar: true, lean: 0.25, col: k ? '#7a6a55' : '#6a5f52' }); temp.push(u); return { u, d: len2 - 12 - k * 1.2 }; });
+      await new Promise(res => hooks.push(dt => { let klara = 0; jag.forEach((j, k) => { const mal = len2 - 2.4 - k * 0.7; j.d = Math.min(mal, j.d + 6 * dt); const a = R.along(p2, j.d); j.u.x = a.x + k * 0.3; j.u.z = a.z; j.u.ang = a.ang; if (j.d >= mal) { klara++; j.u.gar = false; j.u.lean = 0; } }); if (klara === 2) { hooks = []; res(); } }));
+      text('Två skidlöpare från Mora hinner upp honom.'); await vanta(5.5);
+      text('Budet om blodbadet har nått Dalarna. Mora har ändrat sig.'); await vanta(6.5);
+      text('Så berättar krönikan som kungen själv lät skriva.'); await vanta(5);
+      UI.film.svart(1, 1.5); text(''); plats(''); await vanta(1.8);
+      // ---- Mora, januari 1521 ----
+      rensa(); Scene.setSeason(0.04); Scene.jump(mora.x, fz + 1.5, 24); V.Gustav.place(mora.x, fz - 1.3, 0, 0, 0, 1, false);
+      const jubel = []; for (let k = 0; k < 24; k++) { const a = 0.3 + k / 24 * 2.6, d = 1.5 + (k % 4) * 0.45, u = Folk.add(mora.x + Math.cos(a) * d * 1.3, fz + 0.4 + Math.sin(a) * d * 0.7, 'bonde', { ang: Math.PI, pike: k % 3 === 0 }); jubel.push(u); temp.push(u); }
+      hooks.push(() => jubel.forEach((u, i) => { u.y = Math.abs(Math.sin(tid * 7 + i)) * 0.09; }));
+      UI.film.svart(0, 2); plats('Mora, januari 1521'); Scene.flyTo(mora.x, fz + 1, 17, 6); await vanta(1.5);
+      text('Dalkarlarna väljer honom till sin ledare.'); L.spela('klart'); Fx.guld(mora.x, mora.y + 0.4, fz, 80, 2.5);
+      await vanta(6.5); text(''); plats('');
+      I.slut(klar);
+    },
+    // ---- små scener mitt i spelet -----------------------------------------------------------------
+    // Spelet står still medan scenen går. Varje rad bygger på docs/historia.md.
+    aktiv: false, scenFart: 1, spelade: 0,
+    scener: {
+      // September 1518. Kristian kräver sex svenskar som säkerhet för en förhandling. När de är ombord seglar han hem med dem.
+      async gisslan() {
+        const sth = R.P.stockholm, hav = sth.hav || sth, bort = R.seaPath('stockholm', 'kalmar'); let sx = hav.x, sz = hav.z, d = 0;
+        for (let k = 0; k < 60 && Geo.sdAt(sx - 0.3, sz) < -0.45; k++) sx -= 0.3;          // stranden nedanför staden
+        Scene.setSeason(0.7);
+        const skepp = [0, 1, 2].map(() => { const s = V.skepp('danmark'); s.scale.setScalar(2.1); Scene.scene.add(s); tempM.push(s); return s; });
+        const lagg = () => skepp.forEach((s, i) => { const a = R.along(bort, 8.5 + d + i * 2.4); s.position.set(a.x + Math.cos(a.ang) * ((i % 2) - 0.5) * 1.4, 0.02 + Math.sin(tid * 1.4 + i) * 0.03, a.z - Math.sin(a.ang) * ((i % 2) - 0.5) * 1.4); s.rotation.y = a.ang; });
+        lagg(); const forst = skepp[0].position, pts = [[sx, sz], [forst.x, forst.z]];
+        const bat = V.skepp('sverige'); bat.scale.setScalar(0.95); bat.position.set(sx, 0.02, sz); bat.rotation.y = Math.atan2(forst.x - sx, forst.z - sz); Scene.scene.add(bat); tempM.push(bat);
+        const sex = []; for (let i = 0; i < 6; i++) { const u = Folk.add(sx - 1.0 - (i % 3) * 0.32, sz - 0.25 + Math.floor(i / 3) * 0.38, i === 5 ? 'bonde' : 'borgare', i === 5 ? { col: '#7b8690', col2: '#b0352c', sc: 1.15, ang: 1.6 } : { ang: 1.6 }); sex.push(u); temp.push(u); }
+        Scene.jump((sx + forst.x) / 2, sz + 2.4, 30); plats('Stockholm, september 1518'); hooks.push(lagg);
+        await vanta(2); text('Kristian har förlorat slaget, men hans skepp ligger kvar utanför staden. Han säger att han vill förhandla.'); await vanta(8);
+        text('Som säkerhet kräver han sex svenska herrar ombord på sina skepp.'); await vanta(6.5);
+        sex.forEach(u => Folk.remove(u)); temp = temp.filter(u => sex.indexOf(u) < 0);
+        await akFard(pts, 0, R.length(pts) - 0.9, 0.7, 'Skicka', 'Tryck för att skicka ut dem', { kd: 27, ljud: 'vag', satt: a => { bat.position.set(a.x, 0.02 + Math.sin(tid * 2) * 0.02, a.z); bat.rotation.y = a.ang; } });
+        UI.film.knapp(null); I.tar = null; Scene.scene.remove(bat); L.spela('nej'); text('När de sex är ombord hissar Kristian segel.');
+        hooks.push(dt => { d = Math.min(26, d + dt * 1.5); const c = Scene.cam, f = Math.min(1, dt * 1.2); c.tx += (forst.x - c.tx) * f; c.tz += (forst.z + 2 - c.tz) * f; c.td = 36; });
+        await vanta(6.5); text('Han kom aldrig till något möte. De sex förs till Danmark som fångar.'); await vanta(7);
+        text('En av dem är Gustav Eriksson, 22 år.'); await vanta(6);
+      },
+      // November 1517. Riksmötet har avsatt ärkebiskopen, och alla sätter sitt sigill under brevet. Biskop Brask ska ha lagt en lapp under sitt.
+      async sigill() {
+        const K = B.K, h = V.Varld.sate(), tx = h.x, tz = h.z + 0.68, gy = Geo.groundAt(tx, tz); Scene.setSeason(0.87);          // bordet står framför Sten Sture, herrarna på rad bredvid honom
+        const bord = new V.MB(); bord.snow = 0; bord.box(0, 0, 0, 0.95, 0.3, 0.46, '#6b4a2c', { low: '#4f3620' }); bord.box(0, 0.3, 0, 0.66, 0.012, 0.32, '#efe3c6');
+        const bm = B.mesh(bord); bm.position.set(tx, gy, tz); bm.scale.setScalar(K); Scene.scene.add(bm); tempM.push(bm);
+        const herrar = [], pos = [[-0.62, 0], [-1.12, 0.14], [-1.62, 0], [-2.12, 0.14], [-0.9, -0.5], [0.62, 0], [1.12, 0.12]]; for (let i = 0; i < 7; i++) { const x = h.x + pos[i][0], z = h.z - 0.05 + pos[i][1], o = { ang: pos[i][0] < 0 ? 0.25 : -0.25 }; if (i === 6) Object.assign(o, { col: '#6a2a7a', col2: '#f2eee2', sc: 1.12 }); const u = Folk.add(x, z, 'borgare', o); herrar.push(u); temp.push(u); }
+        const sigill = k => { const mb = new V.MB(); mb.snow = 0; mb.cyl(-0.26 + k * 0.087, 0.312, 0.1, 0.036, 0.036, 0.016, 8, '#b8312a', { cap: '#b8312a' }); const m = B.mesh(mb); m.position.copy(bm.position); m.scale.setScalar(K); Scene.scene.add(m); tempM.push(m); };
+        const hopp = u => { u.y = 0.1; setTimeout(() => { u.y = 0; }, 180); };
+        Scene.jump(tx, tz + 0.7, 13); plats('Stockholm, november 1517');
+        await vanta(2); text('Mötet har bestämt: ärkebiskopen avsätts och hans borg ska rivas. Nu sätter alla sitt sigill under brevet.'); await vanta(8);
+        text('Tryck för att sätta sigillen');
+        const n = await tryckN('Sigill', 6, k => { sigill(k - 1); hopp(herrar[k - 1]); L.spela('trumma'); L.spela('kop'); if (k === 2) text(''); }, 18);
+        for (let k = n; k < 6; k++) sigill(k);
+        await vanta(0.8); sigill(6); hopp(herrar[6]); L.spela('trumma');
+        text('Biskop Hans Brask sätter också sitt. Det berättas att han gömde en lapp under vaxet: "Härtill är jag nödd och tvungen." Det här gör jag för att jag måste.'); await vanta(10);
+        text('Den som har sitt sigill under brevet har varit med om att avsätta en ärkebiskop.'); await vanta(7);
+      },
+      // September 1519: flykten från Kalø till Lübeck
+      async kalo() {
+        const K = B.K, k = Geo.place(10.48, 56.3), lb = R.P.lubeck; Scene.setSeason(0.71);
+        const mb = new V.MB(); B.borg(mb, 'liten', 0); const borg = B.mesh(mb); borg.position.set(k.x, Geo.groundAt(k.x, k.z), k.z); borg.scale.setScalar(K); Scene.scene.add(borg); tempM.push(borg);
+        const fl = B.flagga('danmark'); fl.position.set(k.x + 2.2, Geo.groundAt(k.x + 2.2, k.z + 0.6), k.z + 0.6); fl.scale.setScalar(1.7); Scene.scene.add(fl); tempM.push(fl);
+        const g = Folk.add(k.x - 1.7, k.z + 0.9, 'bonde', { col: '#7b8690', col2: '#b0352c', sc: 1.3, ang: -1.4 }); temp.push(g);
+        [[k.x - 0.45, k.z + 1.3], [k.x + 0.55, k.z + 1.3]].forEach(q => temp.push(Folk.add(q[0], q[1], 'dansk', { pike: true, ang: 0 })));          // vakterna vid porten ser åt andra hållet
+        const pts = [[k.x - 1.7, k.z + 0.9], [k.x - 3.6, k.z + 1.1], [k.x - 6, k.z + 2.2], [k.x - 8.5, k.z + 3.8]];
+        Scene.jump(k.x - 0.8, k.z + 2.4, 21); plats('Kalø slott i Danmark, september 1519');
+        await vanta(2); text('Gustav Eriksson har suttit fången här i ett år.'); await vanta(6);
+        await akFard(pts, 0, R.length(pts) - 0.2, 0.8, 'Rym', 'Tryck för att rymma', { kd: 17, ljud: 'steg', satt: (a, v) => { g.x = a.x; g.z = a.z; g.ang = a.ang; g.gar = v > 0.04; } });
+        UI.film.knapp(null); I.tar = null; g.gar = false; text('Han tar sig hela vägen till Lübeck, en fri och rik handelsstad i Tyskland.'); await vanta(6);
+        UI.film.svart(1, 0.8); text(''); plats(''); await vanta(1.1); hooks = [];
+        // Lübeck: kyrka, köpmanshus och stadens vita och röda flagga
+        const mb2 = new V.MB(); B.kyrka(mb2); for (let i = 0; i < 6; i++) { mb2.push().move(-2.2 + i * 0.95, 0, 1.3 + (i % 2) * 0.9).rotY((i % 3 - 1) * 0.25); B.stuga(mb2, 0.7, 0.6, 0.62, 'tegel', { vagg: '#b85f44', vaggLag: '#8a4533', gavel: '#b85f44', brant: 0.8 }); mb2.pop(); }
+        const stad = B.mesh(mb2); stad.position.set(lb.x, Geo.groundAt(lb.x, lb.z), lb.z); stad.scale.setScalar(K); Scene.scene.add(stad); tempM.push(stad);
+        const fl2 = B.flagga('lubeck'); fl2.position.set(lb.x + 2.6, Geo.groundAt(lb.x + 2.6, lb.z + 0.5), lb.z + 0.5); fl2.scale.setScalar(1.7); Scene.scene.add(fl2); tempM.push(fl2);
+        gubbar(7, lb.x, lb.z + 2.4, 'borgare', 2.2);
+        g.x = lb.x - 3.4; g.z = lb.z + 5.2; g.ang = 2.4; g.gar = true; hooks.push(dt => { if (g.z > lb.z + 2.6) { g.z -= dt * 0.42; g.x += dt * 0.38; } else g.gar = false; });
+        Scene.jump(lb.x - 0.3, lb.z + 2.2, 22); UI.film.svart(0, 1.2); plats('Lübeck');
+        await vanta(5); text('Slottsherren från Kalø kommer efter och kräver att få honom tillbaka.');
+        const jagare = Folk.add(lb.x - 6, lb.z + 5.8, 'dansk', { pike: true, gar: true, ang: 1.95 }); temp.push(jagare); hooks.push(dt => { if (jagare.x < lb.x - 3.2) { jagare.x += dt * 0.5; jagare.z -= dt * 0.2; } else jagare.gar = false; });
+        await vanta(7.5); L.spela('klart'); text('Lübecks råd säger nej. Gustav får stanna, och blir kvar i åtta månader.'); await vanta(8);
+      },
+      // Februari 1520. Sten Sture körs hem i släde över Mälarens is och dör på vägen.
+      async isen() {
+        const a0 = R.P.strangnas, a1 = R.P.stockholm, rak = [[a0.x, a0.z], [a1.x, a1.z]], l0 = R.length(rak), Bu = V.Bud, sk = Bu.g.scale.x; Scene.setSeason(0.09); V.Gustav.g.visible = false;
+        let skift = 0; for (let f = 0.28; f <= 0.76; f += 0.04) { const a = R.along(rak, l0 * f); let s = 0; while (s < 5 && Geo.sdAt(a.x, a.z - s) > -1.4) s += 0.4; skift = Math.max(skift, s); }          // ut på öppen is, norr om stranden
+        const p0 = R.along(rak, l0 * 0.28), p1 = R.along(rak, l0 * 0.76), pts = [[p0.x, p0.z - skift], [p1.x, p1.z - skift]], d0 = 0, d1 = R.length(pts);
+        const sl = slade(); sl.scale.setScalar(sk); Scene.scene.add(sl); tempM.push(sl);
+        const lagg = (a, v, t, dt) => {
+          if (aka) { aka.ork = Math.max(0.3, 1 - (aka.d - d0) / (d1 - d0) * 0.85); aka.fartX = 0.8 * aka.ork; if (aka.ork <= 0.3) aka.d1 = aka.d; }          // hästen går tyngre och tyngre, och till sist står släden still
+          Bu.place(a.x, a.z, a.ang, v * (aka ? aka.ork : 1), t, dt, false); Bu.g.userData.ring.visible = false;
+          const bx = a.x - Math.sin(a.ang) * 1.15 * sk, bz = a.z - Math.cos(a.ang) * 1.15 * sk; sl.position.set(bx, Math.max(0.02, Geo.groundAt(bx, bz)) + 0.01, bz); sl.rotation.y = a.ang;
+        };
+        const s = R.along(pts, d0); Bu.ang = s.ang; lagg(s, 0, tid, 0.016); Scene.jump(s.x, s.z + 1.5, 19); plats('Mälarens is, februari 1520');
+        let slut = s; hooks.push(dt => { if (!aka) lagg(slut, 0, tid, dt); });
+        await vanta(2); text('En kanonkula har krossat Sten Stures knä. Armén är slagen, och han körs hem mot Stockholm i släde.'); await vanta(8.5);
+        hooks = []; await akFard(pts, d0, d1, 1, 'Kör', 'Tryck för att köra', { kd: 18, ljud: 'hov', satt: lagg });
+        UI.film.knapp(null); I.tar = null; slut = { x: Bu.x, z: Bu.z, ang: Bu.ang }; hooks.push(dt => lagg(slut, 0, tid, dt));
+        L.spela('klocka'); text('Den 3 februari dör han på isen, 27 år gammal.'); await vanta(7.5);
+        text('Riket står utan ledare. På Stockholms slott tar hans hustru Kristina Gyllenstierna befälet.'); await vanta(8.5);
+      },
+      // Sommaren 1520. Kristina Gyllenstierna håller Stockholm och står själv på vallen. Sedan kommer brevet om nåd.
+      async vallen() {
+        const sth = R.P.stockholm, K = B.K, kr = V.Varld._kristina, kx = kr ? kr.x : sth.x + 1.9 * K, kz = kr ? kr.z : sth.z - 0.5 * K, gy = Geo.groundAt(kx, kz); Scene.setSeason(0.55);
+        const folk = [], stall = (x, z, slag, o) => { const u = Folk.add(x, z, slag, o); folk.push(u); temp.push(u); };
+        for (let j = 0; j < 4; j++) for (const s of [-1, 1]) stall(kx + s * (0.6 + j * 0.56), kz + 0.04 + (j % 2) * 0.14, j % 2 ? 'borgare' : 'knekt', { pike: j % 2 === 0, ang: 0 });          // i rad framför slottsmuren, där hon står
+        for (let i = 0; i < 4; i++) stall(kx - 3.1 - (i % 2) * 0.5, kz + 0.5 + Math.floor(i / 2) * 0.5, i % 2 ? 'knekt' : 'borgare', { pike: i === 1, ang: 1.3 });
+        Scene.jump(kx - 0.4, kz + 2.0, 19); plats('Stockholms slott, sommaren 1520');
+        await vanta(2); text('Kristian belägrar Stockholm från land och hav. Du står själv på vallen och manar försvararna.'); await vanta(7.5);
+        text('Tryck för att mana dem');
+        await tryckN('Mana', 8, k => {
+          L.spela('sorl'); folk.forEach((u, i) => { if (i % 3 === k % 3) { u.y = 0.1; setTimeout(() => { u.y = 0; }, 170); } }); if (kr) { kr.y = 0.12; setTimeout(() => { kr.y = 0; }, 200); }
+          if (k % 2 === 0) { Fx.krut(kx + 1.6, gy + 1.3, kz - 1.2); L.spela('kanon'); Scene.shake(0.16); } if (k === 3) text('');
+        }, 18);
+        text('Borgarna kallar dig vår kära furstinna, och staden håller ut till september.'); await vanta(7.5);
+        text('Men herrarna har gått över till Kristian, och ingen hjälp kommer.'); await vanta(6.5);
+        L.spela('klocka'); text('Den 5 september lovar Kristian i ett brev att ingen ska straffas för det som har hänt.'); await vanta(8);
+      },
+      // 31 maj 1520: Lübeck hjälper honom hem över havet, och han går i land vid Kalmar
+      async kalmar() {
+        const km = R.P.kalmar, alla = R.seaPath('lubeck', 'kalmar'), L0 = R.length(alla), d0 = Math.max(0, L0 - 26); Scene.setSeason(0.4);
+        const s = V.skepp('lubeck'); s.scale.setScalar(2.1); Scene.scene.add(s); tempM.push(s);
+        const satt = a => { s.position.set(a.x, 0.02 + Math.sin(tid * 1.4) * 0.03, a.z); s.rotation.y = a.ang; s.rotation.z = Math.sin(tid * 1.2) * 0.05; };
+        const a0 = R.along(alla, d0); satt(a0); Scene.jump(a0.x, a0.z + 2, 40); plats('Kalmarsund, maj 1520'); hooks.push(() => { if (!aka) satt(R.along(alla, d0)); });
+        await vanta(2); text('Efter åtta månader hjälper Lübecks råd honom hem över havet.'); await vanta(7);
+        hooks = []; await akFard(alla, d0, L0 - 0.8, 1.5, 'Segla', 'Tryck för att segla', { kd: 40, ljud: 'vag', satt });
+        UI.film.knapp(null); I.tar = null; const slut = R.along(alla, L0 - 0.8); hooks.push(() => satt(slut));
+        const h = km.hav || km; let gx = h.x, gz = h.z; for (let k = 0; k < 40 && Geo.sdAt(gx, gz) < 0.35; k++) { gx += (km.x - h.x) * 0.04; gz += (km.z - h.z) * 0.04; }
+        const g = Folk.add(gx, gz, 'bonde', { col: '#7b8690', col2: '#b0352c', sc: 1.3, gar: true, ang: Math.atan2(km.x - gx, km.z - gz) }); temp.push(g);
+        hooks.push(dt => { g.x += Math.sin(g.ang) * dt * 0.4; g.z += Math.cos(g.ang) * dt * 0.4; }); Scene.flyTo(gx, gz + 1.6, 24, 3);
+        plats('Kalmar, 31 maj 1520'); text('Han går i land vid Stensö udde, strax utanför Kalmar.'); await vanta(7);
+        text('Han är hemma. Men Sten Sture är död, och Kristians armé står utanför Stockholm.'); await vanta(7.5);
+      }
+    },
+    async scen(namn, klar) {
+      if (!I.scener[namn] || I.aktiv) { if (klar) klar(); return; }
+      UI = V.UI; L = V.Ljud; I.aktiv = true; I.spelade++; I.nu = namn; autoT = 0; I.scenFart = Math.min(6, +new URLSearchParams(location.search).get('snabb') || 1);
+      if (V.Varld.popKlart) V.Varld.popKlart();
+      const c = Scene.cam, hem = { x: c.x, z: c.z, d: c.d }; c.locked = true; c.fly = null; c.fri = true; UI.visa(false); UI.dolj(); UI.film.pa(true); L.spela('klocka');
+      try { await I.scener[namn](); } catch (e) { console.error(e); }
+      hooks = []; waits = []; aka = null; I.tar = null; I.nu = null; UI.film.knapp(null); rensa(); text(''); plats(''); UI.film.svart(0, 0.6); UI.film.pa(false); UI.visa(true); c.locked = false; c.fri = false; Scene.jump(hem.x, hem.z, hem.d); I.aktiv = false; I.scenFart = 1; if (klar) klar();
+    },
+    slut(klar) { hooks = []; waits = []; rensa(); aka = null; I.tar = null; regn = false; UI.film.knapp(null); UI.film.tal(null); UI.film.text(''); UI.film.plats(''); UI.film.svart(0, 1); UI.film.pa(false); Fx.sno = true; V.Varld._ruttKlar = false; V.Varld._ruttKey = null; klar(); },
+    update(dt, t) {
+      tid = t; const fart = I.aktiv ? (I.scenFart || 1) : (I.fart || 1);
+      for (let k = waits.length - 1; k >= 0; k--) { waits[k].t -= dt * fart; if (waits[k].t <= 0) { const w = waits.splice(k, 1)[0]; w.r(); } }
+      hooks.slice().forEach(h => h(I.aktiv ? dt * fart : dt));
+      if (regn) { const c = Scene.cam, n = Math.round(dt * 240); for (let k = 0; k < n; k++) Fx.spawn({ x: c.x + (Math.random() - 0.5) * c.d * 1.6, y: c.gy + 3 + Math.random() * 6, z: c.z + (Math.random() - 0.7) * c.d * 1.2, vx: 1.2, vy: -11, vz: 0.4, size: 0.03 + c.d * 0.0012, r: 0.7, gr: 0.76, b: 0.86, a: 0.5, max: 0.9, golv: 1, fade: 0 }); }
+      if (I.aktiv && fart > 1 && I.tar) { autoT += dt; if (autoT > 0.08) { autoT = 0; I.tar(); } }          // i snabbspolning (provet) trycker scenen själv
+      if (aka) {
+        aka.v = Math.max(0, aka.v - 0.75 * dt); aka.d = Math.min(aka.d1, aka.d + aka.v * aka.fartX * dt * (I.aktiv ? fart : 1)); aka.stilla += dt;
+        const a = R.along(aka.pts, aka.d); if (aka.satt) aka.satt(a, aka.v / 3.4, t, dt); else V.Gustav.place(a.x, a.z, a.ang, aka.v / 3.4, t, dt, false);
+        Scene.cam.fly = null; Scene.cam.tx = a.x; Scene.cam.tz = a.z + 1.5; Scene.cam.td = aka.kd;
+        if (aka.stilla > 5) { UI.film.text(aka.rad); aka.stilla = 0; } else if (aka.v > 1.5 && aka.d > 2) UI.film.text('');
+        if (aka.d >= aka.d1) { const r = aka.res; aka = null; r(); }
+      }
+    }
+  };
+})();

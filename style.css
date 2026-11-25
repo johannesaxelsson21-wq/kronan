@@ -1,0 +1,310 @@
+﻿/* Kronan: mörkt trä, guldkant och pergament. Alla knappar sitter samlade i konsolen längst ner. */
+:root { --tra: #2b2017; --tra2: #3a2c1f; --guld: #c9a24a; --guld2: #f2cf5a; --perg: #eadfc4; --svag: #b3a482; --rod: #b8312a; --gron: #7fae3a; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #e6d7b8; font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif; font-variant-numeric: lining-nums; color: var(--perg); user-select: none; -webkit-user-select: none; }
+#view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#view:active { cursor: grabbing; }
+button { font-family: inherit; cursor: pointer; }
+#ui { position: fixed; inset: 0; pointer-events: none; }
+#ui > * { pointer-events: none; }
+#datum, #konsol, #meny { opacity: 0; transition: opacity 0.9s; }
+#ui.spel #datum, #ui.spel #konsol, #ui.spel #meny { opacity: 1; pointer-events: auto; }
+#datum, #meny button { background: linear-gradient(180deg, var(--tra2), var(--tra)); border: 1px solid #1a130d; box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.55) inset, 0 3px 12px rgba(0, 0, 0, 0.5); border-radius: 8px; }
+
+/* datum och titel uppe till vänster, menyn uppe till höger */
+#datum { position: absolute; left: 12px; top: 10px; padding: 6px 15px 7px; }
+#dat-ar { font-size: 20px; letter-spacing: 0.03em; color: var(--guld2); text-shadow: 0 1px 0 #000; }
+#dat-titel { font-size: 12.5px; color: var(--svag); margin-top: 1px; font-style: italic; }
+#dat-tron { font-size: 11.5px; color: #cdbf9f; margin-top: 3px; padding-top: 3px; border-top: 1px solid rgba(201, 162, 74, 0.3); }
+#dat-tron.fara { color: #ff9c8c; }
+#meny { position: absolute; right: 12px; top: 10px; display: flex; gap: 6px; }
+#meny button { width: 38px; height: 38px; padding: 6px; }
+#meny svg { width: 100%; height: 100%; }
+#m-ljud.av .vag { display: none; } #m-ljud.av { opacity: 0.6; }
+
+/* Nertill: flera små rutor i stället för en stor. Nästa steg, den runda knappen, och en ruta per slags tillgång. */
+#konsol { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; align-items: flex-end; justify-content: center; gap: 8px; background: none; border: 0; box-shadow: none; border-radius: 0; pointer-events: none !important; }
+#ui.spel #konsol > * { pointer-events: auto; }
+#uppdrag, #kort { background: linear-gradient(180deg, rgba(60, 46, 33, 0.97), rgba(43, 32, 23, 0.97)); border: 1px solid #1a130d; box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.5) inset, 0 3px 12px rgba(0, 0, 0, 0.5); border-radius: 8px; }
+
+/* nästa steg i historien */
+#uppdrag { width: 226px; flex: none; padding: 7px 10px 9px; box-sizing: border-box; display: flex; flex-direction: column; }
+#upp-akt { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--svag); }
+#upp-titel { font-size: 15.5px; line-height: 1.2; margin: 2px 0 6px; color: #fff7df; }
+#upp-kost { display: flex; flex-wrap: wrap; gap: 4px; min-height: 22px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; padding: 1px 8px 1px 4px; border-radius: 12px; background: rgba(0, 0, 0, 0.4); color: #e0a99c; border: 1px solid rgba(255, 255, 255, 0.08); }
+.chip svg { width: 17px; height: 17px; }
+.chip.ok { color: #d6efae; border-color: rgba(127, 174, 58, 0.6); }
+.plats { font-size: 13px; color: var(--guld2); font-style: italic; }
+#upp-bar { height: 4px; background: rgba(0, 0, 0, 0.5); border-radius: 3px; margin: 7px 0 7px; overflow: hidden; }
+#upp-fyll { height: 100%; width: 0; background: linear-gradient(90deg, #8a6a1f, var(--guld2)); transition: width 0.25s; }
+#upp-knapp, .ruta-in button, .filmknapp, #berattar button { width: 100%; padding: 7px 10px; font-size: 16.5px; letter-spacing: 0.04em; color: #2b1c08; background: linear-gradient(180deg, #f7dc7a, #c9992e); border: 1px solid #5d430f; border-radius: 6px; box-shadow: 0 2px 0 #5d430f, 0 0 0 1px rgba(255, 255, 255, 0.35) inset; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4); }
+#upp-knapp { margin-top: auto; padding: 5px 10px; font-size: 15.5px; }
+#upp-knapp:disabled { filter: grayscale(0.85) brightness(0.6); cursor: default; }
+#upp-knapp:not(:disabled):hover, .ruta-in button:hover, .filmknapp:hover, #berattar button:hover { filter: brightness(1.1); }
+#upp-knapp:active:not(:disabled) { transform: translateY(2px); box-shadow: none; }
+#uppdrag.redo { box-shadow: 0 0 0 2px var(--guld2) inset, 0 0 16px rgba(242, 207, 90, 0.5); animation: glod 1.5s ease-in-out infinite; }
+#uppdrag.val #upp-knapp { animation: glod 0.9s ease-in-out infinite; background: linear-gradient(180deg, #ff9b7a, #b8312a); color: #fff; text-shadow: 0 1px 0 #5a120d; }
+@keyframes glod { 50% { box-shadow: 0 0 0 2px var(--guld2) inset, 0 0 26px rgba(242, 207, 90, 0.9); } }
+
+/* den runda knappen med fartmätaren står för sig själv */
+#akwrap { width: 104px; flex: none; text-align: center; position: relative; display: flex; flex-direction: column; align-items: center; }
+#ak { position: relative; width: 90px; height: 90px; border-radius: 50%; border: 2px solid #1a130d; background: radial-gradient(circle at 50% 35%, #5d4631, #2b2017 70%); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55), 0 0 0 2px rgba(201, 162, 74, 0.6) inset; color: #fff7df; font-size: 18px; line-height: 1.05; letter-spacing: 0.04em; touch-action: manipulation; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#ak svg { position: absolute; inset: -2px; width: 90px; height: 90px; transform: rotate(-90deg); }
+#ak .spar { fill: none; stroke: rgba(0, 0, 0, 0.45); stroke-width: 9; }
+#ak .ring { fill: none; stroke: var(--guld2); stroke-width: 9; stroke-linecap: round; transition: stroke-dashoffset 0.12s linear; }
+#ak:active { transform: scale(0.95); }
+#ak-txt { position: relative; text-shadow: 0 2px 2px #000; }
+#ak-hint { font-size: 9.5px; color: #e9dcc0; margin-top: 3px; letter-spacing: 0.12em; text-shadow: 0 1px 2px #000, 0 0 4px #000; }
+#fullx { position: relative; display: block; height: 14px; margin-top: 1px; font-size: 12.5px; letter-spacing: 0.02em; color: var(--guld2); text-shadow: 0 1px 2px #000; pointer-events: none; }
+#handl { display: flex; gap: 6px; flex: none; align-self: flex-end; padding: 7px 8px 6px; background: linear-gradient(180deg, rgba(60, 46, 33, 0.97), rgba(43, 32, 23, 0.97)); border: 1px solid #1a130d; box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.5) inset, 0 3px 12px rgba(0, 0, 0, 0.5); border-radius: 8px; }
+#handl:empty { display: none; }
+.hk { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 58px; padding: 0; border: 0; background: none; color: #e9dcc0; }
+.hk-b { position: relative; width: 52px; height: 52px; padding: 10px; box-sizing: border-box; border-radius: 9px; border: 1px solid #1a130d; background: radial-gradient(circle at 50% 30%, #6a5239, #3a2c1f 75%); box-shadow: 0 0 0 2px var(--guld2) inset, 0 2px 6px rgba(0, 0, 0, 0.5); overflow: hidden; display: block; }
+.hk-b svg { width: 100%; height: 100%; display: block; }
+.hk:hover .hk-b { filter: brightness(1.15); }
+.hk-v { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: rgba(15, 10, 6, 0.8); pointer-events: none; }
+.hk-s { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: normal; color: #fff7df; text-shadow: 0 1px 2px #000, 0 0 5px #000; pointer-events: none; }
+.hk-n { position: absolute; right: 4px; top: 1px; font-size: 10.5px; text-decoration: none; color: #e9dcc0; text-shadow: 0 1px 1px #000; pointer-events: none; }
+.hk-t { font-size: 11.5px; letter-spacing: 0.03em; text-shadow: 0 1px 2px #000; }
+.hk.redo .hk-b { animation: redo 1.8s ease-in-out infinite; }
+@keyframes redo { 50% { box-shadow: 0 0 0 2px #fff3b8 inset, 0 0 14px rgba(242, 207, 90, 0.85); } }
+.hk.vilar .hk-b { box-shadow: 0 0 0 1px #4a3a2b inset, 0 2px 6px rgba(0, 0, 0, 0.5); }
+.hk.vilar { cursor: default; color: #a99b7f; }
+.hk.verkar .hk-b { box-shadow: 0 0 0 2px #b9e27c inset, 0 0 12px rgba(185, 226, 124, 0.8); }
+.hk.verkar .hk-s { color: #d9f5ae; }
+#akwrap.full #ak { box-shadow: 0 0 22px rgba(242, 207, 90, 0.95), 0 0 0 3px var(--guld2) inset; }
+#akwrap.full #ak .ring { stroke: #fff3b8; }
+
+/* Flikar med tillgången i, och under dem den valda flikens kort. Få och stora saker: bild, namn, vad nästa köp ger, och en knapp med priset. */
+#baser { flex: 0 1 auto; min-width: 0; display: flex; flex-direction: column; background: none; }
+#flikar { display: flex; gap: 4px; padding: 0 8px; align-items: flex-end; }
+.flik { position: relative; display: flex; align-items: baseline; gap: 6px; height: 34px; padding: 0 14px 0 10px; border: 1px solid #1a130d; border-bottom: 0; border-radius: 9px 9px 0 0; background: linear-gradient(180deg, #33281e, #2a2018); color: #a99b7f; white-space: nowrap; box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.25) inset; }
+.flik > svg { width: 20px; height: 20px; align-self: center; flex: none; opacity: 0.75; }
+.flik > b { font-size: 18px; font-weight: normal; }
+.flik .fl-s { font-size: 12.5px; }
+.flik > i { font-size: 13px; font-style: normal; color: #8ea66a; }
+.flik em { font-style: normal; font-size: 12.5px; color: #d98a7c; margin-left: 4px; } .flik em b { font-weight: normal; }
+.flik:hover { color: #d9cdb0; }
+.flik.vald { height: 38px; background: linear-gradient(180deg, #4a3a29, #3a2c1f); color: #fff7df; box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.55) inset, 0 -2px 0 var(--guld2) inset; }
+.flik.vald > svg { opacity: 1; } .flik.vald > i { color: #b9d58a; }
+.flik.fullt > b, .flik.fullt .fl-s { color: var(--guld2); }
+.prick { display: none; position: absolute; right: 4px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--guld2); box-shadow: 0 0 6px var(--guld2); }
+.flik.kan .prick { display: block; animation: pulse 1.4s ease-in-out infinite; }
+.sida { display: grid; grid-template-rows: repeat(var(--rader, 2), auto); grid-auto-flow: column; grid-auto-columns: var(--bredd, 196px); gap: 5px; padding: 8px; min-height: 113px; box-sizing: border-box; align-content: start;
+  background: linear-gradient(180deg, rgba(58, 44, 31, 0.97), rgba(43, 32, 23, 0.97)); border: 1px solid #1a130d; box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.5) inset, 0 3px 12px rgba(0, 0, 0, 0.5); border-radius: 8px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #5a4634 transparent; }
+.sida.dold { display: none; }
+/* ett kort: lugnt när man inte har råd, guldknapp när man har */
+.bas { position: relative; padding: 6px 8px 8px 8px; box-sizing: border-box; cursor: pointer; border-radius: 7px; border: 1px solid #1a130d; background: linear-gradient(180deg, #3a2e23, #30261c); color: #a99b7f; overflow: hidden; white-space: nowrap; transition: background 0.12s; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04) inset; }
+.bas:not(.ej) { background: linear-gradient(180deg, #54412c, #453524); color: #f4e9cd; box-shadow: 0 0 0 1px rgba(242, 207, 90, 0.35) inset; }
+.bas:not(.ej):hover { background: linear-gradient(180deg, #614b33, #503d29); }
+.bas.ej:hover { background: linear-gradient(180deg, #41342a, #362b20); }
+.bas:active { transform: translateY(1px); }
+.k-topp { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.k-ikon { width: 22px; height: 22px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(0, 0, 0, 0.32); color: #cbb98f; }
+.k-ikon svg { width: 14px; height: 14px; display: block; }
+.bas:not(.ej) .k-ikon { color: var(--guld2); }
+.k-namn { flex: 1 1 auto; min-width: 0; font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; }
+.k-niva { flex: none; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 10px; background: rgba(0, 0, 0, 0.35); font-size: 12px; font-weight: normal; line-height: 20px; text-align: center; color: #fff7df; text-shadow: 0 1px 1px #000, 0 0 3px #000; }
+.k-rad { display: flex; align-items: center; gap: 6px; margin-top: 5px; min-width: 0; }
+.k-ger { flex: 1 1 auto; min-width: 0; font-size: 13px; color: #8ea66a; overflow: hidden; text-overflow: ellipsis; }
+.k-ger svg { width: 14px; height: 14px; vertical-align: -3px; margin: 0 2px 0 1px; }
+.bas:not(.ej) .k-ger { color: #b9d58a; }
+.bas.snart .k-ger { color: var(--guld2); }
+.k-pris { flex: none; display: flex; align-items: center; gap: 4px; height: 22px; padding: 0 9px 0 6px; border-radius: 11px; font-size: 13.5px; background: rgba(0, 0, 0, 0.3); color: #8f8268; }
+.k-pris svg { width: 15px; height: 15px; opacity: 0.55; }
+.bas:not(.ej) .k-pris { background: linear-gradient(180deg, #f7dc7a, #c9992e); color: #2b1c08; box-shadow: 0 1px 0 #5d430f; }
+.bas:not(.ej) .k-pris svg { opacity: 1; }
+.bas.fogde .k-niva { box-shadow: 0 0 0 1.5px var(--rod); }
+.bas.last .k-ger, .bas.stopp .k-ger { color: #b3a482; }
+.bas.skatt:not(.ej) { background: linear-gradient(180deg, #4f6b34, #3f5629); box-shadow: 0 0 0 1px rgba(185, 226, 124, 0.45) inset; color: #f0f7e2; }
+.bas.skatt:not(.ej):hover { background: linear-gradient(180deg, #5b7a3c, #496330); }
+.bas.skatt:not(.ej) .k-ger { color: #dff2bd; }
+.bas.skatt.pagar { background: linear-gradient(180deg, #3b4730, #313b28); color: #cfdcc0; cursor: default; box-shadow: none; }
+.bas.skatt .bas-bar { height: 3px; } .bas.skatt .bas-bar i { background: #b9e27c; transition: none; }
+.bas.stopp { background: linear-gradient(180deg, #46251f, #391d18); color: #e9b9ad; }
+.bas.stopp .k-ger { color: #e9b9ad; }
+.bas.dubbel { animation: glod 1.3s ease-in-out infinite; }
+.bas.vald { outline: 1px solid #a8976f; outline-offset: -1px; }
+.bas.marknad { background: linear-gradient(180deg, #7a6026, #614b1c) !important; color: #fff7df !important; outline: 2px solid var(--guld2); outline-offset: -2px; animation: glod 0.8s ease-in-out infinite; }
+.bas.marknad .k-ger { color: #fff3b8 !important; }
+.pil.marknad { width: 46px; height: 46px; animation: guppa 0.6s ease-in-out infinite; filter: drop-shadow(0 0 8px #ffe680) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
+.bas-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(0, 0, 0, 0.38); }
+.bas-bar i { display: block; height: 100%; background: linear-gradient(90deg, #7fae3a, #c9e88a); width: 0; transition: width 0.1s linear; }
+.bas.ej .bas-bar i { background: linear-gradient(90deg, #5f7f34, #9ab86a); }
+.fl-m { position: absolute; left: 6px; right: 6px; bottom: 2px; height: 3px; border-radius: 2px; background: rgba(0, 0, 0, 0.4); overflow: hidden; text-decoration: none; }
+.fl-m u { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #8a6a1f, var(--guld2)); transition: width 0.2s linear; text-decoration: none; }
+.flyt.liten { font-size: 14px; }
+/* kortet som säger exakt vad en knapp ger */
+#kort { position: fixed; z-index: 7; width: 268px; box-sizing: border-box; padding: 9px 12px 10px; color: #eadfc4; font-size: 13.5px; line-height: 1.38; pointer-events: none !important; }
+#kort b { font-size: 16px; font-weight: normal; color: #fff7df; }
+#kort .kort-n { float: right; font-size: 12px; color: var(--svag); margin-top: 3px; }
+#kort p { margin: 5px 0 0; }
+#kort .kort-g { color: #b9d58a; }
+#kort .kort-x { color: #fff3b8; }
+#kort .kort-f { color: #ff9c8c; }
+#kort .kort-p { color: var(--guld2); display: flex; align-items: center; gap: 4px; }
+#kort .kort-h { font-size: 11.5px; color: #a8976f; }
+#kort svg { width: 15px; height: 15px; vertical-align: -3px; }
+.skaka { animation: skaka 0.3s; }
+@keyframes skaka { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+/* pilar över baser, siffror som stiger */
+.pil { position: absolute; left: 0; top: 0; width: 34px; height: 34px; padding: 0; border: 0; background: none; pointer-events: auto; animation: guppa 1s ease-in-out infinite; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
+.pil svg { width: 100%; height: 100%; }
+.pil.dubbel svg path { fill: #ff7a5a; stroke: #5a120d; }
+@keyframes guppa { 50% { margin-top: -7px; } }
+.flyt { position: absolute; font-size: 19px; color: #fff3b8; text-shadow: 0 2px 2px #000, 0 0 6px #000; transform: translate(-50%, -50%); animation: stig 1.9s ease-out forwards; white-space: nowrap; }
+.flyt.mark { color: #e8eef5; }
+.flyt.nej { color: #ffb4a6; font-size: 17px; }
+@keyframes stig { 60% { opacity: 1; } to { transform: translate(-50%, -105px); opacity: 0; } }
+.flyt.tr { position: fixed; display: flex; align-items: center; gap: 3px; font-size: 18px; animation: stigkort 0.95s ease-out forwards; z-index: 4; }
+.flyt.tr svg { width: 18px; height: 18px; }
+.flyt.tr.liten { font-size: 13px; color: #d9f5ae; animation-name: stigliten; }
+.flyt.tr.liten.mark { color: #fff3b8; }
+@keyframes stigliten { 50% { opacity: 1; } to { transform: translate(-50%, -34px); opacity: 0; } }
+.flyt.tr.man { color: #ffe9c0; }
+@keyframes stigkort { 50% { opacity: 1; } to { transform: translate(-50%, -78px); opacity: 0; } }
+#ak.puls { animation: puls 0.16s ease-out; }
+@keyframes puls { 45% { transform: scale(1.09); } }
+#text { position: absolute; left: 0; right: 0; bottom: 230px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.text { max-width: 640px; padding: 9px 20px; font-size: 17px; line-height: 1.4; text-align: center; color: #fff7df; background: rgba(20, 14, 9, 0.82); border-radius: 6px; border: 1px solid rgba(201, 162, 74, 0.5); animation: in 0.6s; transition: opacity 0.9s; }
+.text.stor { font-size: 21px; }
+.text.bort, .skylt.bort { opacity: 0; }
+.skylt { padding: 5px 20px; font-size: 20px; color: #2b1c08; background: linear-gradient(180deg, #f7dc7a, #c9992e); border: 1px solid #5d430f; border-radius: 5px; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5); animation: in 0.35s; transition: opacity 0.8s; }
+@keyframes in { from { opacity: 0; transform: translateY(10px); } }
+
+/* berättelsen: står kvar tills man trycker Fortsätt */
+#berattar { position: absolute; left: 50%; transform: translateX(-50%); bottom: 230px; width: min(620px, calc(100vw - 30px)); box-sizing: border-box; padding: 11px 18px 12px; pointer-events: auto !important; background: #efe3c6; color: #2b2017; border: 2px solid #5a4634; border-radius: 8px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55), 0 0 0 3px rgba(201, 162, 74, 0.5) inset; z-index: 5; }
+#berattar.in { animation: berin 0.45s; }
+@keyframes berin { from { opacity: 0; transform: translate(-50%, 12px); } }
+.ber-r { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.18em; color: #8a6a45; }
+#berattar p { margin: 5px 0 0; font-size: 16.5px; line-height: 1.42; }
+#berattar p.ber-x { font-size: 14.5px; color: #4a3b2a; padding-left: 10px; border-left: 3px solid var(--guld); margin-top: 8px; }
+#berattar button { display: block; width: auto; margin: 10px 0 0 auto; padding: 5px 24px; font-size: 15.5px; }
+
+/* pekande rutor för de första stegen */
+.tip { position: fixed; padding: 7px 13px; font-size: 14.5px; color: #2b1c08; background: #fff3c9; border: 1px solid #8a6a1f; border-radius: 6px; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5); white-space: nowrap; z-index: 6; animation: guppa 1.2s ease-in-out infinite; }
+.tip::after { content: ''; position: absolute; left: var(--pil, 50%); bottom: -8px; margin-left: -8px; border: 8px solid transparent; border-top-color: #fff3c9; border-bottom: 0; }
+
+/* rutor */
+#ruta { position: fixed; inset: 0; background: rgba(12, 8, 5, 0.62); display: flex; align-items: center; justify-content: center; pointer-events: auto !important; z-index: 20; }
+.ruta-in { width: min(600px, 92vw); max-height: 88vh; overflow-y: auto; padding: 22px 26px 20px; background: #efe3c6; color: #2b2017; border: 2px solid #5a4634; border-radius: 8px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 0 4px rgba(201, 162, 74, 0.5) inset; }
+.ruta-in h2 { margin: 0 0 10px; font-weight: normal; font-size: 27px; letter-spacing: 0.02em; }
+.ruta-in h3 { margin: 16px 0 4px; font-weight: normal; font-size: 12px; text-transform: uppercase; letter-spacing: 0.2em; color: #8a6a45; }
+.ruta-in p { font-size: 16.5px; line-height: 1.5; margin: 7px 0; }
+.ruta-in p.mal { font-size: 18px; color: #6b3a12; margin-top: 12px; }
+.ruta-in .svag { color: #7a6a52; font-style: italic; font-size: 15px; }
+.ruta-in button { margin-top: 12px; }
+.ruta-in button.fara { background: linear-gradient(180deg, #e8a090, #b8312a); color: #fff; text-shadow: none; }
+.hur { margin: 14px 0 4px; padding: 10px 12px; background: rgba(43, 32, 23, 0.08); border-radius: 6px; display: grid; gap: 9px; }
+.hur > div { display: grid; grid-template-columns: 46px 1fr; gap: 10px; align-items: center; font-size: 14.5px; line-height: 1.38; }
+.hur-i { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 35%, #5d4631, #2b2017 70%); color: #fff7df; font-size: 14px; box-shadow: 0 0 0 2px var(--guld) inset; }
+.hur-i svg { width: 26px; height: 26px; }
+.krono { max-height: 54vh; overflow-y: auto; padding-right: 8px; }
+.regent { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 16px; margin: 6px 0 10px; }
+.reg { display: flex; align-items: baseline; gap: 7px; font-size: 14.5px; color: #8a7a62; padding: 2px 0; }
+.reg b { font-weight: normal; } .reg span { font-size: 12px; } .reg i { font-size: 11px; color: #8a6a1f; margin-left: auto; }
+.reg-k { width: 18px; height: 16px; } .reg-k svg { width: 18px; height: 18px; vertical-align: -4px; }
+.reg.nu { color: #2b2017; } .reg.nu b { font-weight: bold; }
+.fick { display: flex; gap: 8px; margin: 12px 0 4px; } .fick .chip { background: #2b2017; font-size: 17px; padding: 4px 12px 4px 6px; }
+.arv { display: flex; align-items: center; gap: 12px; margin: 14px 0; padding: 10px 14px; background: #2b2017; color: var(--guld2); border-radius: 6px; }
+.arv svg { width: 44px; height: 44px; } .arv b { font-size: 34px; font-weight: normal; } .arv span { color: var(--perg); font-size: 14px; }
+
+/* filmen */
+#film { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+#film .rand { position: absolute; left: 0; right: 0; height: 0; background: #000; transition: height 1.2s; }
+#film .upp { top: 0; } #film .ner { bottom: 0; }
+#film.pa .rand { height: 10vh; }
+#film-plats { position: absolute; left: 5vw; top: calc(10vh + 22px); font-size: 22px; letter-spacing: 0.16em; text-transform: uppercase; color: #fff; text-shadow: 0 2px 6px #000; opacity: 0; transition: opacity 1s; }
+#film-text { position: absolute; left: 10vw; right: 10vw; bottom: calc(10vh + 26px); text-align: center; font-size: 25px; line-height: 1.35; color: #fff; text-shadow: 0 2px 8px #000, 0 0 3px #000; opacity: 0; transition: opacity 0.9s; }
+#film-plats.syns, #film-text.syns { opacity: 1; }
+#film-text.mitt { bottom: 44vh; }
+#film-text .titel { display: block; font-size: 84px; letter-spacing: 0.22em; text-transform: uppercase; color: #e8c040; text-shadow: 0 4px 24px #000; margin-left: 0.22em; }
+#film-text .under { display: block; font-size: 19px; letter-spacing: 0.2em; color: #d9c9a3; margin-top: 6px; }
+#film-tal { position: absolute; left: 0; right: 0; top: 30vh; text-align: center; font-size: 120px; color: #e9dcc0; text-shadow: 0 4px 20px #000; opacity: 0; transition: opacity 1s; }
+#film-tal.syns { opacity: 0.92; }
+#film-svart { position: absolute; inset: 0; background: #000; opacity: 0; z-index: 0; }
+#film .rand, #film-plats, #film-text, #film-tal, #film-knapp { z-index: 2; }
+#film-knapp { position: absolute; left: 50%; bottom: calc(10vh + 78px); transform: translateX(-50%); pointer-events: auto; }
+.filmknapp { width: auto; min-width: 220px; font-size: 21px; padding: 12px 26px; animation: glod 1.3s ease-in-out infinite; }
+.filmknapp.rund { min-width: 0; width: 112px; height: 112px; border-radius: 50%; padding: 0; font-size: 27px; color: #fff7df; text-shadow: 0 2px 2px #000; border: 2px solid #1a130d; background: radial-gradient(circle at 50% 35%, #56412d, #2b2017 70%); box-shadow: 0 5px 16px rgba(0, 0, 0, 0.55), 0 0 0 3px var(--guld2) inset; }
+.filmknapp.rund:active { transform: scale(0.94); }
+
+#load { position: fixed; inset: 0; background: #14100c; display: flex; align-items: center; justify-content: center; transition: opacity 1.2s; z-index: 50; }
+#load.gone { opacity: 0; pointer-events: none; }
+.load-t { color: #d9c9a3; letter-spacing: 0.28em; text-transform: uppercase; font-size: 15px; margin-top: 18px; text-align: center; }
+.load-crown { width: 54px; height: 34px; margin: 0 auto; background: #c9a24a; clip-path: polygon(0 100%, 0 20%, 22% 55%, 50% 0, 78% 55%, 100% 20%, 100% 100%); animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.45; } }
+@media (max-width: 900px) { #konsol { flex-wrap: wrap; } #baser { flex-basis: 100%; order: 3; } }
+
+/* under ett uppdrag: den runda knappen är spelarens del i det som sker */
+#akwrap.driv #ak { background: radial-gradient(circle at 50% 35%, #80602c, #35260f 70%); box-shadow: 0 0 18px rgba(242, 207, 90, 0.8), 0 0 0 3px var(--guld2) inset; }
+#akwrap.strid #ak { background: radial-gradient(circle at 50% 35%, #94392b, #3c1510 70%); box-shadow: 0 0 22px rgba(236, 104, 70, 0.9), 0 0 0 3px #f2a47c inset; }
+#akwrap.driv #ak-txt { font-size: 17px; }
+#akwrap.driv #ak-hint { color: var(--guld2); letter-spacing: 0.04em; font-size: 10.5px; white-space: nowrap; }
+#akwrap.strid #ak-hint { color: #ffb9a0; }
+#upp-kost .chip.strid { color: #ffc2ad; border-color: #a5503c; background: rgba(150, 50, 34, 0.45); margin-left: 6px; }
+
+/* ---- pekskärm ---- */
+#ui button, .bas, .flik { touch-action: manipulation; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+
+/* ---- telefon på höjden: uppdraget och den runda knappen i en rad, korten under, handlingarna för tummen till höger ---- */
+@media (max-width: 720px) {
+  #datum { left: 8px; top: calc(8px + env(safe-area-inset-top)); padding: 4px 10px 5px; max-width: calc(100vw - 200px); box-sizing: border-box; }
+  #dat-ar { font-size: 16px; } #dat-titel { font-size: 11px; } #dat-tron { font-size: 10.5px; margin-top: 2px; padding-top: 2px; }
+  #meny { right: 8px; top: calc(8px + env(safe-area-inset-top)); gap: 4px; } #meny button { width: 33px; height: 33px; padding: 5px; }
+  #konsol { left: 6px; right: 6px; bottom: calc(6px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "upp ak" "baser baser"; gap: 6px; align-items: end; }
+  #uppdrag { grid-area: upp; width: auto; padding: 6px 9px 8px; min-height: 96px; }
+  #upp-akt { font-size: 9px; letter-spacing: 0.1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #upp-titel { font-size: 14.5px; margin: 1px 0 4px; } #upp-bar { margin: 5px 0 6px; } #upp-knapp { font-size: 15.5px; padding: 7px 10px; }
+  .chip { font-size: 12.5px; }
+  #akwrap { grid-area: ak; width: 110px; align-self: center; }
+  #ak { width: 100px; height: 100px; font-size: 19.5px; } #ak svg { width: 100px; height: 100px; }
+  #ak-hint { font-size: 9px; letter-spacing: 0.08em; margin-top: 2px; } #akwrap.driv #ak-hint { font-size: 9px; white-space: normal; line-height: 1.1; }
+  #handl { position: absolute; right: 0; bottom: 100%; margin-bottom: 6px; flex-direction: column; gap: 5px; padding: 6px 5px 4px; }
+  .hk { width: 54px; } .hk-b { width: 48px; height: 48px; padding: 9px; } .hk-n { display: none; } .hk-t { font-size: 10.5px; }
+  #baser { grid-area: baser; min-width: 0; }
+  #flikar { padding: 0 4px; gap: 3px; }
+  .flik { flex: 1 1 0; min-width: 0; padding: 0 8px 0 6px; gap: 4px; height: 32px; overflow: hidden; }
+  .flik.vald { height: 36px; flex-grow: 1.5; }
+  .flik > svg { width: 18px; height: 18px; } .flik > b { font-size: 16px; } .flik .fl-s, .flik em { display: none; } .flik > i { font-size: 11.5px; }
+  .sida { min-height: 0; padding: 6px; scroll-snap-type: x proximity; } .bas { scroll-snap-align: start; padding: 6px 7px 8px; }
+  .k-namn { font-size: 14.5px; } .k-ger { font-size: 12.5px; } .k-pris { font-size: 13px; padding: 0 7px 0 5px; }
+  #kort { left: 8px !important; right: 8px; width: auto; top: auto !important; bottom: var(--kortb, 300px); font-size: 13px; }
+  #text { left: 8px; right: 66px; } .text { max-width: 100%; box-sizing: border-box; font-size: 15px; padding: 7px 12px; } .text.stor { font-size: 17px; }
+  .skylt { font-size: 16px; padding: 4px 14px; text-align: center; }
+  #berattar { bottom: calc(8px + env(safe-area-inset-bottom)) !important; width: calc(100vw - 16px); max-height: 74vh; overflow-y: auto; padding: 10px 13px 11px; }
+  #berattar p { font-size: 15.5px; line-height: 1.38; } #berattar p.ber-x { font-size: 13.5px; } #berattar button { padding: 9px 30px; font-size: 16.5px; }
+  .tip { white-space: normal; max-width: 70vw; font-size: 13.5px; }
+  .flyt { font-size: 16px; } .flyt.liten { font-size: 12.5px; }
+  .ruta-in { padding: 16px 16px 14px; max-height: 86vh; box-sizing: border-box; } .ruta-in h2 { font-size: 23px; } .ruta-in p { font-size: 15.5px; line-height: 1.42; } .ruta-in p.mal { font-size: 16.5px; }
+  .ruta-in button { padding: 10px; }
+  .hur { padding: 8px 9px; gap: 7px; } .hur > div { font-size: 13.5px; grid-template-columns: 38px 1fr; gap: 8px; } .hur-i { width: 36px; height: 36px; font-size: 12px; } .hur-i svg { width: 21px; height: 21px; }
+  .regent { grid-template-columns: 1fr; }
+  #film.pa .rand { height: 7vh; }
+  #film-plats { left: 5vw; right: 5vw; top: calc(7vh + 12px); font-size: 13.5px; letter-spacing: 0.12em; }
+  #film-text { left: 5vw; right: 5vw; bottom: calc(7vh + 18px); font-size: 18.5px; line-height: 1.32; }
+  #film-text.mitt { bottom: 46vh; }
+  #film-text .titel { font-size: 46px; letter-spacing: 0.16em; margin-left: 0.16em; } #film-text .under { font-size: 13.5px; letter-spacing: 0.12em; }
+  #film-tal { font-size: 86px; top: 24vh; }
+  #film-knapp { bottom: calc(7vh + 128px); }
+  .filmknapp { min-width: 190px; font-size: 20px; padding: 14px 26px; } .filmknapp.rund { width: 124px; height: 124px; }
+}
+/* ---- telefon på bredden: allt i en rad, lågt ---- */
+@media (max-height: 520px) and (min-width: 721px) {
+  #konsol { flex-wrap: nowrap; gap: 6px; left: calc(6px + env(safe-area-inset-left)); right: calc(6px + env(safe-area-inset-right)); bottom: 5px; }
+  #baser { flex: 1 1 0; order: 0; }
+  #uppdrag { width: 186px; padding: 5px 8px 7px; } #upp-titel { font-size: 14px; margin: 1px 0 4px; } #upp-akt { font-size: 9px; letter-spacing: 0.08em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } #upp-bar { margin: 4px 0 5px; }
+  #akwrap { width: 90px; } #ak { width: 84px; height: 84px; font-size: 17px; } #ak svg { width: 84px; height: 84px; } #ak-hint { font-size: 8.5px; letter-spacing: 0.05em; }
+  #handl { flex-direction: column; padding: 4px; gap: 4px; } .hk { width: auto; } .hk-b { width: 36px; height: 36px; padding: 6px; } .hk-t, .hk-n { display: none; } .hk-s { font-size: 15px; }
+  .sida { min-height: 0; padding: 6px; } #flikar { padding: 0 4px; gap: 3px; }
+  .flik { flex: 1 1 0; min-width: 0; overflow: hidden; height: 30px; padding: 0 8px 0 6px; gap: 4px; } .flik.vald { height: 33px; flex-grow: 1.4; } .flik .fl-s, .flik em { display: none; } .flik > b { font-size: 16px; } .flik > i { font-size: 12px; }
+  #datum { top: 6px; padding: 3px 10px 4px; } #dat-ar { font-size: 15px; } #dat-titel { font-size: 11px; } #dat-tron { font-size: 10.5px; margin-top: 1px; padding-top: 1px; }
+  #meny { top: 6px; } #meny button { width: 32px; height: 32px; padding: 5px; }
+  #berattar { bottom: 6px !important; max-height: 88vh; overflow-y: auto; padding: 8px 14px 9px; } #berattar p { font-size: 15px; line-height: 1.35; } #berattar p.ber-x { font-size: 13.5px; margin-top: 6px; }
+  .ruta-in { max-height: 92vh; padding: 12px 18px; } .ruta-in h2 { font-size: 22px; margin-bottom: 6px; } .ruta-in p { font-size: 15px; line-height: 1.4; margin: 5px 0; } .hur { gap: 6px; padding: 7px 10px; margin: 8px 0 2px; } .hur > div { font-size: 13.5px; } .hur-i { width: 34px; height: 34px; font-size: 12px; }
+  #film-text { font-size: 19px; left: 8vw; right: 8vw; bottom: calc(10vh + 12px); } #film-plats { font-size: 15px; top: calc(10vh + 10px); }
+  #film-text .titel { font-size: 54px; } #film-tal { font-size: 80px; top: 22vh; }
+  #film-knapp { bottom: calc(10vh + 52px); } .filmknapp { padding: 9px 24px; font-size: 19px; } .filmknapp.rund { width: 96px; height: 96px; font-size: 23px; }
+  .text { font-size: 15px; padding: 6px 14px; }
+}
