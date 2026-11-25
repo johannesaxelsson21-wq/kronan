@@ -23,7 +23,7 @@
   // Vad tillgångarna är, varför man får dem och vad de är till för.
   const RES = {
     mark: { namn: 'Mark', rad: 'Mark är pengar. Städer, gruvor och slott ger mark hela tiden. Du bygger ut och betalar nästa steg med den.' },
-    man: { namn: 'Män', get rad() { return G.s.varld === 0 ? 'Män är din armé. Du har dem till två saker: nästa strid, och att driva in skatt, som ger mark. Fler män får du genom att bygga ut platserna som ger män.' : 'Män som följer dig. Du har dem till tre saker: nästa strid, att bygga ut byarna, och att driva in skatt, som ger mark.'; } }
+    man: { namn: 'Män', rad: 'Män är din armé. Du har dem till tre saker: nästa strid, att få fler att sluta upp (platser som ger män byggs ut med män), och att driva in skatt, som ger mark.' }
   };
   // En liten bild för varje slags bas.
   const SLAG = {
@@ -323,7 +323,7 @@
       if (g.las && g.las.indexOf('mark') >= 0) x.push('<b>Mark</b> är pengar. Gruvor och städer ger mark, och den behövs till större uppdrag.');
       const scen = !!(u.scen || u.valScen), sagt = scen && u.sagt || [];          // det scenen just visade sägs inte en gång till i rutan
       if (u.vet && sagt.indexOf('vet') < 0) x.push(u.vet); if (u.vet2 && sagt.indexOf('vet2') < 0) x.push(u.vet2);
-      if (u.id === 'sAbo') x.push('<b>Män</b> är din armé. Du skickar dem ut i strid och för att driva in skatt. Allt bygger du ut med mark, också platserna som ger män.');
+      if (u.id === 'sAbo') x.push('<b>Män</b> är din armé. Platser som ger män bygger du ut med män: de du har får fler att sluta upp. Allt annat kostar mark.');
       if (g.las && g.las.indexOf('konster') >= 0) x.push('Under fliken <b>Förmågor</b> gör du dina bud och tryck bättre. Håll ' + (V.pek ? 'fingret kvar på' : 'pekaren över') + ' ett kort så ser du exakt vad det ger.');
       if (g.las && g.las.indexOf('sold') >= 0) x.push('Nu kan du <b>värva soldater</b> för mark. De får lön, och du får fler män.');
       if (g.x) for (const r in g.x) x.push('Allt som ger ' + (r === 'man' ? 'män' : 'mark') + ' ger nu ' + String(g.x[r]).replace('.', ',') + ' gånger så mycket.');

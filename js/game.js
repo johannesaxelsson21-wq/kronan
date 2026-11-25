@@ -57,10 +57,9 @@
     kanSold() { return !!S.las.sold && S.res.mark >= G.soldPris(); },
     kopSold() { if (!G.kanSold()) return false; S.res.mark -= G.soldPris(); S.sold = (S.sold || 0) + 1; G.ut('sold', { niva: S.sold, dubbel: S.sold % 10 === 0 }); return true; },
     pris(id, L) { const b = P(id), p = b.c0 * Math.pow(b.r, L === undefined ? (S.bas[id] || 0) : L); return p < 1000 ? Math.ceil(p) : p; },
-    // Vad en utbyggnad betalas med. I förspelet är det alltid mark, också för platserna som ger män: marken betalar mat och vapen
-    // åt dem som sluter upp, och män är bara armén (strider och skatt). I Gustavs värld kostar bygderna än så länge män,
-    // eftersom han börjar utan pengar. Det görs om på samma sätt när förspelet sitter (Johannes 2026-11-25).
-    prisRes(id) { return S.varld === 0 ? 'mark' : BAS[id].ger === 'man' ? 'man' : 'mark'; },
+    // Vad en utbyggnad betalas med: män bygger män, allt annat kostar mark. (Johannes prövade tanken att allt skulle kosta mark
+    // natten mot 2026-11-26 och ångrade sig: "Män ska bygga män, det är bättre så".) De män man har får fler att sluta upp.
+    prisRes(id) { return BAS[id].ger === 'man' ? 'man' : 'mark'; },
     rad(id) { const L = S.bas[id] || 0; return (L + 1) % 10 === 0; },             // är nästa nivå en dubbling?
     kanKopa(id) { return !!S.bas[id] && S.res[G.prisRes(id)] >= G.pris(id); },
     kop(id) {

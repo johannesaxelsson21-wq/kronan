@@ -36,7 +36,7 @@
     { id: 'nykoping', namn: 'Nyköping', rad: 'Slott i Södermanland. Bönderna här håller på dig', slag: 'bygd', ger: 'man', p0: 0.4, c0: 8, r: 1.2, borg: 'liten', hamn: 1, kyrka: 1 }          // bara i förspelet: allmogen i Södermanland
   ];
   // Förspelet har egna, små siffror för de baser som finns med.
-  const STURE_BAS = { stockholm: { p0: 0.5, c0: 5 }, vasteras: { p0: 1.2, c0: 25 }, abo: { p0: 0.1, c0: 30 }, nykoping: { p0: 0.15, c0: 100 }, uppsala: { p0: 14, c0: 1200 } };
+  const STURE_BAS = { stockholm: { p0: 0.5, c0: 5 }, vasteras: { p0: 1.2, c0: 25 }, abo: { p0: 0.1, c0: 6 }, nykoping: { p0: 0.15, c0: 20 }, uppsala: { p0: 14, c0: 1200 } };
 
   // Kungens egna förmågor. Var tionde nivå dubblar.
   const KONSTER = [
