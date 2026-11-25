@@ -49,6 +49,18 @@
 
   // Egna handlingar: sådant hjälten gör själv. tid = hur länge verkan varar, vila = hur länge han måste vänta sedan (sekunder).
   // Grunden står i docs/historia.md: talet på kyrkbacken i Mora, breven i kungens registratur, mönstringen i Romfartuna 1521.
+  // Vad den runda knappen heter inför varje steg: det man gör just då för att komma dit (docs/historia.md).
+  // Trycket ger samma sak hela tiden (mark och män). Det är namnet som följer historien. Steg som inte står här: se UI.gorOrd.
+  const GOR = {
+    sVasteras: 'Skicka<br>bud', sAbo: 'Skicka<br>bud', sAllmoge: 'Vinn<br>bönderna', sStaket: 'Kalla<br>män', sVadla: 'Kalla<br>män', sRiv: 'Kalla till<br>möte',
+    sBrannkyrka: 'Kalla<br>män', sTegel: 'Bär<br>tegel', sAsunden: 'Kalla<br>män', sUppsala: 'Skriv till<br>bönderna', sStockholm: 'Mana<br>försvaret',
+    budRattvik: 'Skicka<br>bud', budLeksand: 'Skicka<br>bud', kopparberget: 'Samla<br>dalkarlar', gavle: 'Skicka<br>bud', hedemora: 'Slå<br>mynt',
+    brunnback: 'Kalla<br>män', vasteras: 'Kalla<br>män', uppsala: 'Kalla<br>män', brunkeberg: 'Kalla<br>män', vadstena: 'Skriv<br>brev', stegeborg: 'Kalla<br>män', slotten: 'Kalla<br>män',
+    lubeck: 'Skriv till<br>Lübeck', blockad: 'Rusta<br>skepp', kalmar: 'Kalla<br>män', strangnas: 'Kalla till<br>riksdag', intag: 'Kalla<br>män', finland: 'Rusta<br>skepp',
+    nt: 'Tryck<br>böcker', riksdag: 'Kalla till<br>riksdag', tuna: 'Kalla<br>soldater', kravelen: 'Bygg<br>skepp', kopparberget2: 'Kalla<br>soldater', sala: 'Bryt<br>silver',
+    grevefejden: 'Rusta<br>flottan', gripsholm: 'Bygg<br>slott', bibeln: 'Tryck<br>Bibeln', kisa: 'Kalla<br>soldater', virserum: 'Kalla<br>soldater', arv: 'Kalla till<br>riksdag',
+    fotfolk: 'Värva<br>soldater', vadstenaslott: 'Bygg<br>slott', helsingfors: 'Bygg<br>stad', viborg: 'Rusta<br>flottan'
+  };
   const HANDLINGAR = [
     { id: 'tal', namn: 'Tala till folket', sture: 'Tala till bönderna', kristina: 'Mana försvararna', vad: 'Du talar själv till dem som har samlats. I tjugo sekunder ger allt som ger män tre gånger så mycket.', tid: 20, vila: 60, ger: { man: 3 } },
     { id: 'brev', namn: 'Skriv brev', vad: 'Brev till dem som tar upp skatten åt dig. I tjugo sekunder ger allt som ger mark dubbelt.', tid: 20, vila: 75, ger: { mark: 2 } },
@@ -222,6 +234,6 @@
   }
 
   // UPPDRAG pekar på den värld som spelas just nu (game.js byter): VASA eller STURE.
-  V.DATA = { PLATSER, BASER, KONSTER, HANDLINGAR, UPPDRAG, VASA: UPPDRAG, STURE, STURE_BAS, UPPROR, AKTER, REGENTER };
+  V.DATA = { PLATSER, BASER, KONSTER, HANDLINGAR, GOR, UPPDRAG, VASA: UPPDRAG, STURE, STURE_BAS, UPPROR, AKTER, REGENTER };
   if (typeof module !== 'undefined' && module.exports) module.exports = V.DATA;
 })(typeof window !== 'undefined' ? window : globalThis);

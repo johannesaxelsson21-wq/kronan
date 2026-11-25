@@ -157,8 +157,8 @@
       }
       for (const h of hl) { const r = hrows[h.id], o = G.handl(h.id); r.b.classList.toggle('vilar', o.v > 0 && o.t <= 0); r.b.classList.toggle('verkar', o.t > 0); r.b.classList.toggle('redo', o.v <= 0); r.v.style.height = (o.t > 0 ? 0 : Math.min(100, o.v / h.vila * 100)) + '%'; const s = o.t > 0 ? Math.ceil(o.t) : o.v > 0 ? Math.ceil(o.v) : ''; if (r._s !== s) { r._s = s; r.s.textContent = s; } }
       // medan striden pågår är den runda knappen spelarens del i den
-      { const sk = G.skede(), ord = sk && u ? UI.drivOrd(u, sk) : null, nyckel = ord ? ord[0] : '';
-        if (UI._akOrd !== nyckel) { UI._akOrd = nyckel; $('ak-txt').innerHTML = ord ? ord[0] : 'Skicka<br>bud'; $('ak-hint').textContent = ord ? ord[1] : HALL; $('akwrap').classList.toggle('driv', !!ord); $('akwrap').classList.toggle('strid', !!ord && sk === 'strid'); } }
+      { const sk = G.skede(), ord = sk && u ? UI.drivOrd(u, sk) : null, nyckel = ord ? ord[0] : UI.gorOrd(u);
+        if (UI._akOrd !== nyckel) { UI._akOrd = nyckel; $('ak-txt').innerHTML = nyckel; $('ak-hint').textContent = ord ? ord[1] : HALL; $('akwrap').classList.toggle('driv', !!ord); $('akwrap').classList.toggle('strid', !!ord && sk === 'strid'); } }
       // farten
       const ring = $('ak-ring'), C = 2 * Math.PI * 54; ring.style.strokeDasharray = C; ring.style.strokeDashoffset = C * (1 - S.fart);
       $('akwrap').classList.toggle('full', S.full); $('fullx').textContent = S.full ? 'allt ×' + G.fullX() : '';
@@ -279,6 +279,8 @@
       }
       if (caption) { capT -= 1 / 60; if (capT <= 0) { caption.classList.add('bort'); const c = caption; caption = null; setTimeout(() => c.remove(), 900); } }
     },
+    // Vad den runda knappen heter annars: det man gör inför nästa steg i historien (D.GOR). Som kung tar man upp skatt när inget annat står.
+    gorOrd(u) { const S = G.s; return (u && D.GOR[u.id]) || (S.varld === 1 && S.titel === 'Kung' ? 'Ta upp<br>skatt' : 'Skicka<br>bud'); },
     // Vad den runda knappen heter medan striden pågår: [ordet på knappen, raden under]. På vägen dit heter den som vanligt.
     drivOrd(u, sk) {
       if (sk !== 'strid') return null;
@@ -350,8 +352,8 @@
     // Rutan i början: vem du är, hur läget ser ut och vad du ska göra. Går att ta fram igen med frågetecknet.
     forklara(varld, igen) {
       const hur = varld === 0
-        ? [['Bud', 'Du styr med bud och brev. Varje tryck på <b>Skicka bud</b> ger mark, och när budet når en stad skickas skatten till dig.'], [IK.mark, '<b>Mark</b> är rikets pengar. Städerna ger mark hela tiden.'], [IK.pil, '<b>Bygg ut</b> en stad med knappen, eller ' + KLICKA + ' på den på kartan. Var tionde nivå dubblar.'], [IK.krona, '<b>Nästa steg</b> är historien. Den går vidare när du har råd.']]
-        : [['Bud', 'Varje tryck på <b>Skicka bud</b> ger män. När budet når en by går ännu fler med dig.'], [IK.man, '<b>Män</b> är de som följer dig. Byarna ger män hela tiden, och du behöver dem för att slåss.'], [IK.pil, '<b>Bygg ut</b> en by med knappen, eller ' + KLICKA + ' på den på kartan. Var tionde nivå dubblar.'], [IK.krona, '<b>Nästa steg</b> är historien. Den går vidare när du har folk nog.']];
+        ? [['Bud', 'Den runda knappen är det du gör just nu. Först skickar du bud till din fars slott. Varje tryck ger mark, och knappen byter namn när historien går vidare.'], [IK.mark, '<b>Mark</b> är rikets pengar. Städerna ger mark hela tiden.'], [IK.pil, '<b>Bygg ut</b> en stad med knappen, eller ' + KLICKA + ' på den på kartan. Var tionde nivå dubblar.'], [IK.krona, '<b>Nästa steg</b> är historien. Den går vidare när du har råd.']]
+        : [['Bud', 'Den runda knappen är det du gör just nu. Först skickar du bud till byarna. Varje tryck ger män, och knappen byter namn när historien går vidare.'], [IK.man, '<b>Män</b> är de som följer dig. Byarna ger män hela tiden, och du behöver dem för att slåss.'], [IK.pil, '<b>Bygg ut</b> en by med knappen, eller ' + KLICKA + ' på den på kartan. Var tionde nivå dubblar.'], [IK.krona, '<b>Nästa steg</b> är historien. Den går vidare när du har folk nog.']];
       const text = varld === 0
         ? '<h2>Sverige 1512</h2><p>Du är <b>Sten Sture</b>, nitton år och riddare. Du är inte kung. Sverige har ingen: riket hör till en union med Danmark och Norge, men har inte erkänt unionens kung sedan 1501.</p><p>I kungens ställe styr en riksföreståndare. Det var din far, och nu är han död. Rådet tänker ge hans plats till en man som vill gå Danmarks kung till mötes.</p><p class="mal">Bygg upp dina städer, vinn folket och håll riket.</p>'
         : '<h2>Dalarna 1521</h2><p>Du är <b>Gustav Eriksson</b>, 24 år. Sveriges kung heter nu Kristian II av Danmark, och han lät halshugga din far i Stockholm.</p><p>Dalkarlarna har valt dig till sin ledare. Resten av riket lyder Kristian.</p><p class="mal">Samla folk, ta Kopparberget och driv ut danskarna.</p>';
@@ -365,7 +367,7 @@
       if (!spel) { e.innerHTML = ''; tips.nu = null; return; }
       const forst = S.varld === 0 ? 'stockholm' : 'mora';
       const steg = [
-        ['ak', '#ak', 'Tryck här för att skicka bud.' + (V.pek ? '' : ' Mellanslag går också.'), S.tryck < 5, S.tryck >= 5],
+        ['ak', '#ak', 'Tryck här. Det är det du gör just nu.' + (V.pek ? '' : ' Mellanslag går också.'), S.tryck < 5, S.tryck >= 5],
         ['full', '#ak', 'Fortsätt trycka, eller håll in. Full mätare ger dubbelt av allt och håller i sig en stund.', S.tryck >= 5 && !S.full && S.nasta < 2, S.full],
         ['kop', '#baser .bas:not(.skatt)', 'Bygg ut ' + G.BAS[forst].namn + ' här, eller ' + KLICKA + ' på den på kartan.', G.kanKopa(forst) && S.bas[forst] === 1, S.bas[forst] > 1],
         ['upp', '#uppdrag', 'Nästa steg i historien. Tryck på knappen när du har råd.', S.nasta === 0 && G.kanSkicka(), S.nasta > 0 || !!S.aktivt],

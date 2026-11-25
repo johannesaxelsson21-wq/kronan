@@ -23,7 +23,7 @@
   // o.satt(a, v, t, dt) flyttar något annat än hjälten (ett skepp, en släde, en man till fots). o.kd = kamerans avstånd.
   function akFard(pts, d0, d1, fartX, knapp, rad, o) {
     return new Promise(res => {
-      o = o || {}; aka = { pts, d: d0, d0, d1, v: 0, fartX: fartX || 1, res, stilla: 0, rad: rad || 'Tryck för att åka', satt: o.satt, kd: o.kd || 19, ljud: o.ljud, ork: 1 };
+      o = o || {}; aka = { pts, d: d0, d0, d1, v: 0, fartX: fartX || 1, res, stilla: 0, rad: rad || 'Tryck för att åka', satt: o.satt, kd: o.kd || 19, ljud: o.ljud, ork: 1, rader: o.rader || null, radNr: 0, radT: 0 };
       UI.film.text(aka.rad); UI.film.knapp(knapp || 'Åk', () => I.tar && I.tar());
       I.tar = () => { if (!aka) return; aka.v = Math.min(3.4, aka.v + 0.8 * aka.ork); aka.stilla = 0; L.spela(aka.ljud || (V.Gustav.sno === false ? 'hov' : 'skida')); };
     });
@@ -84,50 +84,35 @@
       UI.film.svart(0.2, 2.5); plats('Räfsnäs vid Mälaren'); await vanta(2.2); text('Gustav Eriksson är 24 år. Hans far var en av dem.');
       await vanta(7); text('Själv togs han som gisslan efter Brännkyrka. Han flydde från Danmark till Lübeck och kom hem över havet i maj.');
       await vanta(8.5);
-      // flykten är det första spelaren gör själv i Gustavs värld
+      // Flykten är det första spelaren gör själv i Gustavs värld: först till häst från Räfsnäs, sedan på skidor genom Dalarna
+      // i ett enda åk ända till Sälen. Det som händer på vägen står som rader medan man åker (Johannes 2026-11-26: mindre film, mer åkande).
+      // Två sägner är med, och filmen säger att de är berättelser: drängen på Rankhyttan och skidlöparna vid Sälen (docs/historia.md).
       const p0 = R.path('rafsnas', 'strangnas'), len0 = R.length(p0);
-      await akFard(p0, 0.2, Math.min(len0 - 1, 9), 1.3, 'Fly', 'Tryck för att fly');
-      UI.film.knapp(null); I.tar = null; text('Han flyr norrut, till Dalarna.'); await vanta(3.5); UI.film.svart(1, 1.5); text(''); plats(''); await vanta(1.8);
-      // ---- flykten genom Dalarna, plats för plats, så som den berättas. Platserna är sägen (docs/historia.md), och filmen säger det. ----
-      Scene.setSeason(0.965); Fx.sno = true; if (V.Musik) V.Musik.spar('vinter');
-      const st = [[15.75, 60.45, 'Rankhyttan', 'Det berättas att han gömde sig som dräng här och tröskade säd.'], [15.54, 60.51, 'Ornäs', 'Det berättas att husets fru varnade honom, och att han flydde i släde över sjön.'],
-        [15.87, 60.71, 'Isala', 'Det berättas att en bonde gömde honom i sin lada.'], [15.72, 60.84, 'Marnäs', 'Det berättas att han kördes förbi danskarna, gömd i ett lass med hö.']].map(s => ({ p: Geo.place(s[0], s[1]), namn: s[2], rad: s[3] }));
-      st.forEach(s => {          // en gård på varje plats
-        const mb = new V.MB(); B.stuga(mb, 0.95, 0.62, 0.34, 'torv', { skorsten: 1, ljus: 1 }); mb.push().move(1.35, 0, 0.5).rotY(0.6); B.stuga(mb, 1.15, 0.7, 0.4, 'span', {}); mb.pop();
-        const m = B.mesh(mb), x = s.p.x + 0.9, z = s.p.z - 0.9; m.position.set(x, Geo.groundAt(x, z), z); m.scale.setScalar(K); Scene.scene.add(m); tempM.push(m);
-      });
-      let fran = [st[0].p.x - 1.5, st[0].p.z + 3];
-      V.Gustav.place(fran[0], fran[1], 3.1, 0, 0, 1, false); Scene.jump(fran[0], fran[1] + 1.5, 19); UI.film.svart(0, 2.5); plats('Dalarna, november 1520');
-      await vanta(2); text('Han tar sig till Dalarna. Kungens män letar efter honom.'); await vanta(6);
-      text('Vad som hände på vägen vet vi bara genom berättelser som skrevs ned långt senare.'); await vanta(7);
-      for (const s of st) {
-        const pts = [fran, [s.p.x, s.p.z]]; await akFard(pts, 0, Math.max(0.5, R.length(pts) - 0.5), 1.7);
-        UI.film.knapp(null); I.tar = null; plats(s.namn); text(s.rad); await vanta(7); fran = [s.p.x, s.p.z];
-      }
-      text('Så kom han till byarna vid sjön Siljan.'); await vanta(4); UI.film.svart(1, 1.5); text(''); plats(''); await vanta(1.8); tempM.forEach(m => Scene.scene.remove(m)); tempM = [];
-      // ---- Dalarna: åk mot Mora ----
-      Scene.setSeason(0.975); Fx.sno = true; const p1 = R.path('rattvik', 'mora'), len1 = R.length(p1), s1 = Math.max(0, len1 - 11), a0 = R.along(p1, s1);
-      V.Gustav.place(a0.x, a0.z, a0.ang, 0, 0, 1, false); Scene.jump(a0.x, a0.z + 1.5, 19); UI.film.svart(0, 2.5); plats('Dalarna, julen 1520');
-      await vanta(1.5); L.vindstyrka(0.11);
-      await akFard(p1, s1, len1 - 1.2, 1);
-      // ---- Mora: talet ----
-      UI.film.knapp(null); I.tar = null; const mora = R.P.mora, fz = mora.z + 0.5 * K; plats('Mora'); text('Han talar till männen i Mora.');
-      const hopen = []; for (let k = 0; k < 18; k++) { const a = 0.5 + k / 18 * 2.2, d = 1.6 + (k % 3) * 0.5, u = Folk.add(mora.x + Math.cos(a) * d * 1.3, fz + 0.4 + Math.sin(a) * d * 0.7, 'bonde', { ang: Math.PI }); hopen.push(u); temp.push(u); }
-      Scene.flyTo(mora.x, fz + 1, 15, 3); V.Gustav.place(mora.x, fz - 1.3, 0, 0, 0, 1, false);
-      await vanta(2.5);
-      await new Promise(res => { let n = 0; const b = UI.film.knapp('Tala', () => { n++; L.spela('sorl'); hopen.forEach((u, i) => { if (i % 3 === n % 3) u.y = 0.08; setTimeout(() => { u.y = 0; }, 160); }); if (n >= 5) { UI.film.knapp(null); res(); } }); I.tar = () => b && b.dispatchEvent(new Event('pointerdown')); });
-      I.tar = null; await vanta(1.2); L.spela('nej'); text('Männen tvekar. De vill inte ha ett uppror till.');
-      const gaHem = dt => hopen.forEach((u, i) => { u.gar = true; u.ang = 0.5 + i * 0.35; u.x += Math.sin(u.ang) * 0.7 * dt; u.z += Math.cos(u.ang) * 0.7 * dt; }); hooks.push(gaHem);
-      await vanta(6.5); hooks = []; rensa(); text('Han ger upp och åker västerut, mot Norge.'); await vanta(4);
-      // ---- mot Sälen ----
-      const p2 = R.path('mora', 'salen'), len2 = R.length(p2); plats(''); Scene.flyTo(mora.x, mora.z, 22, 1.5);
-      await akFard(p2, 0.5, len2 - 1.5, 2.6);
-      UI.film.knapp(null); I.tar = null; plats('Sälen'); text('');
-      const jag = [0, 1].map(k => { const u = Folk.add(0, 0, 'bonde', { gar: true, skidar: true, lean: 0.25, col: k ? '#7a6a55' : '#6a5f52' }); temp.push(u); return { u, d: len2 - 12 - k * 1.2 }; });
-      await new Promise(res => hooks.push(dt => { let klara = 0; jag.forEach((j, k) => { const mal = len2 - 2.4 - k * 0.7; j.d = Math.min(mal, j.d + 6 * dt); const a = R.along(p2, j.d); j.u.x = a.x + k * 0.3; j.u.z = a.z; j.u.ang = a.ang; if (j.d >= mal) { klara++; j.u.gar = false; j.u.lean = 0; } }); if (klara === 2) { hooks = []; res(); } }));
-      text('Två skidlöpare från Mora hinner upp honom.'); await vanta(5.5);
-      text('Budet om blodbadet har nått Dalarna. Mora har ändrat sig.'); await vanta(6.5);
-      text('Så berättar krönikan som kungen själv lät skriva.'); await vanta(5);
+      await akFard(p0, 0.2, Math.min(len0 - 1, 9), 1.3, 'Fly', 'Tryck för att fly', { rader: [[5, null, 'Han flyr norrut, till Dalarna.']] });
+      UI.film.knapp(null); I.tar = null; UI.film.svart(1, 1.0); await vanta(1.2); text(''); plats('');
+      Scene.setSeason(0.965); Fx.sno = true; if (V.Musik) V.Musik.spar('vinter'); L.vindstyrka(0.11);
+      const mora = R.P.mora, fz = mora.z + 0.5 * K, rank = Geo.place(15.75, 60.45), nara = (q, r) => Math.hypot(q[0] - mora.x, q[1] - mora.z) < r;
+      { const mb = new V.MB(); B.stuga(mb, 0.95, 0.62, 0.34, 'torv', { skorsten: 1, ljus: 1 }); mb.push().move(1.35, 0, 0.5).rotY(0.6); B.stuga(mb, 1.15, 0.7, 0.4, 'span', {}); mb.pop();          // gården Rankhyttan
+        const m = B.mesh(mb), x = rank.x + 1.1, z = rank.z - 1.0; m.position.set(x, Geo.groundAt(x, z), z); m.scale.setScalar(K); Scene.scene.add(m); tempM.push(m); }
+      // vägen: söderifrån förbi Rankhyttan, upp till Rättvik, runt Mora (där männen står på kyrkbacken) och västerut till Sälen
+      const ratt = R.P.rattvik, forbi = [mora.x - 0.4, mora.z + 3.4], start = [rank.x + 5, rank.z + 22];
+      const vag = [start, [rank.x, rank.z], [ratt.x + 0.3, ratt.z + 3.0]].concat(R.path('rattvik', 'mora').filter(q => !nara(q, 3.6) && Math.hypot(q[0] - ratt.x, q[1] - ratt.z) > 3.2), [forbi], R.path('mora', 'salen').filter(q => !nara(q, 3.6)));
+      const Ltot = R.length(vag), dRank = Math.hypot(start[0] - rank.x, start[1] - rank.z); let dMora = 0, bd = 1e9;
+      for (let d = 0; d < Ltot; d += 0.5) { const a = R.along(vag, d), q = Math.hypot(a.x - forbi[0], a.z - forbi[1]); if (q < bd) { bd = q; dMora = d; } }
+      for (let k = 0; k < 18; k++) { const a = 0.5 + k / 18 * 2.2, d = 1.0 + (k % 3) * 0.42, u = Folk.add(mora.x + Math.cos(a) * d * 1.3, fz + 0.5 + Math.sin(a) * d * 0.6, 'bonde', { ang: 0 }); temp.push(u); }          // männen i Mora
+      const a0 = R.along(vag, 0); V.Gustav.place(a0.x, a0.z, a0.ang, 0, 0, 1, false); Scene.jump(a0.x, a0.z + 1.5, 19); UI.film.svart(0, 1.6);
+      // de två skidlöparna kommer bakifrån på slutet
+      const jag = [0, 1].map(k => { const u = Folk.add(a0.x, a0.z - 400, 'bonde', { gar: true, skidar: true, lean: 0.25, col: k ? '#7a6a55' : '#6a5f52' }); temp.push(u); return { u, d: -1 }; });
+      hooks.push(dt => { if (!aka || aka.d < Ltot - 17) return; jag.forEach((j, k) => { if (j.d < 0) j.d = aka.d - 11 - k * 1.2; j.d = Math.min(Ltot - 2.4 - k * 0.7, j.d + 4.4 * dt); const a = R.along(vag, j.d); j.u.x = a.x + k * 0.3; j.u.z = a.z; j.u.ang = a.ang; }); });
+      await akFard(vag, 0, Ltot - 1.5, 1.05, 'Åk', 'Tryck för att åka', { rader: [
+        [0.3, 'Dalarna, november 1520', 'Kungens män letar efter honom.'],
+        [Math.max(8, dRank - 2.5), 'Rankhyttan', 'Det berättas att han gömde sig som dräng på en gård här och tröskade säd.'],
+        [dMora - 9, 'Mora, julen 1520', 'Han talar till männen i Mora. De tvekar: de vill inte ha ett uppror till.'],
+        [dMora + 10, '', 'Han ger upp och åker västerut, mot Norge.'],
+        [Ltot - 9, 'Sälen', 'Det berättas att två skidlöpare från Mora hann upp honom här.']] });
+      UI.film.knapp(null); I.tar = null;
+      await new Promise(res => hooks.push(dt => { let klara = 0; jag.forEach((j, k) => { const mal = Ltot - 2.4 - k * 0.7; if (j.d < 0) j.d = Ltot - 12 - k * 1.2; j.d = Math.min(mal, j.d + 6 * dt); const a = R.along(vag, j.d); j.u.x = a.x + k * 0.3; j.u.z = a.z; j.u.ang = a.ang; if (j.d >= mal) { klara++; j.u.gar = false; j.u.lean = 0; } }); if (klara === 2) { hooks = []; res(); } }));
+      plats('Sälen'); text('Budet om blodbadet har nått Dalarna. Mora har ändrat sig.'); await vanta(6.5);
       UI.film.svart(1, 1.5); text(''); plats(''); await vanta(1.8);
       // ---- Mora, januari 1521 ----
       rensa(); Scene.setSeason(0.04); Scene.jump(mora.x, fz + 1.5, 24); V.Gustav.place(mora.x, fz - 1.3, 0, 0, 0, 1, false);
@@ -292,7 +277,9 @@
         aka.v = Math.max(0, aka.v - 0.75 * dt); aka.d = Math.min(aka.d1, aka.d + aka.v * aka.fartX * dt * (I.aktiv ? fart : 1)); aka.stilla += dt;
         const a = R.along(aka.pts, aka.d); if (aka.satt) aka.satt(a, aka.v / 3.4, t, dt); else V.Gustav.place(a.x, a.z, a.ang, aka.v / 3.4, t, dt, false);
         Scene.cam.fly = null; Scene.cam.tx = a.x; Scene.cam.tz = a.z + 1.5; Scene.cam.td = aka.kd;
-        if (aka.stilla > 5) { UI.film.text(aka.rad); aka.stilla = 0; } else if (aka.v > 1.5 && aka.d > 2) UI.film.text('');
+        if (aka.rader && aka.radNr < aka.rader.length && aka.d >= aka.rader[aka.radNr][0]) { const r = aka.rader[aka.radNr++]; if (r[1] !== null) UI.film.plats(r[1]); UI.film.text(r[2]); aka.radT = 7; aka.stilla = 0; }          // en rad om det man just åker förbi
+        if (aka.radT > 0) { aka.radT -= dt; if (aka.radT <= 0) UI.film.text(''); }
+        else if (aka.stilla > 5) { UI.film.text(aka.rad); aka.stilla = 0; } else if (aka.v > 1.5 && aka.d > aka.d0 + 2) UI.film.text('');
         if (aka.d >= aka.d1) { const r = aka.res; aka = null; r(); }
       }
     }
