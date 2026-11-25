@@ -311,6 +311,7 @@
         if (x < minx) minx = x; if (x > maxx) maxx = x; if (z < minz) minz = z; if (z > maxz) maxz = z; if (y > maxy) maxy = y;
       }
       mesh.geometry = mesh.geometry.clone(); mesh.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3((minx + maxx) / 2, maxy / 2, (minz + maxz) / 2), Math.hypot(maxx - minx, maxz - minz, maxy) / 2 + 2);
+      mesh.frustumCulled = true;          // three stänger av gallringen för InstancedMesh. Med den egna sfären ovan ritas bara de skogsrutor som syns, inte alla 70 000 träd
       mesh.castShadow = true; mesh.receiveShadow = false; mesh.matrixAutoUpdate = false; group.add(mesh);
     }
     group.userData.count = count;

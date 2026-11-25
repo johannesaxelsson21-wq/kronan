@@ -132,7 +132,7 @@
     if (++frames === 3) { document.getElementById('load').classList.add('gone'); window.VASA_READY = true; }
     V.fps = V.fps ? V.fps * 0.95 + (1 / Math.max(dt, 0.001)) * 0.05 : 60;
     // orkar datorn inte med sänks skärpan först och skuggorna sedan
-    if (frames > 400 && frames % 240 === 0 && V.fps < 27 && !document.hidden) { const r = Scene.renderer; if (V.Efterbild && V.Efterbild.pa) V.Efterbild.pa = false; else if (r.getPixelRatio() > 1) { r.setPixelRatio(1); Scene.resize(); } else if (r.shadowMap.enabled) { r.shadowMap.enabled = false; Scene.scene.traverse(o => { if (o.material) o.material.needsUpdate = true; }); } }
+    if (frames > (Scene.mobil ? 200 : 400) && frames % (Scene.mobil ? 120 : 240) === 0 && V.fps < 27 && !document.hidden) { const r = Scene.renderer; if (V.Efterbild && V.Efterbild.pa) V.Efterbild.pa = false; else if (r.getPixelRatio() > 1) { r.setPixelRatio(1); Scene.resize(); } else if (r.shadowMap.enabled) { r.shadowMap.enabled = false; Scene.scene.traverse(o => { if (o.material) o.material.needsUpdate = true; }); } }
     requestAnimationFrame(frame);
   }
   window.addEventListener('load', () => setTimeout(boot, 30));
