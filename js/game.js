@@ -46,6 +46,7 @@
       if (niva === undefined && G.stoppad(id)) return 0;
       let p = b.p0 * L * Math.pow(2, Math.floor(L / 10)) * S.x[b.ger] * G.arvX() * G.gang(b.ger);
       if (b.slag === 'stad' && S.las.privilegier) p *= 0.5;                         // Lübeck tar handeln
+      if (b.slag === 'gruva') p *= 1 + 0.1 * G.arb(id);                             // gruvarbetare: en tiondel mer för varje lag
       return p;
     },
     fullX() { return 2 + Math.floor(S.konst.skidor / 10); },                       // så mycket ger full fart
@@ -61,13 +62,23 @@
     // natten mot 2026-11-26 och ångrade sig: "Män ska bygga män, det är bättre så".) De män man har får fler att sluta upp.
     prisRes(id) { return BAS[id].ger === 'man' ? 'man' : 'mark'; },
     rad(id) { const L = S.bas[id] || 0; return (L + 1) % 10 === 0; },             // är nästa nivå en dubbling?
-    kanKopa(id) { return !!S.bas[id] && S.res[G.prisRes(id)] >= G.pris(id); },
+    // Dagsverken: när något stort byggs på en plats som ger mark (var tionde nivå: stadsmuren, slottet, en ny hytta) arbetar män på bygget.
+    // Det kostar tre tiondelar av vad armén rymmer, utöver marken. Finns inga män än kostar det inget.
+    dagsverke(id) { if (BAS[id].ger === 'man' || !G.rad(id) || !Object.keys(S.bas).some(b => BAS[b].ger === 'man')) return 0; return Math.max(5, Math.ceil(G.tak() * 0.3 / 5) * 5); },
+    kanKopa(id) { return !!S.bas[id] && S.res[G.prisRes(id)] >= G.pris(id) && S.res.man >= G.dagsverke(id); },
     kop(id) {
-      if (!G.kanKopa(id)) return false;
-      S.res[G.prisRes(id)] -= G.pris(id); S.bas[id]++;
-      G.ut('niva', { bas: id, niva: S.bas[id], dubbel: S.bas[id] % 10 === 0 });
+      if (!G.kanKopa(id)) return false; const dv = G.dagsverke(id);
+      S.res[G.prisRes(id)] -= G.pris(id); if (dv) { S.res.man -= dv; S.dagsN = (S.dagsN || 0) + 1; } S.bas[id]++;
+      G.ut('niva', { bas: id, niva: S.bas[id], dubbel: S.bas[id] % 10 === 0, dagsverke: dv });
       return true;
     },
+    // Gruvarbetare: män som sätts i arbete i en gruva. De lämnar armén, och gruvan ger en tiondel mer för varje lag.
+    // Ett lag kan inte vara större än armén, så antalet växer med historien.
+    arb(id) { return (S.arb && S.arb[id]) || 0; },
+    arbPris(id) { return Math.ceil(20 * Math.pow(1.35, G.arb(id)) / 5) * 5; },
+    arbMax(id) { return G.arbPris(id) > G.tak(); },
+    kanArb(id) { return BAS[id].slag === 'gruva' && !!S.bas[id] && !G.stoppad(id) && !G.arbMax(id) && S.res.man >= G.arbPris(id); },
+    kopArb(id) { if (!G.kanArb(id)) return false; S.res.man -= G.arbPris(id); if (!S.arb) S.arb = {}; S.arb[id] = G.arb(id) + 1; G.ut('arbetare', { bas: id, antal: S.arb[id] }); return true; },
     // ---- kungens förmågor ---------------------------------------------------------------------
     konstPris(id) { const k = KONST[id], p = k.c0 * Math.pow(k.r, S.konst[id]); return p < 1000 ? Math.ceil(p) : p; },
     harKonst(id) { return !!S.las.konster && (id !== 'langd' || G.harSkatt()); },          // skattelängder först när det finns skatt att driva in

@@ -140,14 +140,12 @@
         const sex = []; for (let i = 0; i < 5; i++) { const u = Folk.add(sx - 1.0 - (i % 3) * 0.32, sz - 0.25 + Math.floor(i / 3) * 0.38, 'borgare', { ang: 1.6 }); sex.push(u); temp.push(u); }
         const ge = gustavE(), star = dt => ge.place(sx - 1.72, sz + 0.2, 1.6, 0, tid, dt, false, true); ge.ang = 1.6; hooks.push(star);          // den sjätte är Gustav Eriksson, 22 år
         Scene.jump((sx + forst.x) / 2, sz + 2.4, 30); plats('Stockholm, september 1518'); hooks.push(lagg);
-        await vanta(2); text('Kristian har förlorat slaget, men hans skepp ligger kvar utanför staden. Han säger att han vill förhandla.'); await vanta(8);
-        text('Som säkerhet kräver han sex svenska herrar ombord på sina skepp.'); await vanta(6.5);
+        await vanta(2); text('Kristian har förlorat slaget och vill förhandla. Som säkerhet kräver han sex svenska herrar ombord på sina skepp.'); await vanta(8.5);
         sex.forEach(u => Folk.remove(u)); temp = temp.filter(u => sex.indexOf(u) < 0); hooks = hooks.filter(h => h !== star); ge.g.visible = false;
         await akFard(pts, 0, R.length(pts) - 0.9, 0.7, 'Skicka', 'Tryck för att skicka ut dem', { kd: 27, ljud: 'vag', satt: a => { bat.position.set(a.x, 0.02 + Math.sin(tid * 2) * 0.02, a.z); bat.rotation.y = a.ang; } });
         UI.film.knapp(null); I.tar = null; Scene.scene.remove(bat); L.spela('nej'); text('När de sex är ombord hissar Kristian segel.');
         hooks.push(dt => { d = Math.min(26, d + dt * 1.5); const c = Scene.cam, f = Math.min(1, dt * 1.2); c.tx += (forst.x - c.tx) * f; c.tz += (forst.z + 2 - c.tz) * f; c.td = 36; });
-        await vanta(6.5); text('Han kom aldrig till något möte. De sex förs till Danmark som fångar.'); await vanta(7);
-        text('En av dem är Gustav Eriksson, 22 år.'); await vanta(6);
+        await vanta(6); text('Det blir inget möte. De sex förs till Danmark som fångar. En av dem är Gustav Eriksson, 22 år.'); await vanta(8.5);
       },
       // 1516. Ärkebiskopen stängs in i sin borg Stäket. Man slår själv läger runt borgen, tält för tält, tills ringen är sluten.
       async staket() {
@@ -157,13 +155,12 @@
         const talt = () => { const q = ring[satta++]; if (!q) return; const mb = new V.MB(); B.talt(mb); const m = B.mesh(mb); m.position.set(q[0], Geo.groundAt(q[0], q[1]), q[1]); m.rotation.y = satta * 1.7; m.scale.setScalar(K); Scene.scene.add(m); tempM.push(m);
           const u = Folk.add(q[0] + (p.x - q[0]) * 0.16, q[1] + (p.z - q[1]) * 0.16, satta % 2 ? 'knekt' : 'bonde', { pike: true, ang: Math.atan2(p.x - q[0], p.z - q[1]) }); temp.push(u); Fx.damm(q[0], Geo.groundAt(q[0], q[1]), q[1], 5); };
         Scene.jump(p.x, p.z + 1.6, 25); plats('Stäket vid Mälaren, 1516');
-        await vanta(2); text('Gustav Trolle är ny ärkebiskop, kyrkans högste man i Sverige, och han håller på Danmarks kung.'); await vanta(7.5);
-        text('Det har blivit krig mellan er. Nu stänger du in honom i hans borg.'); await vanta(5.5);
+        await vanta(2); text('Ärkebiskop Gustav Trolle håller på Danmarks kung. Du stänger in honom i hans borg.'); await vanta(7);
         text('Tryck för att slå läger runt borgen');
         await tryckN('Slå läger', 6, k => { for (let j = 0; j < per; j++) talt(); L.spela('hammare'); L.spela('trumma'); if (k === 2) text(''); }, 18);
         while (satta < ring.length) talt();
-        text('Nu kommer ingen in och ingen ut. En belägring är att vänta tills den som sitter där inne ger upp.'); await vanta(8.5);
-        text('Det drar ut på tiden. Nästa sommar skickar Danmarks kung soldater för att hjälpa honom.'); await vanta(7.5);
+        text('Ingen kommer in och ingen ut. Nu är det bara att vänta.'); await vanta(6);
+        text('Nästa sommar skickar Danmarks kung soldater till hans hjälp.'); await vanta(6);
       },
       // November 1517. Riksmötet har avsatt ärkebiskopen, och alla sätter sitt sigill under brevet. Biskop Brask ska ha lagt en lapp under sitt.
       async sigill() {
@@ -179,7 +176,7 @@
         const n = await tryckN('Sigill', 6, k => { sigill(k - 1); hopp(herrar[k - 1]); L.spela('trumma'); L.spela('kop'); if (k === 2) text(''); }, 18);
         for (let k = n; k < 6; k++) sigill(k);
         await vanta(0.8); sigill(6); hopp(herrar[6]); L.spela('trumma');
-        text('Biskop Hans Brask sätter också sitt. Det berättas att han gömde en lapp under vaxet: "Härtill är jag nödd och tvungen." Det här gör jag för att jag måste.'); await vanta(10);
+        text('Det berättas att biskop Brask gömde en lapp under sitt sigill: "Härtill är jag nödd och tvungen."'); await vanta(8);
         text('Den som har sitt sigill under brevet har varit med om att avsätta en ärkebiskop.'); await vanta(7);
       },
       // September 1519: flykten från Kalø till Lübeck
@@ -193,7 +190,7 @@
         Scene.jump(k.x - 0.8, k.z + 2.4, 21); plats('Kalø slott i Danmark, september 1519');
         await vanta(2); text('Gustav Eriksson har suttit fången här i ett år.'); await vanta(6);
         await akFard(pts, 0, R.length(pts) - 0.2, 0.8, 'Rym', 'Tryck för att rymma', { kd: 17, ljud: 'steg', satt: (a, v) => { g.x = a.x; g.z = a.z; g.ang = a.ang; g.v = v; } });
-        UI.film.knapp(null); I.tar = null; g.v = 0; text('Han tar sig hela vägen till Lübeck, en fri och rik handelsstad i Tyskland.'); await vanta(6);
+        UI.film.knapp(null); I.tar = null; g.v = 0; text('Han tar sig till Lübeck, en fri och rik handelsstad i Tyskland.'); await vanta(5.5);
         UI.film.svart(1, 0.8); text(''); plats(''); await vanta(1.1); hooks = [];
         // Lübeck: kyrka, köpmanshus och stadens vita och röda flagga
         const mb2 = new V.MB(); B.kyrka(mb2); for (let i = 0; i < 6; i++) { mb2.push().move(-2.2 + i * 0.95, 0, 1.3 + (i % 2) * 0.9).rotY((i % 3 - 1) * 0.25); B.stuga(mb2, 0.7, 0.6, 0.62, 'tegel', { vagg: '#b85f44', vaggLag: '#8a4533', gavel: '#b85f44', brant: 0.8 }); mb2.pop(); }
@@ -204,7 +201,7 @@
         Scene.jump(lb.x - 0.3, lb.z + 2.2, 22); UI.film.svart(0, 1.2); plats('Lübeck');
         await vanta(5); text('Slottsherren från Kalø kommer efter och kräver att få honom tillbaka.');
         const jagare = Folk.add(lb.x - 6, lb.z + 5.8, 'dansk', { pike: true, gar: true, ang: 1.95 }); temp.push(jagare); hooks.push(dt => { if (jagare.x < lb.x - 3.2) { jagare.x += dt * 0.5; jagare.z -= dt * 0.2; } else jagare.gar = false; });
-        await vanta(7.5); L.spela('klart'); text('Lübecks råd säger nej. Gustav får stanna, och blir kvar i åtta månader.'); await vanta(8);
+        await vanta(7); L.spela('klart'); text('Lübecks råd säger nej. Han blir kvar i åtta månader.'); await vanta(7);
       },
       // Februari 1520. Sten Sture körs hem i släde över Mälarens is och dör på vägen.
       async isen() {
@@ -219,11 +216,11 @@
         };
         const s = R.along(pts, d0); Bu.ang = s.ang; lagg(s, 0, tid, 0.016); Scene.jump(s.x, s.z + 1.5, 19); plats('Mälarens is, februari 1520');
         let slut = s; hooks.push(dt => { if (!aka) lagg(slut, 0, tid, dt); });
-        await vanta(2); text('En kanonkula har krossat Sten Stures knä. Armén är slagen, och han körs hem mot Stockholm i släde.'); await vanta(8.5);
+        await vanta(2); text('En kanonkula har krossat ditt knä. Armén är slagen, och du körs hem mot Stockholm i släde.'); await vanta(7.5);
         hooks = []; await akFard(pts, d0, d1, 1, 'Kör', 'Tryck för att köra', { kd: 18, ljud: 'hov', satt: lagg });
         UI.film.knapp(null); I.tar = null; slut = { x: Bu.x, z: Bu.z, ang: Bu.ang }; hooks.push(dt => lagg(slut, 0, tid, dt));
-        L.spela('klocka'); text('Den 3 februari dör han på isen, 27 år gammal.'); await vanta(7.5);
-        text('Riket står utan ledare. På Stockholms slott tar hans hustru Kristina Gyllenstierna befälet.'); await vanta(8.5);
+        L.spela('klocka'); text('Den 3 februari dör Sten Sture på isen, 27 år gammal.'); await vanta(7);
+        text('På Stockholms slott tar hans hustru Kristina Gyllenstierna befälet.'); await vanta(7);
       },
       // Sommaren 1520. Kristina Gyllenstierna håller Stockholm och står själv på vallen. Sedan kommer brevet om nåd.
       async vallen() {
@@ -232,15 +229,14 @@
         for (let j = 0; j < 4; j++) for (const s of [-1, 1]) stall(kx + s * (0.6 + j * 0.56), kz + 0.04 + (j % 2) * 0.14, j % 2 ? 'borgare' : 'knekt', { pike: j % 2 === 0, ang: 0 });          // i rad framför slottsmuren, där hon står
         for (let i = 0; i < 4; i++) stall(kx - 3.1 - (i % 2) * 0.5, kz + 0.5 + Math.floor(i / 2) * 0.5, i % 2 ? 'knekt' : 'borgare', { pike: i === 1, ang: 1.3 });
         Scene.jump(kx - 0.4, kz + 2.0, 19); plats('Stockholms slott, sommaren 1520');
-        await vanta(2); text('Kristian belägrar Stockholm från land och hav. Du står själv på vallen och manar försvararna.'); await vanta(7.5);
+        await vanta(2); text('Du är Kristina Gyllenstierna. Kristian belägrar Stockholm, och du står själv på vallen.'); await vanta(7.5);
         text('Tryck för att mana dem');
         await tryckN('Mana', 8, k => {
           L.spela('sorl'); folk.forEach((u, i) => { if (i % 3 === k % 3) { u.y = 0.1; setTimeout(() => { u.y = 0; }, 170); } }); if (kr) { kr.y = 0.12; setTimeout(() => { kr.y = 0; }, 200); }
           if (k % 2 === 0) { Fx.krut(kx + 1.6, gy + 1.3, kz - 1.2); L.spela('kanon'); Scene.shake(0.16); } if (k === 3) text('');
         }, 18);
-        text('Borgarna kallar dig vår kära furstinna, och staden håller ut till september.'); await vanta(7.5);
-        text('Men herrarna har gått över till Kristian, och ingen hjälp kommer.'); await vanta(6.5);
-        L.spela('klocka'); text('Den 5 september lovar Kristian i ett brev att ingen ska straffas för det som har hänt.'); await vanta(8);
+        text('Borgarna kallar dig vår kära furstinna. Staden håller ut till september, men ingen hjälp kommer.'); await vanta(8);
+        L.spela('klocka'); text('Den 5 september lovar Kristian i ett brev att ingen ska straffas.'); await vanta(7);
       },
       // 31 maj 1520: Lübeck hjälper honom hem över havet, och han går i land vid Kalmar
       async kalmar() {
@@ -258,8 +254,11 @@
         text('Han är hemma. Men Sten Sture är död, och Kristians armé står utanför Stockholm.'); await vanta(7.5);
       }
     },
-    async scen(namn, klar) {
-      if (!I.scener[namn] || I.aktiv) { if (klar) klar(); return; }
+    async scen(namn, klar, tvinga) {
+      // Ingen scen för nära den förra: har det inte gått en dryg minuts spelande hoppas den över (Johannes 2026-11-26: "man måste ha
+      // spelat ett tag innan en ny film kan visas"). tvinga = spela ändå (?scen=namn, för prov och skärmbilder).
+      const Sp = V.Game.s; if (!I.scener[namn] || I.aktiv || (!tvinga && Sp.scenT !== undefined && Sp.t - Sp.scenT < 75)) { if (klar) klar(); return; }
+      Sp.scenT = Sp.t;
       UI = V.UI; L = V.Ljud; I.aktiv = true; I.spelade++; I.nu = namn; autoT = 0; I.scenFart = Math.min(6, +new URLSearchParams(location.search).get('snabb') || 1);
       if (V.Varld.popKlart) V.Varld.popKlart();
       { const stam = { staket: 'krig', gisslan: 'krig', vallen: 'krig', kalo: 'vinter', isen: 'vinter', kalmar: 'vinter' }[namn]; if (stam && V.Musik) V.Musik.spar(stam); }

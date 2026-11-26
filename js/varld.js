@@ -306,7 +306,7 @@
     _folk(dt, t) {
       const S = G.s;
       for (const b of D.BASER) {
-        const L = S.bas[b.id] || 0, want = L ? Math.min(9, 3 + Math.floor(L / 8)) : (steg[b.id].length ? 2 : 0), list = vandrare[b.id] || (vandrare[b.id] = []), p = R.P[b.id], tm = tomt[b.id];
+        const L = S.bas[b.id] || 0, want = L ? Math.min(9, 3 + Math.floor(L / 8)) + (b.slag === 'gruva' ? Math.min(8, G.arb(b.id)) : 0) : (steg[b.id].length ? 2 : 0), list = vandrare[b.id] || (vandrare[b.id] = []), p = R.P[b.id], tm = tomt[b.id];
         while (list.length < want) { const q = W._ledig(tm), u = Folk.add(p.x + q[0], p.z + q[1], b.slag === 'bygd' ? 'by' : b.slag === 'gruva' ? 'bergsman' : 'borgare'); list.push({ u, tx: u.x, tz: u.z, vanta: Math.random() * 3, hopp: 0 }); }
         for (const v of list) {
           const u = v.u, dx = v.tx - u.x, dz = v.tz - u.z, d = Math.hypot(dx, dz);

@@ -109,7 +109,7 @@
           box.className = a.val ? 'val' : 'pagar'; $('upp-kost').innerHTML = a.val ? '' : '<span class="plats">' + UI.platsnamn(u.plats) + ' ' + u.ar + '</span>' + (G.skede() === 'strid' ? '<span class="chip strid">strid</span>' : '');
           $('upp-fyll').style.width = Math.min(100, a.t / a.dur * 100) + '%'; $('upp-knapp').textContent = a.val ? u.val : ''; $('upp-knapp').style.display = a.val ? '' : 'none'; $('upp-knapp').disabled = false;
         } else {
-          let h = ''; for (const r of ['man', 'mark']) if (k[r] > 0) { const ok = S.res[r] >= k[r]; h += '<span class="chip' + (ok ? ' ok' : '') + '" title="' + (r === 'man' ? 'Män som skickas iväg' : 'Mark som det kostar') + '">' + IK[r] + tal(k[r]) + (r === 'man' ? ' män' : ' mark') + '</span>'; }
+          let h = ''; for (const r of ['man', 'mark']) if (k[r] > 0) { const ok = S.res[r] >= k[r]; h += '<span class="chip' + (ok ? ' ok' : '') + '" title="' + (r === 'man' ? (u.slag === 'bygg' ? 'Män som gör dagsverken på bygget' : 'Män som skickas iväg') : 'Mark som det kostar') + '">' + IK[r] + tal(k[r]) + (r === 'man' ? (u.slag === 'bygg' ? ' dagsverken' : ' män') : ' mark') + '</span>'; }
           if (u.lan) h = '<span class="chip ok">' + IK.skuld + 'på kredit</span>'; if (!h) h = '<span class="chip ok">' + IK.krona + 'ditt ord' + '</span>';
           const ok = G.kanSkicka(); box.className = ok ? 'redo' : ''; $('upp-kost').innerHTML = h; $('upp-fyll').style.width = G.framsteg(u) * 100 + '%';
           $('upp-knapp').style.display = ''; $('upp-knapp').textContent = u.titel.split(' ')[0]; $('upp-knapp').disabled = !ok;
@@ -130,12 +130,13 @@
         skattRad.row.classList.toggle('pagar', fullt);
       }
       for (const id of ids) {
-        const r = rows[id], L = S.bas[id], res = G.prisRes(id), pris = G.pris(id), max = G.maxad(id), stopp = G.stoppad(id), dub = G.rad(id), mk = !!S.marknad && S.marknad.bas === id;
+        const r = rows[id], L = S.bas[id], res = G.prisRes(id), pris = G.pris(id), max = G.maxad(id), stopp = G.stoppad(id), dub = G.rad(id), dv = G.dagsverke(id), mk = !!S.marknad && S.marknad.bas === id;
         uppd(r, { namn: G.BAS[id].kort || G.BAS[id].namn, niva: L, v: mk ? 'Marknad! Tryck här' : stopp ? D.UPPROR[stopp].namn : max ? 'kan inte växa just nu' : dub ? 'dubbelt på nästa nivå' : '+' + tal((G.prod(id, L + 1) - G.prod(id, L)) * fx) + ' ' + ger(id) + '/s',
-          k: mk || max || stopp ? '' : IK[res] + tal(pris), ok: mk || (S.res[res] >= pris && !max && !stopp), snart: dub && !max && !stopp && !mk, bar: stopp ? 0 : (S.t / varv(id)) % 1 * 100, mot: (L % 10) / 10 });
+          k: mk || max || stopp ? '' : IK[res] + tal(pris) + (dv ? ' ' + IK.man + tal(dv) : ''), ok: mk || (S.res[res] >= pris && S.res.man >= dv && !max && !stopp), snart: dub && !max && !stopp && !mk, bar: stopp ? 0 : (S.t / varv(id)) % 1 * 100, mot: (L % 10) / 10 });
         const fas = stopp ? 0 : (S.t / varv(id)) % 1; if (r._fas !== undefined && fas < r._fas - 0.5 && !stopp) UI._klump(id, r.row, G.prod(id) * fx * varv(id), ger(id) === 'män' ? 'man' : 'mark'); r._fas = fas;
-        r.row.classList.toggle('stopp', !!stopp); r.row.classList.toggle('vald', valdBas === id); r.row.classList.toggle('marknad', mk); r.row.classList.toggle('fogde', !!S.fogde[id]); r.row.classList.toggle('last', max && !mk);
+        r.row.classList.toggle('dags', dv > 0 && !mk && !stopp); r.row.classList.toggle('stopp', !!stopp); r.row.classList.toggle('vald', valdBas === id); r.row.classList.toggle('marknad', mk); r.row.classList.toggle('fogde', !!S.fogde[id]); r.row.classList.toggle('last', max && !mk);
       }
+      for (const id in (UI._arows || {})) { const n = G.arb(id), full = G.arbMax(id); uppd(UI._arows[id], { namn: 'Gruvarbetare', niva: n, v: full ? 'armén är för liten än' : '+10 % i ' + (G.BAS[id].kort || G.BAS[id].namn), k: full ? '' : IK.man + tal(G.arbPris(id)), ok: G.kanArb(id), bar: 0 }); }
       if (soldRad) { const L = S.sold || 0, dub = (L + 1) % 10 === 0; uppd(soldRad, { namn: 'Värva soldater', niva: L, v: dub ? 'dubbelt på nästa nivå' : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx) + ' män/s', k: IK.mark + tal(G.soldPris()), ok: G.kanSold(), snart: dub, bar: L ? (S.t / 4) % 1 * 100 : 0, mot: (L % 10) / 10 }); }
       for (const id in krows) { const L = S.konst[id], max = L >= G.KONST_MAX, dub = (L + 1) % 10 === 0; uppd(krows[id], { namn: UI.konst(id)[0], niva: L, v: max ? 'kan inte bli bättre' : konstInfo(id).kort, k: max ? '' : IK.mark + tal(G.konstPris(id)), ok: G.kanKonst(id), snart: dub && !max, bar: 0, mot: (L % 10) / 10 }); }
       // en fogde i taget: kortet sätter en fogde på den plats där det är billigast
@@ -169,7 +170,7 @@
     },
     // Tre flikar: män, mark och egna förmågor. Tillgången står i själva fliken. Under dem ligger den valda flikens kort.
     _byggBaser(ids) {
-      const S = G.s, box = $('baser'); box.innerHTML = '<div id="flikar"></div>'; rows = {}; krows = {}; skattRad = null; soldRad = null; fogdeKnappar = []; kortNu = null; flikar = {};
+      const S = G.s, box = $('baser'); box.innerHTML = '<div id="flikar"></div>'; UI._arows = {}; rows = {}; krows = {}; skattRad = null; soldRad = null; fogdeKnappar = []; kortNu = null; flikar = {};
       const nyFlik = (f, id, huvud, titel) => {
         const knapp = el('button', 'flik', huvud + '<u class="prick"></u>'); if (id) knapp.id = id; knapp.title = titel; box.firstChild.appendChild(knapp);
         const sida = el('div', 'sida'); box.appendChild(sida); knapp.addEventListener('click', () => { flik = f; S.flik = f; UI.tick(); });
@@ -187,7 +188,7 @@
         rows[id] = kort(sida, '', SLAG[b.slag], () => {
           const L = S.bas[id], res = G.prisRes(id), enh = ger(id), fx = S.full ? G.fullX() : 1, dub = G.rad(id), stopp = G.stoppad(id);
           return '<b>' + b.namn + '</b><span class="kort-n">nivå ' + L + '</span><p>' + b.rad + '.</p>' + (stopp ? '<p class="kort-f">' + D.UPPROR[stopp].namn + '. Platsen ger ingenting just nu.</p>' : '<p class="kort-g">Ger ' + tal(G.prod(id) * fx) + ' ' + enh + ' i sekunden.</p>') +
-            (G.maxad(id) ? '<p class="kort-x">Kan inte bli större än armén tillåter. Armén växer längre fram i historien.</p>' : '<p class="kort-x">Nästa nivå: ' + (dub ? (UI.byggNamn(id, L + 1) || 'dubbling') + ', dubbelt så ' + (res === 'man' ? 'många män' : 'mycket mark') : '+' + tal((G.prod(id, L + 1) - G.prod(id, L)) * fx) + ' ' + enh + ' i sekunden') + '.</p><p class="kort-p">Kostar ' + IK[res] + tal(G.pris(id)) + ' ' + (res === 'man' ? 'män' : 'mark') + '</p>') +
+            (G.maxad(id) ? '<p class="kort-x">Kan inte bli större än armén tillåter. Armén växer längre fram i historien.</p>' : '<p class="kort-x">Nästa nivå: ' + (dub ? (UI.byggNamn(id, L + 1) || 'dubbling') + ', dubbelt så ' + (res === 'man' ? 'många män' : 'mycket mark') : '+' + tal((G.prod(id, L + 1) - G.prod(id, L)) * fx) + ' ' + enh + ' i sekunden') + '.</p><p class="kort-p">Kostar ' + IK[res] + tal(G.pris(id)) + ' ' + (res === 'man' ? 'män' : 'mark') + '</p>' + (G.dagsverke(id) ? '<p class="kort-x">Stort bygge: ' + IK.man + tal(G.dagsverke(id)) + ' män gör dagsverken på det.</p>' : '')) +
             (S.fogde[id] ? '<p class="kort-h">En fogde bygger ut här åt dig.</p>' : '') + (V.pek ? '' : '<p class="kort-h">Högerklick visar platsen på kartan.</p>');
         }, row => { valdBas = id; if (G.s.marknad && G.s.marknad.bas === id) { G.marknadTa(); return; } if (!UI.kop(id)) { UI._nej(row); if (G.maxad(id)) UI.text(b.namn + ' kan inte bli större än armén tillåter. Armén växer längre fram i historien.', 6); } },
         () => { valdBas = id; UI.onVisaBas && UI.onVisaBas(id); });
@@ -203,7 +204,12 @@
       const mark = () => {
         const m = ids.filter(id => G.BAS[id].ger !== 'man'); if (!m.length) return;
         const s = nyFlik('mark', 'res-mark', IK.mark + '<b id="mark-v"></b><span class="fl-s">mark</span><i id="mark-t"></i><em id="res-skuld" title="Det du är skyldig Lübeck för skeppen och soldaterna.">skuld <b id="skuld-v"></b></em><u class="fl-m"><u id="mark-m"></u></u>', RES.mark.rad + ' Mätaren visar hur långt du har kvar till nästa steg.');
-        m.forEach(id => bas(s, id)); fogde(s, () => m);
+        m.forEach(id => {
+          bas(s, id); if (G.BAS[id].slag !== 'gruva') return;          // en gruva har också ett kort för att sätta män i arbete där
+          UI._arows[id] = kort(s, 'arb', IK.man, () => '<b>Gruvarbetare i ' + G.BAS[id].namn + '</b><span class="kort-n">' + G.arb(id) + ' lag</span><p>Du sätter män i arbete i gruvan. De lämnar armén och bryter malm i stället.</p><p class="kort-g">Varje lag ger gruvan en tiondel mer. Nu: +' + G.arb(id) * 10 + ' %.</p>' + (G.arbMax(id) ? '<p class="kort-x">Nästa lag är större än armén rymmer. Armén växer längre fram i historien.</p>' : '<p class="kort-p">Nästa lag: ' + IK.man + tal(G.arbPris(id)) + ' män</p>'),
+            row => { if (G.kopArb(id)) V.Ljud && V.Ljud.spela('hammare'); else UI._nej(row); });
+        });
+        fogde(s, () => m);
       };
       if (S.varld === 0) { mark(); man(); } else { man(); mark(); }
       if (S.las.konster) {
@@ -328,6 +334,7 @@
       const scen = !!(u.scen || u.valScen), sagt = scen && u.sagt || [];          // det scenen just visade sägs inte en gång till i rutan
       if (u.vet && sagt.indexOf('vet') < 0) x.push(u.vet); if (u.vet2 && sagt.indexOf('vet2') < 0) x.push(u.vet2);
       if (u.id === 'sAbo') x.push('<b>Män</b> är din armé. Platser som ger män bygger du ut med män: de du har får fler att sluta upp. Allt annat kostar mark.');
+      if ((g.bas || []).some(id => G.BAS[id].slag === 'gruva')) x.push('Med kortet <b>Gruvarbetare</b> sätter du män i arbete i gruvan. De lämnar armén, och gruvan ger mer.');
       if (g.las && g.las.indexOf('konster') >= 0) x.push('Under fliken <b>Förmågor</b> gör du dina bud och tryck bättre. Håll ' + (V.pek ? 'fingret kvar på' : 'pekaren över') + ' ett kort så ser du exakt vad det ger.');
       if (g.las && g.las.indexOf('sold') >= 0) x.push('Nu kan du <b>värva soldater</b> för mark. De får lön, och du får fler män.');
       if (g.x) for (const r in g.x) x.push('Allt som ger ' + (r === 'man' ? 'män' : 'mark') + ' ger nu ' + String(g.x[r]).replace('.', ',') + ' gånger så mycket.');
@@ -372,6 +379,7 @@
         ['kop', '#baser .bas:not(.skatt)', 'Bygg ut ' + G.BAS[forst].namn + ' här, eller ' + KLICKA + ' på den på kartan.', G.kanKopa(forst) && S.bas[forst] === 1, S.bas[forst] > 1],
         ['upp', '#uppdrag', 'Nästa steg i historien. Tryck på knappen när du har råd.', S.nasta === 0 && G.kanSkicka(), S.nasta > 0 || !!S.aktivt],
         ['driv', '#ak', 'Striden har börjat. Tryck så anfaller dina män.', !!G.skede(), !!(S.aktivt && S.aktivt.slag >= 3)],
+        ['dags', '#baser .sida:not(.dold) .bas.dags', 'Ett stort bygge. Det kostar mark, och dina män gör dagsverken på det.', !!document.querySelector('#baser .sida:not(.dold) .bas.dags'), S.dagsN > 0],
         ['skatt', '#skatt', 'Skicka ut män här. De kommer hem med mark.', G.kanSkatt() && !S.skattN, !!S.skatt || S.skattN > 0],
         ['tak', '#res-man', 'Armén är full. Driv in skatt (det gröna kortet) så blir männen till mark.', S.res.man >= G.tak() * 0.999 && S.nasta >= 2 && !S.aktivt, S.res.man < G.tak() * 0.9]
       ];

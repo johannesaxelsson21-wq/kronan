@@ -31,6 +31,7 @@
     else if (typ === 'skatt') { UI.skattKlar(d.mark); const p = Varld.skattTill && Varld.pos(Varld.skattTill); if (p) UI.flyt(p.x, p.y + 1.8, p.z, 'Skatt +' + V.tal(d.mark) + ' mark', 'mark'); if (!d.auto) V.Ljud.spela('samling'); }
     else if (typ === 'samling' && !d.lopare) { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 1.8, p.z, d.res === 'mark' ? 'Skatt +' + V.tal(d.antal) + ' mark' : '+' + V.tal(d.antal) + ' män går med', d.res); V.Ljud.spela('samling'); }
     else if (typ === 'niva' && d.dubbel) UI.skylt(UI.byggnad(d.bas, d.niva));
+    else if (typ === 'arbetare') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.4, p.z, d.antal + ' lag i gruvan', 'mark'); V.Fx.damm(p.x, p.y + 0.2, p.z, 10); }
     else if (typ === 'konst' && d.dubbel) UI.skylt(UI.konst(d.id)[0] + ': dubbelt upp');
     else if (typ === 'full') V.Ljud.spela('full');
     else if (typ === 'skickat') { V.Ljud.spela(d.u.slag === 'beslut' ? 'klocka' : 'horn'); if (V.Musik && (d.u.slag === 'tag' || d.u.strid)) V.Musik.spar('krig'); }
@@ -100,7 +101,7 @@
       const id = Varld.basVid(g); if (!(id && spelar && G.s.bas[id])) { tryck(); return; }
       if (G.s.marknad && G.s.marknad.bas === id) { V.Ljud.vakna(); G.marknadTa(); UI.tick(); return; }
       UI.valj(id); V.Ljud.vakna();
-      if (!UI.kop(id)) { const w = Varld.pos(id), res = G.prisRes(id), fattas = G.pris(id) - G.s.res[res]; UI.flyt(w.x, w.y + 2.4, w.z, G.stoppad(id) ? 'Uppror' : 'Fattas ' + V.tal(Math.ceil(fattas)) + (res === 'man' ? ' män' : ' mark'), 'nej'); V.Ljud.spela('trumma'); }
+      if (!UI.kop(id)) { const w = Varld.pos(id), res = G.prisRes(id), fattas = G.pris(id) - G.s.res[res]; UI.flyt(w.x, w.y + 2.4, w.z, G.stoppad(id) ? 'Uppror' : fattas > 0 ? 'Fattas ' + V.tal(Math.ceil(fattas)) + (res === 'man' ? ' män' : ' mark') : 'Fattas ' + V.tal(Math.ceil(G.dagsverke(id) - G.s.res.man)) + ' män till dagsverken', 'nej'); V.Ljud.spela('trumma'); }
     };
     window.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) { haller = true; tryck(); } } else if (spelar && !e.repeat && /^Digit[1-3]$/.test(e.code)) UI.handla(+e.code.slice(5) - 1); });
     window.addEventListener('keyup', e => { if (e.code === 'Space') haller = false; }); window.addEventListener('blur', () => { haller = false; });
@@ -111,7 +112,7 @@
     else if (film && S.varld === 1 && !S.intro) V.Intro.kor(() => { G.s.intro = true; arstid = 0.04; start(true); spara(); UI.forklara(1); });      // Gustavs värld börjar med blodbadet
     else {
       if (S.varld === 1) S.intro = true; start(false);
-      if (q.has('scen') && V.Intro) setTimeout(() => V.Intro.scen(q.get('scen')), 1200);          // ?scen=kalo spelar en scen direkt (för prov och skärmbilder)
+      if (q.has('scen') && V.Intro) setTimeout(() => V.Intro.scen(q.get('scen'), null, true), 1200);          // ?scen=kalo spelar en scen direkt (för prov och skärmbilder)
       if (hade) { const b = G.borta((Date.now() - S.sparad) / 1000); if (b && (b.fick.man > 1 || b.fick.mark > 1)) UI.borta(b); }
     }
     requestAnimationFrame(frame);
