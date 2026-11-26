@@ -16,7 +16,7 @@
   const W = V.Varld = {
     tomt, P: R.P,
     init(sc) {
-      scene = sc; Folk.init(sc); Fx.init(sc); V.Gustav.init(sc, G.s.varld === 0 ? 'sten' : 'gustav'); V.Bud.init(sc, 'bud'); V.Bud.kanSkida = G.s.varld === 1;          // bud på skidor hör Dalarna och Gustavs tid till
+      scene = sc; W._kristina = null; W._kring = null; Folk.init(sc); Fx.init(sc); V.Gustav.init(sc, G.s.varld === 0 ? 'sten' : 'gustav'); V.Bud.init(sc, 'bud'); V.Bud.kanSkida = G.s.varld === 1;          // bud på skidor hör Dalarna och Gustavs tid till
       for (const b of D.BASER) {
         const p = R.P[b.id]; tomt[b.id] = new B.Tomt(b, p); steg[b.id] = [];
         const g = grp[b.id] = new THREE.Group(); g.position.set(p.x, p.y, p.z); g.scale.setScalar(B.K); sc.add(g);
@@ -76,6 +76,8 @@
     _pop(m, id, liten) { const fran = liten === true ? 0.82 : liten ? liten : 0.01; m.scale.setScalar(fran); pops.push({ m, t: 0, fran }); const p = R.P[id]; if (!liten) { Fx.damm(p.x, p.y, p.z, 26); Fx.guld(p.x, p.y + 0.2, p.z, 40, tomt[id].R * 0.6); } },
     // Hus som håller på att växa fram ställs färdiga på en gång (innan en scen, där världen annars står still med halvstora hus)
     popKlart() { pops.forEach(p => p.m.scale.setScalar(1)); pops.length = 0; },
+    // Under en scen syns inte skattelagen och de extra buden: spelet står still då, och de skulle stå som statyer mitt i bilden
+    scenDolj(on) { (skattVis || []).forEach(v => v.enh.forEach(e => { e.vis = !on; })); lopare.forEach(l => { l.u.vis = !on; }); },
     pos(id) { const p = R.P[id]; return p ? { x: p.x, y: p.y || 0, z: p.z } : null; },
     // Vilken bas ligger under den här punkten på marken?
     basVid(g) { if (!g) return null; let best = null, bd = 1e9; for (const b of D.BASER) { if (!steg[b.id].length) continue; const p = R.P[b.id], d = Math.hypot(p.x - g.x, p.z - g.z); if (d < tomt[b.id].R + 0.6 && d < bd) { bd = d; best = b.id; } } return best; },
@@ -264,7 +266,11 @@
           if (!W._kristina) { const p = R.P.stockholm; W._kristina = Folk.add(p.x + 1.9 * B.K, p.z - 0.5 * B.K, 'kvinna', { col: '#2f4f8a', col2: '#f2eee2', sc: 1.4, ang: 0.3 }); }
           const k = W._kristina; k.hoppT = Math.max(0, (k.hoppT || 0) - dt); k.y = Math.abs(Math.sin(k.hoppT * 14)) * 0.1 * Math.min(1, k.hoppT * 4);
           if (k.bx === undefined) k.bx = k.x; { const c = Math.cos(t * 0.2); k.x = k.bx + Math.sin(t * 0.2) * 1.1; k.gar = Math.abs(c) > 0.3; k.ang = k.gar ? (c > 0 ? 1.571 : -1.571) : 0.2; }          // hon går av och an framför slottet
+          // ringen visar vem som är du, också när du är Kristina
+          if (!W._kring) { const r0 = Gu.g.userData.ring; W._kring = r0.clone(); W._kring.material = r0.material.clone(); W._kring.scale.setScalar(Gu.g.scale.x); scene.add(W._kring); }
+          W._kring.visible = true; W._kring.position.set(k.x, Geo.groundAt(k.x, k.z) + 0.05, k.z); W._kring.material.opacity = 0.7 + 0.2 * Math.sin(t * 3);
         } else {
+          if (W._kring) W._kring.visible = false;
           if (W._kvar && (W._kvar.t -= dt) <= 0) W._kvar = null;
           const q = W._kvar || W.sate();
           if (W._kvar) { Gu.place(q.x, q.z, q.ang, 0, t, dt, false, true); W._vandr = null; }
@@ -328,6 +334,10 @@
       const S = G.s; if (!vis) return; const a = S.aktivt; if (!a) return;
       const u = vis.u, f = Math.min(1, a.t / a.dur), p = R.P[u.plats], strid = !!u.strid, K0 = G.KAMP, gf = strid ? Math.min(1, f / K0) : f, kamp = strid && f > K0, kf = strid ? Math.max(0, (f - K0) / (1 - K0)) : 0;
       if (vis.stot > 0) vis.stot = Math.max(0, vis.stot - dt * 2.5);
+      if (u.belagring && !a.val) {          // Stockholm sommaren 1520: lägret på Brunkeberg och slottet skjuter på varandra medan månaderna går
+        W._belT = (W._belT === undefined ? 1.5 : W._belT) - dt;
+        if (W._belT <= 0) { W._belN = (W._belN || 0) + 1; W._belT = 1.8 + Math.random() * 2.4; const ute = W._belN % 2 === 1, q = ute ? R.P.brunkeberg : p, x = q.x + (Math.random() - 0.5) * 1.6, z = q.z + (ute ? 0.5 : -0.9); Fx.krut(x, Geo.groundAt(x, z) + (ute ? 0.3 : 1.2), z); if (!ute && V.Ljud) V.Ljud.spela('kanon'); }
+      }
       if (vis.pts && (u.slag === 'tag' || u.slag === 'bud' || u.slag === 'rid')) {
         const stopp = strid ? (u.strid === 'pilar' ? 2.2 : u.strid === 'kanoner' ? 1.6 : 0.9) : u.slag === 'tag' ? 1.8 : 0, dist = Math.max(0, vis.len - stopp) * gf;
         const lead = R.along(vis.pts, dist);

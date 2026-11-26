@@ -1,0 +1,18 @@
+{
+  "name": "Kronan",
+  "short_name": "Kronan",
+  "description": "Ett spel om Sveriges regenter. Börja 1512 som Sten Sture och följ historien fram till Gustav Vasa.",
+  "lang": "sv",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#14100c",
+  "theme_color": "#14100c",
+  "icons": [
+    {
+      "src": "ikon/ikon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

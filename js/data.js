@@ -175,6 +175,7 @@
   // Uppror: vilka baser som står still tills upproret är över.
   // ---- Förspelet: Sten Sture den yngre 1512–1520 -----------------------------------------------
   // Tar ungefär tjugo minuter och slutar alltid på samma sätt. senast = den minut då uppdraget går iväg av sig självt, vad spelaren än gör.
+  // tid = uppdraget tar så här många sekunder (belägringen av Stockholm: från maj till september, och längre än pausen mellan två scener).
   const STURE = [
     // vet = en rad om vad steget betyder för det som kommer sedan (visas under krönikan)
     { id: 'sVasteras', senast: 2, akt: 0, titel: 'Skicka bud till slottet i Västerås', plats: 'vasteras', ar: 1512, man: 1.3, slag: 'bud', fran: 'stockholm', kostar: { mark: 60 }, ger: { bas: ['vasteras'], las: ['konster'] },
@@ -187,23 +188,23 @@
       kronika: '1516. Erik Trolles son Gustav Trolle hade blivit ärkebiskop, kyrkans högste man i Sverige, och han höll på Danmarks kung. Det blev krig mellan er, och du stängde in honom i hans borg Stäket vid Mälaren.' },
     { id: 'sVadla', med: 1, senast: 11, akt: 0, titel: 'Stoppa danskarna vid Vädla', plats: 'vadla', ar: 1517, man: 7, slag: 'tag', strid: 'liten', kostar: { man: 600, mark: 10000 }, ger: { x: { mark: 1.5 } },
       kronika: 'Sommaren 1517. Danmarks kung Kristian II skickade soldater för att hjälpa ärkebiskopen. Du slog dem vid Vädla utanför Stockholm.' },
-    { id: 'sRiv', scen: 'sigill', efter: 'November 1517. Brevet är beseglat.', senast: 13, akt: 0, titel: 'Kalla rikets ledare till Stockholm', plats: 'stockholm', ar: 1517, man: 11.8, slag: 'beslut', val: 'Riv Stäket', valText: 'Ärkebiskopen har gett upp. Alla väntar på vad du säger.', kostar: { mark: 28000 }, ger: { bas: ['uppsala'] },
+    { id: 'sRiv', scen: 'sigill', efter: 'November 1517. Brevet är beseglat.', senast: 13, akt: 0, titel: 'Kalla rikets ledare till Stockholm', plats: 'stockholm', ar: 1517, man: 11.8, slag: 'beslut', val: 'Riv Stäket', valText: 'Rikets ledare är samlade i Stockholm. Alla väntar på vad du säger.', kostar: { mark: 55000 }, ger: { bas: ['uppsala'] },
       kronika: 'November 1517. Mötet tog ifrån Gustav Trolle hans ämbete och bestämde att hans borg skulle rivas. Alla skrev under med sitt sigill. Biskop Brask ska ha gömt en lapp under sitt: det här gör jag för att jag är tvungen.',
       vet: 'Bara påven får avsätta en ärkebiskop. Gustav Trolle glömmer inte det här.' },
-    { id: 'sBrannkyrka', med: 1, scen: 'gisslan', efter: '27 juli 1518. Du slog Kristian II vid Brännkyrka söder om Stockholm.', senast: 15.5, akt: 0, titel: 'Möt Kristian vid Brännkyrka', plats: 'brannkyrka', ar: 1518, man: 7.9, slag: 'tag', strid: 'stor', kostar: { man: 2500, mark: 45000 }, ger: { x: { man: 1.5 } },
+    { id: 'sBrannkyrka', med: 1, scen: 'gisslan', efter: '27 juli 1518. Du slog Kristian II vid Brännkyrka söder om Stockholm.', senast: 15.5, akt: 0, titel: 'Möt Kristian vid Brännkyrka', plats: 'brannkyrka', ar: 1518, man: 7.9, slag: 'tag', strid: 'stor', kostar: { man: 2500, mark: 150000 }, ger: { x: { man: 1.5 } },
       kronika: '27 juli 1518. Du slog Kristian II vid Brännkyrka söder om Stockholm. I september seglade han hem med sex svenskar som gisslan. En av dem var den unge Gustav Eriksson.' },
-    { id: 'sTegel', scen: 'kalo', sagt: ['vet2'], senast: 18, akt: 0, titel: 'Bär teglet från Stäket till Stockholm', plats: 'stockholm', ar: 1519, man: 6, slag: 'bygg', kostar: { man: 1500, mark: 80000 }, ger: { x: { mark: 2 } },
-      kronika: '1519. Borgen Stäket var riven och teglet bars till Stockholm. Kristian klagade hos påven, och påven lyste Sverige i bann, kyrkans hårdaste straff.',
+    { id: 'sTegel', scen: 'kalo', sagt: ['vet2'], senast: 18, akt: 0, titel: 'Bär teglet från Stäket till Stockholm', plats: 'stockholm', ar: 1519, man: 6, slag: 'bygg', kostar: { man: 1500, mark: 700000 }, ger: { x: { mark: 2 } },
+      kronika: '1519. Borgen Stäket var riven och teglet bars till Stockholm. Kristian klagade hos påven. Med påvens stöd lystes du och dina män i bann, kyrkans hårdaste straff.',
       vet: 'Nu kan Kristian säga att hans krig mot dig är kyrkans krig.',
       vet2: 'I september flydde Gustav Eriksson från fångenskapen i Danmark till staden Lübeck i Tyskland.' },
-    { id: 'sAsunden', med: 1, scen: 'isen', efter: '19 januari 1520. Slaget på Åsundens is var förlorat.', senast: 20.5, akt: 0, titel: 'Möt danskarna på sjön Åsundens is', plats: 'bogesund', ar: 1520, man: 1.6, slag: 'tag', strid: 'nederlag', kostar: { man: 10000 }, ger: { hjalte: 'kristina', startar: 'dagtingan' },
+    { id: 'sAsunden', med: 1, scen: 'isen', efter: '19 januari 1520. Slaget på Åsundens is var förlorat.', senast: 20.5, akt: 0, titel: 'Möt danskarna på sjön Åsundens is', plats: 'bogesund', ar: 1520, man: 1.6, slag: 'tag', strid: 'nederlag', kostar: { man: 10000, mark: 1000000 }, ger: { hjalte: 'kristina', startar: 'dagtingan' },
       kronika: '19 januari 1520. På isen träffades du av en kanonkula strax ovanför knät. Din armé flydde. Den 3 februari dog du i en släde på Mälarens is, 27 år gammal.' },
-    { id: 'sUppsala', senast: 22, akt: 0, titel: 'Skicka bönderna mot Uppsala', plats: 'uppsala', ar: 1520, man: 4.2, slag: 'tag', strid: 'nederlag', kostar: { man: 3000 }, ger: {},
+    { id: 'sUppsala', senast: 21.5, akt: 0, titel: 'Skicka bönderna mot Uppsala', plats: 'uppsala', ar: 1520, man: 4.2, slag: 'tag', strid: 'nederlag', kostar: { man: 3000, mark: 250000 }, ger: {},
       kronika: 'Långfredagen 6 april 1520. Bönderna som gick mot danskarna i Uppsala förlorade. Du, Kristina Gyllenstierna, höll fortfarande Stockholm.',
       vet: 'Den 31 maj steg Gustav Eriksson i land vid Kalmar. Han hade kommit hem över havet från Lübeck.' },
-    { id: 'sStockholm', senast: 23.5, akt: 0, titel: 'Håll Stockholm', plats: 'stockholm', ar: 1520, man: 9.2, slag: 'beslut', val: 'Öppna portarna', valScen: 'vallen', efter: '7 september 1520. Du gav upp Stockholms slott.', valText: 'Staden är instängd. Kristian lovar att ingen ska straffas.', kostar: { man: 6000 }, ger: { slutVarld: 1 },
+    { id: 'sStockholm', senast: 22.5, akt: 0, titel: 'Håll Stockholm', plats: 'stockholm', ar: 1520, man: 9.2, slag: 'beslut', tid: 125, belagring: 1, val: 'Öppna portarna', valScen: 'vallen', efter: '7 september 1520. Du gav upp Stockholms slott.', valText: 'Staden är instängd. Kristian lovar att ingen ska straffas.', kostar: { man: 6000, mark: 300000 }, ger: { slutVarld: 1 },
       kronika: '7 september 1520. Du, Kristina Gyllenstierna, gav upp Stockholms slott. I gengäld lovade Kristian i ett brev att ingen skulle straffas för det som hade hänt.',
-      vet: 'Om att ärkebiskopen avsattes säger brevet inget tydligt.' }
+      vet: 'Men om att ärkebiskopen avsattes säger brevet inget tydligt.' }
   ];
 
   const UPPROR = {

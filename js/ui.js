@@ -109,7 +109,7 @@
           box.className = a.val ? 'val' : 'pagar'; $('upp-kost').innerHTML = a.val ? '' : '<span class="plats">' + UI.platsnamn(u.plats) + ' ' + u.ar + '</span>' + (G.skede() === 'strid' ? '<span class="chip strid">strid</span>' : '');
           $('upp-fyll').style.width = Math.min(100, a.t / a.dur * 100) + '%'; $('upp-knapp').textContent = a.val ? u.val : ''; $('upp-knapp').style.display = a.val ? '' : 'none'; $('upp-knapp').disabled = false;
         } else {
-          let h = ''; for (const r of ['mark', 'man']) if (k[r] > 0) { const ok = S.res[r] >= k[r]; h += '<span class="chip' + (ok ? ' ok' : '') + '" title="' + (r === 'man' ? (u.slag === 'bygg' ? 'Män som gör dagsverken på bygget' : 'Män som skickas iväg') : 'Mark som det kostar') + '">' + IK[r] + tal(k[r]) + (r === 'man' ? (u.slag === 'bygg' ? ' dagsverken' : ' män') : ' mark') + '</span>'; }
+          let h = ''; for (const r of ['man', 'mark']) if (k[r] > 0) { const ok = S.res[r] >= k[r]; h += '<span class="chip' + (ok ? ' ok' : '') + '" title="' + (r === 'man' ? (u.slag === 'bygg' ? 'Män som gör dagsverken på bygget' : 'Män som skickas iväg') : 'Mark som det kostar') + '">' + IK[r] + tal(k[r]) + (r === 'man' ? (u.slag === 'bygg' ? ' dagsverken' : ' män') : ' mark') + '</span>'; }
           if (u.lan) h = '<span class="chip ok">' + IK.skuld + 'på kredit</span>'; if (!h) h = '<span class="chip ok">' + IK.krona + 'ditt ord' + '</span>';
           const ok = G.kanSkicka(); box.className = ok ? 'redo' : ''; $('upp-kost').innerHTML = h; $('upp-fyll').style.width = G.framsteg(u) * 100 + '%';
           $('upp-knapp').style.display = ''; $('upp-knapp').textContent = u.titel.split(' ')[0]; $('upp-knapp').disabled = !ok;
@@ -164,7 +164,7 @@
       const ring = $('ak-ring'), C = 2 * Math.PI * 54; ring.style.strokeDasharray = C; ring.style.strokeDashoffset = C * (1 - S.fart);
       $('akwrap').classList.toggle('full', S.full); $('fullx').textContent = S.full ? 'allt ×' + G.fullX() : '';
       // rutan med berättelsen och textraderna ligger strax ovanför konsolen
-      const h = $('konsol').offsetHeight + 22; $('berattar').style.bottom = h + 'px'; $('text').style.bottom = h + 'px';
+      const h = $('konsol').offsetHeight + 22; $('berattar').style.bottom = h + 'px'; $('text').style.bottom = (h + 28) + 'px';          // ovanför knappen Hitta mig
       V.Scene.lyft = (innerWidth < 720 || innerHeight < 520) && root.classList.contains('spel') ? (h - 22) / 2 : 0;          // se scene.js: bilden lyfts så att mitten hamnar ovanför konsolen
       UI._tips();
     },
@@ -211,7 +211,7 @@
         });
         fogde(s, () => m);
       };
-      mark(); man();          // alltid samma ordning: mark, män, förmågor (Johannes 2026-11-26)
+      man(); mark();          // alltid samma ordning: män, mark, förmågor (Johannes 2026-11-26, sista beskedet)
       if (S.las.konster) {
         const s = nyFlik('konst', '', IK.krona + '<b class="fl-n">Förmågor</b>', 'Dina egna förmågor gör buden, trycken och skatten bättre.');
         for (const kd of D.KONSTER) {
@@ -284,9 +284,10 @@
         mb.style.display = dold ? 'none' : ''; mb.style.transform = 'translate(' + (sp.x - 23) + 'px,' + (sp.y - 46) + 'px)';
       }
       // de första minuterna i en värld står det vem som är vem: du själv, och budet som rider åt dig
-      { const visa = spel && S.t < 150 && !S.slut, lagg = (id, o, h) => { const e = $(id), sp = visa && o && o.g && o.g.visible ? V.Scene.screenPoint(o.x, V.Geo.groundAt(o.x, o.z) + h, o.z) : null, syns = sp && !sp.behind && sp.y > 50 && sp.y < golv; e.style.display = syns ? 'block' : 'none'; if (syns) e.style.transform = 'translate(' + Math.round(sp.x) + 'px,' + Math.round(sp.y) + 'px) translate(-50%, -100%)'; };
-        lagg('vem-du', V.Gustav, 1.75); lagg('vem-bud', V.Bud, 1.9); }
-      if (caption) { capT -= 1 / 60; if (capT <= 0) { caption.classList.add('bort'); const c = caption; caption = null; setTimeout(() => c.remove(), 900); } }
+      { const visa = spel && S.t < 150 && !S.slut, kr = spel && !S.slut && S.hjalte === 'kristina' && S.hjalteT !== undefined && S.t - S.hjalteT < 90 ? V.Varld._kristina : null,          // och en stund efter att man har blivit Kristina
+        lagg = (id, o, h, pa) => { const e = $(id), sp = pa && o && o.g && o.g.visible ? V.Scene.screenPoint(o.x, V.Geo.groundAt(o.x, o.z) + h, o.z) : null, syns = sp && !sp.behind && sp.y > 50 && sp.y < golv; e.style.display = syns ? 'block' : 'none'; if (syns) e.style.transform = 'translate(' + Math.round(sp.x) + 'px,' + Math.round(sp.y) + 'px) translate(-50%, -100%)'; };
+        lagg('vem-du', kr ? { x: kr.x, z: kr.z, g: { visible: true } } : V.Gustav, kr ? 1.45 : 1.75, visa || !!kr); lagg('vem-bud', V.Bud, 1.9, visa); }
+      if (caption && performance.now() > capT) { caption.classList.add('bort'); const c = caption; caption = null; setTimeout(() => c.remove(), 900); }
     },
     // Vad den runda knappen heter annars: det man gör inför nästa steg i historien (D.GOR). Som kung tar man upp skatt när inget annat står.
     gorOrd(u) { const S = G.s; return (u && D.GOR[u.id]) || (S.varld === 1 && S.titel === 'Kung' ? 'Ta upp<br>skatt' : 'Skicka<br>bud'); },
@@ -317,7 +318,7 @@
       e.style.left = (b.left + b.width / 2) + 'px'; e.style.top = (b.top - 4) + 'px'; $('flyt').appendChild(e); setTimeout(() => e.remove(), 950);
     },
     // En kort rad som försvinner av sig själv (bara för sådant som inte behöver läsas noga).
-    text(t, sek, stor) { if (caption) caption.remove(); caption = el('div', 'text' + (stor ? ' stor' : ''), t); $('text').appendChild(caption); capT = sek || 7; },
+    text(t, sek, stor) { if (caption) caption.remove(); caption = el('div', 'text' + (stor ? ' stor' : ''), t); $('text').appendChild(caption); capT = performance.now() + (sek || 7) * 1000; },          // riktig tid: på en skärm med 120 bilder i sekunden försvann raden annars dubbelt så fort
     skylt(t) { const e = el('div', 'skylt', t); $('text').appendChild(e); setTimeout(() => e.classList.add('bort'), 2600); setTimeout(() => e.remove(), 3400); },
 
     // ---- berättelsen: en ruta ovanför konsolen som står kvar tills man trycker bort den -------------
@@ -327,6 +328,7 @@
       b.querySelector('button').addEventListener('click', () => { b.style.display = 'none'; const f = UI.efter; UI.efter = null; if (f) f(); });
     },
     dolj() { $('berattar').style.display = 'none'; },
+    textBort() { if (caption) { caption.remove(); caption = null; } },          // raden mitt på skärmen (valets fråga) ska inte ligga kvar över en scen
     // Tiden står still medan rutan i början läses.
     pausar() { return !!UI._paus && $('ruta').style.display !== 'none'; },
     // Ett uppdrag är klart: vad som hände, och vad det betyder för spelet.
@@ -355,8 +357,7 @@
       if (g.slutar && g.slutar !== 'privilegier') x.push('Baserna ger som vanligt igen.');
       const hn = G.handlingar(); if (!S.handlSedda) { S.handlSedda = {}; if (S.handlSagt) hn.forEach(h => { S.handlSedda[h.id] = 1; }); }          // äldre sparfiler räknade bara antalet
       hn.filter(h => !S.handlSedda[h.id]).forEach(h => { S.handlSedda[h.id] = 1; x.push('Ny handling ' + (innerWidth < 720 ? 'ovanför' : 'bredvid') + ' den runda knappen: <b>' + UI.handlNamn(h) + '</b>. ' + h.vad + ' Sedan behöver du vila.'); });
-      if (G.harSkatt() && !S.skattSagt) { S.skattSagt = 1; x.push('Med det gröna kortet <b>Driv in skatt</b> (under fliken med män) skickar du ut män. De kommer hem med mark, och tre lag kan vara ute samtidigt. Det är så män blir till mark.'); }
-      if (g.hjalte) x.push('Du är nu <b>Kristina Gyllenstierna</b>, hans änka. Du håller Stockholms slott och skriver till bönderna. Fortsätt skicka bud.');
+      if (g.hjalte) x.push('Du är nu <b>Kristina Gyllenstierna</b>, hans änka. Du håller Stockholms slott och skriver till bönderna om hjälp.');
       UI.berattar(UI.platsnamn(u.plats) + ' ' + u.ar, [scen && u.efter ? u.efter : u.kronika].concat(x));
     },
     // Rutan i början: vem du är, hur läget ser ut och vad du ska göra. Går att ta fram igen med frågetecknet.
@@ -375,7 +376,7 @@
     _tips() {
       const S = G.s, T = S.tips, e = $('tips'), spel = root.classList.contains('spel') && $('ruta').style.display === 'none';
       if (!spel) { e.innerHTML = ''; tips.nu = null; return; }
-      const forst = S.varld === 0 ? 'stockholm' : 'mora';
+      const forst = S.varld === 0 ? 'stockholm' : 'mora', synlig = sel => { const m = document.querySelector(sel); return !!(m && m.offsetParent); };
       const steg = [
         ['ak', '#ak', 'Tryck här. Det är det du gör just nu.' + (V.pek ? '' : ' Mellanslag går också.'), S.tryck < 5, S.tryck >= 5],
         ['full', '#ak', 'Fortsätt trycka, eller håll in. Full mätare ger dubbelt av allt och håller i sig en stund.', S.tryck >= 5 && !S.full && S.nasta < 2, S.full],
@@ -383,11 +384,12 @@
         ['upp', '#uppdrag', 'Nästa steg i historien. Tryck på knappen när du har råd.', S.nasta === 0 && G.kanSkicka(), S.nasta > 0 || !!S.aktivt],
         ['driv', '#ak', 'Striden har börjat. Tryck så anfaller dina män.', !!G.skede(), !!(S.aktivt && S.aktivt.slag >= 3)],
         ['dags', '#baser .sida:not(.dold) .bas.dags', 'Ett stort bygge. Det kostar mark, och dina män gör dagsverken på det.', !!document.querySelector('#baser .sida:not(.dold) .bas.dags'), S.dagsN > 0],
+        ['skattFlik', '#res-man', 'Här under finns kortet Driv in skatt. Med det blir män till mark.', G.kanSkatt() && !S.skattN && !synlig('#skatt'), S.skattN > 0 || synlig('#skatt')],
         ['skatt', '#skatt', 'Skicka ut män här. De kommer hem med mark.', G.kanSkatt() && !S.skattN, !!S.skatt || S.skattN > 0],
         ['tak', '#res-man', 'Armén är full. Driv in skatt (det gröna kortet) så blir männen till mark.', S.res.man >= G.tak() * 0.999 && S.nasta >= 2 && !S.aktivt, S.res.man < G.tak() * 0.9]
       ];
-      if (tips.nu) { const s = steg.find(q => q[0] === tips.nu); if (!s || s[4]) { T[tips.nu] = 1; tips.nu = null; e.innerHTML = ''; } else if (!s[3]) { tips.nu = null; e.innerHTML = ''; } }
-      if (!tips.nu) { const s = steg.find(q => !T[q[0]] && q[3]); if (s) { tips.nu = s[0]; e.innerHTML = '<div class="tip">' + s[2] + '</div>'; } }
+      if (tips.nu) { const s = steg.find(q => q[0] === tips.nu); if (!s || s[4]) { T[tips.nu] = 1; tips.nu = null; e.innerHTML = ''; } else if (!s[3] || !synlig(s[1])) { tips.nu = null; e.innerHTML = ''; } }
+      if (!tips.nu) { const s = steg.find(q => !T[q[0]] && q[3] && synlig(q[1])); if (s) { tips.nu = s[0]; e.innerHTML = '<div class="tip">' + s[2] + '</div>'; } }
       if (tips.nu) {            // håll rutan ovanför det den pekar på
         const s = steg.find(q => q[0] === tips.nu), mal = document.querySelector(s[1]), t = e.firstChild; if (!mal || !t) return; t.style.visibility = mal.offsetParent ? '' : 'hidden';
         const r = mal.getBoundingClientRect(), w = t.offsetWidth; t.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; t.style.top = (r.top - t.offsetHeight - (mal.closest('.sida') ? 50 : 14)) + 'px';
@@ -419,7 +421,7 @@
     },
     borta(b) {
       const h = Math.floor(b.sek / 3600), m = Math.floor(b.sek % 3600 / 60);
-      UI.ruta('<h2>Medan du var borta</h2><p>' + (h ? h + ' tim ' : '') + m + ' min har gått. Baserna har arbetat på.</p><div class="fick">' + (b.fick.mark > 0 ? '<span class="chip ok">' + IK.mark + '+' + tal(b.fick.mark) + ' mark</span>' : '') + (b.fick.man > 0 ? '<span class="chip ok">' + IK.man + '+' + tal(b.fick.man) + ' män</span>' : '') + '</div><button class="stang">Fortsätt</button>');
+      UI.ruta('<h2>Medan du var borta</h2><p>' + (h ? h + ' tim ' : '') + m + ' min har gått. Baserna har arbetat på.</p><div class="fick">' + (b.fick.man > 0 ? '<span class="chip ok">' + IK.man + '+' + tal(b.fick.man) + ' män</span>' : '') + (b.fick.mark > 0 ? '<span class="chip ok">' + IK.mark + '+' + tal(b.fick.mark) + ' mark</span>' : '') + '</div><button class="stang">Fortsätt</button>');
     },
     slut() {
       const S = G.s, arv = S.arvNu || G.arvVid();

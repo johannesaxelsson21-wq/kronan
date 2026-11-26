@@ -63,7 +63,7 @@
         cam.x += (cam.tx - cam.x) * a; cam.z += (cam.tz - cam.z) * a; cam.d += (cam.td - cam.d) * a;
       }
       cam.gy += (Geo.groundAt(cam.x, cam.z) - cam.gy) * (1 - Math.exp(-dt * 4));
-      const p = pitchAt(cam.d), dd = cam.d * (cam.k || 1); let sx = 0, sy = 0;
+      const p = cam.lut ? cam.lut * Math.PI / 180 : pitchAt(cam.d), dd = cam.d * (cam.k || 1); let sx = 0, sy = 0;          /* cam.lut = en scen kan be om brantare vinkel (grader), så att hustaken inte skymmer */
       if (cam.shake > 0) { cam.shake = Math.max(0, cam.shake - dt * 1.6); sx = (Math.random() - 0.5) * cam.shake * cam.d * 0.012; sy = (Math.random() - 0.5) * cam.shake * cam.d * 0.012; }
       camera.position.set(cam.x + sx, cam.gy + dd * Math.sin(p) + sy, cam.z + dd * Math.cos(p));
       camera.lookAt(cam.x + sx, cam.gy, cam.z);

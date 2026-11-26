@@ -170,7 +170,7 @@
       const u = D.UPPDRAG[S.nasta], k = G.kostnad(u);
       for (const r in k) S.res[r] -= k[r];
       if (u.kostar.skuldDel) S.skuld = Math.max(0, S.skuld - k.mark);
-      S.aktivt = { id: u.id, t: 0, dur: (dur || TID[u.slag]) / (u.slag === 'beslut' || u.slag === 'bygg' ? 1 : S.fartX), val: false };
+      S.aktivt = { id: u.id, t: 0, dur: (u.tid || dur || TID[u.slag]) / (u.slag === 'beslut' || u.slag === 'bygg' ? 1 : S.fartX), val: false };
       G.ut('skickat', { u, kostnad: k });
       return true;
     },
@@ -198,7 +198,7 @@
       if (g.startar) S.uppror[g.startar] = true;
       if (g.slutar) { if (g.slutar === 'privilegier') S.las.privilegier = false; else S.uppror[g.slutar] = false; }
       if (g.slut) { S.slut = true; S.arvNu = G.arvVid(); }
-      if (g.hjalte) { S.hjalte = g.hjalte; S.titel = 'Kristina'; }                  // Sten Sture är död, Kristina Gyllenstierna för riket vidare
+      if (g.hjalte) { S.hjalte = g.hjalte; S.titel = 'Kristina'; S.hjalteT = S.t; }                  // Sten Sture är död, Kristina Gyllenstierna för riket vidare
       if (g.slutVarld) S.slut = true;
       S.kronika.push({ id: u.id, ar: u.ar });
       G.ut('klart', { u });

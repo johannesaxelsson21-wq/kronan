@@ -8,7 +8,13 @@
   const vanta = s => new Promise(r => waits.push({ t: s, r }));
   const text = t => UI.film.text(t), plats = t => UI.film.plats(t);
   function gubbar(n, cx, cz, slag, rad) { const list = []; for (let k = 0; k < n; k++) { const a = Math.random() * 6.283, d = 0.5 + Math.random() * (rad || 2); const u = Folk.add(cx + Math.cos(a) * d, cz + Math.sin(a) * d * 0.8, slag); list.push(u); temp.push(u); } return list; }
-  function rensa() { temp.forEach(u => Folk.remove(u)); temp = []; tempM.forEach(m => Scene.scene.remove(m)); tempM = []; }
+  let skyltar = [];
+  function rensa() { temp.forEach(u => Folk.remove(u)); temp = []; tempM.forEach(m => Scene.scene.remove(m)); tempM = []; skyltar.forEach(s => s.e.remove()); skyltar = []; }
+  // En namnskylt över någon i en scen, så att man ser vem det är. var_() ger platsen ({ x, z }) varje bildruta, h är höjden över marken.
+  function skylt(t, var_, h) {
+    const e = document.createElement('div'), film = document.getElementById('film'); e.className = 'filmnamn'; e.textContent = t; e.style.display = 'none'; film.insertBefore(e, document.getElementById('film-svart'));
+    const s = { e, var_, h: h || 1.6, bort() { e.remove(); skyltar = skyltar.filter(q => q !== s); } }; skyltar.push(s); return s;
+  }
 
   // Släden som Sten Sture kördes hem i, februari 1520
   function slade() {
@@ -23,7 +29,7 @@
   // o.satt(a, v, t, dt) flyttar något annat än hjälten (ett skepp, en släde, en man till fots). o.kd = kamerans avstånd.
   function akFard(pts, d0, d1, fartX, knapp, rad, o) {
     return new Promise(res => {
-      o = o || {}; aka = { pts, d: d0, d0, d1, v: 0, fartX: fartX || 1, res, stilla: 0, rad: rad || 'Tryck för att åka', satt: o.satt, kd: o.kd || 19, ljud: o.ljud, ork: 1, rader: o.rader || null, radNr: 0, radT: 0 };
+      o = o || {}; aka = { pts, d: d0, d0, d1, v: 0, fartX: fartX || 1, res, stilla: 0, rad: rad || 'Tryck för att åka', satt: o.satt, kd: o.kd || 19, sikt: o.sikt || null, ljud: o.ljud, ork: 1, rader: o.rader || null, radNr: 0, radT: 0 };
       UI.film.text(aka.rad); UI.film.knapp(knapp || 'Åk', () => I.tar && I.tar());
       I.tar = () => { if (!aka) return; aka.v = Math.min(3.4, aka.v + 0.8 * aka.ork); aka.stilla = 0; L.spela(aka.ljud || (V.Gustav.sno === false ? 'hov' : 'skida')); };
     });
@@ -31,7 +37,7 @@
   const MELLAN = 120;          // så många sekunders spelande måste det gå mellan två scener. Förspelets steg ligger minst 150 sekunder isär (senast i data.js), så där får alla plats.
   let autoT = 0, GE = null;
   // Gustav Eriksson som han ser ut i sin egen värld, till fots. I förspelet är hjälten Sten Sture, så scenerna om Gustav har en egen figur.
-  function gustavE() { if (!GE) { GE = Object.create(V.Gustav); GE.init(Scene.scene, 'gustav'); } GE.g.visible = true; return GE; }
+  function gustavE() { if (!GE) { GE = Object.create(V.Gustav); GE.init(Scene.scene, 'gustav'); } GE.g.visible = true; GE.utanRing = false; return GE; }
   // Spelaren trycker n gånger på knappen (eller väntar ut tiden). vid(k) körs för varje tryck. Löfte som blir klart när det är gjort.
   function tryckN(knapp, n, vid, sek) {
     return new Promise(res => {
@@ -153,11 +159,11 @@
         lagg(); const forst = skepp[0].position, pts = [[sx, sz], [forst.x, forst.z]];
         const bat = V.skepp('sverige'); bat.scale.setScalar(0.95); bat.position.set(sx, 0.02, sz); bat.rotation.y = Math.atan2(forst.x - sx, forst.z - sz); Scene.scene.add(bat); tempM.push(bat);
         const sex = []; for (let i = 0; i < 5; i++) { const u = Folk.add(sx - 1.0 - (i % 3) * 0.32, sz - 0.25 + Math.floor(i / 3) * 0.38, 'borgare', { ang: 1.6 }); sex.push(u); temp.push(u); }
-        const ge = gustavE(), star = dt => ge.place(sx - 1.72, sz + 0.2, 1.6, 0, tid, dt, false, true); ge.ang = 1.6; hooks.push(star);          // den sjätte är Gustav Eriksson, 22 år
+        const ge = gustavE(), star = dt => ge.place(sx - 1.72, sz + 0.2, 1.6, 0, tid, dt, false, true); ge.ang = 1.6; ge.utanRing = true; hooks.push(star); const gs = skylt('Gustav Eriksson', () => ({ x: sx - 1.72, z: sz + 0.2 }), 1.8);          // den sjätte är Gustav Eriksson, 22 år
         Scene.jump((sx + forst.x) / 2, sz + 2.4, 30); plats('Stockholm, september 1518'); hooks.push(lagg);
         await vanta(2); text('Kristian har förlorat slaget och vill förhandla. Som säkerhet kräver han sex svenska herrar ombord på sina skepp.'); await vanta(8.5);
-        sex.forEach(u => Folk.remove(u)); temp = temp.filter(u => sex.indexOf(u) < 0); hooks = hooks.filter(h => h !== star); ge.g.visible = false;
-        await akFard(pts, 0, R.length(pts) - 0.9, 0.7, 'Skicka', 'Tryck för att skicka ut dem', { kd: 27, ljud: 'vag', satt: a => { bat.position.set(a.x, 0.02 + Math.sin(tid * 2) * 0.02, a.z); bat.rotation.y = a.ang; } });
+        sex.forEach(u => Folk.remove(u)); temp = temp.filter(u => sex.indexOf(u) < 0); hooks = hooks.filter(h => h !== star); ge.g.visible = false; gs.bort();
+        await akFard(pts, 0, R.length(pts) - 0.9, 0.7, 'Skicka', 'Tryck för att skicka ut dem', { kd: innerWidth < innerHeight ? 31 : 27, sikt: [forst.x, forst.z], ljud: 'vag', satt: a => { bat.position.set(a.x, 0.02 + Math.sin(tid * 2) * 0.02, a.z); bat.rotation.y = a.ang; } });
         UI.film.knapp(null); I.tar = null; Scene.scene.remove(bat); L.spela('nej'); text('När de sex är ombord hissar Kristian segel.');
         hooks.push(dt => { d = Math.min(26, d + dt * 1.5); const c = Scene.cam, f = Math.min(1, dt * 1.2); c.tx += (forst.x - c.tx) * f; c.tz += (forst.z + 2 - c.tz) * f; c.td = 36; });
         await vanta(6); text('Det blir inget möte. De sex förs till Danmark som fångar. En av dem är Gustav Eriksson, 22 år.'); await vanta(8.5);
@@ -185,13 +191,15 @@
         const herrar = [], pos = [[-0.62, 0], [-1.12, 0.14], [-1.62, 0], [-2.12, 0.14], [-0.9, -0.5], [0.62, 0], [1.12, 0.12]]; for (let i = 0; i < 7; i++) { const x = h.x + pos[i][0], z = h.z - 0.05 + pos[i][1], o = { ang: pos[i][0] < 0 ? 0.25 : -0.25 }; if (i === 6) Object.assign(o, { col: '#6a2a7a', col2: '#f2eee2', sc: 1.12 }); const u = Folk.add(x, z, 'borgare', o); herrar.push(u); temp.push(u); }
         const sigill = k => { const mb = new V.MB(); mb.snow = 0; mb.cyl(-0.26 + k * 0.087, 0.312, 0.1, 0.036, 0.036, 0.016, 8, '#b8312a', { cap: '#b8312a' }); const m = B.mesh(mb); m.position.copy(bm.position); m.scale.setScalar(K); Scene.scene.add(m); tempM.push(m); };
         const hopp = u => { u.y = 0.1; setTimeout(() => { u.y = 0; }, 180); };
-        Scene.jump(tx, tz + 0.7, 13); plats('Stockholm, november 1517');
+        V.Varld._kvar = { x: h.x, z: h.z, ang: 0, t: 300, scen: 1 };          // Sten Sture står kvar vid bordet, vänd mot oss
+        Scene.cam.lut = 60; Scene.jump(tx, tz + 0.35, 14); plats('Stockholm, november 1517');
         await vanta(2); text('Mötet har bestämt: ärkebiskopen avsätts och hans borg ska rivas. Nu sätter alla sitt sigill under brevet.'); await vanta(8);
         text('Tryck för att sätta sigillen');
         const n = await tryckN('Sigill', 6, k => { sigill(k - 1); hopp(herrar[k - 1]); L.spela('trumma'); L.spela('kop'); if (k === 2) text(''); }, 18);
         for (let k = n; k < 6; k++) sigill(k);
         await vanta(0.8); sigill(6); hopp(herrar[6]); L.spela('trumma');
-        text('Det berättas att biskop Brask gömde en lapp under sitt sigill: "Härtill är jag nödd och tvungen."'); await vanta(8);
+        const brask = skylt('Biskop Brask', () => herrar[6], 1.75);
+        text('Det berättas att biskop Brask gömde en lapp under sitt sigill: "Härtill är jag nödd och tvungen."'); await vanta(8); brask.bort();
         text('Den som har sitt sigill under brevet har varit med om att avsätta en ärkebiskop.'); await vanta(7);
       },
       // September 1519: flykten från Kalø till Lübeck
@@ -199,7 +207,7 @@
         const K = B.K, k = Geo.place(10.48, 56.3), lb = R.P.lubeck; Scene.setSeason(0.71);
         const mb = new V.MB(); B.borg(mb, 'liten', 0); const borg = B.mesh(mb); borg.position.set(k.x, Geo.groundAt(k.x, k.z), k.z); borg.scale.setScalar(K); Scene.scene.add(borg); tempM.push(borg);
         const fl = B.flagga('danmark'); fl.position.set(k.x + 2.2, Geo.groundAt(k.x + 2.2, k.z + 0.6), k.z + 0.6); fl.scale.setScalar(1.7); Scene.scene.add(fl); tempM.push(fl);
-        const ge = gustavE(), g = { x: k.x - 1.7, z: k.z + 0.9, ang: -1.4, v: 0 }, visa = dt => ge.place(g.x, g.z, g.ang, g.v, tid, dt, false, true); ge.ang = g.ang; hooks.push(visa);
+        const ge = gustavE(), g = { x: k.x - 1.7, z: k.z + 0.9, ang: -1.4, v: 0 }, visa = dt => ge.place(g.x, g.z, g.ang, g.v, tid, dt, false, true); ge.ang = g.ang; hooks.push(visa); skylt('Gustav Eriksson', () => g, 1.8);
         [[k.x - 0.45, k.z + 1.3], [k.x + 0.55, k.z + 1.3]].forEach(q => temp.push(Folk.add(q[0], q[1], 'dansk', { pike: true, ang: 0 })));          // vakterna vid porten ser åt andra hållet
         const pts = [[k.x - 1.7, k.z + 0.9], [k.x - 3.6, k.z + 1.1], [k.x - 6, k.z + 2.2], [k.x - 8.5, k.z + 3.8]];
         Scene.jump(k.x - 0.8, k.z + 2.4, 21); plats('Kalø slott i Danmark, september 1519');
@@ -215,7 +223,7 @@
         g.x = lb.x - 3.4; g.z = lb.z + 5.2; g.ang = 2.4; g.v = 0.45; ge.ang = 2.4; hooks.push(dt => { if (g.z > lb.z + 2.6) { g.z -= dt * 0.42; g.x += dt * 0.38; } else g.v = 0; visa(dt); });
         Scene.jump(lb.x - 0.3, lb.z + 2.2, 22); UI.film.svart(0, 1.2); plats('Lübeck');
         await vanta(5); text('Slottsherren från Kalø kommer efter och kräver att få honom tillbaka.');
-        const jagare = Folk.add(lb.x - 6, lb.z + 5.8, 'dansk', { pike: true, gar: true, ang: 1.95 }); temp.push(jagare); hooks.push(dt => { if (jagare.x < lb.x - 3.2) { jagare.x += dt * 0.5; jagare.z -= dt * 0.2; } else jagare.gar = false; });
+        const jagare = Folk.add(lb.x - 6, lb.z + 5.8, 'dansk', { pike: true, gar: true, ang: 1.95 }); temp.push(jagare); skylt('Slottsherren', () => jagare, 1.35); hooks.push(dt => { if (jagare.x < lb.x - 3.2) { jagare.x += dt * 0.5; jagare.z -= dt * 0.2; } else jagare.gar = false; });
         await vanta(7); L.spela('klart'); text('Lübecks råd säger nej. Han blir kvar i åtta månader.'); await vanta(7);
       },
       // Februari 1520. Sten Sture körs hem i släde över Mälarens is och dör på vägen.
@@ -223,7 +231,7 @@
         const a0 = R.P.strangnas, a1 = R.P.stockholm, rak = [[a0.x, a0.z], [a1.x, a1.z]], l0 = R.length(rak), Bu = V.Bud, sk = Bu.g.scale.x; Scene.setSeason(0.09); V.Gustav.g.visible = false;
         let skift = 0; for (let f = 0.28; f <= 0.76; f += 0.04) { const a = R.along(rak, l0 * f); let s = 0; while (s < 5 && Geo.sdAt(a.x, a.z - s) > -1.4) s += 0.4; skift = Math.max(skift, s); }          // ut på öppen is, norr om stranden
         const p0 = R.along(rak, l0 * 0.28), p1 = R.along(rak, l0 * 0.76), pts = [[p0.x, p0.z - skift], [p1.x, p1.z - skift]], d0 = 0, d1 = R.length(pts);
-        const sl = slade(); sl.scale.setScalar(sk); Scene.scene.add(sl); tempM.push(sl);
+        const sl = slade(); sl.scale.setScalar(sk); Scene.scene.add(sl); tempM.push(sl); skylt('Du', () => ({ x: sl.position.x, z: sl.position.z, gy: sl.position.y }), 0.95);
         const lagg = (a, v, t, dt) => {
           if (aka) { aka.ork = Math.max(0.3, 1 - (aka.d - d0) / (d1 - d0) * 0.85); aka.fartX = 0.8 * aka.ork; if (aka.ork <= 0.3) aka.d1 = aka.d; }          // hästen går tyngre och tyngre, och till sist står släden still
           Bu.place(a.x, a.z, a.ang, v * (aka ? aka.ork : 1), t, dt, false); Bu.g.userData.ring.visible = false;
@@ -243,7 +251,7 @@
         const folk = [], stall = (x, z, slag, o) => { const u = Folk.add(x, z, slag, o); folk.push(u); temp.push(u); };
         for (let j = 0; j < 4; j++) for (const s of [-1, 1]) stall(kx + s * (0.6 + j * 0.56), kz + 0.04 + (j % 2) * 0.14, j % 2 ? 'borgare' : 'knekt', { pike: j % 2 === 0, ang: 0 });          // i rad framför slottsmuren, där hon står
         for (let i = 0; i < 4; i++) stall(kx - 3.1 - (i % 2) * 0.5, kz + 0.5 + Math.floor(i / 2) * 0.5, i % 2 ? 'knekt' : 'borgare', { pike: i === 1, ang: 1.3 });
-        Scene.jump(kx - 0.4, kz + 2.0, 19); plats('Stockholms slott, sommaren 1520');
+        Scene.jump(kx - 0.4, kz + 2.0, 19); plats('Stockholms slott, sommaren 1520'); skylt('Du', () => kr || { x: kx, z: kz }, 1.5);
         await vanta(2); text('Du är Kristina Gyllenstierna. Kristian belägrar Stockholm, och du står själv på vallen.'); await vanta(7.5);
         text('Tryck för att mana dem');
         await tryckN('Mana', 8, k => {
@@ -277,12 +285,15 @@
       UI = V.UI; L = V.Ljud; I.aktiv = true; I.spelade++; I.nu = namn; autoT = 0; I.scenFart = Math.min(6, +new URLSearchParams(location.search).get('snabb') || 1);
       if (V.Varld.popKlart) V.Varld.popKlart();
       if (V.Musik) V.Musik.spar(V.Musik.har(namn) ? namn : { staket: 'krig', gisslan: 'krig', vallen: 'krig', kalo: 'vinter', isen: 'vinter', kalmar: 'vinter' }[namn]);          // varje scen har sitt eget spår
-      const c = Scene.cam, hem = { x: c.x, z: c.z, d: c.d }; c.locked = true; c.fly = null; c.fri = true; UI.visa(false); UI.dolj(); UI.film.pa(true); L.spela('klocka');
+      const c = Scene.cam, hem = { x: c.x, z: c.z, d: c.d }; c.locked = true; c.fly = null; c.fri = true; UI.visa(false); UI.dolj(); UI.textBort(); UI.film.pa(true); L.spela('klocka');
+      const Bu = V.Bud, budSyns = Bu.g.visible; if (namn !== 'isen') Bu.g.visible = false; V.Varld.scenDolj(true);          // budet hör inte hemma i scenen (på isen är det hästen som drar släden)
       try { await I.scener[namn](); } catch (e) { console.error(e); }
-      hooks = []; waits = []; aka = null; I.tar = null; I.nu = null; UI.film.knapp(null); if (GE) GE.g.visible = false; if (V.Musik) V.Musik.spar(V.Musik.grund()); rensa(); text(''); plats(''); UI.film.svart(0, 0.6); UI.film.pa(false); UI.visa(true); c.locked = false; c.fri = false; Scene.jump(hem.x, hem.z, Math.max(hem.d, 32)); I.aktiv = false; I.scenFart = 1; if (klar) klar();
+      UI.film.knapp(null); I.tar = null; text(''); plats(''); await new Promise(r => setTimeout(r, 950));          // sista raden tonar bort innan rutan kommer (i riktig tid, också i snabbspolning)
+      Bu.g.visible = budSyns; V.Varld.scenDolj(false); c.lut = 0; if (V.Varld._kvar && V.Varld._kvar.scen) V.Varld._kvar = null; hooks = []; waits = []; aka = null; I.tar = null; I.nu = null; UI.film.knapp(null); if (GE) GE.g.visible = false; if (V.Musik) V.Musik.spar(V.Musik.grund()); rensa(); text(''); plats(''); UI.film.svart(0, 0.6); UI.film.pa(false); UI.visa(true); c.locked = false; c.fri = false; Scene.jump(hem.x, hem.z, Math.max(hem.d, 32)); I.aktiv = false; I.scenFart = 1; if (klar) klar();
     },
     slut(klar) { hooks = []; waits = []; rensa(); aka = null; I.tar = null; regn = false; UI.film.knapp(null); UI.film.tal(null); UI.film.text(''); UI.film.plats(''); UI.film.svart(0, 1); UI.film.pa(false); Fx.sno = true; V.Varld._ruttKlar = false; V.Varld._ruttKey = null; klar(); },
     update(dt, t) {
+      skyltar.forEach(s => { const p = s.var_(), sp = p ? Scene.screenPoint(p.x, (p.gy !== undefined ? p.gy : Geo.groundAt(p.x, p.z)) + s.h, p.z) : null; if (!sp || sp.behind) { s.e.style.display = 'none'; return; } s.e.style.display = ''; const w = s.e.offsetWidth / 2 + 6, x = Math.max(w, Math.min(innerWidth - w, sp.x)); s.e.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(sp.y) + 'px) translate(-50%, -100%)'; });
       tid = t; const fart = I.aktiv ? (I.scenFart || 1) : (I.fart || 1);
       for (let k = waits.length - 1; k >= 0; k--) { waits[k].t -= dt * fart; if (waits[k].t <= 0) { const w = waits.splice(k, 1)[0]; w.r(); } }
       hooks.slice().forEach(h => h(I.aktiv ? dt * fart : dt));
@@ -292,7 +303,7 @@
         aka.v = Math.max(0, aka.v - 0.75 * dt); aka.d = Math.min(aka.d1, aka.d + aka.v * aka.fartX * dt * (I.aktiv ? fart : 1)); aka.stilla += dt;
         const a = R.along(aka.pts, aka.d); if (aka.satt) aka.satt(a, aka.v / 3.4, t, dt); else V.Gustav.place(a.x, a.z, a.ang, aka.v / 3.4, t, dt, false);
         V.Varld.friExtra = [[a.x, a.z, 1.1]];
-        Scene.cam.fly = null; Scene.cam.tx = a.x; Scene.cam.tz = a.z + 1.5; Scene.cam.td = aka.kd;
+        { const sk = aka.sikt; Scene.cam.fly = null; Scene.cam.tx = sk ? (a.x + sk[0]) / 2 : a.x; Scene.cam.tz = (sk ? (a.z + sk[1]) / 2 : a.z) + 1.5; Scene.cam.td = aka.kd; }          /* sikt = kameran håller både den som far och målet i bild */
         if (aka.rader && aka.radNr < aka.rader.length && aka.d >= aka.rader[aka.radNr][0]) { const r = aka.rader[aka.radNr++]; if (r[1] !== null) UI.film.plats(r[1]); UI.film.text(r[2]); aka.radT = 7; aka.stilla = 0; }          // en rad om det man just åker förbi
         if (aka.radT > 0) { aka.radT -= dt; if (aka.radT <= 0) UI.film.text(''); }
         else if (aka.stilla > 5) { UI.film.text(aka.rad); aka.stilla = 0; } else if (aka.v > 1.5 && aka.d > aka.d0 + 2) UI.film.text('');
