@@ -376,3 +376,8 @@ button { font-family: inherit; cursor: pointer; }
 .flyt.svar { font-size: 18px; font-weight: normal; }
 .flyt.svar.bra { color: #cdeccf; }
 .flyt.svar.fel { color: #e9dcc0; }
+
+/* Slagen: ringen runt knappen fylls med trycken och blir grön när det går bra; raden under knappen syns */
+#akwrap.hugg.kraft #ak .ring { stroke: #9df0a6; }
+#akwrap.hugg #fullx { color: #fff3c9; }
+#akwrap.strid #ak-hint { font-size: 11px; }

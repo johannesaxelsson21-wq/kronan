@@ -231,7 +231,7 @@
         const a0 = R.P.strangnas, a1 = R.P.stockholm, rak = [[a0.x, a0.z], [a1.x, a1.z]], l0 = R.length(rak), Bu = V.Bud, sk = Bu.g.scale.x; Scene.setSeason(0.09); V.Gustav.g.visible = false;
         let skift = 0; for (let f = 0.28; f <= 0.76; f += 0.04) { const a = R.along(rak, l0 * f); let s = 0; while (s < 5 && Geo.sdAt(a.x, a.z - s) > -1.4) s += 0.4; skift = Math.max(skift, s); }          // ut på öppen is, norr om stranden
         const p0 = R.along(rak, l0 * 0.28), p1 = R.along(rak, l0 * 0.76), pts = [[p0.x, p0.z - skift], [p1.x, p1.z - skift]], d0 = 0, d1 = R.length(pts);
-        const sl = slade(); sl.scale.setScalar(sk); Scene.scene.add(sl); tempM.push(sl); skylt('Du', () => ({ x: sl.position.x, z: sl.position.z, gy: sl.position.y }), 0.95);
+        const sl = slade(); sl.scale.setScalar(sk); Scene.scene.add(sl); tempM.push(sl); skylt('Sten Sture', () => ({ x: sl.position.x, z: sl.position.z, gy: sl.position.y }), 0.95);
         const lagg = (a, v, t, dt) => {
           if (aka) { aka.ork = Math.max(0.3, 1 - (aka.d - d0) / (d1 - d0) * 0.85); aka.fartX = 0.8 * aka.ork; if (aka.ork <= 0.3) aka.d1 = aka.d; }          // hästen går tyngre och tyngre, och till sist står släden still
           Bu.place(a.x, a.z, a.ang, v * (aka ? aka.ork : 1), t, dt, false); Bu.g.userData.ring.visible = false;
@@ -251,7 +251,7 @@
         const folk = [], stall = (x, z, slag, o) => { const u = Folk.add(x, z, slag, o); folk.push(u); temp.push(u); };
         for (let j = 0; j < 4; j++) for (const s of [-1, 1]) stall(kx + s * (0.6 + j * 0.56), kz + 0.04 + (j % 2) * 0.14, j % 2 ? 'borgare' : 'knekt', { pike: j % 2 === 0, ang: 0 });          // i rad framför slottsmuren, där hon står
         for (let i = 0; i < 4; i++) stall(kx - 3.1 - (i % 2) * 0.5, kz + 0.5 + Math.floor(i / 2) * 0.5, i % 2 ? 'knekt' : 'borgare', { pike: i === 1, ang: 1.3 });
-        Scene.jump(kx - 0.4, kz + 2.0, 19); plats('Stockholms slott, sommaren 1520'); skylt('Du', () => kr || { x: kx, z: kz }, 1.5);
+        Scene.jump(kx - 0.4, kz + 2.0, 19); plats('Stockholms slott, sommaren 1520'); skylt('Kristina', () => kr || { x: kx, z: kz }, 1.5);
         await vanta(2); text('September 1520. Ni har hållit ut hela sommaren, men ingen hjälp har kommit.'); await vanta(7);
         if (!V.Game.s.aktivt || !V.Game.s.aktivt.val) {          // spelas scenen för sig själv (?scen=vallen) manar man som förut
         text('Tryck för att mana dem');

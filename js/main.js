@@ -22,16 +22,16 @@
   let haller = false, hallT = 0;          // mellanslag eller knappen hålls in: buden går i jämn takt utan att man behöver hamra
   function handelse(typ, d) {
     Varld.handelse(typ, d);
-    if (typ === 'tryck') { if (spelar) UI.tryckt(d); }
+    if (typ === 'tryck') { if (spelar && !(V.lugn && d.skede)) UI.tryckt(d); }          // i förspelets slag inga siffror från knappen: där syns trycken i slaget
     else if (typ === 'marknad') { if (!V.lugn) { UI.skylt('Marknadsdag i ' + G.BAS[d.bas].namn); V.Ljud.spela('klocka'); } }
     else if (typ === 'marknadKlar') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.2, p.z, 'Marknad +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark'), d.res); V.Ljud.spela('dubbel');
     }
     else if (typ === 'sold' && d.dubbel) UI.skylt((G.s.varld === 0 ? 'Knektarna' : 'Soldaterna') + ': dubbelt så många män');
     else if (typ === 'slagStart') { UI.skylt(d.u.belagring ? 'Belägringen börjar' : 'Slaget börjar', true); V.Ljud.spela('horn'); }
-    else if (typ === 'order') { const ex = d.forst ? (d.typ === 'hugg' ? 'Hugg i lugn takt: tryck när ringen har krympt till pricken och det står NU. I slaget eller på knappen. Att hamra hjälper inte.' : d.typ === 'order' ? 'Vänta tills ringen har krympt till pricken och det står NU. Tryck då, i slaget eller på knappen.' : '') : ''; UI.text(d.o.rad + (ex ? '<br><b>' + ex + '</b>' : ''), d.typ === 'hugg' ? 6.8 : d.typ === 'vanta' ? 5 : 4.4, !!ex); V.Ljud.spela(d.typ === 'hugg' ? 'trumma' : 'horn'); }          // första gången förklaras varje sort
+    else if (typ === 'order') { const a0 = G.s.aktivt, ex = d.typ !== 'vanta' && a0 && !a0.forklarad ? 'Tryck på knappen många gånger. Ringen runt den fylls, och ju fler tryck, desto mer händer. Håll inte in.' : ''; if (ex) a0.forklarad = 1; UI.text(d.o.rad + (d.o.hur ? '<br>' + d.o.hur : '') + (ex ? '<br><b>' + ex + '</b>' : ''), d.typ === 'hugg' ? 6.8 : d.typ === 'vanta' ? 5.5 : 5, !!ex); V.Ljud.spela(d.typ === 'hugg' ? 'trumma' : 'horn'); }          // första gången förklaras varje sort          // i början av varje slag
     else if (typ === 'hugg') { UI.svar(d.traff ? 'Träff' : d.igen ? 'Vänta på nästa ring' : d.d < 0 ? 'Lite tidigt' : 'Lite sent', d.traff); }          // varje hugg får ett svar där ringen är
     else if (typ === 'orderVanta') UI.svar('Vänta tills ringen når pricken', false);
-    else if (typ === 'orderSvar') { if (!d.o.alltid && d.typ !== 'hugg') UI.svar(d.bra ? 'Rätt läge' : d.svar === 'tidigt' ? 'Lite tidigt' : 'Lite sent', d.bra); }
+    else if (typ === 'orderSvar') { if (!d.o.alltid && d.bra) UI.svar('Bra', true); }
     if (typ === 'orderSvar') { UI.text(d.o.alltid || (d.bra ? d.o.bra : d.o.miss), 3.2); if (d.bra && !d.o.alltid) V.Ljud.spela('klart'); }
     else if (typ === 'kula') { UI.text(d.o.rad, 6.5); V.Ljud.spela('kanon'); Scene.shake(0.5); if (d.o.efter && !V.tyst) setTimeout(() => UI.text(d.o.efter, 6), 6800 / Math.min(snabb, 10)); }
     else if (typ === 'byggnad') { UI.skylt(d.b.skylt || d.b.namn + ' står klart'); if (d.b.klart && !V.tyst) UI.text(d.b.klart, 9); V.Ljud.spela('hammare'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } UI.tick(true); }          // kameran går dit så att man ser huset resas

@@ -139,6 +139,7 @@
     pos(id) { const p = R.P[id]; return p ? { x: p.x, y: p.y || 0, z: p.z } : null; },
     // Ortnamnen på kartan (förspelet): varje plats som syns, och borgen Stäket så länge den står. Namnet står strax nedanför husen.
     ortnamn() {
+      if (G.s.varld === 0 && vis && G.skede() === 'strid') return W._slagNamn();          // i ett slag: vem som är vem, inte städernas namn
       const ut = [], lagg = (id, namn, x, z) => ut.push({ id, namn, x, z, y: Math.max(0.02, Geo.groundAt(x, z)) });
       for (const b of D.BASER) { if (!steg[b.id] || !steg[b.id].length) continue; const p = R.P[b.id], r = tomt[b.id] ? tomt[b.id].R * 0.34 : 1; lagg(b.id, b.namn, p.x, p.z + r); }
       if (dekor.staket) { const p = R.P.staket; lagg('staket', 'Stäket', p.x, p.z + 1.5); }
@@ -374,6 +375,7 @@
       } else if (typ === 'samling') { const p = R.P[d.bas]; if (!d.lopare) Fx.guld(p.x, p.y + 0.2, p.z, 10, 1.0); (vandrare[d.bas] || []).forEach(v => { v.hopp = 0.5; }); }
       else if (typ === 'byggnad') W._byggnad(d.id, false);
       else if (typ === 'hus') { if (d.niva === 1) W._byggnad(d.id, false); else { const w = W.byggPlats(d.id); if (w) Fx.guld(w.x, Geo.groundAt(w.x, w.z) + 0.3, w.z, 25, 0.8); } }          // stadens hus: byggs första gången, glimmar sedan
+      else if (typ === 'slagTryck' && vis) { const nu = performance.now(); if (nu > (W._slagT || 0)) { W._slagT = nu + 280; W._slagTryck(d.o); } }          // förspelets slag: trycken syns i slaget
       else if (typ === 'hugg' && vis && vis.u.belagring) { if (d.traff) W._belBild(d.o && d.o.bild, true, 'hugg'); }          // belägringen: varje tryck i takt syns på vallen eller i tornen
       else if (typ === 'hugg' && vis && d.traff) { const q = W.malPunkt(); if (q) Fx.damm(q.x, Geo.groundAt(q.x, q.z), q.z, 5); vis.stot = 1; Scene.shake(0.08); V.Ljud && V.Ljud.spela('svard'); const e = vis.enh[Math.floor(Math.random() * Math.min(vis.enh.length, vis.bredd || 6))]; if (e) Fx.damm(e.x, Geo.groundAt(e.x, e.z), e.z, 3); }          // ett hugg i takt: leden trycker på
       else if (typ === 'orderSvar' && vis && vis.u.belagring) W._belBild(d.o.bild, d.bra, 'svar');
@@ -534,6 +536,12 @@
         else if (hop.length > want) Folk.remove(hop.pop());
       }
     },
+    // Ett tryck i förspelets slag: leden trycker på och det dammar vid fronten, eller (belägringen) tornen skjuter, försvararna jublar, brevet beseglas.
+    _slagTryck(o) {
+      if (vis.u.belagring) { W._belBild(o && o.bild, true, 'hugg'); return; }
+      vis.stot = 1; Scene.shake(0.14); const fi = vis.fi.filter(e => e.br === 0 && e.fall < 0.5), e = fi[Math.floor(Math.random() * fi.length)] || vis.enh[0];
+      if (e) Fx.damm(e.x, Geo.groundAt(e.x, e.z), e.z, 3); if (Math.random() < 0.5) V.Ljud && V.Ljud.spela('svard');
+    },
     // Var i världen ringen står i förspelets slag (Johannes 2026-11-26: "så man klickar på slagfältet"). null = ingen ring just nu.
     malPunkt() {
       const a = G.s.aktivt, m = a && a.mom; if (!vis || !m || m.svar || m.typ === 'vanta' || G.s.varld !== 0) return null;
@@ -560,6 +568,20 @@
       q = q || fi || egen; return q ? { x: q.x, y: gy(q.x, q.z) + 0.35, z: q.z } : null;
     },
     malSkarm() { const q = W.malPunkt(); if (!q) return null; const p = Scene.screenPoint(q.x, q.y, q.z); return p.behind ? null : { x: p.x, y: p.y, r: Scene.mobil ? 48 : 40 }; },          // r = hur nära man måste trycka
+    // En kanonkula som syns flyga i en båge och slår ner (förspelet): så ser man vem som skjuter på vem
+    _kula(x0, y0, z0, x1, z1, rok) {
+      const y1 = Geo.groundAt(x1, z1) + 0.1, T = 1.0, g = 4; Fx.krut(x0, y0, z0);
+      Fx.spawn({ x: x0, y: y0, z: z0, vx: (x1 - x0) / T, vz: (z1 - z0) / T, vy: (y1 - y0) / T + g * T / 2, g, size: 0.16, r: 0.08, gr: 0.07, b: 0.06, a: 1, fade: 0, max: T });
+      setTimeout(() => { Fx.krut(x1, y1, z1); Fx.damm(x1, y1, z1, 8); if (rok) for (let k = 0; k < 3; k++) Fx.rok(x1, y1 + 0.2, z1, true); Scene.shake(0.14); }, T * 1000);
+    },
+    // Namn över dem som slåss (förspelet), så att man ser vem som är vem
+    _slagNamn() {
+      const ut = [], gy = (x, z) => Geo.groundAt(x, z), mitt = l => { let x = 0, z = 0, n = 0; for (const e of l) if (e.vis !== false && e.fall < 0.5) { x += e.x; z += e.z; n++; } return n ? { x: x / n, z: z / n } : null; };
+      if (vis.u.belagring) { const b = R.P.brunkeberg; if (b) ut.push({ id: 'slag-lager', namn: 'Kristians läger', x: b.x, z: b.z + 0.9, y: gy(b.x, b.z) + 0.2 }); const f = mitt(vis.enh); if (f) ut.push({ id: 'slag-egen', namn: 'Försvararna', x: f.x, z: f.z + 0.4, y: gy(f.x, f.z) }); return ut; }
+      const e = mitt(vis.enh), f = mitt(vis.fi), egen = vis.u.id === 'sUppsala' ? 'Bönderna' : 'Sten Stures män';
+      if (e) ut.push({ id: 'slag-egen', namn: egen, x: e.x, z: e.z, y: gy(e.x, e.z) + 1.1 }); if (f) ut.push({ id: 'slag-fiende', namn: 'Danskarna', x: f.x, z: f.z, y: gy(f.x, f.z) + 1.1 });
+      return ut;
+    },
     // Belägringen av Stockholm 1520 (förspelet): försvarare i rad framför slottet där Kristina står, och det ögonblicken visar.
     _belStart(p) {
       const K = B.K, kr = W._kristina, kx = kr ? (kr.bx !== undefined ? kr.bx : kr.x) : p.x + 1.9 * K, kz = kr ? kr.z : p.z - 0.5 * K;
@@ -569,9 +591,10 @@
       const p = R.P.stockholm, Lj = V.Ljud, kr = W._kristina, gy = (x, z) => Geo.groundAt(x, z), torn = W._tornLagen && W._tornLagen.length ? W._tornLagen : [{ x: p.x + 1.6, z: p.z - 1.2 }];
       if (bild === 'mana') { if (vis) vis.enh.forEach((u, i) => { if (bra || i % 2) { u.y = 0.1; setTimeout(() => { u.y = 0; }, 170 + i * 15); } }); if (kr) kr.hoppT = 0.45; if (Lj) Lj.spela(nar === 'hugg' ? 'sorl' : bra ? 'klart' : 'nej'); return; }
       if (bild === 'kanon') {
-        if (nar === 'hugg') { const q = torn[Math.floor(Math.random() * torn.length)]; Fx.krut(q.x, gy(q.x, q.z) + 1.6, q.z); if (Lj) Lj.spela('kanon'); Scene.shake(0.08); return; }          // ladda och skjut i takt: ett torn i taget
-        if (bra) { torn.forEach(q => Fx.krut(q.x, gy(q.x, q.z) + 1.6, q.z)); Fx.krut(p.x + 1.4, gy(p.x + 1.4, p.z - 1.3) + 1.3, p.z - 1.3); const b = R.P.brunkeberg; if (b) { Fx.krut(b.x, gy(b.x, b.z) + 0.3, b.z); Fx.damm(b.x, gy(b.x, b.z), b.z, 6); } Scene.shake(0.2); }
-        else { const x = p.x + (Math.random() - 0.5) * 2.4, z = p.z + 0.6 + Math.random() * 1.2; Fx.krut(x, gy(x, z) + 0.3, z); Fx.damm(x, gy(x, z), z, 8); for (let k = 0; k < 4; k++) Fx.rok(x, gy(x, z) + 0.3, z, true); Scene.shake(0.35); }          // kulor slår ner bland husen
+        const b = R.P.brunkeberg || p, mot = () => [b.x + (Math.random() - 0.5) * 1.4, b.z + (Math.random() - 0.5) * 1.4];
+        if (nar === 'hugg') { const q = torn[Math.floor(Math.random() * torn.length)], m = mot(); W._kula(q.x, gy(q.x, q.z) + 1.5, q.z, m[0], m[1], false); if (Lj) Lj.spela('kanon'); return; }          // ett tryck: ett torn skjuter mot lägret, och man ser kulan flyga
+        if (bra) torn.forEach((q, i) => setTimeout(() => { const m = mot(); W._kula(q.x, gy(q.x, q.z) + 1.5, q.z, m[0], m[1], false); }, i * 220));          // tornen skjuter mot lägret
+        else { const x = p.x + (Math.random() - 0.5) * 2.4, z = p.z + 0.6 + Math.random() * 1.2; W._kula(b.x, gy(b.x, b.z) + 0.4, b.z, x, z, true); }          // en kula från lägret slår ner bland husen
         if (Lj) Lj.spela('kanon'); return;
       }
       if (bild === 'brev' && bra) { const x = kr ? kr.x : p.x, z = kr ? kr.z : p.z; Fx.guld(x, gy(x, z) + 0.4, z, 40, 1.2); if (Lj) Lj.spela('klart'); }
@@ -689,7 +712,9 @@
         if (u.order) W._folj(p.x + 0.9, p.z - 0.2, 26);          // kameran står vid slottet medan staden försvaras
         if (u.nytt && V.kalender && !V.tyst) { const m = V.kalender().man; vis.nytt = vis.nytt || {}; u.nytt.forEach((q, i) => { if (!vis.nytt[i] && m >= q[0]) { vis.nytt[i] = 1; V.UI.text(q[1], 7); } }); }          // nyheter medan staden är instängd
         W._belT = (W._belT === undefined ? 1.5 : W._belT) - dt;
-        if (W._belT <= 0) { W._belN = (W._belN || 0) + 1; W._belT = 1.8 + Math.random() * 2.4; const ute = W._belN % 2 === 1, q = ute ? R.P.brunkeberg : p, x = q.x + (Math.random() - 0.5) * 1.6, z = q.z + (ute ? 0.5 : -0.9); Fx.krut(x, Geo.groundAt(x, z) + (ute ? 0.3 : 1.2), z); if (!ute && V.Ljud) V.Ljud.spela('kanon'); if (!ute && W._tornLagen && W._tornLagen.length) { const q = W._tornLagen[W._belN % W._tornLagen.length]; Fx.krut(q.x, Geo.groundAt(q.x, q.z) + 1.7, q.z); } }
+        if (W._belT <= 0 && G.s.varld === 0 && u.order) { W._belN = (W._belN || 0) + 1; W._belT = 3.2 + Math.random() * 2.4; const b = R.P.brunkeberg, ute = W._belN % 2 === 1;          // förspelet: man ser kulorna flyga, från lägret in i staden och från tornen till lägret
+          if (b) { if (ute) { const x = p.x + (Math.random() - 0.5) * 2.2, z = p.z + 0.4 + Math.random() * 1.2; W._kula(b.x, Geo.groundAt(b.x, b.z) + 0.4, b.z, x, z, true); } else { const t = W._tornLagen && W._tornLagen.length ? W._tornLagen[W._belN % W._tornLagen.length] : { x: p.x + 1.4, z: p.z - 1.3 }; W._kula(t.x, Geo.groundAt(t.x, t.z) + 1.5, t.z, b.x + (Math.random() - 0.5) * 1.2, b.z + (Math.random() - 0.5) * 1.2, false); } } }
+        else if (W._belT <= 0) { W._belN = (W._belN || 0) + 1; W._belT = 1.8 + Math.random() * 2.4; const ute = W._belN % 2 === 1, q = ute ? R.P.brunkeberg : p, x = q.x + (Math.random() - 0.5) * 1.6, z = q.z + (ute ? 0.5 : -0.9); Fx.krut(x, Geo.groundAt(x, z) + (ute ? 0.3 : 1.2), z); if (!ute && V.Ljud) V.Ljud.spela('kanon'); if (!ute && W._tornLagen && W._tornLagen.length) { const q = W._tornLagen[W._belN % W._tornLagen.length]; Fx.krut(q.x, Geo.groundAt(q.x, q.z) + 1.7, q.z); } }
       }
       if (vis.pts && (u.slag === 'tag' || u.slag === 'bud' || u.slag === 'rid')) {
         const stopp = strid ? (u.strid === 'pilar' ? 2.2 : u.strid === 'kanoner' ? 1.6 : 0.9) : u.slag === 'tag' ? 1.8 : 0, dist = Math.max(0, vis.len - stopp) * gf;
