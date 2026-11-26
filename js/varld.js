@@ -11,13 +11,14 @@
   const stegAv = L => Math.min(MAXSTEG, Math.floor((L || 0) / 10));
   function lager(p, n) { const mb = new V.MB(); for (let k = 0; k < (n || 9); k++) { const a = k * 2.4, d = 0.5 + (k % 3) * 0.6; mb.push().move(Math.cos(a) * d, 0, Math.sin(a) * d * 0.8).rotY(a); B.talt(mb); mb.pop(); } B.eld(mb); const m = B.mesh(mb); m.position.set(p.x, Geo.groundAt(p.x, p.z), p.z); m.scale.setScalar(B.K); B.smoke.push({ x: p.x, y: Geo.groundAt(p.x, p.z) + 0.3, z: p.z, slag: 'eld', bas: 'stockholm' }); return m; }
   const finns = b => !(b.slag === 'slott' || b.ny || b.id === 'sala');          // fanns platsen redan 1520?
+  const FOLJE = 12;          // förspelet: så många går i följet när man har råd med nästa steg
   const JAMN = 0.6;          // förspelet: så stor del av toppfarten håller den som rider rundan, hela tiden
   const MAXSTEG = 7, SATE = ['kopparberget', 'hedemora', 'vasteras', 'uppsala', 'brunkeberg'];
 
   const W = V.Varld = {
     tomt, P: R.P,
     init(sc) {
-      scene = sc; W._kristina = null; W._kring = null; W._kvar = null; W._borta = false; W._plats = null; W._placerad = false; if (W._foljMig === undefined) W._foljMig = 1; Folk.init(sc); Fx.init(sc); V.Gustav.init(sc, G.s.varld === 0 ? 'sten' : 'gustav'); V.Bud.init(sc, 'bud'); V.Bud.kanSkida = G.s.varld === 1;          // bud på skidor hör Dalarna och Gustavs tid till
+      scene = sc; W._kristina = null; W._kring = null; W._kvar = null; W._borta = false; W._plats = null; W._placerad = false; W._f = null; if (W._foljMig === undefined) W._foljMig = 1; Folk.init(sc); Fx.init(sc); V.Gustav.init(sc, G.s.varld === 0 ? 'sten' : 'gustav'); V.Bud.init(sc, 'bud'); V.Bud.kanSkida = G.s.varld === 1;          // bud på skidor hör Dalarna och Gustavs tid till
       for (const b of D.BASER) {
         const p = R.P[b.id]; tomt[b.id] = new B.Tomt(b, p); steg[b.id] = [];
         const g = grp[b.id] = new THREE.Group(); g.position.set(p.x, p.y, p.z); g.scale.setScalar(B.K); sc.add(g);
@@ -78,7 +79,7 @@
     // Hus som håller på att växa fram ställs färdiga på en gång (innan en scen, där världen annars står still med halvstora hus)
     popKlart() { pops.forEach(p => p.m.scale.setScalar(1)); pops.length = 0; },
     // Under en scen syns inte skattelagen och de extra buden: spelet står still då, och de skulle stå som statyer mitt i bilden
-    scenDolj(on) { (skattVis || []).forEach(v => v.enh.forEach(e => { e.vis = !on; })); lopare.forEach(l => { l.u.vis = !on; }); },
+    scenDolj(on) { (skattVis || []).forEach(v => v.enh.forEach(e => { e.vis = !on; })); lopare.forEach(l => { l.u.vis = !on; }); if (W._f) { W._f.enh.forEach(e => { e.vis = !on; }); W._f.nya.forEach(n => { n.e.vis = !on; }); } },
     pos(id) { const p = R.P[id]; return p ? { x: p.x, y: p.y || 0, z: p.z } : null; },
     // Vilken bas ligger under den här punkten på marken?
     basVid(g) { if (!g) return null; let best = null, bd = 1e9; for (const b of D.BASER) { if (!steg[b.id].length) continue; const p = R.P[b.id], d = Math.hypot(p.x - g.x, p.z - g.z); if (d < tomt[b.id].R + 0.6 && d < bd) { bd = d; best = b.id; } } return best; },
@@ -152,6 +153,7 @@
       if (vis && vis.enh.length) { const e = vis.enh; lagg(e[0].x, e[0].z, 1.3); if (e.length > 6) { const m = e[e.length >> 1], s = e[e.length - 1]; lagg(m.x, m.z, 1.3); lagg(s.x, s.z, 1.3); } }
       if (vis && vis.fi.length) { const m = vis.fi[vis.fi.length >> 1]; lagg(m.x, m.z, 1.6); }
       (skattVis || []).forEach(v => { if (v.enh[0]) lagg(v.enh[0].x, v.enh[0].z, 1.0); });
+      if (W._f && W._f.enh.length > 3) { const m = W._f.enh[W._f.enh.length >> 1]; lagg(m.x, m.z, 1.1); }
       (W.friExtra || []).forEach(q => lagg(q[0], q[1], q[2])); World.fri(l);
     },
     // Ingen går rakt genom en stad eller en borg: vägen börjar och slutar vid kanten av platsen, och böjer av runt allt annat med hus på vägen.
@@ -234,7 +236,7 @@
     // Händelser från spelet.
     handelse(typ, d) {
       if (typ === 'tryck') {
-        if (W._kristina) W._kristina.hoppT = 0.45; const ry = W._ryttare(); if (ry.g && ry.g.visible) Fx.damm(ry.x, Geo.groundAt(ry.x, ry.z) + 0.05, ry.z, 2); if (d.skede) W._drag(d.skede);
+        if (W._kristina) W._kristina.hoppT = 0.45; const ry = W._ryttare(); if (ry.g && ry.g.visible) Fx.damm(ry.x, Geo.groundAt(ry.x, ry.z) + 0.05, ry.z, 2); if (d.skede) W._drag(d.skede); else W._sluterUpp();
         // belägringen: du manar försvaret, och vart tredje tryck skjuter slottet. Det ändrar inte hur länge belägringen varar.
         if (vis && vis.u.belagring && G.s.aktivt && !G.s.aktivt.val) { W._belTryck = (W._belTryck || 0) + 1; if (W._belTryck % 3 === 0) { const p = R.P[vis.u.plats], x = p.x + 1.2 + Math.random() * 1.4, z = p.z - 1.3; Fx.krut(x, Geo.groundAt(x, z) + 1.3, z); V.Ljud && V.Ljud.spela('kanon'); Scene.shake(0.12); } }
       }
@@ -294,11 +296,55 @@
       pts = W._runt(pts, null, to, true); const len = R.length(pts);
       if (bd > 0.3 && len < 45) pre = { pts, len, to };
     },
+    // ---- följet (förspelet): det du har samlat inför nästa steg går bakom dig, och det växer när du trycker ----
+    // Johannes 2026-11-26: "Man måste känna och se att när man trycker på sin knapp ... så ser man att man utvecklas och går mot målet".
+    // a = var du är just nu på rundan. Följet är fullt (FOLJE man) när du har råd med nästa steg.
+    _folje(dt, t, a) {
+      const S = G.s, u = D.UPPDRAG[S.nasta], F = W._f || (W._f = { spar: [], enh: [], nya: [], nyT: 0 });
+      if (!a) { F.spar.length = 0; a = { x: 0, z: 0, ang: 0 }; }          // ingen rider (Kristina): inget följe, bara buden
+      else { const s0 = F.spar[0]; if (s0 && Math.hypot(a.x - s0[0], a.z - s0[1]) > 2.5) F.spar.length = 0;          // han har flyttats: börja om spåret
+        if (!F.spar.length || Math.hypot(a.x - F.spar[0][0], a.z - F.spar[0][1]) > 0.16) { F.spar.unshift([a.x, a.z, a.ang]); if (F.spar.length > 120) F.spar.length = 120; } }
+      const want = F.spar.length && u && !S.aktivt && !S.slut ? Math.round(G.framsteg(u) * FOLJE) : 0, man = !!(u && u.kostar.man > 0);
+      F.nyT -= dt;
+      if (F.nyT <= 0 && F.enh.length !== want) {          // en i taget, så att det syns att de sluter upp (eller går hem när du har använt det du samlat)
+        F.nyT = 0.14;
+        if (F.enh.length > want) Folk.remove(F.enh.pop());
+        else if (F.spar.length > 4) { const i = F.enh.length, e = Folk.add(a.x, a.z, man ? (i % 3 === 0 ? 'knekt' : 'bonde') : (i % 3 === 0 ? 'bonde' : 'borgare'), { pike: man && i % 2 === 0, gar: true, sc: 1.0 }); e.in = 0; e.sida = i % 2 ? 1 : -1; F.enh.push(e); }
+      }
+      const plats = k => F.spar[Math.min(F.spar.length - 1, k)] || [a.x, a.z, a.ang];
+      F.enh.forEach((e, i) => {
+        const s = plats(5 + Math.floor(i / 2) * 3), sid = (i % 2 ? 1 : -1) * 0.2; e.in = Math.min(1, e.in + dt * 1.6); const ut = sid + (1 - e.in) * 1.4 * e.sida;          // två i bredd, och den nya kommer in från vägkanten
+        e.x = s[0] + Math.cos(s[2]) * ut; e.z = s[1] - Math.sin(s[2]) * ut; e.ang = s[2]; e.gar = true;
+      });
+      for (let k = F.nya.length - 1; k >= 0; k--) {          // de som just nu är på väg: ett bud som springer i förväg, eller en som sluter upp
+        const n = F.nya[k]; let klar = false;
+        if (n.bud) { n.d += 4.4 * dt; const q = R.along(n.seg.pts, n.d); n.e.x = q.x; n.e.z = q.z; n.e.ang = q.ang; klar = n.d >= n.slut; }
+        else { n.t += dt * 1.6; const m = plats(5 + Math.floor(F.enh.length / 2) * 3), f = Math.min(1, n.t); n.e.x = n.x0 + (m[0] - n.x0) * f; n.e.z = n.z0 + (m[1] - n.z0) * f; n.e.ang = Math.atan2(m[0] - n.x0, m[1] - n.z0); klar = n.t >= 1; }
+        if (klar) { Folk.remove(n.e); F.nya.splice(k, 1); }
+      }
+    },
+    _foljeBort() { const F = W._f; if (!F || (!F.enh.length && !F.nya.length && !F.spar.length)) return; F.enh.forEach(e => Folk.remove(e)); F.nya.forEach(n => Folk.remove(n.e)); F.enh.length = 0; F.nya.length = 0; F.spar.length = 0; },
+    // Ett tryck syns: heter knappen Skicka bud eller Skriv springer ett bud i förväg längs vägen, annars kommer någon från vägkanten och sluter upp.
+    _sluterUpp() {
+      const S = G.s, F = W._f, Gu = V.Gustav; if (S.varld !== 0 || !F || !W._placerad || S.aktivt || F.nya.length >= 7) return;
+      if (S.hjalte === 'kristina') {          // hennes brev: ett bud springer ut ur Stockholm längs vägen
+        const sg = route.find(s => s.from === 'stockholm' && s.len > 3); if (sg) { const q = R.along(sg.pts, 0.6), e = Folk.add(q.x, q.z, 'bonde', { gar: true, sc: 0.95, col: '#8a5a3a' }); F.nya.push({ e, bud: true, seg: sg, d: 0.6, slut: Math.min(sg.len, 8) }); }
+        return;
+      }
+      if (W._kvar || W._borta || !F.spar.length) return;
+      const u = D.UPPDRAG[S.nasta], ord = u ? (D.GOR[u.id] || 'bud') : 'bud', seg = pre || route[gseg], ang = F.spar[0][2];
+      if (/bud|Skriv/.test(ord) && seg && seg.len - gd > 1.2) { const e = Folk.add(Gu.x, Gu.z, 'bonde', { gar: true, sc: 0.95, col: '#8a5a3a' }); F.nya.push({ e, bud: true, seg, d: gd + 0.5, slut: Math.min(seg.len, gd + 6.5) }); return; }
+      for (const sida of (Math.random() < 0.5 ? [1, -1] : [-1, 1])) {
+        const r = 1.3 + Math.random() * 0.5, bak = 0.4 + Math.random() * 1.2, x = Gu.x + Math.cos(ang) * r * sida - Math.sin(ang) * bak, z = Gu.z - Math.sin(ang) * r * sida - Math.cos(ang) * bak;
+        if (Geo.sdAt(x, z) < 0.35) continue;
+        const man = !!(u && u.kostar.man > 0), e = Folk.add(x, z, man ? 'bonde' : 'borgare', { pike: man && Math.random() < 0.5, gar: true, sc: 1.0 }); F.nya.push({ e, t: 0, x0: x, z0: z }); Fx.damm(x, Geo.groundAt(x, z) + 0.04, z, 1); return;
+      }
+    },
     _gustav(dt, t) {
       const S = G.s, Gu = V.Gustav, Bu = V.Bud, kristina = S.hjalte === 'kristina';
       if (S.varld !== 0) return W._gustavGammal(dt, t);
       if (kristina) {          // Sten Sture är död. Kristina Gyllenstierna står vid Stockholms slott.
-        Gu.g.visible = false;
+        Gu.g.visible = false; W._folje(dt, t, null);
         if (!W._kristina) { const p = R.P.stockholm; W._kristina = Folk.add(p.x + 1.9 * B.K, p.z - 0.5 * B.K, 'kvinna', { col: '#2f4f8a', col2: '#f2eee2', sc: 1.4, ang: 0.3 }); }
         const k = W._kristina; k.hoppT = Math.max(0, (k.hoppT || 0) - dt); k.y = Math.abs(Math.sin(k.hoppT * 14)) * 0.1 * Math.min(1, k.hoppT * 4);
         if (k.bx === undefined) k.bx = k.x; { const c = Math.cos(t * 0.2); k.x = k.bx + Math.sin(t * 0.2) * 1.1; k.gar = Math.abs(c) > 0.3; k.ang = k.gar ? (c > 0 ? 1.571 : -1.571) : 0.2; }          // hon går av och an framför slottet
@@ -307,9 +353,9 @@
         W._kring.visible = true; W._kring.position.set(k.x, Geo.groundAt(k.x, k.z) + 0.05, k.z); W._kring.material.opacity = 0.7 + 0.2 * Math.sin(t * 3);
       } else {
         if (W._kring) W._kring.visible = false; Bu.g.visible = false;
-        if (vis && vis.gustav) { W._borta = true; return; }          // du leder ett tåg eller rider till ett möte (se _uppdrag). Rundan väntar på dig.
+        if (vis && vis.gustav) { W._borta = true; W._foljeBort(); return; }          // du leder ett tåg eller rider till ett möte (se _uppdrag). Rundan väntar på dig.
         if (W._kvar) {          // du stannar en stund där du kom fram
-          if ((W._kvar.t -= dt) > 0) { Gu.place(W._kvar.x, W._kvar.z, W._kvar.ang, 0, t, dt, false, true); W._borta = true; return; }
+          if ((W._kvar.t -= dt) > 0) { Gu.place(W._kvar.x, W._kvar.z, W._kvar.ang, 0, t, dt, false, true); W._borta = true; W._foljeBort(); return; }
           W._borta = true; W._plats = W._kvar.plats; W._kvar = null;
         }
         if (W._borta) { W._borta = false; W._tillRundan(Gu.x, Gu.z, W._plats); W._plats = null; }
@@ -325,7 +371,7 @@
       }
       const a = R.along(seg.pts, gd); ry.place(a.x, a.z, a.ang, 0.85, t, dt, false); W._placerad = true;
       // kameran följer dig, tills du själv flyttar kartan. Knappen Hitta mig slår på det igen.
-      if (!kristina) { const c = Scene.cam; if (!V.tyst && c.user <= (W._foljMig || 0) && !c.fly && !c.locked && !vis) { c.tx = a.x; c.tz = a.z + (Scene.lyft ? 0 : 1.2); } }
+      if (!kristina) { const c = Scene.cam; if (!V.tyst && c.user <= (W._foljMig || 0) && !c.fly && !c.locked && !vis) { c.tx = a.x; c.tz = a.z + (Scene.lyft ? 0 : 1.2); } W._folje(dt, t, a); }
     },
     // Gustavs värld, orörd tills förspelet är klart (Johannes 2026-11-26): hjälten står på sin plats och ett bud rider rundan.
     _gustavGammal(dt, t) {
