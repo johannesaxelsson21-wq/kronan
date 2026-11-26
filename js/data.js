@@ -12,7 +12,7 @@
     alvsborg: [11.93, 57.69], helsingfors: [24.98, 60.21], salen: [13.27, 61.16], rafsnas: [17.27, 59.22], lubeck: [10.72, 53.9], kopenhamn: [12.55, 55.68], malmo: [13.03, 55.6],
     soderkoping: [16.32, 58.485], storatuna: [15.5, 60.43], kisa: [15.63, 57.99], virserum: [15.58, 57.32], smaland: [15.3, 57.1], skara: [13.44, 58.39], bornholm: [15.5, 55.45],
     kivinebb: [29.3, 60.4], halsingland: [16.6, 61.3], nykoping: [17.01, 58.76], lima: [13.36, 60.94], evertsberg: [13.96, 61.13], oxberg: [14.2, 61.12], ostersjon: [17.6, 57.6], finskaviken: [25.5, 59.85],
-    staket: [17.72, 59.5], vadla: [18.42, 59.55], brannkyrka: [17.9, 59.14], bogesund: [13.42, 57.79]          // förspelet: lagda en bit utanför Stockholm så att de syns för sig
+    staket: [17.72, 59.5], vadla: [18.5, 59.6], brannkyrka: [17.81, 59.03], bogesund: [13.42, 57.79]          // förspelet: lagda en bit utanför Stockholm så att de syns för sig
   };
 
   // Baser. slag: bygd (ger män), gruva, stad, slott (ger mark). p0 = produktion per nivå och sekund, c0 = första nivåns pris, r = prisökning per nivå.
@@ -185,6 +185,8 @@
   // ---- Förspelet: Sten Sture den yngre 1512–1520 -----------------------------------------------
   // Tar ungefär tjugo minuter och slutar alltid på samma sätt. senast = den minut då uppdraget går iväg av sig självt, vad spelaren än gör.
   // efterMan = månaden kartan står i efter steget, när scenen efteråt slutar senare än steget (gisslan i september 1518, Kalø i september 1519, Sten Stures död i februari 1520).
+  // folk = hur många figurer som syns i tåget och hos fienden. Åsunden: 10 000 man på var sida, en figur för fyrtio. Uppsala: 4 000 till 7 000 sammanlagt.
+  // För Stäket, Vädla och Brännkyrka står inga antal i det lästa (vid Brännkyrka låg 1 600 bönder kvar på platsen), så där är storleken spelets val.
   // tid = uppdraget tar så här många sekunder (belägringen av Stockholm: från maj till september, och längre än pausen mellan två scener).
   const STURE = [
     // vet = en rad om vad steget betyder för det som kommer sedan (visas under krönikan)
@@ -194,22 +196,22 @@
       kronika: 'Samma år. Befälhavaren på Åbo slott gick också över till dig. Nu hade du din fars stora slott.' },
     { id: 'sAllmoge', senast: 6, akt: 0, titel: 'Få bönderna på din sida', plats: 'nykoping', ar: 1512, man: 7.7, slag: 'bud', fran: 'stockholm', kostar: { man: 40, mark: 2500 }, ger: { bas: ['nykoping'], titel: 'Riksföreståndare' },
       kronika: '23 juli 1512. Rikets råd, de mäktigaste herrarna, hade valt Erik Trolle att styra. Han ville hålla ihop med Danmark. Men du hade bönderna bakom dig och fick platsen i stället. Du var nu riksföreståndare: den som styr ett rike utan kung.' },
-    { id: 'sStaket', med: 1, scen: 'staket', efter: '1516. Ärkebiskopens borg Stäket är instängd.', senast: 8.5, akt: 0, titel: 'Stäng in ärkebiskopen i hans borg', plats: 'staket', ar: 1516, man: 10, slag: 'tag', kostar: { man: 200, mark: 5500 }, ger: {},
+    { id: 'sStaket', folk: [30], med: 1, scen: 'staket', efter: '1516. Ärkebiskopens borg Stäket är instängd.', senast: 8.5, akt: 0, titel: 'Stäng in ärkebiskopen i hans borg', plats: 'staket', ar: 1516, man: 10, slag: 'tag', kostar: { man: 200, mark: 5500 }, ger: {},
       kronika: '1516. Erik Trolles son Gustav Trolle hade blivit ärkebiskop, kyrkans högste man i Sverige, och han höll på Danmarks kung. Det blev krig mellan er, och du stängde in honom i hans borg Stäket vid Mälaren.' },
-    { id: 'sVadla', med: 1, senast: 11, akt: 0, titel: 'Stoppa danskarna vid Vädla', plats: 'vadla', ar: 1517, man: 7, slag: 'tag', strid: 'liten', kostar: { man: 600, mark: 10000 }, ger: { x: { mark: 1.5 }, las: ['konster'] },
+    { id: 'sVadla', folk: [48, 44], med: 1, senast: 11, akt: 0, titel: 'Stoppa danskarna vid Vädla', plats: 'vadla', ar: 1517, man: 7, slag: 'tag', strid: 'liten', kostar: { man: 600, mark: 10000 }, ger: { x: { mark: 1.5 }, las: ['konster'] },
       kronika: 'Sommaren 1517. Danmarks kung Kristian II skickade soldater för att hjälpa ärkebiskopen. Du slog dem vid Vädla utanför Stockholm.' },
     { id: 'sRiv', scen: 'sigill', efter: 'November 1517. Brevet är beseglat.', senast: 13, akt: 0, titel: 'Kalla rikets ledare till Stockholm', plats: 'stockholm', ar: 1517, man: 11.8, slag: 'beslut', val: 'Riv Stäket', valText: 'Rikets ledare är samlade i Stockholm. Alla väntar på vad du säger.', kostar: { mark: 80000 }, ger: { bas: ['uppsala'] },
       kronika: 'November 1517. Mötet tog ifrån Gustav Trolle hans ämbete och bestämde att hans borg skulle rivas. Alla skrev under med sitt sigill. Biskop Brask ska ha gömt en lapp under sitt: det här gör jag för att jag är tvungen.',
       vet: 'Bara påven får avsätta en ärkebiskop. Gustav Trolle glömmer inte det här.' },
-    { id: 'sBrannkyrka', efterMan: 9.4, med: 1, scen: 'gisslan', efter: '27 juli 1518. Du slog Kristian II vid Brännkyrka söder om Stockholm.', senast: 15.5, akt: 0, titel: 'Möt Kristian vid Brännkyrka', plats: 'brannkyrka', ar: 1518, man: 7.9, slag: 'tag', strid: 'stor', kostar: { man: 2500, mark: 170000 }, ger: { x: { man: 1.5 } },
+    { id: 'sBrannkyrka', folk: [110, 100], efterMan: 9.4, med: 1, scen: 'gisslan', efter: '27 juli 1518. Du slog Kristian II vid Brännkyrka söder om Stockholm.', senast: 15.5, akt: 0, titel: 'Möt Kristian vid Brännkyrka', plats: 'brannkyrka', ar: 1518, man: 7.9, slag: 'tag', strid: 'stor', kostar: { man: 2500, mark: 170000 }, ger: { x: { man: 1.5 } },
       kronika: '27 juli 1518. Du slog Kristian II vid Brännkyrka söder om Stockholm. I september seglade han hem med sex svenskar som gisslan. En av dem var den unge Gustav Eriksson.' },
     { id: 'sTegel', efterMan: 9.5, scen: 'kalo', sagt: ['vet2'], senast: 18, akt: 0, titel: 'Bär teglet från Stäket till Stockholm', plats: 'stockholm', ar: 1519, man: 6, slag: 'bygg', kostar: { man: 1500, mark: 750000 }, ger: { x: { mark: 2 } },
       kronika: '1519. Borgen Stäket var riven och teglet bars till Stockholm. Kristian klagade hos påven. Med påvens stöd lystes du och dina män i bann, kyrkans hårdaste straff.',
       vet: 'Nu kan Kristian säga att hans krig mot dig är kyrkans krig.',
       vet2: 'I september flydde Gustav Eriksson från fångenskapen i Danmark till staden Lübeck i Tyskland.' },
-    { id: 'sAsunden', efterMan: 2.1, med: 1, scen: 'isen', efter: '19 januari 1520. Slaget på Åsundens is var förlorat.', senast: 20.5, akt: 0, titel: 'Möt danskarna på sjön Åsundens is', plats: 'bogesund', ar: 1520, man: 1.6, slag: 'tag', strid: 'nederlag', kostar: { man: 10000, mark: 1500000 }, ger: { hjalte: 'kristina', startar: 'dagtingan' },
+    { id: 'sAsunden', folk: [250, 250], efterMan: 2.1, med: 1, scen: 'isen', efter: '19 januari 1520. Slaget på Åsundens is var förlorat.', senast: 20.5, akt: 0, titel: 'Möt danskarna på sjön Åsundens is', plats: 'bogesund', ar: 1520, man: 1.6, slag: 'tag', strid: 'nederlag', kostar: { man: 10000, mark: 1500000 }, ger: { hjalte: 'kristina', startar: 'dagtingan' },
       kronika: '19 januari 1520. På isen träffades du av en kanonkula strax ovanför knät. Din armé flydde. Den 3 februari dog du i en släde på Mälarens is, 27 år gammal.' },
-    { id: 'sUppsala', senast: 21.5, akt: 0, titel: 'Skicka bönderna mot Uppsala', plats: 'uppsala', ar: 1520, man: 4.2, slag: 'tag', strid: 'nederlag', kostar: { man: 3000, mark: 250000 }, ger: {},
+    { id: 'sUppsala', folk: [70, 70], senast: 21.5, akt: 0, titel: 'Skicka bönderna mot Uppsala', plats: 'uppsala', ar: 1520, man: 4.2, slag: 'tag', strid: 'nederlag', kostar: { man: 3000, mark: 250000 }, ger: {},
       kronika: 'Långfredagen 6 april 1520. Bönderna som gick mot danskarna i Uppsala förlorade. Du, Kristina Gyllenstierna, höll fortfarande Stockholm.',
       vet: 'Den 31 maj steg Gustav Eriksson i land vid Kalmar. Han hade kommit hem över havet från Lübeck.' },
     { id: 'sStockholm', senast: 22.5, akt: 0, titel: 'Håll Stockholm', plats: 'stockholm', ar: 1520, man: 9.2, slag: 'beslut', tid: 105, belagring: 1, val: 'Öppna portarna', valScen: 'vallen', efter: '7 september 1520. Du gav upp Stockholms slott.', valText: 'Staden är instängd. Kristian lovar att ingen ska straffas.', kostar: { man: 6000, mark: 300000 }, ger: { slutVarld: 1 },

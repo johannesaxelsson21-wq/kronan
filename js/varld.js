@@ -52,6 +52,9 @@
       W._dekor('staket', f0 && S.nasta <= idx('sRiv'), () => { const mb = new V.MB(); B.borg(mb, 'liten', 0); const m = B.mesh(mb), p = R.P.staket; m.position.set(p.x, p.y, p.z); m.scale.setScalar(B.K); return m; });
       W._dekor('staketLager', f0 && S.nasta > idx('sStaket') && S.nasta <= idx('sRiv'), () => { const q = R.P.staket, c = [[4.6, 2.4], [4.8, 0.4], [3.6, -3], [0, -5]].find(o => Geo.sdAt(q.x + o[0], q.z + o[1]) > 1.6) || [4.6, 2.4]; return lager({ x: q.x + c[0], z: q.z + c[1] }, 7); });
       if (f0 && S.bygg) for (const id in S.bygg) W._byggnad(id, true);          // byggnaderna man har köpt (se D.BYGGNADER)
+      // sjön Åsunden finns inte i kartans vatten: den målas dit där slaget står, långsmal längs vägen in mot Bogesund
+      if (f0 && S.nasta >= idx('sAsunden') - 1 && !dekor.asunden) { const v = R.path('skara', 'bogesund'), e = v[v.length - 1], q = v[Math.max(0, v.length - 6)], L = Math.hypot(e[0] - q[0], e[1] - q[1]) || 1, dx = (e[0] - q[0]) / L, dz = (e[1] - q[1]) / L;
+        World.Paint.river([[e[0] - dx * 6.5, e[1] - dz * 6.5], [e[0] + dx * 8, e[1] + dz * 8]], 10.5); dekor.asunden = { sjo: { x: e[0] + dx * 0.7, z: e[1] + dz * 0.7, r: 8.2 } }; paintDirty = true; }
       W._dekor('danskLager', f0 && S.nasta > idx('sUppsala'), () => lager(R.P.brunkeberg, 12));
       W._dekor('danskFlotta', f0 && S.nasta > idx('sUppsala'), () => W._flotta('stockholm', 4, 'danmark'));
       // belägringen av Stockholm, flottor som ligger kvar
@@ -160,9 +163,11 @@
     // Gläntorna i skogen: en kring var och en som rör sig (hjälten, budet, tåget, skattelagen och den som en scen handlar om)
     fri() {
       const l = [], G0 = V.Gustav, Bu = V.Bud, lagg = (x, z, r) => { if (l.length < 8) l.push([x, z, r]); };
+      if (dekor.asunden) { const q = dekor.asunden.sjo; lagg(q.x, q.z, q.r * 1.9); }          // inga träd på sjön
       if (G0.g && G0.g.visible) lagg(G0.x, G0.z, 1.0); if (Bu.g && Bu.g.visible) lagg(Bu.x, Bu.z, 0.9);
-      if (vis && vis.enh.length) { const e = vis.enh; lagg(e[0].x, e[0].z, 1.3); if (e.length > 6) { const m = e[e.length >> 1], s = e[e.length - 1]; lagg(m.x, m.z, 1.3); lagg(s.x, s.z, 1.3); } }
-      if (vis && vis.fi.length) { const m = vis.fi[vis.fi.length >> 1]; lagg(m.x, m.z, 1.6); }
+      const rb = vis && vis.noll && G.skede() === 'strid' ? 1.0 + vis.bredd * 0.17 : 0;          // i ett slag i förspelet står de i bredd: större glänta
+      if (vis && vis.enh.length) { const e = vis.enh; lagg(e[0].x, e[0].z, Math.max(1.3, rb)); if (e.length > 6) { const m = e[e.length >> 1], s = e[e.length - 1]; lagg(m.x, m.z, Math.max(1.3, rb)); lagg(s.x, s.z, 1.3); } }
+      if (vis && vis.fi.length) { const m = vis.fi[vis.fi.length >> 1]; lagg(m.x, m.z, Math.max(1.6, rb)); }
       (skattVis || []).forEach(v => { if (v.enh[0]) lagg(v.enh[0].x, v.enh[0].z, 1.0); });
       (W.friExtra || []).forEach(q => lagg(q[0], q[1], q[2])); World.fri(l);
     },
@@ -191,7 +196,8 @@
     _startVis(u, pts, fran, man) {
       W._slutVis(); const p = R.P[u.plats];
       vis = { u, pts, len: pts ? R.length(pts) : 0, enh: [], fi: [], skepp: [], t0: V.U.uTime.value, start: performance.now() };
-      if (u.slag === 'tag') {
+      if (u.slag === 'tag' && G.s.varld === 0) W._tag0Start(u, pts);
+      else if (u.slag === 'tag') {
         vis.gustav = !!u.med;
         const n = Math.max(8, Math.min(40, Math.round(4 + Math.log10(Math.max(10, u.kostar.man || 100)) * 8)));
         for (let k = 0; k < n; k++) { const kn = G.s.las.flotta && k % 3 === 0; vis.enh.push(Folk.add(pts[0][0], pts[0][1], kn ? 'knekt' : 'bonde', { pike: k % 2 === 0, rad: Math.floor(k / 4), kol: k % 4 - 1.5, gar: true })); }
@@ -207,7 +213,7 @@
       if (!V.tyst) { if (pts) Scene.flyTo(pts[0][0], pts[0][1] + 1, u.slag === 'flotta' ? 46 : 32, 1.4); else Scene.flyTo(p.x, p.z + 1, 28, 1.4); }
     },
     _slutVis() {
-      if (!vis) return;
+      if (!vis) return; V.Gustav.slass = 0;
       vis.enh.forEach(e => Folk.remove(e)); vis.fi.forEach(e => Folk.remove(e)); vis.skepp.forEach(s => scene.remove(s)); (vis.fiende || []).forEach(s => scene.remove(s));
       if (vis.fana) scene.remove(vis.fana); if (vis.stallning) scene.remove(vis.stallning); vis = null;
     },
@@ -414,10 +420,51 @@
       }
     },
     _ledig(tm) { const K = B.K; for (let k = 0; k < 12; k++) { const a = Math.random() * 6.283, d = Math.random() * tm.R / K * 0.75, x = Math.cos(a) * d, z = Math.sin(a) * d * 0.85 + 0.3; if (Geo.sdAt(tm.p.x + x * K, tm.p.z + z * K) > 0.4) { let ok = true; for (const o of tm.occ) if (Math.hypot(o[0] - x, o[1] - z) < o[2] * 0.75) { ok = false; break; } if (ok) return [x * K, z * K]; } } return [0, 0.6 * K]; },
+    // ---- förspelets fälttåg och slag (Johannes 2026-11-26) ----
+    // Så många som de var (D.STURE folk: en figur för ungefär fyrtio man där antalet är känt). På vägen går de i kolonn, led för led.
+    // I slaget ställer de upp i bredd mot fienden, och leden möts utan att gå in i varandra. Du rider mitt i främsta leden och hugger själv.
+    _tag0Start(u, pts) {
+      const S = G.s, tak = Scene.mobil ? 180 : 260, n = Math.min(tak, (u.folk && u.folk[0]) || 24), m = u.strid ? Math.min(tak, (u.folk && u.folk[1]) || n) : 0;
+      vis.gustav = !!u.med; vis.noll = true; vis.kol = n > 60 ? 6 : 4; vis.bredd = Math.max(6, Math.min(26, Math.ceil(Math.sqrt(Math.max(n, m) * 2.3))));
+      const platser = []; for (let r = 0; platser.length < n; r++) for (let c = 0; c < vis.bredd && platser.length < n; c++) { const bk = c - (vis.bredd - 1) / 2; if (vis.gustav && r < 3 && Math.abs(bk) < 1.3) continue; platser.push([r, bk]); }          // en lucka mitt i de främsta leden, där du rider
+      for (let k = 0; k < n; k++) { const e = Folk.add(pts[0][0], pts[0][1], S.sold > 0 && k % 5 === 0 ? 'knekt' : 'bonde', { pike: k % 2 === 0, rad: Math.floor(k / vis.kol), kol: k % vis.kol - (vis.kol - 1) / 2, gar: true }); e.br = platser[k][0]; e.bk = platser[k][1]; vis.enh.push(e); }
+      const f = B.flagga('sverige'); f.scale.setScalar(0.8); scene.add(f); vis.fana = f;
+      if (m) { const e = R.along(pts, vis.len), fx = Math.sin(e.ang), fz = Math.cos(e.ang), sx = Math.cos(e.ang), sz = -Math.sin(e.ang);
+        for (let k = 0; k < m; k++) { const r = Math.floor(k / vis.bredd), c = k % vis.bredd - (vis.bredd - 1) / 2, x = e.x + fx * (1.3 + r * 0.4) + sx * c * 0.32, z = e.z + fz * (1.3 + r * 0.4) + sz * c * 0.32, q = Folk.add(x, z, 'dansk', { pike: k % 2 === 0, ang: e.ang + Math.PI }); q.bx = x; q.bz = z; q.br = r; vis.fi.push(q); } }
+    },
+    _tag0(dt, t, a, u) {
+      const Gu = V.Gustav, f = Math.min(1, a.t / a.dur), strid = !!u.strid, K0 = G.KAMP, gf = strid ? Math.min(1, f / K0) : f, kamp = strid && f > K0, kf = strid ? Math.max(0, (f - K0) / (1 - K0)) : 0, forlust = u.strid === 'nederlag';
+      const DR = 0.4, DK = 0.32, stopp = strid ? 0.9 : 1.8, dist = Math.max(0, vis.len - stopp) * gf, lead = R.along(vis.pts, dist), fx = Math.sin(lead.ang), fz = Math.cos(lead.ang), sx = Math.cos(lead.ang), sz = -Math.sin(lead.ang);
+      // leden går varandra till mötes tills det är en knapp armlängd emellan (2,2 mellan dem från början, 1,85 går de)
+      const in0 = Math.min(1, kf / 0.3), A = in0 * 1.0 + 0.12 * (vis.stot || 0), Bf = in0 * 0.85, ut = kamp ? Geo.smooth(0, 0.22, kf) : 0, flykt = forlust ? Math.max(0, (kf - 0.45) / 0.55) : 0, vinst = !forlust ? Math.max(0, (kf - 0.6) / 0.4) : 0;
+      if (kamp) W._folj(lead.x + fx * 1.1, lead.z + fz * 1.1 + 0.4, vis.bredd > 14 ? 31 : 23); else W._folj(lead.x, lead.z, 30);
+      if (vis.gustav) { const hf = kamp ? A - 0.55 - flykt * 2 : 0; Gu.slass = kamp && !flykt ? 1 : 0; Gu.place(lead.x + fx * hf, lead.z + fz * hf, lead.ang, gf < 1 ? 0.9 : 0, t, dt, false); }
+      const bak0 = vis.gustav ? 0.95 : 0;
+      vis.enh.forEach((e, i) => {
+        const d0 = dist - e.rad * DR - bak0, back = R.along(vis.pts, Math.max(0, d0)); let x = back.x + Math.cos(back.ang) * e.kol * DK, z = back.z - Math.sin(back.ang) * e.kol * DK, ang = back.ang;
+        e.vis = d0 > -0.25 || kamp;          // de kommer fram led för led, inte i en hög
+        if (kamp) {
+          const j = Math.sin(t * 11 + e.fas) * (e.br < 2 ? 0.05 : 0.015), fl = flykt * (2.5 + (i % 5) * 0.5), fram = A + j - e.br * DR - fl, bx = lead.x + fx * fram + sx * e.bk * DK, bz = lead.z + fz * fram + sz * e.bk * DK;
+          x += (bx - x) * ut; z += (bz - z) * ut; ang = flykt > 0.05 && e.fall < 0.3 ? lead.ang + Math.PI : lead.ang;
+          if (forlust && i % 3 === 0 && kf > 0.3 + (i % 9) * 0.05) e.fall = Math.min(1, e.fall + dt * 3);
+        }
+        e.x = x; e.z = z; e.ang = ang; e.gar = e.fall < 0.3 && (gf < 1 || (kamp && (ut < 1 || flykt > 0))); e.strid = kamp && ut > 0.8 && e.br < 3 && e.fall < 0.3 && !flykt;
+      });
+      if (vis.fana) { const e0 = vis.enh[0]; vis.fana.position.set(e0.x, Geo.groundAt(e0.x, e0.z) + 0.1, e0.z); }
+      if (!kamp) return;
+      W._kampT = (W._kampT || 0) + dt;
+      if (W._kampT > 0.09) { W._kampT = 0; const e = vis.enh[Math.floor(Math.random() * Math.min(vis.enh.length, vis.bredd * 2))], m = vis.fi[Math.floor(Math.random() * Math.min(vis.fi.length, vis.bredd * 2))]; if (e && m && e.fall < 0.3 && m.fall < 0.3) { if (Math.random() < 0.3) Fx.pil(e.x, Geo.groundAt(e.x, e.z) + 0.35, e.z, m.x, 0.2, m.z); Fx.damm((e.x + m.x) / 2, Geo.groundAt(e.x, e.z), (e.z + m.z) / 2, 1); } }
+      vis.fi.forEach((m, i) => {
+        const j = Math.sin(t * 11 + m.fas) * (m.br < 2 ? 0.05 : 0.015), fram = Bf + j + flykt * 1.6 - vinst * (2.2 + (i % 5) * 0.5);          // vinner de trycker de på när dina flyr, förlorar de drar de sig undan
+        m.x = m.bx - fx * fram; m.z = m.bz - fz * fram; m.gar = m.fall < 0.3; m.strid = m.br < 3 && m.fall < 0.3 && !vinst; m.ang = vinst > 0.05 && m.fall < 0.3 ? lead.ang : lead.ang + Math.PI;
+        if (!forlust && i % 3 === 0 && kf > 0.3 + (i % 9) * 0.05) m.fall = Math.min(1, m.fall + dt * 3);
+      });
+    },
     _uppdrag(dt, t) {
       const S = G.s; if (!vis) return; const a = S.aktivt; if (!a) return;
       const u = vis.u, f = Math.min(1, a.t / a.dur), p = R.P[u.plats], strid = !!u.strid, K0 = G.KAMP, gf = strid ? Math.min(1, f / K0) : f, kamp = strid && f > K0, kf = strid ? Math.max(0, (f - K0) / (1 - K0)) : 0;
       if (vis.stot > 0) vis.stot = Math.max(0, vis.stot - dt * 2.5);
+      if (vis.noll) return W._tag0(dt, t, a, u);          // förspelets fälttåg och slag har sin egen ordning
       if (u.belagring && !a.val) {          // Stockholm sommaren 1520: lägret på Brunkeberg och slottet skjuter på varandra medan månaderna går
         W._belT = (W._belT === undefined ? 1.5 : W._belT) - dt;
         if (W._belT <= 0) { W._belN = (W._belN || 0) + 1; W._belT = 1.8 + Math.random() * 2.4; const ute = W._belN % 2 === 1, q = ute ? R.P.brunkeberg : p, x = q.x + (Math.random() - 0.5) * 1.6, z = q.z + (ute ? 0.5 : -0.9); Fx.krut(x, Geo.groundAt(x, z) + (ute ? 0.3 : 1.2), z); if (!ute && V.Ljud) V.Ljud.spela('kanon'); }

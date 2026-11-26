@@ -166,6 +166,7 @@
     const skida = () => del(b => { b.box(0, 0, 0.1, 0.055, 0.018, 1.15, '#9a7648', { low: '#7a5a34' }); b.push().move(0, 0.016, 0.66).rotX(-0.5); b.box(0, 0, 0, 0.055, 0.018, 0.1, '#9a7648'); b.pop(); });
     bal.position.y = 0.42; huvud.position.y = 0.72; kropp.add(bal, huvud);
     const armV = arm(-1), armH = arm(1), stavV = stav(), stavH = stav(); armV.position.set(-0.16, 0.655, 0); armH.position.set(0.16, 0.655, 0); stavV.position.set(-0.035, -0.26, 0.02); stavH.position.set(0.035, -0.26, 0.02); armV.add(stavV); armH.add(stavH); kropp.add(armV, armH);
+    const svH = del(b => { b.box(0.035, -0.78, 0, 0.026, 0.48, 0.042, STAL, { low: STAL2 }); b.box(0.035, -0.31, 0, 0.11, 0.022, 0.05, '#d9b030'); }); svH.visible = false; armH.add(svH);          // svärdet i handen när han slåss
     const benV = ben(-1), benH = ben(1); benV.position.set(-0.075, 0.42, 0); benH.position.set(0.075, 0.42, 0); kropp.add(benV, benH);
     const skV = skida(), skH = skida(); skV.position.set(-0.075, 0.012, 0); skH.position.set(0.075, 0.012, 0); g.add(skV, skH);
     // hästen
@@ -182,7 +183,7 @@
     svans.position.set(0, 0.68, -0.4); svans.rotation.x = 0.35; hast.add(hk, svans, ...hb); g.add(hast);
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.54, 32), new THREE.MeshBasicMaterial({ color: 0xf2b830, transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide }));
     ring.rotation.x = -Math.PI / 2; ring.position.y = 0.035; ring.renderOrder = 3; ring.layers.set(1); g.add(ring);
-    g.userData = { kropp, bal, huvud, armV, armH, stavV, stavH, benV, benH, skV, skH, hast, hb, svans, ring };
+    g.userData = { kropp, bal, huvud, armV, armH, stavV, stavH, svH, benV, benH, skV, skH, hast, hb, svans, ring };
     return g;
   }
   const RANG = { Riddare: 0, 'Hövitsman': 0, 'Riksföreståndare': 1, Kung: 2, Kristina: 1 };
@@ -215,6 +216,10 @@
         d.kropp.position.set(0, 0.4 + gal, -0.04); d.kropp.rotation.set(0.06 + 0.12 * f + Math.sin(w) * 0.03 * ror, 0, 0);
         d.benV.rotation.set(-0.5, 0, -0.5); d.benH.rotation.set(-0.5, 0, 0.5); d.armV.rotation.set(-1.0, 0, 0.25); d.armH.rotation.set(-1.0 + Math.sin(w) * 0.08 * ror, 0, -0.25);
       }
+      // slass: han är med i striden (Varld sätter det). Svärdet i höger hand, hugg efter hugg, och hästen stegrar sig lite.
+      if (d.svH) d.svH.visible = !!this.slass && !sno;
+      if (this.slass && !sno) { const hg = Math.sin(t * 7.5); d.armH.rotation.set(-2.05 + hg * 0.85, 0, -0.3); d.kropp.rotation.y = hg * 0.16; if (!tillFots) { d.hast.rotation.x = -0.07 + Math.sin(t * 3.7) * 0.06; d.hb[0].rotation.x = -0.5 + Math.sin(t * 7.5) * 0.4; d.hb[1].rotation.x = -0.5 + Math.sin(t * 7.5 + 1.2) * 0.4; } }
+      else d.kropp.rotation.y = tillFots && !(f > 0.04) ? d.kropp.rotation.y : 0;
       d.ring.material.opacity = 0.7 + 0.2 * Math.sin(t * 3); d.ring.scale.setScalar(1 + 0.06 * Math.sin(t * 3));
       if (sno && !tillSjoss) this.addSpar(x, z, gy); this.drawSpar(t);
     },
