@@ -72,6 +72,8 @@ button { font-family: inherit; cursor: pointer; }
 .hk.vilar { cursor: default; color: #a99b7f; }
 .hk.verkar .hk-b { box-shadow: 0 0 0 2px #b9e27c inset, 0 0 12px rgba(185, 226, 124, 0.8); }
 .hk.verkar .hk-s { color: #d9f5ae; }
+#ak-order { position: absolute; left: 0; top: 0; width: 96px; height: 96px; border-radius: 50%; border: 4px solid rgba(255, 243, 184, 0.75); box-sizing: border-box; pointer-events: none; z-index: 3; }
+#ak-order.nara { border-color: #7ee08a; box-shadow: 0 0 14px rgba(126, 224, 138, 0.9); }
 #akwrap.full #ak { box-shadow: 0 0 22px rgba(242, 207, 90, 0.95), 0 0 0 3px var(--guld2) inset; }
 #akwrap.full #ak .ring { stroke: #fff3b8; }
 
@@ -321,3 +323,9 @@ button { font-family: inherit; cursor: pointer; }
 .filmnamn { position: absolute; left: 0; top: 0; z-index: 0; padding: 1px 9px 2px; font-size: 13.5px; letter-spacing: 0.04em; color: #2b1c08; background: #fff3c9; border: 1px solid #8a6a1f; border-radius: 10px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45); white-space: nowrap; }
 .vem { position: absolute; left: 0; top: 0; padding: 1px 8px 2px; font-size: 12.5px; letter-spacing: 0.04em; color: #2b1c08; background: #fff3c9; border: 1px solid #8a6a1f; border-radius: 10px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45); white-space: nowrap; }
 #vem-bud { background: #e9dcc0; }
+
+/* Förspelet: under ett slag tonas allt bort utom uppdraget, den runda knappen, raderna och Hitta mig (Johannes 2026-11-26). Korten under fälls ihop så att bilden blir större. */
+#ui.forspel #baser { max-height: 320px; transition: max-height 0.8s ease, opacity 0.6s; }
+#ui.forspel #handl, #ui.forspel #pilar, #ui.forspel #tips { transition: opacity 0.6s; }
+#ui.slag #baser { max-height: 0; opacity: 0; overflow: hidden; pointer-events: none !important; }
+#ui.slag #handl, #ui.slag #datum, #ui.slag #meny, #ui.slag #pilar, #ui.slag #tips { opacity: 0; pointer-events: none !important; }

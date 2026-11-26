@@ -18,7 +18,7 @@
     tomt, P: R.P,
     init(sc) {
       R.kapaVandor = G.s.varld === 0;
-      scene = sc; W._kristina = null; W._kring = null; W._kvar = null; W._borta = false; W._plats = null; W._placerad = false; W._byggda = {}; if (W._foljMig === undefined) W._foljMig = 1; Folk.init(sc); Fx.init(sc); V.Gustav.init(sc, G.s.varld === 0 ? 'sten' : 'gustav'); V.Bud.init(sc, 'bud'); V.Bud.kanSkida = G.s.varld === 1;          // bud på skidor hör Dalarna och Gustavs tid till
+      scene = sc; W._kristina = null; W._kring = null; W._kvar = null; W._borta = false; W._plats = null; W._placerad = false; W._byggda = {}; W._foljer = null; W._foljVis = null; if (W._foljMig === undefined) W._foljMig = 1; Folk.init(sc); Fx.init(sc); V.Gustav.init(sc, G.s.varld === 0 ? 'sten' : 'gustav'); V.Bud.init(sc, 'bud'); V.Bud.kanSkida = G.s.varld === 1;          // bud på skidor hör Dalarna och Gustavs tid till
       for (const b of D.BASER) {
         const p = R.P[b.id]; tomt[b.id] = new B.Tomt(b, p); steg[b.id] = [];
         const g = grp[b.id] = new THREE.Group(); g.position.set(p.x, p.y, p.z); g.scale.setScalar(B.K); sc.add(g);
@@ -156,7 +156,7 @@
     // Räkna ut vägen och hur lång tid färden tar, och be spelet skicka iväg dem.
     skicka() {
       const S = G.s, u = D.UPPDRAG[S.nasta]; if (!u || !G.kanSkicka()) return false;
-      const man = S.res.man; let pts = null, dur = null, fran = u.fran, hem = null;
+      const man = S.res.man; let pts = null, dur = null, fran = u.fran, hem = null, k0 = 0;
       if (u.slag === 'flotta') { pts = R.seaPath(fran, u.plats); dur = Math.max(10, Math.min(24, R.length(pts) / 7)) + (u.strid ? 8 : 0); }
       else if (u.slag === 'tag' || u.slag === 'bud' || u.slag === 'rid') {
         const sjalv = u.slag === 'rid' || (u.slag === 'tag' && !!u.med);          // hjälten är själv med: då går tåget från platsen där han står
@@ -175,22 +175,45 @@
         pts = W._runt(pts, sjalv ? hem : fran, u.plats, u.slag === 'rid');
         const sp = u.slag === 'bud' ? 4.5 : u.slag === 'rid' ? 5 : 3.4, lim = u.slag === 'bud' ? [5, 12] : [9, 26];
         dur = Math.max(lim[0], Math.min(lim[1], R.length(pts) / sp)) + (u.strid ? 10 : 0);
+        if (S.varld === 0 && u.strid) { const marsch = Math.max(6, Math.min(26, R.length(pts) / sp)), slag = u.order ? 16 : 12; dur = marsch + slag; k0 = marsch / dur; }
       }
-      if (!G.skicka(dur ? dur * G.s.fartX : undefined)) return false;
+      if (!G.skicka(dur ? dur * G.s.fartX : undefined, k0)) return false;
       W._startVis(u, pts, fran, man);
       return true;
     },
-    // Gläntorna i skogen: en kring var och en som rör sig (hjälten, budet, tåget, skattelagen och den som en scen handlar om)
+    // Gläntorna i skogen kring dem som rör sig, så att ingen går genom ett träd. Varje glänta är en sträcka med en bredd (en kapsel): [x1, z1, x2, z2, r].
+    // I förspelet kliver träden åt sidan (Johannes 2026-11-26: "fixa så att träden flyttar på sig för gubbarna också"), och kring ett tåg eller ett slag
+    // ligger gläntan längs hela kolonnen och kring båda leden. Negativ radie: träden krymper bort som förut (sjön, ladugården, scenerna och Gustavs värld).
     fri() {
-      const l = [], G0 = V.Gustav, Bu = V.Bud, lagg = (x, z, r) => { if (l.length < 8) l.push([x, z, r]); };
-      if (dekor.asunden) { const q = dekor.asunden.sjo; lagg(q.x, q.z, q.r * 1.9); }          // inga träd på sjön
-      if (W._byggda && W._byggda.ladugard) { const q = W.byggPlats('ladugard'); lagg(q.x + 0.4, q.z + 0.4, 4.2); }          // och inga genom kungsladugården
+      const noll = G.s.varld === 0, max = noll ? World.FRI_N : 8, l = [], G0 = V.Gustav, Bu = V.Bud, kaps = q => { if (q && l.length < max) l.push(q); }, lagg = (x, z, r) => kaps([x, z, x, z, noll ? r : -r]), krymp = (x, z, r) => kaps([x, z, x, z, -r]);
+      if (dekor.asunden) { const q = dekor.asunden.sjo; krymp(q.x, q.z, q.r * 1.9); }          // inga träd på sjön
+      if (W._byggda && W._byggda.ladugard) { const q = W.byggPlats('ladugard'); krymp(q.x + 0.4, q.z + 0.4, 4.2); }          // och inga genom kungsladugården
       if (G0.g && G0.g.visible) lagg(G0.x, G0.z, 1.0); if (Bu.g && Bu.g.visible) lagg(Bu.x, Bu.z, 0.9);
-      const rb = vis && vis.noll && G.skede() === 'strid' ? 1.0 + vis.bredd * 0.17 : 0;          // i ett slag i förspelet står de i bredd: större glänta
-      if (vis && vis.enh.length) { const e = vis.enh; lagg(e[0].x, e[0].z, Math.max(1.3, rb)); if (e.length > 6) { const m = e[e.length >> 1], s = e[e.length - 1]; lagg(m.x, m.z, Math.max(1.3, rb)); lagg(s.x, s.z, 1.3); } }
-      if (vis && vis.fi.length) { const m = vis.fi[vis.fi.length >> 1]; lagg(m.x, m.z, Math.max(1.6, rb)); }
+      if (vis && vis.noll) W._friTag(kaps);
+      else {
+        if (vis && vis.enh.length) { const e = vis.enh; lagg(e[0].x, e[0].z, 1.3); if (e.length > 6) { const m = e[e.length >> 1], s = e[e.length - 1]; lagg(m.x, m.z, 1.3); lagg(s.x, s.z, 1.3); } }
+        if (vis && vis.fi.length) { const m = vis.fi[vis.fi.length >> 1]; lagg(m.x, m.z, 1.6); }
+      }
       (skattVis || []).forEach(v => { if (v.enh[0]) lagg(v.enh[0].x, v.enh[0].z, 1.0); });
-      (W.friExtra || []).forEach(q => lagg(q[0], q[1], q[2])); World.fri(l);
+      (W.friExtra || []).forEach(q => krymp(q[0], q[1], q[2])); World.fri(l);
+    },
+    // Gläntan kring ett tåg i förspelet: fyra kapslar längs kolonnen på vägen, och en kring båda leden i slaget, efter var gubbarna står.
+    _friTag(kaps) {
+      const a = G.s.aktivt; if (!a || !vis.pts) return; const u = vis.u, K0 = a.k0 || G.KAMP, f = Math.min(1, a.t / a.dur), strid = !!u.strid, kamp = strid && f > K0, gf = strid ? Math.min(1, f / K0) : f;
+      const ut = kamp ? Geo.smooth(0, 0.22, (f - K0) / (1 - K0)) : 0;
+      if (ut < 1) {
+        const dist = Math.max(0, vis.len - (strid ? 0.9 : 1.8)) * gf, sist = vis.enh[vis.enh.length - 1], bak = (sist ? sist.rad * 0.4 : 0) + (vis.gustav ? 0.95 : 0), fram = dist + 0.4, slut = Math.max(0, dist - bak), r = vis.kol * 0.16 + 0.6;
+        let p = R.along(vis.pts, fram); for (let k = 1; k <= 4; k++) { const q = R.along(vis.pts, fram + (slut - fram) * k / 4); kaps([p.x, p.z, q.x, q.z, r]); p = q; }
+      }
+      const lista = kamp ? vis.enh.concat(vis.fi) : vis.fi; if (lista.length) kaps(W._kapsel(lista, 0.75));
+    },
+    // En kapsel kring en skara: längs den längsta sidan av rutan de står i, sedd i slagfältets riktning
+    _kapsel(lista, marg) {
+      const e = R.along(vis.pts, vis.len), fx = Math.sin(e.ang), fz = Math.cos(e.ang); let f0 = 1e9, f1 = -1e9, s0 = 1e9, s1 = -1e9;
+      for (const m of lista) { const dx = m.x - e.x, dz = m.z - e.z, pf = dx * fx + dz * fz, ps = dx * fz - dz * fx; if (pf < f0) f0 = pf; if (pf > f1) f1 = pf; if (ps < s0) s0 = ps; if (ps > s1) s1 = ps; }
+      const cf = (f0 + f1) / 2, cs = (s0 + s1) / 2, hf = (f1 - f0) / 2, hs = (s1 - s0) / 2, pt = (pf, ps) => [e.x + fx * pf + fz * ps, e.z + fz * pf - fx * ps];
+      const ab = hs >= hf ? [pt(cf, cs - hs), pt(cf, cs + hs)] : [pt(cf - hf, cs), pt(cf + hf, cs)];
+      return [ab[0][0], ab[0][1], ab[1][0], ab[1][1], Math.min(hs, hf) + marg];
     },
     // Ingen går rakt genom en stad eller en borg: vägen börjar och slutar vid kanten av platsen, och böjer av runt allt annat med hus på vägen.
     // inIMalet = man ska in i platsen (en ritt in i staden), då går vägen ända fram.
@@ -234,7 +257,7 @@
       if (!V.tyst) { if (pts) Scene.flyTo(pts[0][0], pts[0][1] + 1, u.slag === 'flotta' ? 46 : 32, 1.4); else Scene.flyTo(p.x, p.z + 1, 28, 1.4); }
     },
     _slutVis() {
-      if (!vis) return; V.Gustav.slass = 0;
+      if (!vis) return; V.Gustav.slass = 0; V.Gustav.stupad = false; W._foljVis = null;
       vis.enh.forEach(e => Folk.remove(e)); vis.fi.forEach(e => Folk.remove(e)); vis.skepp.forEach(s => scene.remove(s)); (vis.fiende || []).forEach(s => scene.remove(s));
       if (vis.fana) scene.remove(vis.fana); if (vis.stallning) scene.remove(vis.stallning); vis = null;
     },
@@ -267,8 +290,29 @@
         if (u.strid === 'pilar') Lj && Lj.spela('pil'); else { vis.stot = 1; Scene.shake(0.12); Lj && Lj.spela('svard'); const e = slump(vis.enh); Fx.damm(e.x, gy(e), e.z, 3); }
       }
     },
+    // Det man trycker på i världen följer kameran, tills man själv flyttar kartan (Johannes 2026-11-26: "man följer det man klickar på"):
+    // hjälten, tåget och fienden, flottan, budet och skattelagen. Städerna är kvar som förut: ett tryck på en stad bygger ut den.
+    valjVid(sx, sy, iStad) {          // iStad: trycket är på en stad, då måste man träffa nästan precis för att följa i stället för att bygga
+      const Gu = V.Gustav, Bu = V.Bud; let best = null, bd = iStad ? (Scene.mobil ? 24 : 18) : Scene.mobil ? 46 : 34;
+      const prova = (x, z, h, mal) => { const p = Scene.screenPoint(x, Geo.groundAt(x, z) + h, z); if (p.behind) return; const d = Math.hypot(p.x - sx, p.y - sy); if (d < bd) { bd = d; best = mal; } };
+      if (vis) { const mal = W._malUppdrag(); vis.skepp.forEach(s => prova(s.position.x, s.position.z, 0.6, mal));
+        const st = l => Math.max(1, Math.floor(l.length / 40)); for (let k = 0; k < vis.enh.length; k += st(vis.enh)) { const e = vis.enh[k]; if (e.vis !== false) prova(e.x, e.z, 0.4, mal); } for (let k = 0; k < vis.fi.length; k += st(vis.fi)) prova(vis.fi[k].x, vis.fi[k].z, 0.4, mal); }
+      if (Gu.g && Gu.g.visible) prova(Gu.x, Gu.z, 0.7, W._malHjalten());
+      if (Bu.g && Bu.g.visible) prova(Bu.x, Bu.z, 0.7, { pos: () => Bu.g.visible ? { x: Bu.x, z: Bu.z } : null });
+      (skattVis || []).forEach(v => { const e = v.enh[0]; if (e) prova(e.x, e.z, 0.4, { pos: () => skattVis && skattVis.indexOf(v) >= 0 && v.enh[0] ? { x: v.enh[0].x, z: v.enh[0].z } : null }); });
+      if (!best) return false; W._foljer = Object.assign({ t: performance.now() }, best); return true;
+    },
+    _malUppdrag() { return { pos: () => vis && W._foljVis ? { x: W._foljVis.x, z: W._foljVis.z, d: G.skede() === 'strid' ? W._foljVis.d : 0 } : null }; },
+    _malHjalten() { const Gu = V.Gustav; return { pos: () => { const k = G.s.hjalte === 'kristina' && W._kristina; if (k) return { x: k.x, z: k.z }; if (vis && vis.gustav && W._foljVis) return W._malUppdrag().pos(); return Gu.g.visible ? { x: Gu.x, z: Gu.z } : null; } }; },
+    foljUppdraget() { if (vis && !V.tyst) W._foljer = Object.assign({ t: performance.now() }, W._malUppdrag()); },          // i slaget: varje tryck tar kameran tillbaka dit
+    foljHjalten() { if (!V.tyst) W._foljer = Object.assign({ t: performance.now() }, W._malHjalten()); },          // knappen Hitta mig
+    _foljNu() {
+      const fo = W._foljer; if (!fo) return; const c = Scene.cam, p = c.user > fo.t || c.locked || V.tyst ? null : fo.pos();
+      if (!p) { W._foljer = null; return; } if (c.fly) return;
+      c.tx = p.x; c.tz = p.z + (Scene.lyft ? 0 : 1); if (p.d) c.td += (p.d - c.td) * 0.03;
+    },
     // Kameran följer det som är ute på uppdrag, tills spelaren själv flyttar kartan.
-    _folj(x, z, d) { const c = Scene.cam; if (V.tyst || !vis || c.fly || c.user > vis.start) return; c.tx = x; c.tz = z + (Scene.lyft ? 0 : 1); c.td += (d - c.td) * 0.03; },
+    _folj(x, z, d) { W._foljVis = { x, z, d }; const c = Scene.cam; if (V.tyst || !vis || c.fly || c.user > vis.start) return; c.tx = x; c.tz = z + (Scene.lyft ? 0 : 1); c.td += (d - c.td) * 0.03; },
 
     // Händelser från spelet.
     handelse(typ, d) {
@@ -288,6 +332,8 @@
         while (steg[d.bas].length <= s) W.byggSteg(d.bas, false);
       } else if (typ === 'samling') { const p = R.P[d.bas]; if (!d.lopare) Fx.guld(p.x, p.y + 0.2, p.z, 10, 1.0); (vandrare[d.bas] || []).forEach(v => { v.hopp = 0.5; }); }
       else if (typ === 'byggnad') W._byggnad(d.id, false);
+      else if (typ === 'orderSvar' && vis) { if (d.bra && !d.o.alltid) { vis.stot = 1; Scene.shake(0.18); } else if (d.o.alltid) vis.stot = -1.6; }          // rätt läge: en stöt framåt. Anfallet i gryningen vid Brännkyrka slås tillbaka
+      else if (typ === 'kula' && vis) { const Gu = V.Gustav; Fx.krut(Gu.x, Geo.groundAt(Gu.x, Gu.z) + 0.4, Gu.z); Fx.damm(Gu.x, Geo.groundAt(Gu.x, Gu.z) + 0.1, Gu.z, 12); }
       else if (typ === 'klart') {
         const u = d.u, p = R.P[u.plats]; if (vis && vis.u.strid === 'nederlag') { /* de stupade ligger kvar ett ögonblick */ }
         if (vis && vis.gustav && u.slag !== 'flotta') W._kvar = { x: V.Gustav.x, z: V.Gustav.z, ang: 0, t: G.s.varld === 0 ? 8 : 14, plats: u.plats };          // du stannar en stund där du kom fram, sedan rider du tillbaka till rundan
@@ -303,7 +349,7 @@
       const S = G.s;
       for (let k = pops.length - 1; k >= 0; k--) { const p = pops[k]; p.t += dt / 0.65; const e = p.t >= 1 ? 1 : 1 + 2.2 * Math.pow(p.t - 1, 3) + 1.2 * Math.pow(p.t - 1, 2); p.m.scale.setScalar(Math.max(0.01, p.fran + ((p.till || 1) - p.fran) * e)); if (p.t >= 1) pops.splice(k, 1); }
       if (paintDirty && !pops.length) { World.Paint.commit(); paintDirty = false; }
-      W._gustav(dt, t); W._lopare(dt, t); W._folk(dt, t); W._uppdrag(dt, t); W._skatt();
+      W._gustav(dt, t); W._lopare(dt, t); W._folk(dt, t); W._uppdrag(dt, t); W._skatt(); W._foljNu();
       if (S.marknad && Math.random() < dt * 5) { const p = R.P[S.marknad.bas]; Fx.guld(p.x, p.y + 0.3, p.z, 2, tomt[S.marknad.bas].R * 0.6); }
       // rök ur skorstenar och hyttor, gnistor ur eldar
       smokeAcc += dt; if (smokeAcc > 0.22) { smokeAcc = 0; const c = Scene.cam; for (const s of B.smoke) { if (Math.abs(s.x - c.x) > c.d * 1.2 + 10 || Math.abs(s.z - c.z) > c.d + 10) continue; if (!S.bas[s.bas] && s.slag !== 'eld') { if (Math.random() < 0.5) continue; } if (s.slag === 'eld') Fx.gnista(s.x, s.y, s.z); else if (Math.random() < 0.7) Fx.rok(s.x, s.y, s.z, false); }
@@ -454,12 +500,13 @@
         for (let k = 0; k < m; k++) { const r = Math.floor(k / vis.bredd), c = k % vis.bredd - (vis.bredd - 1) / 2, x = e.x + fx * (1.3 + r * 0.4) + sx * c * 0.32, z = e.z + fz * (1.3 + r * 0.4) + sz * c * 0.32, q = Folk.add(x, z, 'dansk', { pike: k % 2 === 0, ang: e.ang + Math.PI }); q.bx = x; q.bz = z; q.br = r; vis.fi.push(q); } }
     },
     _tag0(dt, t, a, u) {
-      const Gu = V.Gustav, f = Math.min(1, a.t / a.dur), strid = !!u.strid, K0 = G.KAMP, gf = strid ? Math.min(1, f / K0) : f, kamp = strid && f > K0, kf = strid ? Math.max(0, (f - K0) / (1 - K0)) : 0, forlust = u.strid === 'nederlag';
+      const Gu = V.Gustav, f = Math.min(1, a.t / a.dur), strid = !!u.strid, K0 = a.k0 || G.KAMP, gf = strid ? Math.min(1, f / K0) : f, kamp = strid && f > K0, kf = strid ? Math.max(0, (f - K0) / (1 - K0)) : 0, forlust = u.strid === 'nederlag';
       const DR = 0.4, DK = 0.32, stopp = strid ? 0.9 : 1.8, dist = Math.max(0, vis.len - stopp) * gf, lead = R.along(vis.pts, dist), fx = Math.sin(lead.ang), fz = Math.cos(lead.ang), sx = Math.cos(lead.ang), sz = -Math.sin(lead.ang);
       // leden går varandra till mötes tills det är en knapp armlängd emellan (2,2 mellan dem från början, 1,85 går de)
-      const in0 = Math.min(1, kf / 0.3), A = in0 * 1.0 + 0.12 * (vis.stot || 0), Bf = in0 * 0.85, ut = kamp ? Geo.smooth(0, 0.22, kf) : 0, flykt = forlust ? Math.max(0, (kf - 0.45) / 0.55) : 0, vinst = !forlust ? Math.max(0, (kf - 0.6) / 0.4) : 0;
-      if (kamp) W._folj(lead.x + fx * 1.1, lead.z + fz * 1.1 + 0.4, vis.bredd > 14 ? 31 : 23); else W._folj(lead.x, lead.z, 30);
-      if (vis.gustav) { const hf = kamp ? A - 0.55 - flykt * 2 : 0; Gu.slass = kamp && !flykt ? 1 : 0; Gu.place(lead.x + fx * hf, lead.z + fz * hf, lead.ang, gf < 1 ? 0.9 : 0, t, dt, false); }
+      const in0 = Math.min(1, kf / 0.3), A = in0 * 1.0 + (vis.stot > 0 ? 0.12 : 0.35) * (vis.stot || 0), Bf = in0 * 0.85, ut = kamp ? Geo.smooth(0, 0.22, kf) : 0, flykt = forlust ? (u.order ? (a.kula ? Math.min(1, (vis.kulaT = (vis.kulaT || 0) + dt) / 7) : 0) : Math.max(0, (kf - 0.45) / 0.55)) : 0, vinst = !forlust ? Math.max(0, (kf - 0.6) / 0.4) : 0;
+      if (kamp) { W._folj(lead.x + fx * 1.1, lead.z + fz * 1.1 + 0.4, vis.bredd > 14 ? 24 : 18); if (!vis.iSlag) { vis.iSlag = true; W.foljUppdraget(); } } else W._folj(lead.x, lead.z, 30);
+      if (vis.gustav) { const hf = kamp ? A - 0.55 - (a.kula ? 3.2 * Math.max(0, flykt - 0.15) : flykt * 2) : 0; Gu.slass = kamp && !flykt && !a.kula ? 1 : 0; Gu.stupad = !!a.kula; Gu.place(lead.x + fx * hf, lead.z + fz * hf, lead.ang, gf < 1 ? 0.9 : 0, t, dt, false, !!a.kula); }
+      if (u.rader && kamp) { const nr = Math.min(u.rader.length - 1, Math.floor(kf * u.rader.length)); if (vis.radNr !== nr) { vis.radNr = nr; if (!V.tyst) V.UI.text(u.rader[nr], 4.5); } }          // ett slag där du inte är med: raderna säger vad som händer
       const bak0 = vis.gustav ? 0.95 : 0;
       vis.enh.forEach((e, i) => {
         const d0 = dist - e.rad * DR - bak0, back = R.along(vis.pts, Math.max(0, d0)); let x = back.x + Math.cos(back.ang) * e.kol * DK, z = back.z - Math.sin(back.ang) * e.kol * DK, ang = back.ang;
@@ -484,7 +531,7 @@
     _uppdrag(dt, t) {
       const S = G.s; if (!vis) return; const a = S.aktivt; if (!a) return;
       const u = vis.u, f = Math.min(1, a.t / a.dur), p = R.P[u.plats], strid = !!u.strid, K0 = G.KAMP, gf = strid ? Math.min(1, f / K0) : f, kamp = strid && f > K0, kf = strid ? Math.max(0, (f - K0) / (1 - K0)) : 0;
-      if (vis.stot > 0) vis.stot = Math.max(0, vis.stot - dt * 2.5);
+      if (vis.stot > 0) vis.stot = Math.max(0, vis.stot - dt * 2.5); else if (vis.stot < 0) vis.stot = Math.min(0, vis.stot + dt * 0.8);
       if (vis.noll) return W._tag0(dt, t, a, u);          // förspelets fälttåg och slag har sin egen ordning
       if (u.belagring && !a.val) {          // Stockholm sommaren 1520: lägret på Brunkeberg och slottet skjuter på varandra medan månaderna går
         W._belT = (W._belT === undefined ? 1.5 : W._belT) - dt;

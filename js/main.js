@@ -13,10 +13,10 @@
   // Ladda om sidan utan ?ny, så att den nya sparfilen gäller.
   function laddaOm() { const p = new URLSearchParams(location.search); ['ny', 'fusk', 'varld'].forEach(k => p.delete(k)); const s = p.toString(); location.href = location.pathname + (s ? '?' + s : ''); }
 
-  function tryck() {
+  function tryck(auto) {
     if (V.Intro && V.Intro.tar) { V.Ljud.vakna(); V.Intro.tar(); return; }          // i filmen och i scenerna är trycket det som scenen säger
     if (!spelar || (V.Intro && V.Intro.aktiv)) return; V.Ljud.vakna();
-    const f = G.tryck(); if (f && !f.skede) V.Ljud.spela(Varld._ryttare().sno ? 'skida' : 'hov');          // i striden låter världen själv (Varld._drag)
+    const f = G.tryck(auto === true); if (f && !f.skede) V.Ljud.spela(Varld._ryttare().sno ? 'skida' : 'hov');          // i striden låter världen själv (Varld._drag)
   }
   const UTSIKT = 32;          // en bra nivå att se sig omkring från: dit zoomar kameran ut efter ett inzoomat moment
   let haller = false, hallT = 0;          // mellanslag eller knappen hålls in: buden går i jämn takt utan att man behöver hamra
@@ -27,6 +27,9 @@
     else if (typ === 'marknadKlar') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.2, p.z, 'Marknad +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark'), d.res); V.Ljud.spela('dubbel');
       if (G.s.varld === 0) UI.skylt('Marknaden i ' + G.BAS[d.bas].namn + ': +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark')); }          // förspelet: också mitt på skärmen, platsen är ofta inte i bild
     else if (typ === 'sold' && d.dubbel) UI.skylt((G.s.varld === 0 ? 'Knektarna' : 'Soldaterna') + ': dubbelt så många män');
+    else if (typ === 'order') { UI.text(d.o.rad, 4.4); V.Ljud.spela('horn'); }
+    else if (typ === 'orderSvar') { UI.text(d.o.alltid || (d.bra ? d.o.bra : d.o.miss), 3.2); if (!d.o.alltid) UI.skylt(d.bra ? 'Rätt läge' : d.svar === 'tidigt' ? 'För tidigt' : 'För sent', true); V.Ljud.spela(d.bra && !d.o.alltid ? 'klart' : 'nej'); }
+    else if (typ === 'kula') { UI.text(d.o.rad, 7); V.Ljud.spela('kanon'); Scene.shake(0.5); }
     else if (typ === 'byggnad') { UI.skylt(d.b.skylt || d.b.namn + ' står klart'); if (d.b.klart && !V.tyst) UI.text(d.b.klart, 9); V.Ljud.spela('hammare'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } UI.tick(true); }          // kameran går dit så att man ser huset resas
     else if (typ === 'handling') { V.Ljud.spela(d.id === 'tal' ? 'sorl' : d.id === 'monstra' ? 'horn' : 'kop'); const h = D.HANDLINGAR.find(q => q.id === d.id); UI.skylt(UI.handlNamn(h) + (d.fick ? ': +' + V.tal(d.fick) + ' män' : '')); }
     else if (typ === 'skattUt') { if (!d.auto) V.Ljud.spela('kop'); }
@@ -109,12 +112,15 @@
     arstid = hade && G.s.arstid >= 0 && !q.has('fusk') ? G.s.arstid % 1 : ((senaste().man - 1) / 12) % 1; Scene.setSeason(q.has('season') ? +q.get('season') : arstid);
     const p = q.has('lon') ? Geo.place(+q.get('lon'), +q.get('lat')) : hemma(); Scene.jump(p.x, p.z + 1.5, +q.get('d') || 30);
     UI.onTryck = tryck; UI.onSkicka = () => Varld.skicka(); UI.onSkatt = () => G.skatt();
-    UI.onHitta = () => { const w = Varld.gustavVid(); Scene.cam.user = performance.now(); Varld._foljMig = Scene.cam.user; Scene.flyTo(w.x, w.z + 1.2, UTSIKT, 0.9); };          // knappen Hitta mig
+    UI.onHitta = () => { const w = Varld.gustavVid(); Scene.cam.user = performance.now(); Varld._foljMig = Scene.cam.user; Scene.flyTo(w.x, w.z + 1.2, UTSIKT, 0.9); if (G.s.varld === 0) Varld.foljHjalten(); };          // knappen Hitta mig
     UI.onVisaBas = id => { const w = Varld.pos(id); Scene.flyTo(w.x, w.z + 1.2, Math.min(Scene.cam.d, 30), 0.9); };
     UI.onBorjaOm = () => { byter = true; try { localStorage.removeItem(SPAR); } catch (e) { /* inget */ } laddaOm(); };
     UI.onIgen = arv => { byter = true; G.s.arv += arv; G.s.varv++; const s = G.ny(true); s.intro = true; skriv(); laddaOm(); };
     Scene.onClick = (e, g) => {
-      const id = Varld.basVid(g); if (!(id && spelar && G.s.bas[id])) { tryck(); return; }
+      if (spelar && G.s.varld === 0 && G.skede() === 'strid') { Varld.foljUppdraget(); tryck(); return; }          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget
+      const id = Varld.basVid(g), egen = !!(id && spelar && G.s.bas[id]);
+      if (spelar && G.s.varld === 0 && Varld.valjVid(e.clientX, e.clientY, egen)) { V.Ljud.vakna(); return; }          // förspelet: det man trycker på följs (Johannes 2026-11-26)
+      if (!egen) { tryck(); return; }
       if (G.s.marknad && G.s.marknad.bas === id) { V.Ljud.vakna(); G.marknadTa(); UI.tick(); return; }
       UI.valj(id); V.Ljud.vakna();
       if (!UI.kop(id)) { const w = Varld.pos(id), res = G.prisRes(id), fattas = G.pris(id) - G.s.res[res]; UI.flyt(w.x, w.y + 2.4, w.z, G.stoppad(id) ? 'Uppror' : fattas > 0 ? 'Fattas ' + V.tal(Math.ceil(fattas)) + (res === 'man' ? ' män' : ' mark') : 'Fattas ' + V.tal(Math.ceil(G.dagsverke(id) - G.s.res.man)) + ' män till dagsverken', 'nej'); V.Ljud.spela('trumma'); }
@@ -136,7 +142,7 @@
   function frame(now) {
     let dt = Math.min(0.1, (now - (last || now)) / 1000); last = now; const t = (V.U.uTime.value += dt);
     if (spelar && !(V.Intro && V.Intro.aktiv)) {
-      if (haller && !UI.pausar() && !(V.Intro && V.Intro.tar) && (hallT += dt) > 0.2) { hallT = 0; tryck(); }
+      if (haller && !UI.pausar() && !(V.Intro && V.Intro.tar) && (hallT += dt) > 0.2) { hallT = 0; tryck(true); }
       if (!UI.pausar()) {                                 // tiden står still medan rutan i början läses
         for (let k = 0; k < snabb; k++) G.steg(dt);
         if (G.tvinga()) Varld.skicka();                    // förspelet går sin gång vad man än gör

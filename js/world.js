@@ -4,9 +4,19 @@
   const V = window.VASA = window.VASA || {}, Geo = V.Geo, MB = V.MB, lin = V.hexToLin;
   const v3 = hex => { const c = lin(hex); return new THREE.Vector3(c.r, c.g, c.b); };
 
+  // Gläntorna (V.Varld.fri): upp till FRI_N kapslar, en sträcka med en bredd (x1, z1, x2, z2 i uFri, radien i uFriR). Positiv radie: trädet kliver åt sidan,
+  // ut mot kanten, och blir lite mindre ju längre in det stod. Negativ radie: trädet krymper bort. Samma kod i trädens färg, skuggor och djupbilden (efterbild.js).
+  const FRI_N = 12, FRI_DEKL = 'uniform vec4 uFri[' + FRI_N + ']; uniform float uFriR[' + FRI_N + '];',
+    FRI_GLSL = '{ vec2 fip = instanceMatrix[3].xz; float fri = 1.0; vec2 friU = vec2(0.0);\n' +
+      ' for (int i = 0; i < ' + FRI_N + '; i++) { float fr = uFriR[i]; if (fr == 0.0) break; vec4 fq = uFri[i]; vec2 pa = fip - fq.xy, ba = fq.zw - fq.xy; vec2 fv = pa - ba * clamp(dot(pa, ba) / max(dot(ba, ba), 0.0001), 0.0, 1.0); float fd = length(fv);\n' +
+      '  if (fr < 0.0) fri = min(fri, smoothstep(-fr * 0.5, -fr, fd));\n' +
+      '  else if (fd < fr) { float fk = 1.0 - fd / fr; vec2 fp = (fd > 0.001 ? fv / fd : vec2(0.7071)) * (fr - fd) * 0.85; if (dot(fp, fp) > dot(friU, friU)) friU = fp; fri = min(fri, 1.0 - 0.55 * fk); } }\n' +
+      ' transformed *= fri;\n' +
+      ' if (dot(friU, friU) > 0.0) { vec3 fo = vec3(friU.x, 0.0, friU.y); vec3 c0 = instanceMatrix[0].xyz, c1 = instanceMatrix[1].xyz, c2 = instanceMatrix[2].xyz; transformed += vec3(dot(c0, fo) / dot(c0, c0), dot(c1, fo) / dot(c1, c1), dot(c2, fo) / dot(c2, c2)); } }';
+
   // Gemensamma värden som alla färgprogram läser (tid, årstid, sol).
   const U = V.U = {
-    uFri: { value: [0, 1, 2, 3, 4, 5, 6, 7].map(() => new THREE.Vector3()) },          // gläntor: (x, z, radie) kring dem som rör sig, så att ingen går genom ett träd
+    uFri: { value: Array.from({ length: FRI_N }, () => new THREE.Vector4()) }, uFriR: { value: new Float32Array(FRI_N) },          // gläntor kring dem som rör sig, så att ingen går genom ett träd (se FRI_GLSL)
     uTime: { value: 0 }, uSnow: { value: 0 }, uGreen: { value: 1 }, uAutumn: { value: 0 }, uBare: { value: 0 }, uIce: { value: 0 }, uCloud: { value: 1 },
     uCropCol: { value: v3('#7fae3a') }, uCropAmt: { value: 1 }, uMap: { value: new THREE.Vector2(Geo.W, Geo.H) }, uParch: { value: v3('#e6d7b8') },
     uSunDir: { value: new THREE.Vector3(-0.45, 0.6, 0.55).normalize() }, uSunCol: { value: new THREE.Vector3(1, 0.95, 0.85) }, uAmb: { value: new THREE.Vector3(0.5, 0.55, 0.65) },
@@ -259,7 +269,7 @@
       sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vBare; varying float vSnowK;\nfloat hashB(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }')
         .replace('#include <map_fragment>', 'if (vBare > 0.5 && hashB(floor(gl_FragCoord.xy * 0.75)) < (vBare - 0.5) * 1.2) discard;')       // kala kronor ritas glest, som kvistar
         .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.93, 0.96, 1.0), smoothstep(0.38, 0.6, abs(vSnowK)) * step(0.0, vSnowK) + smoothstep(0.2, 0.9, -vSnowK) * 0.5);');
-      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 aFx; uniform float uTime, uSnow, uAutumn, uBare; uniform vec2 uMap; uniform vec3 uFri[8]; varying float vBare; varying float vSnowK;')
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 aFx; uniform float uTime, uSnow, uAutumn, uBare; uniform vec2 uMap; ' + FRI_DEKL + ' varying float vBare; varying float vSnowK;')
         .replace('#include <color_vertex>', `#include <color_vertex>
           vec3 ipos = instanceMatrix[3].xyz;
           float rnd = fract(sin(dot(ipos.xz, vec2(12.9898, 78.233))) * 43758.5453);
@@ -274,7 +284,7 @@
           if (aFx.y > 1.5) { transformed.xz *= 1.0 - 0.2 * uBare; }
           float sway = sin(uTime * 1.4 + ipos.x * 0.8 + ipos.z * 0.6) * 0.03 * transformed.y * transformed.y;
           transformed.x += sway; transformed.z += sway * 0.5;
-          { vec2 fip = instanceMatrix[3].xz; float fri = 1.0; for (int i = 0; i < 8; i++) { float fr = uFri[i].z; if (fr > 0.0) fri = min(fri, smoothstep(fr * 0.5, fr, distance(fip, uFri[i].xy))); } transformed *= fri; }`);
+          ${FRI_GLSL}`);
     };
     return m;
   }
@@ -283,7 +293,7 @@
   function treeDepth() {
     if (treeDjup) return treeDjup;
     const m = treeDjup = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
-    m.onBeforeCompile = sh => { sh.uniforms.uFri = U.uFri; sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform vec3 uFri[8];').replace('#include <begin_vertex>', '#include <begin_vertex>\n{ vec2 fip = instanceMatrix[3].xz; float fri = 1.0; for (int i = 0; i < 8; i++) { float fr = uFri[i].z; if (fr > 0.0) fri = min(fri, smoothstep(fr * 0.5, fr, distance(fip, uFri[i].xy))); } transformed *= fri; }'); };
+    m.onBeforeCompile = sh => { sh.uniforms.uFri = U.uFri; sh.uniforms.uFriR = U.uFriR; sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\n' + FRI_DEKL).replace('#include <begin_vertex>', '#include <begin_vertex>\n' + FRI_GLSL); };
     return m;
   }
 
@@ -333,7 +343,8 @@
   V.World = {
     U, Paint, season, setSeason, snowAt, iceAt,
     // Säg var gläntorna ska vara den här bildrutan: [[x, z, radie], ...], högst åtta
-    fri(lista) { const v = U.uFri.value; for (let k = 0; k < 8; k++) { const q = lista[k]; if (q) v[k].set(q[0], q[1], q[2]); else v[k].set(0, 0, 0); } },
+    FRI_N, FRI_DEKL, FRI_GLSL,
+    fri(lista) { const v = U.uFri.value, r = U.uFriR.value; for (let k = 0; k < FRI_N; k++) { const q = lista[k]; if (q) { v[k].set(q[0], q[1], q[2], q[3]); r[k] = q[4]; } else { v[k].set(0, 0, 0, 0); r[k] = 0; } } },          // q = [x1, z1, x2, z2, radie], en punkt har x2 = x1 och z2 = z1
     build(scene, clear, roads) {
       Geo.init(); Paint.init();
       for (const r of Geo.G.rivers) Paint.river(r.pts, r.w);

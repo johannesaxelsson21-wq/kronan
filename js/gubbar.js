@@ -216,6 +216,7 @@
         d.kropp.position.set(0, 0.4 + gal, -0.04); d.kropp.rotation.set(0.06 + 0.12 * f + Math.sin(w) * 0.03 * ror, 0, 0);
         d.benV.rotation.set(-0.5, 0, -0.5); d.benH.rotation.set(-0.5, 0, 0.5); d.armV.rotation.set(-1.0, 0, 0.25); d.armH.rotation.set(-1.0 + Math.sin(w) * 0.08 * ror, 0, -0.25);
       }
+      if (this.stupad && tillFots) { d.kropp.position.set(0, 0.09, 0); d.kropp.rotation.set(-1.45, 0.3, 0); d.armV.rotation.set(-0.4, 0, 0.9); d.armH.rotation.set(-0.4, 0, -0.9); d.benV.rotation.set(0.1, 0, 0.12); d.benH.rotation.set(-0.15, 0, -0.1); }          // han ligger på isen
       // slass: han är med i striden (Varld sätter det). Svärdet i höger hand, hugg efter hugg, och hästen stegrar sig lite.
       if (d.svH) d.svH.visible = !!this.slass && !sno;
       if (this.slass && !sno) { const hg = Math.sin(t * 7.5); d.armH.rotation.set(-2.05 + hg * 0.85, 0, -0.3); d.kropp.rotation.y = hg * 0.16; if (!tillFots) { d.hast.rotation.x = -0.07 + Math.sin(t * 3.7) * 0.06; d.hb[0].rotation.x = -0.5 + Math.sin(t * 7.5) * 0.4; d.hb[1].rotation.x = -0.5 + Math.sin(t * 7.5 + 1.2) * 0.4; } }

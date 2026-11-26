@@ -67,7 +67,7 @@
         <div id="meny"><button id="m-fraga" title="Så fungerar det">${IK.fraga}</button><button id="m-bok" title="Krönikan">${IK.bok}</button><button id="m-krona" title="Regentlängden">${IK.krona}</button><button id="m-ljud" title="Ljud">${IK.ljud}</button><button id="m-kugg" title="Inställningar">${IK.kugg}</button></div>
         <div id="konsol">
           <div id="uppdrag"><div id="upp-akt"></div><div id="upp-titel"></div><div id="upp-kost"></div><div id="upp-bar"><div id="upp-fyll"></div></div><button id="upp-knapp"></button></div>
-          <div id="akwrap"><button id="ak"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" class="spar"/><circle cx="60" cy="60" r="54" id="ak-ring" class="ring"/></svg><span id="ak-txt">Skicka<br>bud</span><span id="fullx"></span></button><div id="ak-hint">${HALL}</div></div>
+          <div id="akwrap"><i id="ak-order" style="display:none"></i><button id="ak"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" class="spar"/><circle cx="60" cy="60" r="54" id="ak-ring" class="ring"/></svg><span id="ak-txt">Skicka<br>bud</span><span id="fullx"></span></button><div id="ak-hint">${HALL}</div></div>
           <div id="handl"></div>
           <div id="baser"></div>
           <button id="hitta" title="Visa var du är på kartan">${IK.sikte}<span>Hitta mig</span></button>
@@ -162,6 +162,8 @@
       // medan striden pågår är den runda knappen spelarens del i den
       { const sk = G.skede(), ord = sk && u ? UI.drivOrd(u, sk) : null, nyckel = ord ? ord[0] : UI.gorOrd(u);
         if (UI._akOrd !== nyckel) { UI._akOrd = nyckel; $('ak-txt').innerHTML = nyckel; $('ak-hint').textContent = ord ? ord[1] : HALL; $('akwrap').classList.toggle('driv', !!ord); $('akwrap').classList.toggle('strid', !!ord && sk === 'strid'); } }
+      // förspelet: under ett slag tonas allt bort utom uppdraget, den runda knappen och raderna (Johannes 2026-11-26 20:34). Kameran går nära (varld.js).
+      { const slag = S.varld === 0 && G.skede() === 'strid'; if (root.classList.contains('slag') !== slag) root.classList.toggle('slag', slag); if (root.classList.contains('forspel') !== (S.varld === 0)) root.classList.toggle('forspel', S.varld === 0); }
       // farten
       const ring = $('ak-ring'), C = 2 * Math.PI * 54; ring.style.strokeDasharray = C; ring.style.strokeDashoffset = C * (1 - S.fart);
       $('akwrap').classList.toggle('full', S.full); $('fullx').textContent = S.full ? 'allt ×' + G.fullX() : '';
@@ -291,9 +293,13 @@
         mb.style.display = dold ? 'none' : ''; mb.style.transform = 'translate(' + (sp.x - 23) + 'px,' + (sp.y - 46) + 'px)';
       }
       // de första minuterna i en värld står det Du över den man är (och Ditt bud över budet, när man är Kristina och budet rider)
-      { const visa = spel && S.t < 150 && !S.slut, kr = spel && !S.slut && S.hjalte === 'kristina' && S.hjalteT !== undefined && S.t - S.hjalteT < 90 ? V.Varld._kristina : null,          // och en stund efter att man har blivit Kristina
+      { const visa = spel && S.t < 150 && !S.slut, slag = spel && root.classList.contains('slag'), kr = spel && !S.slut && S.hjalte === 'kristina' && S.hjalteT !== undefined && S.t - S.hjalteT < 90 ? V.Varld._kristina : null,          // och en stund efter att man har blivit Kristina
         lagg = (id, o, h, pa) => { const e = $(id), sp = pa && o && o.g && o.g.visible ? V.Scene.screenPoint(o.x, V.Geo.groundAt(o.x, o.z) + h, o.z) : null, syns = sp && !sp.behind && sp.y > 50 && sp.y < golv; e.style.display = syns ? 'block' : 'none'; if (syns) e.style.transform = 'translate(' + Math.round(sp.x) + 'px,' + Math.round(sp.y) + 'px) translate(-50%, -100%)'; };
-        lagg('vem-du', kr ? { x: kr.x, z: kr.z, g: { visible: true } } : V.Gustav, kr ? 1.45 : 1.75, visa || !!kr); lagg('vem-bud', V.Bud, 1.9, visa); }
+        lagg('vem-du', kr ? { x: kr.x, z: kr.z, g: { visible: true } } : V.Gustav, kr ? 1.45 : V.Gustav.stupad ? 0.6 : 1.75, visa || !!kr || slag); lagg('vem-bud', V.Bud, 1.9, visa); }
+      // ordern i ett slag: en ring som sluter sig kring knappen. Rätt läge är när den är framme vid knappens kant.
+      { const a = S.aktivt, m = a && a.mom, e = $('ak-order'), O = G.ORDER; if (!m || m.svar || !spel) { if (e.style.display !== 'none') e.style.display = 'none'; }
+        else { const sk = Math.max(0.86, 1 + (O.mal - m.tm) / O.mal * 1.1), nara = Math.abs(m.tm - O.mal) <= O.slack, kr = $('ak').getBoundingClientRect(), wr = $('akwrap').getBoundingClientRect();
+          e.style.display = 'block'; e.style.width = e.style.height = (kr.width + 6) + 'px'; e.style.left = (kr.left - wr.left - 3) + 'px'; e.style.top = (kr.top - wr.top - 3) + 'px'; e.style.transform = 'scale(' + sk.toFixed(3) + ')'; e.classList.toggle('nara', nara); } }
       if (caption && performance.now() > capT) { caption.classList.add('bort'); const c = caption; caption = null; setTimeout(() => c.remove(), 900); }
     },
     // Vad den runda knappen heter annars: det man gör inför nästa steg i historien (D.GOR). Som kung tar man upp skatt när inget annat står.
@@ -301,6 +307,7 @@
     // Vad den runda knappen heter medan striden pågår: [ordet på knappen, raden under]. På vägen dit heter den som vanligt.
     drivOrd(u, sk) {
       if (sk !== 'strid') return null;
+      if (G.s.varld === 0 && u.order) { const m = G.s.aktivt && G.s.aktivt.mom; return G.s.aktivt && G.s.aktivt.kula ? ['Du är<br>träffad', ''] : m && u.order[m.i] && u.order[m.i].ord ? [u.order[m.i].ord, m.svar ? '' : 'tryck när ringen är framme'] : ['Slaget<br>börjar', 'vänta på ordern']; }
       return u.strid === 'nederlag' ? ['Håll<br>emot', 'tryck: håll emot'] : u.strid === 'pilar' ? ['Skjut!', 'tryck: en salva'] : u.strid === 'kanoner' || u.strid === 'sjo' ? ['Skjut!', 'tryck: kanonerna'] : ['Anfall!', 'tryck: anfall'];
     },
     // Siffra som stiger upp från en plats i världen.
@@ -326,7 +333,7 @@
     },
     // En kort rad som försvinner av sig själv (bara för sådant som inte behöver läsas noga).
     text(t, sek, stor) { if (caption) caption.remove(); caption = el('div', 'text' + (stor ? ' stor' : ''), t); $('text').appendChild(caption); capT = performance.now() + (sek || 7) * 1000; },          // riktig tid: på en skärm med 120 bilder i sekunden försvann raden annars dubbelt så fort
-    skylt(t) { const e = el('div', 'skylt', t); $('text').appendChild(e); setTimeout(() => e.classList.add('bort'), 2600); setTimeout(() => e.remove(), 3400); },
+    skylt(t, iSlag) { if (!iSlag && root.classList.contains('slag')) return; const e = el('div', 'skylt', t); $('text').appendChild(e); setTimeout(() => e.classList.add('bort'), 2600); setTimeout(() => e.remove(), 3400); },
 
     // ---- berättelsen: en ruta ovanför konsolen som står kvar tills man trycker bort den -------------
     berattar(rubrik, rader) {
@@ -351,6 +358,7 @@
       if (g.las && g.las.indexOf('konster') >= 0 && S.varld !== 0) x.push(('Under fliken <b>Förmågor</b> gör du dina bud och tryck bättre. Håll ') + (V.pek ? 'fingret kvar på' : 'pekaren över') + ' ett kort så ser du exakt vad det ger.');
       if (g.las && g.las.indexOf('sold') >= 0) x.push('Nu kan du <b>värva soldater</b> för mark. De får lön, och du får fler män.');
       if (g.x) for (const r in g.x) x.push('Allt som ger ' + (r === 'man' ? 'män' : 'mark') + ' ger nu ' + String(g.x[r]).replace('.', ',') + ' gånger så mycket.');
+      if (S.hem && S.hem.id === u.id) x.push('<b>' + tal(S.hem.hem) + '</b> av dina ' + tal(S.hem.av) + ' män kom hem' + (S.hem.bra >= S.hem.n ? ': du gav varje order i rätt läge.' : S.hem.bra ? '.' : '. Ger du order i rätt läge kommer fler hem.'));
       if (g.markTid || g.mark) x.push('Du fick en rejäl summa mark på en gång.');
       if (g.man) x.push('Du fick ' + tal(g.man) + ' män.');
       if (g.fart) x.push('Din armé rör sig fortare från och med nu.');
@@ -382,7 +390,7 @@
 
     // ---- första stegen: en pekande ruta i taget, som står kvar tills steget är gjort ------------------
     _tips() {
-      const S = G.s, T = S.tips, e = $('tips'), spel = root.classList.contains('spel') && $('ruta').style.display === 'none';
+      const S = G.s, T = S.tips, e = $('tips'), spel = root.classList.contains('spel') && $('ruta').style.display === 'none' && !root.classList.contains('slag');
       if (!spel) { e.innerHTML = ''; tips.nu = null; return; }
       const forst = S.varld === 0 ? 'stockholm' : 'mora', synlig = sel => { const m = document.querySelector(sel); return !!(m && m.offsetParent); };
       const steg = [

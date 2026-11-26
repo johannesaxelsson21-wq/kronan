@@ -124,7 +124,8 @@
 
     // Varje tryck svarar direkt: mätaren fylls på sex tryck, budet får ett ryck framåt (upp till dubbel fart),
     // och man får något direkt i handen: minst en mark eller en man, annars en kvarts sekunds inkomst.
-    tryck() {
+    tryck(auto) {          // auto = knappen hålls in och spelet trycker själv: det räknas inte som en order i ett slag
+      if (!auto && S.aktivt && S.aktivt.mom && !S.aktivt.mom.svar && S.aktivt.mom.tm > 0.5) G._orderSvar(true);
       const kraft = Math.min(1, S.sistaTryck);          // det man får laddas upp över en sekund: att hamra ger inte mer än att trycka i lugn takt
       S.fart = Math.min(1, S.fart + 0.17); S.sistaTryck = 0; S.tryck++; S.ryck = Math.min(1, (S.ryck || 0) + 0.5);
       if (S.fart >= 1 && !S.full) { S.full = true; G.ut('full', {}); }
@@ -140,7 +141,24 @@
     // Medan striden pågår syns varje tryck på kartan (en salva, en stöt). Det går aldrig fortare för det:
     // inget tryck får göra en resa eller ett moment kortare, man ska alltid se hela vägen (Johannes 2026-11-25).
     KAMP,
-    skede() { const a = S.aktivt; if (!a || a.val) return null; const u = D.UPPDRAG.find(q => q.id === a.id); return u && u.strid && a.t / a.dur >= KAMP ? 'strid' : null; },
+    skede() { const a = S.aktivt; if (!a || a.val) return null; const u = D.UPPDRAG.find(q => q.id === a.id); return u && u.strid && a.t / a.dur >= (a.k0 || KAMP) ? 'strid' : null; },
+    // ---- förspelets slag: order i rätt ögonblick -----------------------------------------------
+    // Slaget har två eller tre ögonblick (D.STURE order). I vart och ett sluter sig en ring kring knappen, och ett tryck när den är framme
+    // är rätt läge. Utgången följer historien vad man än gör: det man spelar om är hur många av männen som kommer hem (_klar).
+    ORDER: { borjan: 0.8, langd: 4.2, mellan: 0.6, mal: 3.2, slack: 0.5 },
+    _order() {
+      const a = S.aktivt; if (!a || a.val || a.kula || S.varld !== 0) return; const u = D.UPPDRAG.find(q => q.id === a.id); if (!u || !u.order || G.skede() !== 'strid') return;
+      const O = G.ORDER, per = O.langd + O.mellan, tb = a.t - a.dur * (a.k0 || KAMP) - O.borjan; if (tb < 0) return;
+      const i = Math.floor(tb / per), tm = tb - i * per;
+      if (a.mom && !a.mom.svar && (a.mom.i !== i || tm > O.langd)) { a.mom.tm = O.langd; G._orderSvar(false); }          // ögonblicket tog slut utan tryck: en miss
+      if (i >= u.order.length || tm > O.langd) return;          // slut på order, eller pausen mellan två
+      if (!a.mom || a.mom.i !== i) { const o = u.order[i]; if (o.hand === 'kula') { a.kula = true; a.mom = null; G.ut('kula', { u, o }); return; } a.mom = { i, svar: null, tm: 0 }; G.ut('order', { u, o, i }); }
+      a.mom.tm = tm;
+    },
+    _orderSvar(tryckt) {
+      const a = S.aktivt, u = D.UPPDRAG.find(q => q.id === a.id), o = u.order[a.mom.i], O = G.ORDER, d = a.mom.tm - O.mal, bra = tryckt && Math.abs(d) <= O.slack;
+      a.mom.svar = bra ? 'bra' : !tryckt ? 'sent' : d < 0 ? 'tidigt' : 'sent'; if (bra && !o.alltid) a.bra = (a.bra || 0) + 1; G.ut('orderSvar', { u, o, i: a.mom.i, bra, svar: a.mom.svar });
+    },
     fartNu() { return (0.12 + 0.88 * S.fart) * (1 + (S.ryck || 0)); },          // hur fort hjälten far just nu, som del av toppfarten
 
     // ---- driv in skatt: skicka ut män som kommer hem med mark ---------------------------------
@@ -175,12 +193,12 @@
     },
     framsteg(u) { const k = G.kostnad(u); let f = 1; for (const r in k) if (k[r] > 0) f = Math.min(f, S.res[r] / k[r]); return Math.max(0, Math.min(1, f)); },
     kanSkicka() { const u = D.UPPDRAG[S.nasta]; return !!u && !S.aktivt && !S.slut && G.framsteg(u) >= 1; },
-    skicka(dur) {
+    skicka(dur, k0) {          // k0 = hur stor del av uppdraget som är vägen dit, när den inte är KAMP (förspelets slag)
       if (!G.kanSkicka()) return false;
       const u = D.UPPDRAG[S.nasta], k = G.kostnad(u);
       for (const r in k) S.res[r] -= k[r];
       if (u.kostar.skuldDel) S.skuld = Math.max(0, S.skuld - k.mark);
-      S.aktivt = { id: u.id, t: 0, dur: (u.tid || dur || TID[u.slag]) / (u.slag === 'beslut' || u.slag === 'bygg' ? 1 : S.fartX), val: false };
+      S.aktivt = { id: u.id, t: 0, dur: (u.tid || dur || TID[u.slag]) / (u.slag === 'beslut' || u.slag === 'bygg' ? 1 : S.fartX), val: false, k0: k0 || undefined, man: k.man || 0 };
       G.ut('skickat', { u, kostnad: k });
       return true;
     },
@@ -192,8 +210,10 @@
     // Riksdagen 1527: uppdraget blir inte klart förrän spelaren själv har hotat att avgå.
     valj() { if (S.aktivt && S.aktivt.val) { S.aktivt.val = false; S.aktivt.valt = true; G._klar(); } },
     _klar() {
-      const u = D.UPPDRAG.find(q => q.id === S.aktivt.id), g = u.ger || {};
+      const u = D.UPPDRAG.find(q => q.id === S.aktivt.id), g = u.ger || {}, akt = S.aktivt;
       S.aktivt = null; S.nasta++; S.datum = 0;
+      // förspelets slag: en femtedel av männen kommer alltid hem, och upp till två tredjedelar om orderna gavs i rätt läge
+      S.hem = null; if (S.varld === 0 && u.order && akt.man) { const n = u.order.filter(o => o.ord && !o.alltid).length || 1, bra = Math.min(n, akt.bra || 0), hem = Math.round(akt.man * (0.2 + 0.45 * bra / n)); S.res.man = Math.min(G.tak(), S.res.man + hem); S.hem = { id: u.id, hem, av: akt.man, bra, n }; }
       if (g.bas) g.bas.forEach(id => { if (!S.bas[id]) S.bas[id] = 1; });
       if (g.x) for (const r in g.x) S.x[r] *= g.x[r];
       if (g.las) g.las.forEach(l => S.las[l] = true);
@@ -242,7 +262,7 @@
       const tak = G.tak(); if (S.res.man > tak) S.res.man = tak;
       if (S.aktivt && S.aktivt.val && S.varld === 0) { S.aktivt.valT = (S.aktivt.valT || 0) + dt; if (S.aktivt.valT > 30) G.valj(); }      // i förspelet väntar historien inte
       if (S.aktivt && !S.aktivt.val) {
-        S.aktivt.t += dt;
+        S.aktivt.t += dt; G._order();
         if (S.aktivt.t >= S.aktivt.dur) { const u = D.UPPDRAG.find(q => q.id === S.aktivt.id); if (u.val && !S.aktivt.valt) { S.aktivt.val = true; G.ut('val', { u }); } else G._klar(); }
       }
       if (S.las.fogdar) for (const id in S.fogde) { let n = 0; while (S.fogde[id] && G.kanKopa(id) && G.pris(id) <= S.res[G.prisRes(id)] * 0.12 && n++ < 5) G.kop(id); }
@@ -256,7 +276,7 @@
       }
       // marknadsdag: då och då är det marknad i en bygd eller stad. Den som trycker där får en klump på en gång.
       if (S.marknad) { S.marknad.t -= dt; if (S.marknad.t <= 0) { S.marknad = null; G.ut('marknadSlut', {}); } }
-      else if (!S.slut && S.t > 40) {
+      else if (!S.slut && S.t > 40 && !(S.varld === 0 && G.skede() === 'strid')) {          // förspelet: ingen marknad mitt i ett slag
         S.marknadT = (S.marknadT === undefined ? 35 : S.marknadT) - dt;
         if (S.marknadT <= 0) { const ids = Object.keys(S.bas).filter(id => (BAS[id].slag === 'bygd' || BAS[id].slag === 'stad') && G.prod(id) > 0); S.marknadT = 75 + Math.random() * 60; if (ids.length) { S.marknad = { bas: ids[Math.floor(Math.random() * ids.length)], t: 30 }; G.ut('marknad', { bas: S.marknad.bas }); } }
       }
