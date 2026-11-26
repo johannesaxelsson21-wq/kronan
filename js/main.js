@@ -129,7 +129,7 @@
       Varld.update(dt * Math.min(snabb, 4), t);
       sparAcc += dt; if (sparAcc > 10) { sparAcc = 0; spara(); }
     } else if (V.Intro && V.Intro.update) V.Intro.update(dt, t);
-    V.Folk.update(t); V.Fx.mat.uniforms.uH.value = Scene.renderer.domElement.height * 1.866; V.Fx.update(dt, Scene.cam);
+    Varld.fri(); V.Folk.update(t); V.Fx.mat.uniforms.uH.value = Scene.renderer.domElement.height * 1.866; V.Fx.update(dt, Scene.cam);
     Scene.keyPan(dt); Scene.update(dt); Scene.render(); UI.frame();
     uiAcc += dt; if (uiAcc > 0.1) { uiAcc = 0; if (spelar) UI.tick(); }
     if (++frames === 3) { document.getElementById('load').classList.add('gone'); window.VASA_READY = true; }

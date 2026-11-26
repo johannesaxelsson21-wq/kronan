@@ -126,12 +126,42 @@
           else { const ut = W._utanfor(W._sateId, mal), c = R.P[W._sateId], rr = Math.hypot(ut[0] - c.x, ut[1] - c.z) + 0.5; pts = [ut].concat(grafHar(u.plats) ? full.filter(q => Math.hypot(q[0] - c.x, q[1] - c.z) > rr) : [[mal.x, mal.z]]); if (pts.length < 2) pts.push([mal.x, mal.z]); }          // armén samlas utanför staden, på den sida som vetter mot målet
         }
         else pts = grafHar(u.plats) && grafHar(fran) ? R.path(fran, u.plats) : [[R.P[fran].x, R.P[fran].z], [R.P[u.plats].x, R.P[u.plats].z]];
+        pts = W._runt(pts, sjalv ? W._sateId : fran, u.plats, u.slag === 'rid');
         const sp = u.slag === 'bud' ? 4.5 : u.slag === 'rid' ? 5 : 3.4, lim = u.slag === 'bud' ? [5, 12] : [9, 26];
         dur = Math.max(lim[0], Math.min(lim[1], R.length(pts) / sp)) + (u.strid ? 10 : 0);
       }
       if (!G.skicka(dur ? dur * G.s.fartX : undefined)) return false;
       W._startVis(u, pts, fran, man);
       return true;
+    },
+    // Gläntorna i skogen: en kring var och en som rör sig (hjälten, budet, tåget, skattelagen och den som en scen handlar om)
+    fri() {
+      const l = [], G0 = V.Gustav, Bu = V.Bud, lagg = (x, z, r) => { if (l.length < 8) l.push([x, z, r]); };
+      if (G0.g && G0.g.visible) lagg(G0.x, G0.z, 1.0); if (Bu.g && Bu.g.visible) lagg(Bu.x, Bu.z, 0.9);
+      if (vis && vis.enh.length) { const e = vis.enh; lagg(e[0].x, e[0].z, 1.3); if (e.length > 6) { const m = e[e.length >> 1], s = e[e.length - 1]; lagg(m.x, m.z, 1.3); lagg(s.x, s.z, 1.3); } }
+      if (vis && vis.fi.length) { const m = vis.fi[vis.fi.length >> 1]; lagg(m.x, m.z, 1.6); }
+      (skattVis || []).forEach(v => { if (v.enh[0]) lagg(v.enh[0].x, v.enh[0].z, 1.0); });
+      (W.friExtra || []).forEach(q => lagg(q[0], q[1], q[2])); World.fri(l);
+    },
+    // Ingen går rakt genom en stad eller en borg: vägen börjar och slutar vid kanten av platsen, och böjer av runt allt annat med hus på vägen.
+    // inIMalet = man ska in i platsen (en ritt in i staden), då går vägen ända fram.
+    _hinder() { const ut = []; for (const b of D.BASER) if (steg[b.id].length) ut.push({ id: b.id, x: R.P[b.id].x, z: R.P[b.id].z, r: tomt[b.id].R * 0.5 + 0.5 }); if (dekor.staket) ut.push({ id: 'staket', x: R.P.staket.x, z: R.P.staket.z, r: 2.4 }); return ut; },
+    _runt(pts, startId, malId, inIMalet) {
+      const H = W._hinder(), inne = (q, h) => Math.hypot(q[0] - h.x, q[1] - h.z) < h.r, hs = H.find(h => h.id === startId), hm = H.find(h => h.id === malId), kant = (h, q) => { const d = Math.hypot(q[0] - h.x, q[1] - h.z) || 1; return [h.x + (q[0] - h.x) / d * h.r, h.z + (q[1] - h.z) / d * h.r]; };
+      let p = pts.slice();
+      if (hs && inne(p[0], hs)) { let k = 0; while (k < p.length - 1 && inne(p[k], hs)) k++; p = [kant(hs, p[k])].concat(p.slice(k)); }
+      if (hm && !inIMalet && inne(p[p.length - 1], hm)) { let k = p.length - 1; while (k > 0 && inne(p[k], hm)) k--; p = p.slice(0, k + 1).concat([kant(hm, p[k])]); }
+      for (const h of H) {
+        if (h === hs || h === hm) continue;
+        p = p.filter((q, k) => k === 0 || k === p.length - 1 || !inne(q, h));          // punkter mitt i platsen stryks
+        for (let k = 0; k + 1 < p.length; k++) {
+          const a = p[k], b = p[k + 1], dx = b[0] - a[0], dz = b[1] - a[1], t = Math.max(0, Math.min(1, ((h.x - a[0]) * dx + (h.z - a[1]) * dz) / (dx * dx + dz * dz || 1)));
+          let nx = a[0] + dx * t - h.x, nz = a[1] + dz * t - h.z, d = Math.hypot(nx, nz); if (d >= h.r || t <= 0.001 || t >= 0.999) continue;
+          if (d < 0.05) { nx = -dz; nz = dx; d = Math.hypot(nx, nz) || 1; }
+          p.splice(k + 1, 0, [h.x + nx / d * (h.r + 0.6), h.z + nz / d * (h.r + 0.6)]); k++;
+        }
+      }
+      return p;
     },
     // Går det ingen väg dit samlas tåget strax utanför platsen där hjälten står, på den sida som vetter mot målet (annars går det rakt genom husen)
     _utanfor(id, mal) { const p = R.P[id], dx = mal.x - p.x, dz = mal.z - p.z, L = Math.hypot(dx, dz) || 1, r = Math.max(1.5, Math.min((tomt[id] ? tomt[id].R * 0.8 : 2) + 0.6, L - 2.4)); return [p.x + dx / L * r, p.z + dz / L * r]; },
@@ -164,7 +194,7 @@
       const S = G.s; let best = null, bd = 1e9;
       for (const a in S.bas) { if (G.BAS[a].ger !== 'man' || !grafHar(a)) continue; for (const b in S.bas) { if (G.BAS[b].ger !== 'mark' || !grafHar(b)) continue; const p = R.P[a], q = R.P[b], d = Math.hypot(p.x - q.x, p.z - q.z); if (d < bd) { bd = d; best = [a, b]; } } }
       if (!best) { const m = Object.keys(S.bas).filter(id => G.BAS[id].ger === 'mark' && grafHar(id)); if (m.length < 2) return; best = [m[1], m[0]]; }
-      const pts = svans(R.path(best[0], best[1]), 24), v = { pts, len: R.length(pts), enh: [], till: best[1], nr }; W.skattTill = best[1]; if (!skattVis) skattVis = []; skattVis.push(v);
+      const pts = svans(W._runt(R.path(best[0], best[1]), best[0], best[1], false), 24), v = { pts, len: R.length(pts), enh: [], till: best[1], nr }; W.skattTill = best[1]; if (!skattVis) skattVis = []; skattVis.push(v);
       for (let k = 0; k < 6; k++) v.enh.push(Folk.add(pts[0][0], pts[0][1], S.las.flotta ? 'knekt' : 'bonde', { pike: k % 2 === 0, gar: true }));
     },
     _skattSlut(nr) { if (!skattVis) return null; let ut = null; skattVis = skattVis.filter(v => { if (nr === undefined || v.nr === nr) { v.enh.forEach(e => Folk.remove(e)); ut = v; return false; } return true; }); return ut; },
@@ -233,9 +263,24 @@
           Gu.g.visible = false;
           if (!W._kristina) { const p = R.P.stockholm; W._kristina = Folk.add(p.x + 1.9 * B.K, p.z - 0.5 * B.K, 'kvinna', { col: '#2f4f8a', col2: '#f2eee2', sc: 1.4, ang: 0.3 }); }
           const k = W._kristina; k.hoppT = Math.max(0, (k.hoppT || 0) - dt); k.y = Math.abs(Math.sin(k.hoppT * 14)) * 0.1 * Math.min(1, k.hoppT * 4);
+          if (k.bx === undefined) k.bx = k.x; { const c = Math.cos(t * 0.2); k.x = k.bx + Math.sin(t * 0.2) * 1.1; k.gar = Math.abs(c) > 0.3; k.ang = k.gar ? (c > 0 ? 1.571 : -1.571) : 0.2; }          // hon går av och an framför slottet
         } else {
           if (W._kvar && (W._kvar.t -= dt) <= 0) W._kvar = null;
-          const q = W._kvar || W.sate(); Gu.place(q.x, q.z, q.ang, 0, t, dt, false, true);
+          const q = W._kvar || W.sate();
+          if (W._kvar) { Gu.place(q.x, q.z, q.ang, 0, t, dt, false, true); W._vandr = null; }
+          else {
+            // han går mellan fria fläckar nära sin plats (torget, kyrkan, slottsporten) och stannar en stund på varje
+            let v = W._vandr; if (!v || v.hem !== W._sateId) v = W._vandr = { hem: W._sateId, x: q.x, z: q.z, tx: q.x, tz: q.z, vila: 2.5, ang: q.ang };
+            const dx = v.tx - v.x, dz = v.tz - v.z, d = Math.hypot(dx, dz);
+            if (d > 0.05) { const st = Math.min(d, 0.5 * dt); v.x += dx / d * st; v.z += dz / d * st; v.ang = Math.atan2(dx, dz); Gu.place(v.x, v.z, v.ang, 0.32, t, dt, false, true); }
+            else {
+              v.vila -= dt; Gu.place(v.x, v.z, v.ang, 0, t, dt, false, true);
+              if (v.vila <= 0) {
+                v.vila = 2.5 + Math.random() * 4.5; const tm = tomt[W._sateId], fri = (x, z) => !tm || (Geo.sdAt(x, z) > 0.4 && !tm.occ.some(o => Math.hypot(o[0] - (x - tm.p.x) / B.K, o[1] - (z - tm.p.z) / B.K) < o[2] * 0.8));
+                for (let k = 0; k < 10; k++) { const a = Math.random() * 6.283, r = 0.5 + Math.random() * 1.0, x = v.x + Math.sin(a) * r, z = v.z + Math.cos(a) * r; if (Math.hypot(x - q.x, z - q.z) < 2.4 && fri(x, z) && fri((x + v.x) / 2, (z + v.z) / 2)) { v.tx = x; v.tz = z; break; } }
+              }
+            }
+          }
         }
       }
       // budet far runt mellan platserna med bud och brev

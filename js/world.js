@@ -6,6 +6,7 @@
 
   // Gemensamma värden som alla färgprogram läser (tid, årstid, sol).
   const U = V.U = {
+    uFri: { value: [0, 1, 2, 3, 4, 5, 6, 7].map(() => new THREE.Vector3()) },          // gläntor: (x, z, radie) kring dem som rör sig, så att ingen går genom ett träd
     uTime: { value: 0 }, uSnow: { value: 0 }, uGreen: { value: 1 }, uAutumn: { value: 0 }, uBare: { value: 0 }, uIce: { value: 0 }, uCloud: { value: 1 },
     uCropCol: { value: v3('#7fae3a') }, uCropAmt: { value: 1 }, uMap: { value: new THREE.Vector2(Geo.W, Geo.H) }, uParch: { value: v3('#e6d7b8') },
     uSunDir: { value: new THREE.Vector3(-0.45, 0.6, 0.55).normalize() }, uSunCol: { value: new THREE.Vector3(1, 0.95, 0.85) }, uAmb: { value: new THREE.Vector3(0.5, 0.55, 0.65) },
@@ -246,6 +247,7 @@
     b.blob(0, 0.9, 0, 0.46, 0.38, 0.46, '#4c8033', { top: '#6ea343', low: '#335f27' }); b.blob(0.3, 0.7, -0.12, 0.3, 0.26, 0.3, '#4a7d32', { top: '#66993f', low: '#305a25' });
     b.blob(-0.28, 0.72, 0.14, 0.3, 0.25, 0.3, '#487a31', { top: '#63953d', low: '#2e5724' }); b.blob(0.02, 0.68, 0.3, 0.26, 0.22, 0.26, '#4a7d32', { top: '#66993f', low: '#305a25' });
     out.ek = b.geometry();
+    for (const k in out) out[k].setAttribute('aTrad', new THREE.BufferAttribute(new Float32Array(out[k].attributes.position.count).fill(1), 1));          // märker träden för djuppasset i efterbild.js
     return out;
   }
   let treeMat = null;
@@ -257,7 +259,7 @@
       sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vBare; varying float vSnowK;\nfloat hashB(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }')
         .replace('#include <map_fragment>', 'if (vBare > 0.5 && hashB(floor(gl_FragCoord.xy * 0.75)) < (vBare - 0.5) * 1.2) discard;')       // kala kronor ritas glest, som kvistar
         .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.93, 0.96, 1.0), smoothstep(0.38, 0.6, abs(vSnowK)) * step(0.0, vSnowK) + smoothstep(0.2, 0.9, -vSnowK) * 0.5);');
-      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 aFx; uniform float uTime, uSnow, uAutumn, uBare; uniform vec2 uMap; varying float vBare; varying float vSnowK;')
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 aFx; uniform float uTime, uSnow, uAutumn, uBare; uniform vec2 uMap; uniform vec3 uFri[8]; varying float vBare; varying float vSnowK;')
         .replace('#include <color_vertex>', `#include <color_vertex>
           vec3 ipos = instanceMatrix[3].xyz;
           float rnd = fract(sin(dot(ipos.xz, vec2(12.9898, 78.233))) * 43758.5453);
@@ -271,8 +273,17 @@
         .replace('#include <begin_vertex>', `#include <begin_vertex>
           if (aFx.y > 1.5) { transformed.xz *= 1.0 - 0.2 * uBare; }
           float sway = sin(uTime * 1.4 + ipos.x * 0.8 + ipos.z * 0.6) * 0.03 * transformed.y * transformed.y;
-          transformed.x += sway; transformed.z += sway * 0.5;`);
+          transformed.x += sway; transformed.z += sway * 0.5;
+          { vec2 fip = instanceMatrix[3].xz; float fri = 1.0; for (int i = 0; i < 8; i++) { float fr = uFri[i].z; if (fr > 0.0) fri = min(fri, smoothstep(fr * 0.5, fr, distance(fip, uFri[i].xy))); } transformed *= fri; }`);
     };
+    return m;
+  }
+  // samma glänta i skuggorna, annars ligger skuggan kvar efter ett träd som har vikit undan
+  let treeDjup = null;
+  function treeDepth() {
+    if (treeDjup) return treeDjup;
+    const m = treeDjup = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
+    m.onBeforeCompile = sh => { sh.uniforms.uFri = U.uFri; sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform vec3 uFri[8];').replace('#include <begin_vertex>', '#include <begin_vertex>\n{ vec2 fip = instanceMatrix[3].xz; float fri = 1.0; for (int i = 0; i < 8; i++) { float fr = uFri[i].z; if (fr > 0.0) fri = min(fri, smoothstep(fr * 0.5, fr, distance(fip, uFri[i].xy))); } transformed *= fri; }'); };
     return m;
   }
 
@@ -311,6 +322,7 @@
         if (x < minx) minx = x; if (x > maxx) maxx = x; if (z < minz) minz = z; if (z > maxz) maxz = z; if (y > maxy) maxy = y;
       }
       mesh.geometry = mesh.geometry.clone(); mesh.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3((minx + maxx) / 2, maxy / 2, (minz + maxz) / 2), Math.hypot(maxx - minx, maxz - minz, maxy) / 2 + 2);
+      mesh.customDepthMaterial = treeDepth();
       mesh.frustumCulled = true;          // three stänger av gallringen för InstancedMesh. Med den egna sfären ovan ritas bara de skogsrutor som syns, inte alla 70 000 träd
       mesh.castShadow = true; mesh.receiveShadow = false; mesh.matrixAutoUpdate = false; group.add(mesh);
     }
@@ -320,6 +332,8 @@
 
   V.World = {
     U, Paint, season, setSeason, snowAt, iceAt,
+    // Säg var gläntorna ska vara den här bildrutan: [[x, z, radie], ...], högst åtta
+    fri(lista) { const v = U.uFri.value; for (let k = 0; k < 8; k++) { const q = lista[k]; if (q) v[k].set(q[0], q[1], q[2]); else v[k].set(0, 0, 0); } },
     build(scene, clear, roads) {
       Geo.init(); Paint.init();
       for (const r of Geo.G.rivers) Paint.river(r.pts, r.w);

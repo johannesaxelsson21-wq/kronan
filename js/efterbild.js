@@ -31,8 +31,8 @@
     pa: !/[?&]efter=0/.test(location.search),
     init(renderer) {
       // eget enkelt program för djupet: det rör aldrig färgen per gubbe, så samma program duger åt träd, hus och folk
-      djupMat = new THREE.ShaderMaterial({ colorWrite: false, fragmentShader: 'void main() { gl_FragColor = vec4(1.0); }',
-        vertexShader: 'void main() {\n vec4 p = vec4(position, 1.0);\n #ifdef USE_INSTANCING\n p = instanceMatrix * p;\n #endif\n gl_Position = projectionMatrix * modelViewMatrix * p;\n}' });
+      djupMat = new THREE.ShaderMaterial({ colorWrite: false, uniforms: { uFri: V.U.uFri }, fragmentShader: 'void main() { gl_FragColor = vec4(1.0); }',
+        vertexShader: 'attribute float aTrad; uniform vec3 uFri[8];\nvoid main() {\n vec3 transformed = position;\n #ifdef USE_INSTANCING\n if (aTrad > 0.5) { vec2 fip = instanceMatrix[3].xz; float fri = 1.0; for (int i = 0; i < 8; i++) { float fr = uFri[i].z; if (fr > 0.0) fri = min(fri, smoothstep(fr * 0.5, fr, distance(fip, uFri[i].xy))); } transformed *= fri; }\n #endif\n vec4 p = vec4(transformed, 1.0);\n #ifdef USE_INSTANCING\n p = instanceMatrix * p;\n #endif\n gl_Position = projectionMatrix * modelViewMatrix * p;\n}' });
       mat = new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: FS, depthTest: false, depthWrite: false, blending: THREE.MultiplyBlending, transparent: true,
         uniforms: { tD: { value: null }, uPx: { value: new THREE.Vector2() }, uNear: { value: 1 }, uFar: { value: 100 }, uSkala: { value: 1000 }, uAO: { value: 0.5 }, uKant: { value: 0.28 }, uVin: { value: 0.2 } } });
       scenQ = new THREE.Scene(); camQ = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);

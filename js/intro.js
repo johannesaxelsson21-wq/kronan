@@ -96,7 +96,8 @@
         const m = B.mesh(mb), x = rank.x + 1.1, z = rank.z - 1.0; m.position.set(x, Geo.groundAt(x, z), z); m.scale.setScalar(K); Scene.scene.add(m); tempM.push(m); }
       // vägen: söderifrån förbi Rankhyttan, upp till Rättvik, runt Mora (där männen står på kyrkbacken) och västerut till Sälen
       const ratt = R.P.rattvik, forbi = [mora.x - 0.4, mora.z + 3.4], start = [rank.x + 5, rank.z + 22];
-      const vag = [start, [rank.x, rank.z], [ratt.x + 0.3, ratt.z + 3.0]].concat(R.path('rattvik', 'mora').filter(q => !nara(q, 3.6) && Math.hypot(q[0] - ratt.x, q[1] - ratt.z) > 3.2), [forbi], R.path('mora', 'salen').filter(q => !nara(q, 3.6)));
+      const vag0 = [start, [rank.x, rank.z], [ratt.x + 0.3, ratt.z + 3.0]].concat(R.path('rattvik', 'mora').filter(q => !nara(q, 3.6) && Math.hypot(q[0] - ratt.x, q[1] - ratt.z) > 3.2), [forbi], R.path('mora', 'salen').filter(q => !nara(q, 3.6)));
+      const vag = V.Varld._runt(vag0, null, null, true);          // runt Kopparberget och byarna, inte rakt genom husen
       const Ltot = R.length(vag), dRank = Math.hypot(start[0] - rank.x, start[1] - rank.z); let dMora = 0, bd = 1e9;
       for (let d = 0; d < Ltot; d += 0.5) { const a = R.along(vag, d), q = Math.hypot(a.x - forbi[0], a.z - forbi[1]); if (q < bd) { bd = q; dMora = d; } }
       for (let k = 0; k < 18; k++) { const a = 0.5 + k / 18 * 2.2, d = 1.0 + (k % 3) * 0.42, u = Folk.add(mora.x + Math.cos(a) * d * 1.3, fz + 0.5 + Math.sin(a) * d * 0.6, 'bonde', { ang: 0 }); temp.push(u); }          // männen i Mora
@@ -276,11 +277,14 @@
       if (aka) {
         aka.v = Math.max(0, aka.v - 0.75 * dt); aka.d = Math.min(aka.d1, aka.d + aka.v * aka.fartX * dt * (I.aktiv ? fart : 1)); aka.stilla += dt;
         const a = R.along(aka.pts, aka.d); if (aka.satt) aka.satt(a, aka.v / 3.4, t, dt); else V.Gustav.place(a.x, a.z, a.ang, aka.v / 3.4, t, dt, false);
+        V.Varld.friExtra = [[a.x, a.z, 1.1]];
         Scene.cam.fly = null; Scene.cam.tx = a.x; Scene.cam.tz = a.z + 1.5; Scene.cam.td = aka.kd;
         if (aka.rader && aka.radNr < aka.rader.length && aka.d >= aka.rader[aka.radNr][0]) { const r = aka.rader[aka.radNr++]; if (r[1] !== null) UI.film.plats(r[1]); UI.film.text(r[2]); aka.radT = 7; aka.stilla = 0; }          // en rad om det man just åker förbi
         if (aka.radT > 0) { aka.radT -= dt; if (aka.radT <= 0) UI.film.text(''); }
         else if (aka.stilla > 5) { UI.film.text(aka.rad); aka.stilla = 0; } else if (aka.v > 1.5 && aka.d > aka.d0 + 2) UI.film.text('');
         if (aka.d >= aka.d1) { const r = aka.res; aka = null; r(); }
+      } else if (V.Varld.friExtra) {
+        V.Varld.friExtra = GE && GE.g.visible ? [[GE.x, GE.z, 1.0]] : null;
       }
     }
   };
