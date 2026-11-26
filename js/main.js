@@ -33,6 +33,7 @@
     else if (typ === 'orderSvar') { UI.text(d.o.alltid || (d.bra ? d.o.bra : d.o.miss), 3.2); if (!d.o.alltid) UI.skylt(d.typ === 'hugg' ? (d.bra ? 'Starkt!' : d.svar === 'otakt' ? 'Ur takt' : 'För få hugg') : d.bra ? 'Rätt läge' : d.svar === 'tidigt' ? 'För tidigt' : 'För sent', true); V.Ljud.spela(d.bra && !d.o.alltid ? 'klart' : 'nej'); }
     else if (typ === 'kula') { UI.text(d.o.rad, 6.5); V.Ljud.spela('kanon'); Scene.shake(0.5); if (d.o.efter && !V.tyst) setTimeout(() => UI.text(d.o.efter, 6), 6800 / Math.min(snabb, 10)); }
     else if (typ === 'byggnad') { UI.skylt(d.b.skylt || d.b.namn + ' står klart'); if (d.b.klart && !V.tyst) UI.text(d.b.klart, 9); V.Ljud.spela('hammare'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } UI.tick(true); }          // kameran går dit så att man ser huset resas
+    else if (typ === 'hus') { if (d.niva === 1) { UI.skylt(d.h.namn + ' står klart'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } } UI.tick(true); }          // stadens hus: kameran går dit första gången
     else if (typ === 'handling') { V.Ljud.spela(d.id === 'tal' ? 'sorl' : d.id === 'monstra' ? 'horn' : 'kop'); const h = D.HANDLINGAR.find(q => q.id === d.id); UI.skylt(UI.handlNamn(h) + (d.fick ? ': +' + V.tal(d.fick) + ' män' : '')); }
     else if (typ === 'skattUt') { if (!d.auto) V.Ljud.spela('kop'); }
     else if (typ === 'skatt') { UI.skattKlar(d.mark); const p = Varld.skattTill && Varld.pos(Varld.skattTill); if (p) UI.flyt(p.x, p.y + 1.8, p.z, 'Skatt +' + V.tal(d.mark) + ' mark', 'mark'); if (!d.auto) V.Ljud.spela('samling'); }
@@ -120,10 +121,11 @@
     UI.onIgen = arv => { byter = true; G.s.arv += arv; G.s.varv++; const s = G.ny(true); s.intro = true; skriv(); laddaOm(); };
     Scene.onClick = (e, g) => {
       if (spelar && G.s.varld === 0 && G.skede() === 'strid') { Varld.foljUppdraget(); const q = Varld.malSkarm(); tryck(false, q && Math.hypot(q.x - e.clientX, q.y - e.clientY) <= q.r ? 'traff' : 'miss'); return; }          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget
-      const id = Varld.basVid(g), egen = !!(id && spelar && G.s.bas[id]);
+      const id = Varld.basVid(g) || Varld.byggVid(g), egen = !!(id && spelar && G.s.bas[id]);
       if (spelar && G.s.varld === 0 && Varld.valjVid(e.clientX, e.clientY, egen)) { V.Ljud.vakna(); return; }          // förspelet: det man trycker på följs (Johannes 2026-11-26)
       if (!egen) { tryck(); return; }
       if (G.s.marknad && G.s.marknad.bas === id) { V.Ljud.vakna(); G.marknadTa(); UI.tick(); return; }
+      if (G.s.varld === 0 && !UI.stadVald(id)) { V.Ljud.vakna(); UI.visaStad(id); return; }          // förspelet: första trycket på en stad eller ett av dess hus öppnar stadens flik, nästa bygger ut den
       UI.valj(id); V.Ljud.vakna();
       if (!UI.kop(id)) { const w = Varld.pos(id), res = G.prisRes(id), fattas = G.pris(id) - G.s.res[res]; UI.flyt(w.x, w.y + 2.4, w.z, G.stoppad(id) ? 'Uppror' : fattas > 0 ? 'Fattas ' + V.tal(Math.ceil(fattas)) + (res === 'man' ? ' män' : ' mark') : 'Fattas ' + V.tal(Math.ceil(G.dagsverke(id) - G.s.res.man)) + ' män till dagsverken', 'nej'); V.Ljud.spela('trumma'); }
     };

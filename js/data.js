@@ -46,13 +46,20 @@
       vad: 'Ett hus vid slottet för knektar i din tjänst. När det står klart kan du ta knektar i tjänst för mark, och få fler män.' },
     { id: 'radstuga', namn: 'Rådstugan', skylt: 'Rådstugan står klar', flik: 'mark', plats: 'stockholm', x: -1.55, z: -0.7, kostar: 3500, fran: 3, ger: 'ger breven och Sigillet',
       vad: 'Stadens rådstuga vid Stortorget. Här skrivs och beseglas dina brev. Ger handlingen Skriv brev och förmågorna Sigillet och Skattelistor.',
-      klart: 'Nu kan du skriva brev (knappen vid den runda), och Sigillet finns under marken.' },
-    { id: 'ladugard', namn: 'Kungsladugården', skylt: 'Kungsladugården står klar', vid: 'vadla', x: -3.0, z: -1.0, kostar: 9000, fran: 4, tak: 1.25, ger: 'armén rymmer fler',
+      klart: 'Nu kan du skriva brev (knappen vid den runda), och Sigillet finns under Stockholm.' },
+    { id: 'ladugard', namn: 'Kungsladugården', stad: 'stockholm', skylt: 'Kungsladugården står klar', vid: 'vadla', x: -3.0, z: -1.0, kostar: 9000, fran: 4, tak: 1.25, ger: 'armén rymmer fler',
       vad: 'Kronans gård vid Vädla norr om staden. Den föder ditt folk och dina hästar: armén rymmer en fjärdedel fler, och du får förmågan Hästar.',
-      klart: 'Armén rymmer en fjärdedel fler, och Hästar finns under marken.' },
+      klart: 'Armén rymmer en fjärdedel fler, och Hästar finns under Stockholm.' },
     { id: 'torn', namn: 'Torn i stadsmuren', skylt: 'Tornen står klara', plats: 'stockholm', kostar: 400000, fran: 8, x: 0, z: 0, xman: 1.2, ger: 'fler män, starkare försvar',
       vad: 'Stockholms mur får nya torn. Allt som ger män ger en femtedel mer, och fler kanoner svarar när staden belägras.',
-      klart: 'Allt som ger män ger en femtedel mer.' }
+      klart: 'Allt som ger män ger en femtedel mer.' },
+    // Stadens hus med nivåer (niva: 1). Köps i stadens flik, i det staden ger (mark eller män). Varje nivå ger staden ger (en andel) mer.
+    // modell = hur huset ser ut på kartan (varld.js), stad = vilken stads flik en byggnad utanför staden hör till. Grunden står i docs/historia.md.
+    { id: 'bryggor', niva: 1, namn: 'Bryggorna', plats: 'stockholm', modell: 'hamn', fran: 1, c0: 60, r: 1.9, ger: 0.15, vad: 'Bryggor där Hansans skepp lägger till. Handeln ger Stockholm mer mark.' },
+    { id: 'vhamn', niva: 1, namn: 'Hamnen', plats: 'vasteras', modell: 'bod', fran: 1, c0: 200, r: 1.9, ger: 0.15, vad: 'Hit kommer järn och koppar från Bergslagen och skeppas ut över Mälaren. Västerås ger mer mark.' },
+    { id: 'garnison', niva: 1, namn: 'Garnisonen', plats: 'abo', modell: 'garnison', fran: 2, c0: 20, r: 1.9, ger: 0.15, vad: 'Knektar i läger vid Åbo slott. Åbo ger fler män.' },
+    { id: 'gardar', niva: 1, namn: 'Gårdarna', plats: 'nykoping', modell: 'gardar', fran: 3, c0: 40, r: 1.9, ger: 0.15, vad: 'Fler gårdar i bygden kring Nyköping. Bönderna där ger fler män.' },
+    { id: 'disting', niva: 1, namn: 'Distingsmarknaden', plats: 'uppsala', modell: 'disting', fran: 6, c0: 20000, r: 1.9, ger: 0.15, vad: 'Den stora marknaden i Uppsala i februari. Uppsala ger mer mark.' }
   ];
 
   // Kungens egna förmågor. Var tionde nivå dubblar.

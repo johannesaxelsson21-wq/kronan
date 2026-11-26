@@ -347,3 +347,7 @@ button { font-family: inherit; cursor: pointer; }
 #slag-mal.nara i { border-color: #7ee08a; box-shadow: 0 0 16px rgba(126, 224, 138, 0.95); }
 #slag-mal.hugg i { border-color: rgba(255, 170, 140, 0.95); }
 #slag-mal.hugg.nara i { border-color: #ffdf6e; box-shadow: 0 0 16px rgba(255, 223, 110, 0.95); }
+
+/* Stadens flik (förspelet): pilen säger att ett tryck till ger nästa stad. Ortnamnen går att trycka på. */
+.flik .fl-byt { font-style: normal; margin-left: 5px; color: var(--guld2); font-size: 17px; line-height: 1; }
+.ortnamn { pointer-events: auto; cursor: pointer; }

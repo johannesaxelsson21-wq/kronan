@@ -45,6 +45,7 @@
       const b = P(id), L = niva === undefined ? (S.bas[id] || 0) : niva; if (!L) return 0;
       if (niva === undefined && G.stoppad(id)) return 0;
       let p = b.p0 * L * Math.pow(2, Math.floor(L / 10)) * S.x[b.ger] * G.arvX() * G.gang(b.ger);
+      if (S.varld === 0) p *= G.husX(id);          // stadens hus (förspelet)
       if (b.slag === 'stad' && S.las.privilegier) p *= 0.5;                         // Lübeck tar handeln
       if (b.slag === 'gruva') p *= 1 + 0.1 * G.arb(id);                             // gruvarbetare: en tiondel mer för varje lag
       return p;
@@ -57,9 +58,18 @@
     soldProd(L) { const So = S.varld === 0 ? SOLD0 : SOLD; L = L === undefined ? (S.sold || 0) : L; return L ? So.p0 * L * Math.pow(2, Math.floor(L / 10)) * S.x.man * G.arvX() * G.gang('man') : 0; },
     soldPris() { const So = S.varld === 0 ? SOLD0 : SOLD, p = So.c0 * Math.pow(So.r, S.sold || 0); return p < 1000 ? Math.ceil(p) : p; },
     // ---- byggnader (förspelet): köps för mark, byggs vid platsen och låser upp något ----
-    byggnader() { return S.varld === 0 && !S.slut ? D.BYGGNADER.filter(b => S.nasta >= b.fran && (!b.plats || S.bas[b.plats]) && !(S.bygg && S.bygg[b.id])) : []; },
+    byggnader() { return S.varld === 0 && !S.slut ? D.BYGGNADER.filter(b => !b.niva && S.nasta >= b.fran && (!b.plats || S.bas[b.plats]) && !(S.bygg && S.bygg[b.id])) : []; },
     kanBygga(id) { const b = G.byggnader().find(q => q.id === id); return !!b && S.res.mark >= b.kostar; },
     bygg(id) { if (!G.kanBygga(id)) return false; const b = D.BYGGNADER.find(q => q.id === id); S.res.mark -= b.kostar; (S.bygg || (S.bygg = {}))[id] = 1; if (b.las) S.las[b.las] = true; if (b.xman) S.x.man *= b.xman; G.ut('byggnad', { id, b }); return true; },
+    // ---- stadens hus (förspelet): köps i stadens flik, och varje nivå ger staden mer av det den ger (Johannes 2026-11-26) ----
+    hus(id) { return (S.hus && S.hus[id]) || 0; },
+    husFinns(id) { const h = D.BYGGNADER.find(q => q.id === id); return S.varld === 0 && !S.slut && !!h && !!h.niva && S.nasta >= h.fran && !!S.bas[h.plats]; },
+    husLista() { return D.BYGGNADER.filter(h => h.niva && G.husFinns(h.id)).map(h => h.id); },
+    husRes(h) { return BAS[h.plats].ger; },
+    husPris(id) { const h = D.BYGGNADER.find(q => q.id === id), p = h.c0 * Math.pow(h.r, G.hus(id)); return p < 1000 ? Math.ceil(p) : p; },
+    kanHus(id) { const h = D.BYGGNADER.find(q => q.id === id); return G.husFinns(id) && S.res[G.husRes(h)] >= G.husPris(id); },
+    kopHus(id) { if (!G.kanHus(id)) return false; const h = D.BYGGNADER.find(q => q.id === id), res = G.husRes(h); S.res[res] -= G.husPris(id); (S.hus || (S.hus = {}))[id] = G.hus(id) + 1; G.ut('hus', { id, h, niva: S.hus[id] }); return true; },
+    husX(plats) { if (!S.hus) return 1; let x = 1; for (const h of D.BYGGNADER) if (h.niva && h.plats === plats && S.hus[h.id]) x *= 1 + h.ger * S.hus[h.id]; return x; },
     kanSold() { return !!S.las.sold && S.res.mark >= G.soldPris(); },
     kopSold() { if (!G.kanSold()) return false; S.res.mark -= G.soldPris(); S.sold = (S.sold || 0) + 1; G.ut('sold', { niva: S.sold, dubbel: S.sold % 10 === 0 }); return true; },
     pris(id, L) { const b = P(id), p = b.c0 * Math.pow(b.r, L === undefined ? (S.bas[id] || 0) : L); return p < 1000 ? Math.ceil(p) : p; },
