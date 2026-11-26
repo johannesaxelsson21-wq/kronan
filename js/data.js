@@ -39,10 +39,11 @@
   const STURE_BAS = { stockholm: { p0: 0.5, c0: 5 }, vasteras: { p0: 1.2, c0: 25 }, abo: { p0: 0.1, c0: 6 }, nykoping: { p0: 0.15, c0: 20 }, uppsala: { p0: 14, c0: 1200 } };
 
   // Kungens egna förmågor. Var tionde nivå dubblar.
+  // vad0 = texten i förspelet, där man rider själv (i Gustavs värld är det än så länge ett bud som far)
   const KONSTER = [
     { id: 'sigill', namn: 'Sigillet', vad: 'Ditt eget sigill under brevet, så att alla ser att budet kommer från dig. Varje tryck ger mer.', c0: 30, r: 2.4 },
-    { id: 'skidor', namn: 'Skidor och hästar', sture: 'Hästar', vad: 'Budet far fortare mellan platserna. Var tionde nivå ger full mätare en gång till.', c0: 40, r: 2.4 },
-    { id: 'tal', namn: 'Ordets makt', vad: 'Fler lyssnar när budet kommer fram: varje besök ger mer.', c0: 60, r: 2.4 },
+    { id: 'skidor', namn: 'Skidor och hästar', sture: 'Hästar', vad: 'Budet far fortare mellan platserna. Var tionde nivå ger full mätare en gång till.', vad0: 'Du rider fortare mellan platserna. Var tionde nivå ger full mätare en gång till.', c0: 40, r: 2.4 },
+    { id: 'tal', namn: 'Ordets makt', vad: 'Fler lyssnar när budet kommer fram: varje besök ger mer.', vad0: 'Fler lyssnar när du kommer fram: varje besök ger mer.', c0: 60, r: 2.4 },
     { id: 'bud', namn: 'Fler bud', vad: 'Löpare som far runt åt dig, också när du inte trycker. Med tre löpare står mätaren full av sig själv.', c0: 250, r: 2.4 },
     { id: 'langd', namn: 'Skattelistor', vad: 'Listor över vem som ska betala skatt. Driv in skatt ger mer.', c0: 150, r: 2.4 }
   ];
@@ -178,17 +179,17 @@
   // tid = uppdraget tar så här många sekunder (belägringen av Stockholm: från maj till september, och längre än pausen mellan två scener).
   const STURE = [
     // vet = en rad om vad steget betyder för det som kommer sedan (visas under krönikan)
-    { id: 'sVasteras', senast: 2, akt: 0, titel: 'Skicka bud till slottet i Västerås', plats: 'vasteras', ar: 1512, man: 1.3, slag: 'bud', fran: 'stockholm', kostar: { mark: 60 }, ger: { bas: ['vasteras'], las: ['konster'] },
+    { id: 'sVasteras', senast: 2, akt: 0, titel: 'Skicka bud till slottet i Västerås', plats: 'vasteras', ar: 1512, man: 1.3, slag: 'bud', fran: 'stockholm', kostar: { mark: 60 }, ger: { bas: ['vasteras'] },
       kronika: 'Januari 1512. Din far Svante Nilsson, som styrde Sverige, var död. Befälhavaren på hans slott i Västerås ställde sig på din sida.' },
     { id: 'sAbo', senast: 4, akt: 0, titel: 'Skicka bud över havet till Åbo', plats: 'abo', ar: 1512, man: 4.5, slag: 'flotta', fran: 'stockholm', kostar: { mark: 500 }, ger: { bas: ['abo'] },
       kronika: 'Samma år. Befälhavaren på Åbo slott gick också över till dig. Nu hade du din fars stora slott.' },
     { id: 'sAllmoge', senast: 6, akt: 0, titel: 'Få bönderna på din sida', plats: 'nykoping', ar: 1512, man: 7.7, slag: 'bud', fran: 'stockholm', kostar: { man: 60, mark: 3000 }, ger: { bas: ['nykoping'], titel: 'Riksföreståndare' },
       kronika: '23 juli 1512. Rikets råd, de mäktigaste herrarna, hade valt Erik Trolle att styra. Han ville hålla ihop med Danmark. Men du hade bönderna bakom dig och fick platsen i stället. Du var nu riksföreståndare: den som styr ett rike utan kung.' },
-    { id: 'sStaket', med: 1, scen: 'staket', efter: '1516. Ärkebiskopens borg Stäket är instängd.', senast: 8.5, akt: 0, titel: 'Stäng in ärkebiskopen i hans borg', plats: 'staket', ar: 1516, man: 10, slag: 'tag', kostar: { man: 250, mark: 7000 }, ger: {},
+    { id: 'sStaket', med: 1, scen: 'staket', efter: '1516. Ärkebiskopens borg Stäket är instängd.', senast: 8.5, akt: 0, titel: 'Stäng in ärkebiskopen i hans borg', plats: 'staket', ar: 1516, man: 10, slag: 'tag', kostar: { man: 250, mark: 6000 }, ger: {},
       kronika: '1516. Erik Trolles son Gustav Trolle hade blivit ärkebiskop, kyrkans högste man i Sverige, och han höll på Danmarks kung. Det blev krig mellan er, och du stängde in honom i hans borg Stäket vid Mälaren.' },
-    { id: 'sVadla', med: 1, senast: 11, akt: 0, titel: 'Stoppa danskarna vid Vädla', plats: 'vadla', ar: 1517, man: 7, slag: 'tag', strid: 'liten', kostar: { man: 600, mark: 10000 }, ger: { x: { mark: 1.5 } },
+    { id: 'sVadla', med: 1, senast: 11, akt: 0, titel: 'Stoppa danskarna vid Vädla', plats: 'vadla', ar: 1517, man: 7, slag: 'tag', strid: 'liten', kostar: { man: 600, mark: 10000 }, ger: { x: { mark: 1.5 }, las: ['konster'] },
       kronika: 'Sommaren 1517. Danmarks kung Kristian II skickade soldater för att hjälpa ärkebiskopen. Du slog dem vid Vädla utanför Stockholm.' },
-    { id: 'sRiv', scen: 'sigill', efter: 'November 1517. Brevet är beseglat.', senast: 13, akt: 0, titel: 'Kalla rikets ledare till Stockholm', plats: 'stockholm', ar: 1517, man: 11.8, slag: 'beslut', val: 'Riv Stäket', valText: 'Rikets ledare är samlade i Stockholm. Alla väntar på vad du säger.', kostar: { mark: 55000 }, ger: { bas: ['uppsala'] },
+    { id: 'sRiv', scen: 'sigill', efter: 'November 1517. Brevet är beseglat.', senast: 13, akt: 0, titel: 'Kalla rikets ledare till Stockholm', plats: 'stockholm', ar: 1517, man: 11.8, slag: 'beslut', val: 'Riv Stäket', valText: 'Rikets ledare är samlade i Stockholm. Alla väntar på vad du säger.', kostar: { mark: 60000 }, ger: { bas: ['uppsala'] },
       kronika: 'November 1517. Mötet tog ifrån Gustav Trolle hans ämbete och bestämde att hans borg skulle rivas. Alla skrev under med sitt sigill. Biskop Brask ska ha gömt en lapp under sitt: det här gör jag för att jag är tvungen.',
       vet: 'Bara påven får avsätta en ärkebiskop. Gustav Trolle glömmer inte det här.' },
     { id: 'sBrannkyrka', med: 1, scen: 'gisslan', efter: '27 juli 1518. Du slog Kristian II vid Brännkyrka söder om Stockholm.', senast: 15.5, akt: 0, titel: 'Möt Kristian vid Brännkyrka', plats: 'brannkyrka', ar: 1518, man: 7.9, slag: 'tag', strid: 'stor', kostar: { man: 2500, mark: 150000 }, ger: { x: { man: 1.5 } },

@@ -191,7 +191,7 @@
         const herrar = [], pos = [[-0.62, 0], [-1.12, 0.14], [-1.62, 0], [-2.12, 0.14], [-0.9, -0.5], [0.62, 0], [1.12, 0.12]]; for (let i = 0; i < 7; i++) { const x = h.x + pos[i][0], z = h.z - 0.05 + pos[i][1], o = { ang: pos[i][0] < 0 ? 0.25 : -0.25 }; if (i === 6) Object.assign(o, { col: '#6a2a7a', col2: '#f2eee2', sc: 1.12 }); const u = Folk.add(x, z, 'borgare', o); herrar.push(u); temp.push(u); }
         const sigill = k => { const mb = new V.MB(); mb.snow = 0; mb.cyl(-0.26 + k * 0.087, 0.312, 0.1, 0.036, 0.036, 0.016, 8, '#b8312a', { cap: '#b8312a' }); const m = B.mesh(mb); m.position.copy(bm.position); m.scale.setScalar(K); Scene.scene.add(m); tempM.push(m); };
         const hopp = u => { u.y = 0.1; setTimeout(() => { u.y = 0; }, 180); };
-        V.Varld._kvar = { x: h.x, z: h.z, ang: 0, t: 300, scen: 1 };          // Sten Sture står kvar vid bordet, vänd mot oss
+        hooks.push(dt => V.Gustav.place(h.x, h.z, 0, 0, tid, dt, false, true));          // Sten Sture står vid bordet, vänd mot oss (annars är han ute på sin runda)
         Scene.cam.lut = 60; Scene.jump(tx, tz + 0.35, 14); plats('Stockholm, november 1517');
         await vanta(2); text('Mötet har bestämt: ärkebiskopen avsätts och hans borg ska rivas. Nu sätter alla sitt sigill under brevet.'); await vanta(8);
         text('Tryck för att sätta sigillen');
@@ -289,7 +289,7 @@
       const Bu = V.Bud, budSyns = Bu.g.visible; if (namn !== 'isen') Bu.g.visible = false; V.Varld.scenDolj(true);          // budet hör inte hemma i scenen (på isen är det hästen som drar släden)
       try { await I.scener[namn](); } catch (e) { console.error(e); }
       UI.film.knapp(null); I.tar = null; text(''); plats(''); await new Promise(r => setTimeout(r, 950));          // sista raden tonar bort innan rutan kommer (i riktig tid, också i snabbspolning)
-      Bu.g.visible = budSyns; V.Varld.scenDolj(false); c.lut = 0; if (V.Varld._kvar && V.Varld._kvar.scen) V.Varld._kvar = null; hooks = []; waits = []; aka = null; I.tar = null; I.nu = null; UI.film.knapp(null); if (GE) GE.g.visible = false; if (V.Musik) V.Musik.spar(V.Musik.grund()); rensa(); text(''); plats(''); UI.film.svart(0, 0.6); UI.film.pa(false); UI.visa(true); c.locked = false; c.fri = false; Scene.jump(hem.x, hem.z, Math.max(hem.d, 32)); I.aktiv = false; I.scenFart = 1; if (klar) klar();
+      Bu.g.visible = budSyns; V.Varld.scenDolj(false); c.lut = 0; hooks = []; waits = []; aka = null; I.tar = null; I.nu = null; UI.film.knapp(null); if (GE) GE.g.visible = false; if (V.Musik) V.Musik.spar(V.Musik.grund()); rensa(); text(''); plats(''); UI.film.svart(0, 0.6); UI.film.pa(false); UI.visa(true); c.locked = false; c.fri = false; Scene.jump(hem.x, hem.z, Math.max(hem.d, 32)); I.aktiv = false; I.scenFart = 1; if (klar) klar();
     },
     slut(klar) { hooks = []; waits = []; rensa(); aka = null; I.tar = null; regn = false; UI.film.knapp(null); UI.film.tal(null); UI.film.text(''); UI.film.plats(''); UI.film.svart(0, 1); UI.film.pa(false); Fx.sno = true; V.Varld._ruttKlar = false; V.Varld._ruttKey = null; klar(); },
     update(dt, t) {

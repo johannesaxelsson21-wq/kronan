@@ -11,12 +11,13 @@
   const stegAv = L => Math.min(MAXSTEG, Math.floor((L || 0) / 10));
   function lager(p, n) { const mb = new V.MB(); for (let k = 0; k < (n || 9); k++) { const a = k * 2.4, d = 0.5 + (k % 3) * 0.6; mb.push().move(Math.cos(a) * d, 0, Math.sin(a) * d * 0.8).rotY(a); B.talt(mb); mb.pop(); } B.eld(mb); const m = B.mesh(mb); m.position.set(p.x, Geo.groundAt(p.x, p.z), p.z); m.scale.setScalar(B.K); B.smoke.push({ x: p.x, y: Geo.groundAt(p.x, p.z) + 0.3, z: p.z, slag: 'eld', bas: 'stockholm' }); return m; }
   const finns = b => !(b.slag === 'slott' || b.ny || b.id === 'sala');          // fanns platsen redan 1520?
+  const JAMN = 0.6;          // förspelet: så stor del av toppfarten håller den som rider rundan, hela tiden
   const MAXSTEG = 7, SATE = ['kopparberget', 'hedemora', 'vasteras', 'uppsala', 'brunkeberg'];
 
   const W = V.Varld = {
     tomt, P: R.P,
     init(sc) {
-      scene = sc; W._kristina = null; W._kring = null; Folk.init(sc); Fx.init(sc); V.Gustav.init(sc, G.s.varld === 0 ? 'sten' : 'gustav'); V.Bud.init(sc, 'bud'); V.Bud.kanSkida = G.s.varld === 1;          // bud på skidor hör Dalarna och Gustavs tid till
+      scene = sc; W._kristina = null; W._kring = null; W._kvar = null; W._borta = false; W._plats = null; W._placerad = false; if (W._foljMig === undefined) W._foljMig = 1; Folk.init(sc); Fx.init(sc); V.Gustav.init(sc, G.s.varld === 0 ? 'sten' : 'gustav'); V.Bud.init(sc, 'bud'); V.Bud.kanSkida = G.s.varld === 1;          // bud på skidor hör Dalarna och Gustavs tid till
       for (const b of D.BASER) {
         const p = R.P[b.id]; tomt[b.id] = new B.Tomt(b, p); steg[b.id] = [];
         const g = grp[b.id] = new THREE.Group(); g.position.set(p.x, p.y, p.z); g.scale.setScalar(B.K); sc.add(g);
@@ -85,6 +86,7 @@
     // ---- Gustavs rundtur ---------------------------------------------------------------------
     rutt() {
       const S = G.s, ids = Object.keys(S.bas), tour = R.tour(ids), key = tour.join(','); if (key === W._ruttKey) return; W._ruttKey = key;
+      const fr = W._ruttKlar && W._placerad ? W._framTill() : null;          // vägen han är på just nu, i den gamla rundan
       route = [];
       if (tour.length === 1) {
         const u = D.UPPDRAG[S.nasta], mal = u && R.P[u.plats] ? u.plats : 'rattvik', full = R.path(tour[0], mal), ut = []; let d = 0;
@@ -92,12 +94,13 @@
         route.push({ pts: ut, len: R.length(ut), to: null }, { pts: ut.slice().reverse(), len: R.length(ut), to: tour[0] });
       } else tour.forEach((id, i) => { const pts = R.path(id, tour[(i + 1) % tour.length]); route.push({ pts, len: R.length(pts), to: tour[(i + 1) % tour.length], from: id }); });
       // fortsätt därifrån han är: gå först till närmaste bas på den nya rundan
-      const gx = V.Bud.x, gz = V.Bud.z;
-      if (W._ruttKlar && route.length) {
+      const ry = W._ryttare(), gx = ry.x, gz = ry.z;
+      if (W._ruttKlar && route.length && W._placerad) {          // _placerad: ryttaren har stått på rundan minst en gång (annars finns ingen plats att fortsätta ifrån)
         let best = 0, bd = 1e9; route.forEach((s, i) => { if (!s.to) return; const p = R.P[s.to], d = Math.hypot(p.x - gx, p.z - gz); if (d < bd) { bd = d; best = i; } });
         const p = R.P[route[best].to]; let pts = [[gx, gz], [p.x, p.z]]; if (W._fran && grafHar(W._fran) && grafHar(route[best].to) && W._fran !== route[best].to) pts = [[gx, gz]].concat(R.path(W._fran, route[best].to));
         pre = bd > 0.3 ? { pts, len: R.length(pts), to: route[best].to } : null; gseg = (best + 1) % route.length; gd = 0; W._fran = null;
       } else { gseg = 0; gd = 0; pre = null; }
+      if (fr) { const vidare = route.findIndex(s => s.from === fr.id); if (vidare >= 0) { pre = { pts: fr.pts, len: R.length(fr.pts), to: fr.id }; gseg = vidare; gd = 0; } }
       W._ruttKlar = true;
       lopare.forEach((l, i) => { l.seg = Math.floor(i * route.length / Math.max(1, lopare.length)) % route.length; l.d = 0; });
     },
@@ -105,6 +108,7 @@
     gustavVid() { const k = G.s.hjalte === 'kristina' && W._kristina; return k ? { x: k.x, z: k.z } : { x: V.Gustav.x, z: V.Gustav.z }; },
     // Var hjälten står när han inte själv är ute: där källorna har honom, i grova drag.
     // Sten Sture på Stockholms slott. Gustav i Mora, sedan med hären (Kopparberget, Hedemora, Västerås, Uppsala, lägret på Brunkeberg) och från midsommar 1523 i Stockholm.
+    // Sedan 2026-11-26 rider han själv rundan (_gustav). Platsen här används för scenen med sigillen, för Kristina, och när det inte finns någon runda.
     sate() {
       const S = G.s; let id = S.varld === 0 || S.bas.stockholm ? 'stockholm' : 'mora';
       if (id === 'mora') for (let k = 0; k < S.nasta && k < D.UPPDRAG.length; k++) { const u = D.UPPDRAG[k]; if (SATE.indexOf(u.id) >= 0 && R.P[u.plats]) id = u.plats; }
@@ -117,18 +121,23 @@
     // Räkna ut vägen och hur lång tid färden tar, och be spelet skicka iväg dem.
     skicka() {
       const S = G.s, u = D.UPPDRAG[S.nasta]; if (!u || !G.kanSkicka()) return false;
-      const man = S.res.man; let pts = null, dur = null, fran = u.fran;
+      const man = S.res.man; let pts = null, dur = null, fran = u.fran, hem = null;
       if (u.slag === 'flotta') { pts = R.seaPath(fran, u.plats); dur = Math.max(10, Math.min(24, R.length(pts) / 7)) + (u.strid ? 8 : 0); }
       else if (u.slag === 'tag' || u.slag === 'bud' || u.slag === 'rid') {
         const sjalv = u.slag === 'rid' || (u.slag === 'tag' && !!u.med);          // hjälten är själv med: då går tåget från platsen där han står
         if (sjalv) fran = null;
         else if (!fran) { let bd = 1e9; for (const id in S.bas) { if (G.BAS[id].ger !== 'man' || ['abo'].indexOf(id) >= 0) continue; const p = R.P[id], q = R.P[u.plats], d = Math.hypot(p.x - q.x, p.z - q.z); if (d < bd && d > 1) { bd = d; fran = id; } } }
-        if (sjalv) { W.sate(); const a = grafHar(W._sateId) ? W._sateId : sistaBas, full = R.path(a, R.P[u.plats] && grafHar(u.plats) ? u.plats : a); const mal = R.P[u.plats];
-          if (u.slag === 'rid') pts = grafHar(u.plats) ? [[V.Gustav.x, V.Gustav.z]].concat(full) : [[V.Gustav.x, V.Gustav.z], [mal.x, mal.z]];
-          else { const ut = W._utanfor(W._sateId, mal), c = R.P[W._sateId], rr = Math.hypot(ut[0] - c.x, ut[1] - c.z) + 0.5; pts = [ut].concat(grafHar(u.plats) ? full.filter(q => Math.hypot(q[0] - c.x, q[1] - c.z) > rr) : [[mal.x, mal.z]]); if (pts.length < 2) pts.push([mal.x, mal.z]); }          // armén samlas utanför staden, på den sida som vetter mot målet
+        if (sjalv) { W.sate(); hem = W._sateId; const a = grafHar(hem) ? hem : sistaBas, full = R.path(a, R.P[u.plats] && grafHar(u.plats) ? u.plats : a); const mal = R.P[u.plats];
+          if (u.slag === 'rid') {          // du rider dit själv, därifrån du är: vägen du är på fram till nästa plats, och vidare därifrån
+            const fr = W._framTill(), stod = S.varld === 0 && W._kvar && W._kvar.plats && R.P[W._kvar.plats] ? W._kvar.plats : null;
+            if (fr && grafHar(fr.id) && grafHar(u.plats)) { pts = fr.pts.concat(R.path(fr.id, u.plats).slice(1)); hem = fr.id; }
+            else if (stod && stod !== u.plats) pts = [[V.Gustav.x, V.Gustav.z]].concat(R.path(stod, u.plats));
+            else pts = grafHar(u.plats) ? [[V.Gustav.x, V.Gustav.z]].concat(full) : [[V.Gustav.x, V.Gustav.z], [mal.x, mal.z]];
+          }
+          else { const ut = W._utanfor(hem, mal), c = R.P[hem], rr = Math.hypot(ut[0] - c.x, ut[1] - c.z) + 0.5; pts = [ut].concat(grafHar(u.plats) ? full.filter(q => Math.hypot(q[0] - c.x, q[1] - c.z) > rr) : [[mal.x, mal.z]]); if (pts.length < 2) pts.push([mal.x, mal.z]); }          // armén samlas utanför staden, på den sida som vetter mot målet
         }
         else pts = grafHar(u.plats) && grafHar(fran) ? R.path(fran, u.plats) : [[R.P[fran].x, R.P[fran].z], [R.P[u.plats].x, R.P[u.plats].z]];
-        pts = W._runt(pts, sjalv ? W._sateId : fran, u.plats, u.slag === 'rid');
+        pts = W._runt(pts, sjalv ? hem : fran, u.plats, u.slag === 'rid');
         const sp = u.slag === 'bud' ? 4.5 : u.slag === 'rid' ? 5 : 3.4, lim = u.slag === 'bud' ? [5, 12] : [9, 26];
         dur = Math.max(lim[0], Math.min(lim[1], R.length(pts) / sp)) + (u.strid ? 10 : 0);
       }
@@ -224,7 +233,11 @@
 
     // Händelser från spelet.
     handelse(typ, d) {
-      if (typ === 'tryck') { if (W._kristina) W._kristina.hoppT = 0.45; const Bu = V.Bud; if (Bu.g && Bu.g.visible) Fx.damm(Bu.x, Geo.groundAt(Bu.x, Bu.z) + 0.05, Bu.z, 2); if (d.skede) W._drag(d.skede); }
+      if (typ === 'tryck') {
+        if (W._kristina) W._kristina.hoppT = 0.45; const ry = W._ryttare(); if (ry.g && ry.g.visible) Fx.damm(ry.x, Geo.groundAt(ry.x, ry.z) + 0.05, ry.z, 2); if (d.skede) W._drag(d.skede);
+        // belägringen: du manar försvaret, och vart tredje tryck skjuter slottet. Det ändrar inte hur länge belägringen varar.
+        if (vis && vis.u.belagring && G.s.aktivt && !G.s.aktivt.val) { W._belTryck = (W._belTryck || 0) + 1; if (W._belTryck % 3 === 0) { const p = R.P[vis.u.plats], x = p.x + 1.2 + Math.random() * 1.4, z = p.z - 1.3; Fx.krut(x, Geo.groundAt(x, z) + 1.3, z); V.Ljud && V.Ljud.spela('kanon'); Scene.shake(0.12); } }
+      }
       else if (typ === 'marknadKlar') { const p = R.P[d.bas]; Fx.guld(p.x, p.y + 0.3, p.z, 60, tomt[d.bas].R * 0.7); (vandrare[d.bas] || []).forEach(v => { v.hopp = 0.9; }); }
       else if (typ === 'handling') { for (const id in vandrare) vandrare[id].forEach(v => { v.hopp = 0.9; }); hop.forEach((u, i) => { u.y = 0.1; setTimeout(() => { u.y = 0; }, 180 + i * 12); }); if (V.Gustav.g.visible) Fx.guld(V.Gustav.x, Geo.groundAt(V.Gustav.x, V.Gustav.z) + 0.4, V.Gustav.z, 40, 1.4); }
       else if (typ === 'skattUt') W._skattUt(d.nr);
@@ -237,12 +250,12 @@
       } else if (typ === 'samling') { const p = R.P[d.bas]; if (!d.lopare) Fx.guld(p.x, p.y + 0.2, p.z, 10, 1.0); (vandrare[d.bas] || []).forEach(v => { v.hopp = 0.5; }); }
       else if (typ === 'klart') {
         const u = d.u, p = R.P[u.plats]; if (vis && vis.u.strid === 'nederlag') { /* de stupade ligger kvar ett ögonblick */ }
-        if (vis && vis.gustav && u.slag !== 'flotta') W._kvar = { x: V.Gustav.x, z: V.Gustav.z, ang: 0, t: 14 };          // han stannar en stund där han kom fram, sedan är han tillbaka på sin plats
+        if (vis && vis.gustav && u.slag !== 'flotta') W._kvar = { x: V.Gustav.x, z: V.Gustav.z, ang: 0, t: G.s.varld === 0 ? 8 : 14, plats: u.plats };          // du stannar en stund där du kom fram, sedan rider du tillbaka till rundan
         W._slutVis(); W.sync(false);
         if (u.ger && u.ger.bas) u.ger.bas.forEach(id => { const q = R.P[id]; Fx.guld(q.x, q.y + 0.3, q.z, 90, tomt[id].R); steg[id].forEach(m => { if (!pops.some(o => o.m === m)) W._pop(m, id, true); }); });
         else if (p) Fx.guld(p.x, (p.y || 0) + 0.3, p.z, 40, 1.5);
         W._ruttKey = null; W.rutt();
-      } else if (typ === 'konst' && d.dubbel) Fx.guld(V.Bud.x, Geo.groundAt(V.Bud.x, V.Bud.z) + 0.3, V.Bud.z, 50, 1);
+      } else if (typ === 'konst' && d.dubbel) { const ry = W._ryttare(); Fx.guld(ry.x, Geo.groundAt(ry.x, ry.z) + 0.3, ry.z, 50, 1); }
     },
 
     // ---- varje bildruta -------------------------------------------------------------------------
@@ -257,7 +270,65 @@
         for (const u in S.uppror) if (S.uppror[u]) for (const id of D.UPPROR[u].baser) if (S.bas[id]) { const p = R.P[id]; Fx.rok(p.x + (Math.random() - 0.5) * 2, p.y + 0.4, p.z + (Math.random() - 0.5) * 2, true); } }
       for (const k in dekor) { const g = dekor[k]; if (g && g.userData && g.userData.skepp) g.userData.skepp.forEach((s, i) => { s.position.y = 0.02 + Math.sin(t * 1.3 + i) * 0.025; s.rotation.z = Math.sin(t * 1.1 + i * 2) * 0.04; }); }
     },
+    // Vem som rider rundan mellan platserna: du själv (Johannes 2026-11-26: "det var roligare när man åkte runt mellan städerna").
+    // Som Kristina är du instängd i Stockholm, och då är det ett bud som rider ut med dina brev.
+    _ryttare() { return G.s.varld === 0 && G.s.hjalte !== 'kristina' ? V.Gustav : V.Bud; },          // i Gustavs värld rider budet tills vidare
+    // Vägen du är på just nu, från där du är fram till nästa plats på rundan (när du ska rida vidare till ett möte)
+    _framTill() {
+      const seg = pre || route[gseg]; if (G.s.varld !== 0 || !seg || !seg.to || W._kvar || W._borta || G.s.hjalte === 'kristina') return null;
+      const pts = [[V.Gustav.x, V.Gustav.z]]; let d = 0;
+      for (let q = 0; q + 1 < seg.pts.length; q++) { d += Math.hypot(seg.pts[q + 1][0] - seg.pts[q][0], seg.pts[q + 1][1] - seg.pts[q][1]); if (d > gd) pts.push(seg.pts[q + 1]); }
+      if (pts.length < 2) pts.push(seg.pts[seg.pts.length - 1]);
+      return { id: seg.to, pts };
+    },
+    // Rid tillbaka till rundan därifrån du står (efter ett fälttåg eller ett möte): längs vägen till närmaste plats på rundan.
+    _tillRundan(x, z, plats) {
+      if (!route.length) return;
+      let best = -1, bd = 1e9; route.forEach((s, i) => { if (!s.to) return; const p = R.P[s.to], d = Math.hypot(p.x - x, p.z - z); if (d < bd) { bd = d; best = i; } });
+      if (best < 0) { gseg = 0; gd = 0; pre = null; return; }
+      const to = route[best].to, p = R.P[to]; let pts = [[x, z], [p.x, p.z]];
+      gseg = (best + 1) % route.length; gd = 0; pre = null;
+      // kom han sjövägen (Malmö 1524), står han utan känd plats långt bort, eller är vägen hem mycket lång: fortsätt rundan från närmaste plats
+      if (Geo.sdAt(x, z) < 0.2 || (!(plats && R.P[plats]) && bd > 6)) return;
+      if (plats && R.P[plats] && plats !== to) pts = [[x, z]].concat(R.path(plats, to));
+      pts = W._runt(pts, null, to, true); const len = R.length(pts);
+      if (bd > 0.3 && len < 45) pre = { pts, len, to };
+    },
     _gustav(dt, t) {
+      const S = G.s, Gu = V.Gustav, Bu = V.Bud, kristina = S.hjalte === 'kristina';
+      if (S.varld !== 0) return W._gustavGammal(dt, t);
+      if (kristina) {          // Sten Sture är död. Kristina Gyllenstierna står vid Stockholms slott.
+        Gu.g.visible = false;
+        if (!W._kristina) { const p = R.P.stockholm; W._kristina = Folk.add(p.x + 1.9 * B.K, p.z - 0.5 * B.K, 'kvinna', { col: '#2f4f8a', col2: '#f2eee2', sc: 1.4, ang: 0.3 }); }
+        const k = W._kristina; k.hoppT = Math.max(0, (k.hoppT || 0) - dt); k.y = Math.abs(Math.sin(k.hoppT * 14)) * 0.1 * Math.min(1, k.hoppT * 4);
+        if (k.bx === undefined) k.bx = k.x; { const c = Math.cos(t * 0.2); k.x = k.bx + Math.sin(t * 0.2) * 1.1; k.gar = Math.abs(c) > 0.3; k.ang = k.gar ? (c > 0 ? 1.571 : -1.571) : 0.2; }          // hon går av och an framför slottet
+        // ringen visar vem som är du, också när du är Kristina
+        if (!W._kring) { const r0 = Gu.g.userData.ring; W._kring = r0.clone(); W._kring.material = r0.material.clone(); W._kring.scale.setScalar(Gu.g.scale.x); scene.add(W._kring); }
+        W._kring.visible = true; W._kring.position.set(k.x, Geo.groundAt(k.x, k.z) + 0.05, k.z); W._kring.material.opacity = 0.7 + 0.2 * Math.sin(t * 3);
+      } else {
+        if (W._kring) W._kring.visible = false; Bu.g.visible = false;
+        if (vis && vis.gustav) { W._borta = true; return; }          // du leder ett tåg eller rider till ett möte (se _uppdrag). Rundan väntar på dig.
+        if (W._kvar) {          // du stannar en stund där du kom fram
+          if ((W._kvar.t -= dt) > 0) { Gu.place(W._kvar.x, W._kvar.z, W._kvar.ang, 0, t, dt, false, true); W._borta = true; return; }
+          W._borta = true; W._plats = W._kvar.plats; W._kvar = null;
+        }
+        if (W._borta) { W._borta = false; W._tillRundan(Gu.x, Gu.z, W._plats); W._plats = null; }
+      }
+      const ry = kristina ? Bu : Gu;
+      if (!route.length) { if (kristina) Bu.g.visible = false; else { const q = W.sate(); Gu.place(q.x, q.z, q.ang, 0, t, dt, false, true); } return; }
+      // jämn takt: trycken gör ingen resa snabbare (Johannes 2026-11-26: "Det får inte snabba upp något typ av resande"). Förmågan Hästar gör den snabbare för gott.
+      const v = G.hastighet() * JAMN * dt; let seg = pre || route[gseg]; gd += v;
+      let guard = 0;
+      while (gd >= seg.len && guard++ < 20) {
+        gd -= seg.len; if (seg.to) { sistaBas = seg.to; G.besok(seg.to, false); }
+        if (pre) pre = null; else gseg = (gseg + 1) % route.length; seg = route[gseg];
+      }
+      const a = R.along(seg.pts, gd); ry.place(a.x, a.z, a.ang, 0.85, t, dt, false); W._placerad = true;
+      // kameran följer dig, tills du själv flyttar kartan. Knappen Hitta mig slår på det igen.
+      if (!kristina) { const c = Scene.cam; if (!V.tyst && c.user <= (W._foljMig || 0) && !c.fly && !c.locked && !vis) { c.tx = a.x; c.tz = a.z + (Scene.lyft ? 0 : 1.2); } }
+    },
+    // Gustavs värld, orörd tills förspelet är klart (Johannes 2026-11-26): hjälten står på sin plats och ett bud rider rundan.
+    _gustavGammal(dt, t) {
       const S = G.s, Gu = V.Gustav, Bu = V.Bud;
       // hjälten själv är antingen ute på ett uppdrag (se _uppdrag) eller står på sin plats
       if (!(vis && vis.gustav)) {
@@ -297,7 +368,7 @@
         gd -= seg.len; if (seg.to) { sistaBas = seg.to; G.besok(seg.to, false); }
         if (pre) pre = null; else gseg = (gseg + 1) % route.length; seg = route[gseg];
       }
-      const a = R.along(seg.pts, gd); Bu.place(a.x, a.z, a.ang, Math.min(1.6, S.fart * (1 + 0.6 * (S.ryck || 0))), t, dt, false);
+      const a = R.along(seg.pts, gd); Bu.place(a.x, a.z, a.ang, Math.min(1.6, S.fart * (1 + 0.6 * (S.ryck || 0))), t, dt, false); W._placerad = true;
     },
     _lopare(dt, t) {
       const n = G.lopare(); while (lopare.length < n) lopare.push({ seg: lopare.length % Math.max(1, route.length), d: 0, u: Folk.add(0, 0, 'bonde', { gar: true, sc: 1.0, col: '#8a5a3a' }) });

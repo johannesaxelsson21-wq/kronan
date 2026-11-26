@@ -80,7 +80,7 @@
       $('upp-knapp').addEventListener('click', () => { const a = G.s.aktivt; if (a && a.val) { G.valj(); V.Ljud && V.Ljud.spela('klocka'); } else UI.onSkicka && UI.onSkicka(); });
       $('hitta').addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); UI.onHitta && UI.onHitta(); });
       $('m-bok').addEventListener('click', UI.kronika); $('m-krona').addEventListener('click', UI.regenter); $('m-kugg').addEventListener('click', UI.installningar); $('m-fraga').addEventListener('click', () => UI.forklara(G.s.varld, true));
-      $('m-ljud').addEventListener('click', () => { G.s.ljud = !G.s.ljud; V.Ljud && V.Ljud.pa(G.s.ljud); V.Musik && V.Musik.satt(G.s.ljud && G.s.musik !== false); UI.tick(true); });
+      $('m-ljud').addEventListener('click', () => { G.s.ljud = !G.s.ljud; V.Ljud && V.Ljud.pa(G.s.ljud); V.Musik && V.Musik.satt(G.s.ljud && G.s.musik === true); UI.tick(true); });
       $('ruta').addEventListener('click', e => { if (e.target.id === 'ruta' && !UI._last) UI.stang(); });
       root.addEventListener('pointerdown', e => { if (e.target.closest('button, .bas')) V.Ljud && V.Ljud.vakna(); }, true);
       window.addEventListener('resize', () => { sistaBaser = ''; });
@@ -213,7 +213,7 @@
       };
       man(); mark();          // alltid samma ordning: män, mark, förmågor (Johannes 2026-11-26, sista beskedet)
       if (S.las.konster) {
-        const s = nyFlik('konst', '', IK.krona + '<b class="fl-n">Förmågor</b>', 'Dina egna förmågor gör buden, trycken och skatten bättre.');
+        const s = nyFlik('konst', '', IK.krona + '<b class="fl-n">Förmågor</b>', G.s.varld === 0 ? 'Dina egna förmågor gör din ritt, dina tryck och skatten bättre.' : 'Dina egna förmågor gör buden, trycken och skatten bättre.');
         for (const kd of D.KONSTER) {
           if (!G.harKonst(kd.id)) continue; const id = kd.id;
           krows[id] = kort(s, 'konst', IK.krona, () => { const L = S.konst[id], i = konstInfo(id), max = L >= G.KONST_MAX; return '<b>' + UI.konst(id)[0] + '</b><span class="kort-n">nivå ' + L + '</span><p>' + kd.vad + '</p><p class="kort-g">Nu: ' + i.nu + '</p>' + (max ? '' : '<p class="kort-x">Nästa nivå: ' + i.nasta + '</p><p class="kort-p">Kostar ' + IK.mark + tal(G.konstPris(id)) + ' mark</p>'); },
@@ -259,7 +259,7 @@
     handlNamn(h) { const S = G.s; return S.hjalte === 'kristina' && h.kristina ? h.kristina : S.varld === 0 && h.sture ? h.sture : h.namn; },
     handla(n) { const h = G.handlingar()[n]; if (h && G.handla(h.id)) UI.tick(); },
     // Förmågornas namn och vad de gör, i den värld som spelas.
-    konst(id) { const k = G.KONST[id]; return [G.s.varld === 0 && k.sture ? k.sture : k.namn, k.vad]; },
+    konst(id) { const k = G.KONST[id], f = G.s.varld === 0; return [f && k.sture ? k.sture : k.namn, f && k.vad0 ? k.vad0 : k.vad]; },
     _nej(e) { e.classList.remove('skaka'); void e.offsetWidth; e.classList.add('skaka'); V.Ljud && V.Ljud.spela('trumma'); },
     kop(id) { if (G.kop(id)) { V.Ljud && V.Ljud.spela(G.s.bas[id] % 10 === 0 ? 'dubbel' : 'kop'); UI.tick(); return true; } return false; },
     valj(id) { valdBas = id; },
@@ -283,7 +283,7 @@
         const w = V.Varld.pos(mk), sp = V.Scene.screenPoint(w.x, w.y + 4.4, w.z), dold = sp.behind || sp.x < 20 || sp.x > innerWidth - 40 || sp.y < 60 || sp.y > golv;
         mb.style.display = dold ? 'none' : ''; mb.style.transform = 'translate(' + (sp.x - 23) + 'px,' + (sp.y - 46) + 'px)';
       }
-      // de första minuterna i en värld står det vem som är vem: du själv, och budet som rider åt dig
+      // de första minuterna i en värld står det Du över den man är (och Ditt bud över budet, när man är Kristina och budet rider)
       { const visa = spel && S.t < 150 && !S.slut, kr = spel && !S.slut && S.hjalte === 'kristina' && S.hjalteT !== undefined && S.t - S.hjalteT < 90 ? V.Varld._kristina : null,          // och en stund efter att man har blivit Kristina
         lagg = (id, o, h, pa) => { const e = $(id), sp = pa && o && o.g && o.g.visible ? V.Scene.screenPoint(o.x, V.Geo.groundAt(o.x, o.z) + h, o.z) : null, syns = sp && !sp.behind && sp.y > 50 && sp.y < golv; e.style.display = syns ? 'block' : 'none'; if (syns) e.style.transform = 'translate(' + Math.round(sp.x) + 'px,' + Math.round(sp.y) + 'px) translate(-50%, -100%)'; };
         lagg('vem-du', kr ? { x: kr.x, z: kr.z, g: { visible: true } } : V.Gustav, kr ? 1.45 : 1.75, visa || !!kr); lagg('vem-bud', V.Bud, 1.9, visa); }
@@ -340,7 +340,7 @@
       if (u.vet && sagt.indexOf('vet') < 0) x.push(u.vet); if (u.vet2 && sagt.indexOf('vet2') < 0) x.push(u.vet2);
       if (u.id === 'sAbo') x.push('<b>Män</b> är din armé. Platser som ger män bygger du ut med män: de du har får fler att sluta upp. Allt annat kostar mark.');
       if ((g.bas || []).some(id => G.BAS[id].slag === 'gruva')) x.push('Med kortet <b>Gruvarbetare</b> sätter du män i arbete i gruvan. De lämnar armén, och gruvan ger mer.');
-      if (g.las && g.las.indexOf('konster') >= 0) x.push('Under fliken <b>Förmågor</b> gör du dina bud och tryck bättre. Håll ' + (V.pek ? 'fingret kvar på' : 'pekaren över') + ' ett kort så ser du exakt vad det ger.');
+      if (g.las && g.las.indexOf('konster') >= 0) x.push((S.varld === 0 ? 'Ny flik: <b>Förmågor</b>. Där gör du din ritt och dina tryck bättre. Håll ' : 'Under fliken <b>Förmågor</b> gör du dina bud och tryck bättre. Håll ') + (V.pek ? 'fingret kvar på' : 'pekaren över') + ' ett kort så ser du exakt vad det ger.');
       if (g.las && g.las.indexOf('sold') >= 0) x.push('Nu kan du <b>värva soldater</b> för mark. De får lön, och du får fler män.');
       if (g.x) for (const r in g.x) x.push('Allt som ger ' + (r === 'man' ? 'män' : 'mark') + ' ger nu ' + String(g.x[r]).replace('.', ',') + ' gånger så mycket.');
       if (g.markTid || g.mark) x.push('Du fick en rejäl summa mark på en gång.');
@@ -363,7 +363,7 @@
     // Rutan i början: vem du är, hur läget ser ut och vad du ska göra. Går att ta fram igen med frågetecknet.
     forklara(varld, igen) {
       const hur = varld === 0
-        ? [['Bud', 'Den runda knappen är det du gör just nu. Först skickar du bud till din fars slott. Varje tryck ger mark, och knappen byter namn när historien går vidare.'], [IK.mark, '<b>Mark</b> är rikets pengar. Städerna ger mark hela tiden.'], [IK.pil, '<b>Bygg ut</b> en stad med knappen, eller ' + KLICKA + ' på den på kartan. Var tionde nivå dubblar.'], [IK.krona, '<b>Nästa steg</b> är historien. Den går vidare när du har råd.']]
+        ? [['Bud', 'Den runda knappen är det du gör just nu. Först skickar du bud till din fars slott. Varje tryck ger mark, och knappen byter namn när historien går vidare.'], [IK.mark, '<b>Mark</b> är rikets pengar. Städerna ger mark hela tiden, och mer varje gång du rider förbi.'], [IK.pil, '<b>Bygg ut</b> en stad med knappen, eller ' + KLICKA + ' på den på kartan. Var tionde nivå dubblar.'], [IK.krona, '<b>Nästa steg</b> är historien. Den går vidare när du har råd.']]
         : [['Bud', 'Den runda knappen är det du gör just nu. Först skickar du bud till byarna. Varje tryck ger män, och knappen byter namn när historien går vidare.'], [IK.man, '<b>Män</b> är de som följer dig. Byarna ger män hela tiden, och du behöver dem för att slåss.'], [IK.pil, '<b>Bygg ut</b> en by med knappen, eller ' + KLICKA + ' på den på kartan. Var tionde nivå dubblar.'], [IK.krona, '<b>Nästa steg</b> är historien. Den går vidare när du har folk nog.']];
       const text = varld === 0
         ? '<h2>Sverige 1512</h2><p>Du är <b>Sten Sture</b>, nitton år och riddare. Du är inte kung. Sverige har ingen: riket hör till en union med Danmark och Norge, men har inte erkänt unionens kung sedan 1501.</p><p>I kungens ställe styr en riksföreståndare. Det var din far, och nu är han död. Rådet tänker ge hans plats till en man som vill gå Danmarks kung till mötes.</p><p class="mal">Bygg upp dina städer, vinn folket och håll riket.</p>'
@@ -414,9 +414,9 @@
       UI.ruta(h + '</div><p class="svag">Varje regent blir en egen värld. Det du bygger går i arv till nästa.</p><button class="stang">Stäng</button>');
     },
     installningar() {
-      const musikText = () => 'Musik: ' + (G.s.musik !== false ? 'på' : 'av');
+      const musikText = () => 'Musik: ' + (G.s.musik === true ? 'på' : 'av');
       UI.ruta('<h2>Inställningar</h2><p class="svag">Spelet sparas av sig självt i den här webbläsaren.</p>' + (V.Musik && V.Musik.finns() ? '<button id="musik-knapp">' + musikText() + '</button>' : '') + '<button id="nollstall" class="fara">Börja om från början</button><button class="stang">Stäng</button>');
-      if ($('musik-knapp')) $('musik-knapp').addEventListener('click', () => { G.s.musik = G.s.musik === false; V.Musik && V.Musik.satt(G.s.ljud && G.s.musik !== false); $('musik-knapp').textContent = musikText(); });
+      if ($('musik-knapp')) $('musik-knapp').addEventListener('click', () => { G.s.musik = G.s.musik !== true; V.Musik && V.Musik.satt(G.s.ljud && G.s.musik === true); $('musik-knapp').textContent = musikText(); });
       $('nollstall').addEventListener('click', () => { if (confirm('Börja om från 1512? Allt du byggt försvinner.')) UI.onBorjaOm && UI.onBorjaOm(); });
     },
     borta(b) {

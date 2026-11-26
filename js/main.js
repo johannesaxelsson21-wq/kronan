@@ -16,7 +16,7 @@
   function tryck() {
     if (V.Intro && V.Intro.tar) { V.Ljud.vakna(); V.Intro.tar(); return; }          // i filmen och i scenerna är trycket det som scenen säger
     if (!spelar || (V.Intro && V.Intro.aktiv)) return; V.Ljud.vakna();
-    const f = G.tryck(); if (f && !f.skede) V.Ljud.spela(V.Bud && V.Bud.sno ? 'skida' : 'hov');          // i striden låter världen själv (Varld._drag)
+    const f = G.tryck(); if (f && !f.skede) V.Ljud.spela(Varld._ryttare().sno ? 'skida' : 'hov');          // i striden låter världen själv (Varld._drag)
   }
   const UTSIKT = 32;          // en bra nivå att se sig omkring från: dit zoomar kameran ut efter ett inzoomat moment
   let haller = false, hallT = 0;          // mellanslag eller knappen hålls in: buden går i jämn takt utan att man behöver hamra
@@ -87,13 +87,13 @@
     const hade = !q.has('ny') && ladda();
     if (!hade) G.nyVarld(q.has('varld') ? +q.get('varld') : q.has('fusk') ? 1 : 0);
     UI.init(); Varld.init(Scene.scene);
-    G.ut = handelse; V.Ljud.init(); V.Ljud.pa(G.s.ljud); if (V.Musik) { V.Musik.satt(G.s.ljud && G.s.musik !== false); V.Musik.spar(V.Musik.grund()); }
+    G.ut = handelse; V.Ljud.init(); V.Ljud.pa(G.s.ljud); if (V.Musik) { V.Musik.satt(G.s.ljud && G.s.musik === true); V.Musik.spar(V.Musik.grund()); }
     if (q.has('fusk')) V.fusk(+q.get('fusk'));
     Varld.sync(true);
     arstid = hade && G.s.arstid >= 0 && !q.has('fusk') ? G.s.arstid % 1 : ((senaste().man - 1) / 12) % 1; Scene.setSeason(q.has('season') ? +q.get('season') : arstid);
     const p = q.has('lon') ? Geo.place(+q.get('lon'), +q.get('lat')) : hemma(); Scene.jump(p.x, p.z + 1.5, +q.get('d') || 30);
     UI.onTryck = tryck; UI.onSkicka = () => Varld.skicka(); UI.onSkatt = () => G.skatt();
-    UI.onHitta = () => { const w = Varld.gustavVid(); Scene.cam.user = performance.now(); Scene.flyTo(w.x, w.z + 1.2, UTSIKT, 0.9); };          // knappen Hitta mig
+    UI.onHitta = () => { const w = Varld.gustavVid(); Scene.cam.user = performance.now(); Varld._foljMig = Scene.cam.user; Scene.flyTo(w.x, w.z + 1.2, UTSIKT, 0.9); };          // knappen Hitta mig
     UI.onVisaBas = id => { const w = Varld.pos(id); Scene.flyTo(w.x, w.z + 1.2, Math.min(Scene.cam.d, 30), 0.9); };
     UI.onBorjaOm = () => { byter = true; try { localStorage.removeItem(SPAR); } catch (e) { /* inget */ } laddaOm(); };
     UI.onIgen = arv => { byter = true; G.s.arv += arv; G.s.varv++; const s = G.ny(true); s.intro = true; skriv(); laddaOm(); };
