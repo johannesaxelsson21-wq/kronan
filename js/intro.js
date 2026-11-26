@@ -34,7 +34,7 @@
       I.tar = () => { if (!aka) return; aka.v = Math.min(3.4, aka.v + 0.8 * aka.ork); aka.stilla = 0; L.spela(aka.ljud || (V.Gustav.sno === false ? 'hov' : 'skida')); };
     });
   }
-  const MELLAN = 120;          // så många sekunders spelande måste det gå mellan två scener. Förspelets steg ligger minst 150 sekunder isär (senast i data.js), så där får alla plats.
+  const MELLAN = 100;          // så många sekunders spelande måste det gå mellan två scener (120 fram till 2026-11-26, sänkt när produktionen höjdes och stegen kom tätare)
   let autoT = 0, GE = null;
   // Gustav Eriksson som han ser ut i sin egen värld, till fots. I förspelet är hjälten Sten Sture, så scenerna om Gustav har en egen figur.
   function gustavE() { if (!GE) { GE = Object.create(V.Gustav); GE.init(Scene.scene, 'gustav'); } GE.g.visible = true; GE.utanRing = false; return GE; }
