@@ -141,7 +141,7 @@
     // Medan striden pågår syns varje tryck på kartan (en salva, en stöt). Det går aldrig fortare för det:
     // inget tryck får göra en resa eller ett moment kortare, man ska alltid se hela vägen (Johannes 2026-11-25).
     KAMP,
-    skede() { const a = S.aktivt; if (!a || a.val) return null; const u = D.UPPDRAG.find(q => q.id === a.id); return u && u.strid && a.t / a.dur >= (a.k0 || KAMP) ? 'strid' : null; },
+    skede() { const a = S.aktivt; if (!a || a.val) return null; const u = D.UPPDRAG.find(q => q.id === a.id); return u && (u.strid || (u.belagring && u.order)) && a.t / a.dur >= (u.belagring ? 0 : (a.k0 || KAMP)) ? 'strid' : null; },          // förspelets belägring av Stockholm är också ett slag, från början
     // ---- förspelets slag: order i rätt ögonblick -----------------------------------------------
     // Slaget har två eller tre ögonblick (D.STURE order). I vart och ett sluter sig en ring kring knappen, och ett tryck när den är framme
     // är rätt läge. Utgången följer historien vad man än gör: det man spelar om är hur många av männen som kommer hem (_klar).
@@ -155,7 +155,7 @@
     slagTid(u) { const P = G._plan(u); return P.slut + (u.strid === 'nederlag' && !P.kula ? 6 : 3); },          // och en stund efteråt: de som vann trycker på, de som förlorade flyr
     _order() {
       const a = S.aktivt; if (!a || a.val || a.kula || S.varld !== 0) return; const u = D.UPPDRAG.find(q => q.id === a.id); if (!u || !u.order || G.skede() !== 'strid') return;
-      const P = G._plan(u), tb = a.t - a.dur * (a.k0 || KAMP); if (!a.borjat) { a.borjat = 1; G.ut('slagStart', { u }); }
+      const P = G._plan(u), tb = a.t - (u.belagring ? 0 : a.dur * (a.k0 || KAMP)); if (!a.borjat) { a.borjat = 1; G.ut('slagStart', { u }); }
       let i = -1; for (let k = 0; k < P.mom.length; k++) if (tb >= P.mom[k].start) i = k;
       if (a.mom && !a.mom.svar && (a.mom.i !== i || tb - P.mom[a.mom.i].start > P.mom[a.mom.i].langd)) G._momSlut(u, P);          // ögonblicket är över
       if (i < 0) return; const m = P.mom[i], tm = tb - m.start; if (tm > m.langd) return;          // pausen mellan två
@@ -168,8 +168,8 @@
     },
     // Hugg i takt: en ring når knappen var takt-sekund. Ett tryck när den är där är ett hugg som tar. Tryck emellan är slag i luften.
     _hugg(m) {
-      const O = G.ORDER, j = Math.round(m.tm / O.takt), n = Math.floor(O.hugg / O.takt);
-      if (j >= 1 && j <= n && Math.abs(m.tm - j * O.takt) <= O.fonster && !m.slag[j]) { m.slag[j] = 1; m.traff++; G.ut('hugg', { traff: true }); } else { m.miss++; G.ut('hugg', { traff: false }); }
+      const O = G.ORDER, j = Math.round(m.tm / O.takt), n = Math.floor(O.hugg / O.takt), u = D.UPPDRAG.find(q => q.id === S.aktivt.id), o = u && u.order[m.i];
+      if (j >= 1 && j <= n && Math.abs(m.tm - j * O.takt) <= O.fonster && !m.slag[j]) { m.slag[j] = 1; m.traff++; G.ut('hugg', { traff: true, o }); } else { m.miss++; G.ut('hugg', { traff: false, o }); }
     },
     _momSlut(u, P) {
       const a = S.aktivt, m = a.mom, o = u.order[m.i], O = G.ORDER;
@@ -235,7 +235,7 @@
       const u = D.UPPDRAG.find(q => q.id === S.aktivt.id), g = u.ger || {}, akt = S.aktivt;
       S.aktivt = null; S.nasta++; S.datum = 0;
       // förspelets slag: en femtedel av männen kommer alltid hem, och upp till två tredjedelar om orderna gavs i rätt läge
-      S.hem = null; if (S.varld === 0 && u.order && akt.man) { const n = u.order.filter(o => o.ord && !o.alltid && !o.vanta).length || 1, p = Math.min(1, (akt.poang || 0) / n), hem = Math.round(akt.man * (0.2 + 0.45 * p)); S.res.man = Math.min(G.tak(), S.res.man + hem); S.hem = { id: u.id, hem, av: akt.man, p }; }
+      S.hem = null; if (S.varld === 0 && u.order && akt.man && !u.belagring) { const n = u.order.filter(o => o.ord && !o.alltid && !o.vanta).length || 1, p = Math.min(1, (akt.poang || 0) / n), hem = Math.round(akt.man * (0.2 + 0.45 * p)); S.res.man = Math.min(G.tak(), S.res.man + hem); S.hem = { id: u.id, hem, av: akt.man, p }; }
       if (g.bas) g.bas.forEach(id => { if (!S.bas[id]) S.bas[id] = 1; });
       if (g.x) for (const r in g.x) S.x[r] *= g.x[r];
       if (g.las) g.las.forEach(l => S.las[l] = true);

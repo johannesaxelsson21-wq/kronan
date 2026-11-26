@@ -27,8 +27,8 @@
     else if (typ === 'marknadKlar') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.2, p.z, 'Marknad +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark'), d.res); V.Ljud.spela('dubbel');
       if (G.s.varld === 0) UI.skylt('Marknaden i ' + G.BAS[d.bas].namn + ': +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark')); }          // förspelet: också mitt på skärmen, platsen är ofta inte i bild
     else if (typ === 'sold' && d.dubbel) UI.skylt((G.s.varld === 0 ? 'Knektarna' : 'Soldaterna') + ': dubbelt så många män');
-    else if (typ === 'slagStart') { UI.skylt('Slaget börjar', true); V.Ljud.spela('horn'); }
-    else if (typ === 'order') { const ex = d.forst ? (d.typ === 'hugg' ? 'Hugg i takt: tryck varje gång ringen når knappen. Att hamra hjälper inte.' : d.typ === 'order' ? 'Vänta tills den ljusa ringen når knappen. Tryck då, inte förr.' : '') : ''; UI.text(d.o.rad + (ex ? '<br><b>' + ex + '</b>' : ''), d.typ === 'hugg' ? 6.8 : d.typ === 'vanta' ? 5 : 4.4, !!ex); V.Ljud.spela(d.typ === 'hugg' ? 'trumma' : 'horn'); }          // första gången förklaras varje sort
+    else if (typ === 'slagStart') { UI.skylt(d.u.belagring ? 'Belägringen börjar' : 'Slaget börjar', true); V.Ljud.spela('horn'); }
+    else if (typ === 'order') { const ex = d.forst ? (d.typ === 'hugg' ? 'Tryck i takt: varje gång ringen når knappen. Att hamra hjälper inte.' : d.typ === 'order' ? 'Vänta tills den ljusa ringen når knappen. Tryck då, inte förr.' : '') : ''; UI.text(d.o.rad + (ex ? '<br><b>' + ex + '</b>' : ''), d.typ === 'hugg' ? 6.8 : d.typ === 'vanta' ? 5 : 4.4, !!ex); V.Ljud.spela(d.typ === 'hugg' ? 'trumma' : 'horn'); }          // första gången förklaras varje sort
     else if (typ === 'orderSvar') { UI.text(d.o.alltid || (d.bra ? d.o.bra : d.o.miss), 3.2); if (!d.o.alltid) UI.skylt(d.typ === 'hugg' ? (d.bra ? 'Starkt!' : d.svar === 'otakt' ? 'Ur takt' : 'För få hugg') : d.bra ? 'Rätt läge' : d.svar === 'tidigt' ? 'För tidigt' : 'För sent', true); V.Ljud.spela(d.bra && !d.o.alltid ? 'klart' : 'nej'); }
     else if (typ === 'kula') { UI.text(d.o.rad, 6.5); V.Ljud.spela('kanon'); Scene.shake(0.5); if (d.o.efter && !V.tyst) setTimeout(() => UI.text(d.o.efter, 6), 6800 / Math.min(snabb, 10)); }
     else if (typ === 'byggnad') { UI.skylt(d.b.skylt || d.b.namn + ' står klart'); if (d.b.klart && !V.tyst) UI.text(d.b.klart, 9); V.Ljud.spela('hammare'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } UI.tick(true); }          // kameran går dit så att man ser huset resas
@@ -40,7 +40,7 @@
     else if (typ === 'arbetare') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.4, p.z, d.antal + ' lag i gruvan', 'mark'); V.Fx.damm(p.x, p.y + 0.2, p.z, 10); }
     else if (typ === 'konst' && d.dubbel) UI.skylt(UI.konst(d.id)[0] + ': dubbelt upp');
     else if (typ === 'full') V.Ljud.spela('full');
-    else if (typ === 'skickat') { V.Ljud.spela(d.u.slag === 'beslut' ? 'klocka' : 'horn'); if (V.Musik && (d.u.slag === 'tag' || d.u.strid)) V.Musik.spar('krig'); if (d.u.belagring && !V.tyst) UI.text('Kristians armé och flotta stänger in Stockholm. Håll ut.', 9); }
+    else if (typ === 'skickat') { V.Ljud.spela(d.u.slag === 'beslut' ? 'klocka' : 'horn'); if (V.Musik && (d.u.slag === 'tag' || d.u.strid)) V.Musik.spar('krig'); if (d.u.belagring && !d.u.order && !V.tyst) UI.text('Kristians armé och flotta stänger in Stockholm. Håll ut.', 9); }
     else if (typ === 'val') {
       const visa = () => { if (!V.tyst) UI.text(d.u.valText || 'Biskop Brask säger nej. Riksdagen tvekar.', 30); V.Ljud.spela('sorl'); };
       if (d.u.valScen && !V.tyst && V.Intro && V.Intro.scener[d.u.valScen]) V.Intro.scen(d.u.valScen, visa); else visa();          // först scenen, sedan valet

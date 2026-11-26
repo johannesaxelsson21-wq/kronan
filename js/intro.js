@@ -252,13 +252,14 @@
         for (let j = 0; j < 4; j++) for (const s of [-1, 1]) stall(kx + s * (0.6 + j * 0.56), kz + 0.04 + (j % 2) * 0.14, j % 2 ? 'borgare' : 'knekt', { pike: j % 2 === 0, ang: 0 });          // i rad framför slottsmuren, där hon står
         for (let i = 0; i < 4; i++) stall(kx - 3.1 - (i % 2) * 0.5, kz + 0.5 + Math.floor(i / 2) * 0.5, i % 2 ? 'knekt' : 'borgare', { pike: i === 1, ang: 1.3 });
         Scene.jump(kx - 0.4, kz + 2.0, 19); plats('Stockholms slott, sommaren 1520'); skylt('Du', () => kr || { x: kx, z: kz }, 1.5);
-        await vanta(2); text('Du är Kristina Gyllenstierna. Kristian belägrar Stockholm, och du står själv på vallen.'); await vanta(7.5);
+        await vanta(2); text('September 1520. Ni har hållit ut hela sommaren, men ingen hjälp har kommit.'); await vanta(7);
+        if (!V.Game.s.aktivt || !V.Game.s.aktivt.val) {          // spelas scenen för sig själv (?scen=vallen) manar man som förut
         text('Tryck för att mana dem');
         await tryckN('Mana', 8, k => {
           L.spela('sorl'); folk.forEach((u, i) => { if (i % 3 === k % 3) { u.y = 0.1; setTimeout(() => { u.y = 0; }, 170); } }); if (kr) { kr.y = 0.12; setTimeout(() => { kr.y = 0; }, 200); }
           if (k % 2 === 0) { Fx.krut(kx + 1.6, gy + 1.3, kz - 1.2); L.spela('kanon'); Scene.shake(0.16); } if (k === 3) text('');
         }, 18);
-        text('Borgarna kallar dig "vår kära furstinna". Ni håller ut, vecka efter vecka, men ingen hjälp kommer.'); await vanta(8);
+        }
         L.spela('klocka'); text('Den 5 september lovar Kristian i ett brev att ingen ska straffas.'); await vanta(7);
       },
       // 31 maj 1520: Lübeck hjälper honom hem över havet, och han går i land vid Kalmar
