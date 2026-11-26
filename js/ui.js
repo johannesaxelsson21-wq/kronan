@@ -32,7 +32,7 @@
     gruva: '<svg viewBox="0 0 24 24"><path d="M4 7c5-4 11-4 16 0-5-1.6-11-1.6-16 0z" fill="currentColor"/><path d="M12 5.5V21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>',
     slott: '<svg viewBox="0 0 24 24"><path d="M3 20V6h3v2.5h2.5V6h3v2.5H14V6h3v2.5h1V6h3v14z" fill="currentColor"/></svg>'
   };
-  let root, rows = {}, krows = {}, skattRad = null, soldRad = null, byggRader = [], fogdeKnappar = [], kortNu = null, hrows = {}, sistaHandl = '?', flikar = {}, flik = '', pilar = {}, sistaBaser = '', caption = null, capT = 0, tips = { nu: null }, valdBas = null;
+  let root, rows = {}, krows = {}, skattRad = null, soldRad = null, byggRader = [], fogdeKnappar = [], kortNu = null, hrows = {}, sistaHandl = '?', flikar = {}, flik = '', pilar = {}, ortEl = {}, sistaBaser = '', caption = null, capT = 0, tips = { nu: null }, valdBas = null;
   const sek = n => (Math.round(n * 100) / 100).toString().replace('.', ',');
   V.pek = /[?&]mobil=1/.test(location.search) || !!(window.matchMedia && matchMedia('(hover: none)').matches);          // pekskärm: inget mellanslag, ingen muspekare som svävar
   const HALL = V.pek ? 'håll in' : 'håll in mellanslag', KLICKA = V.pek ? 'tryck' : 'klicka';
@@ -74,7 +74,7 @@
         </div>
         <div id="kort" style="display:none"></div>
         <div id="berattar" style="display:none"></div>
-        <div id="pilar"></div><div id="vem-du" class="vem" style="display:none">Du</div><div id="vem-bud" class="vem" style="display:none">Ditt bud</div><div id="flyt"></div><div id="text"></div><div id="tips"></div>
+        <div id="ortnamn"></div><div id="pilar"></div><div id="vem-du" class="vem" style="display:none">Du</div><div id="vem-bud" class="vem" style="display:none">Ditt bud</div><div id="flyt"></div><div id="text"></div><div id="tips"></div>
         <div id="film"><div class="rand upp"></div><div class="rand ner"></div><div id="film-plats"></div><div id="film-text"></div><div id="film-tal"></div><div id="film-knapp"></div><div id="film-svart"></div></div>
         <div id="ruta" style="display:none"></div>`;
       $('ak').addEventListener('pointerdown', e => { e.preventDefault(); UI.onTryck && UI.onTryck(); });
@@ -284,6 +284,11 @@
         const w = V.Varld.pos(id), sp = V.Scene.screenPoint(w.x, w.y + 3.6, w.z), dold = sp.behind || sp.x < 20 || sp.x > innerWidth - 40 || sp.y < 60 || sp.y > golv;
         p.style.display = dold ? 'none' : ''; p.style.transform = 'translate(' + (sp.x - 17) + 'px,' + (sp.y - 34) + 'px)'; p.classList.toggle('dubbel', G.rad(id));
       }
+      // ortnamnen vid varje ort (förspelet, Johannes 2026-11-26: "deras namn ska synas på nåt sätt så man ser vid orten vilken det är")
+      { const lista = spel && S.varld === 0 && !root.classList.contains('slag') ? V.Varld.ortnamn() : [], sett = {};
+        for (const o of lista) { let e = ortEl[o.id]; if (!e) { e = ortEl[o.id] = el('div', 'ortnamn', o.namn); $('ortnamn').appendChild(e); } sett[o.id] = 1;
+          const sp = V.Scene.screenPoint(o.x, o.y, o.z), dold = sp.behind || sp.x < 12 || sp.x > innerWidth - 12 || sp.y < 56 || sp.y > golv + 10; e.style.display = dold ? 'none' : ''; if (!dold) e.style.transform = 'translate(' + Math.round(sp.x) + 'px,' + Math.round(sp.y) + 'px) translate(-50%, 0)'; }
+        for (const id in ortEl) if (!sett[id] && ortEl[id].style.display !== 'none') ortEl[id].style.display = 'none'; }
       // marknadsdag: en gyllene knapp över platsen
       const mk = S.marknad && spel ? S.marknad.bas : null; let mb = pilar._marknad;
       if (!mk) { if (mb) mb.style.display = 'none'; }
@@ -358,7 +363,7 @@
       if (g.las && g.las.indexOf('konster') >= 0 && S.varld !== 0) x.push(('Under fliken <b>Förmågor</b> gör du dina bud och tryck bättre. Håll ') + (V.pek ? 'fingret kvar på' : 'pekaren över') + ' ett kort så ser du exakt vad det ger.');
       if (g.las && g.las.indexOf('sold') >= 0) x.push('Nu kan du <b>värva soldater</b> för mark. De får lön, och du får fler män.');
       if (g.x) for (const r in g.x) x.push('Allt som ger ' + (r === 'man' ? 'män' : 'mark') + ' ger nu ' + String(g.x[r]).replace('.', ',') + ' gånger så mycket.');
-      if (S.hem && S.hem.id === u.id) x.push('<b>' + tal(S.hem.hem) + '</b> av dina ' + tal(S.hem.av) + ' män kom hem' + (S.hem.bra >= S.hem.n ? ': du gav varje order i rätt läge.' : S.hem.bra ? '.' : '. Ger du order i rätt läge kommer fler hem.'));
+      if (S.hem && S.hem.id === u.id) x.push('<b>' + tal(S.hem.hem) + '</b> av dina ' + tal(S.hem.av) + ' män kommer hem' + (S.hem.bra >= S.hem.n ? ': varje order kom i rätt läge.' : S.hem.bra ? '.' : '. Ger du order i rätt läge kommer fler hem.'));
       if (g.markTid || g.mark) x.push('Du fick en rejäl summa mark på en gång.');
       if (g.man) x.push('Du fick ' + tal(g.man) + ' män.');
       if (g.fart) x.push('Din armé rör sig fortare från och med nu.');

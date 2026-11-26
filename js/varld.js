@@ -115,6 +115,13 @@
     // Under en scen syns inte skattelagen och de extra buden: spelet står still då, och de skulle stå som statyer mitt i bilden
     scenDolj(on) { (skattVis || []).forEach(v => v.enh.forEach(e => { e.vis = !on; })); lopare.forEach(l => { l.u.vis = !on; }); },
     pos(id) { const p = R.P[id]; return p ? { x: p.x, y: p.y || 0, z: p.z } : null; },
+    // Ortnamnen på kartan (förspelet): varje plats som syns, och borgen Stäket så länge den står. Namnet står strax nedanför husen.
+    ortnamn() {
+      const ut = [], lagg = (id, namn, x, z) => ut.push({ id, namn, x, z, y: Math.max(0.02, Geo.groundAt(x, z)) });
+      for (const b of D.BASER) { if (!steg[b.id] || !steg[b.id].length) continue; const p = R.P[b.id], r = tomt[b.id] ? tomt[b.id].R * 0.34 : 1; lagg(b.id, b.namn, p.x, p.z + r); }
+      if (dekor.staket) { const p = R.P.staket; lagg('staket', 'Stäket', p.x, p.z + 1.5); }
+      return ut;
+    },
     // Vilken bas ligger under den här punkten på marken?
     basVid(g) { if (!g) return null; let best = null, bd = 1e9; for (const b of D.BASER) { if (!steg[b.id].length) continue; const p = R.P[b.id], d = Math.hypot(p.x - g.x, p.z - g.z); if (d < tomt[b.id].R + 0.6 && d < bd) { bd = d; best = b.id; } } return best; },
 
@@ -534,6 +541,7 @@
       if (vis.stot > 0) vis.stot = Math.max(0, vis.stot - dt * 2.5); else if (vis.stot < 0) vis.stot = Math.min(0, vis.stot + dt * 0.8);
       if (vis.noll) return W._tag0(dt, t, a, u);          // förspelets fälttåg och slag har sin egen ordning
       if (u.belagring && !a.val) {          // Stockholm sommaren 1520: lägret på Brunkeberg och slottet skjuter på varandra medan månaderna går
+        if (u.nytt && V.kalender && !V.tyst) { const m = V.kalender().man; vis.nytt = vis.nytt || {}; u.nytt.forEach((q, i) => { if (!vis.nytt[i] && m >= q[0]) { vis.nytt[i] = 1; V.UI.text(q[1], 7); } }); }          // nyheter medan staden är instängd
         W._belT = (W._belT === undefined ? 1.5 : W._belT) - dt;
         if (W._belT <= 0) { W._belN = (W._belN || 0) + 1; W._belT = 1.8 + Math.random() * 2.4; const ute = W._belN % 2 === 1, q = ute ? R.P.brunkeberg : p, x = q.x + (Math.random() - 0.5) * 1.6, z = q.z + (ute ? 0.5 : -0.9); Fx.krut(x, Geo.groundAt(x, z) + (ute ? 0.3 : 1.2), z); if (!ute && V.Ljud) V.Ljud.spela('kanon'); if (!ute && W._tornLagen && W._tornLagen.length) { const q = W._tornLagen[W._belN % W._tornLagen.length]; Fx.krut(q.x, Geo.groundAt(q.x, q.z) + 1.7, q.z); } }
       }

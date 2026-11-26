@@ -161,7 +161,7 @@
         const sex = []; for (let i = 0; i < 5; i++) { const u = Folk.add(sx - 1.0 - (i % 3) * 0.32, sz - 0.25 + Math.floor(i / 3) * 0.38, 'borgare', { ang: 1.6 }); sex.push(u); temp.push(u); }
         const ge = gustavE(), star = dt => ge.place(sx - 1.72, sz + 0.2, 1.6, 0, tid, dt, false, true); ge.ang = 1.6; ge.utanRing = true; hooks.push(star); const gs = skylt('Gustav Eriksson', () => ({ x: sx - 1.72, z: sz + 0.2 }), 1.8);          // den sjätte är Gustav Eriksson, 22 år
         Scene.jump((sx + forst.x) / 2, sz + 2.4, 30); plats('Stockholm, september 1518'); hooks.push(lagg);
-        await vanta(2); text('Kristian har förlorat slaget och vill förhandla. Som säkerhet kräver han sex svenska herrar ombord på sina skepp.'); await vanta(8.5);
+        await vanta(2); text('Kristian har förlorat slaget och vill förhandla. Hans bud kräver sex svenska herrar ombord på skeppen, som säkerhet.'); await vanta(8.5);
         sex.forEach(u => Folk.remove(u)); temp = temp.filter(u => sex.indexOf(u) < 0); hooks = hooks.filter(h => h !== star); ge.g.visible = false; gs.bort();
         await akFard(pts, 0, R.length(pts) - 0.9, 0.7, 'Skicka', 'Tryck för att skicka ut dem', { kd: innerWidth < innerHeight ? 31 : 27, sikt: [forst.x, forst.z], ljud: 'vag', satt: a => { bat.position.set(a.x, 0.02 + Math.sin(tid * 2) * 0.02, a.z); bat.rotation.y = a.ang; } });
         UI.film.knapp(null); I.tar = null; Scene.scene.remove(bat); L.spela('nej'); text('När de sex är ombord hissar Kristian segel.');
@@ -181,7 +181,7 @@
         await tryckN('Slå läger', 6, k => { for (let j = 0; j < per; j++) talt(); L.spela('hammare'); L.spela('trumma'); if (k === 2) text(''); }, 18);
         while (satta < ring.length) talt();
         text('Ingen kommer in och ingen ut. Nu är det bara att vänta.'); await vanta(6);
-        text('Nästa sommar skickar Danmarks kung soldater till hans hjälp.'); await vanta(6);
+        text('Från Danmark kommer rykten: kungen tänker skicka soldater till hans hjälp.'); await vanta(6);
       },
       // November 1517. Riksmötet har avsatt ärkebiskopen, och alla sätter sitt sigill under brevet. Biskop Brask ska ha lagt en lapp under sitt.
       async sigill() {
@@ -199,7 +199,7 @@
         for (let k = n; k < 6; k++) sigill(k);
         await vanta(0.8); sigill(6); hopp(herrar[6]); L.spela('trumma');
         const brask = skylt('Biskop Brask', () => herrar[6], 1.75);
-        text('Det berättas att biskop Brask gömde en lapp under sitt sigill: "Härtill är jag nödd och tvungen."'); await vanta(8); brask.bort();
+        text('Det berättas att biskop Brask gömmer en lapp under sitt sigill: "Härtill är jag nödd och tvungen."'); await vanta(8); brask.bort();
         text('Den som har sitt sigill under brevet har varit med om att avsätta en ärkebiskop.'); await vanta(7);
       },
       // September 1519: flykten från Kalø till Lübeck
@@ -224,7 +224,7 @@
         Scene.jump(lb.x - 0.3, lb.z + 2.2, 22); UI.film.svart(0, 1.2); plats('Lübeck');
         await vanta(5); text('Slottsherren från Kalø kommer efter och kräver att få honom tillbaka.');
         const jagare = Folk.add(lb.x - 6, lb.z + 5.8, 'dansk', { pike: true, gar: true, ang: 1.95 }); temp.push(jagare); skylt('Slottsherren', () => jagare, 1.35); hooks.push(dt => { if (jagare.x < lb.x - 3.2) { jagare.x += dt * 0.5; jagare.z -= dt * 0.2; } else jagare.gar = false; });
-        await vanta(7); L.spela('klart'); text('Lübecks råd säger nej. Han blir kvar i åtta månader.'); await vanta(7);
+        await vanta(7); L.spela('klart'); text('Lübecks råd svarar nej. Gustav får stanna i staden.'); await vanta(7);
       },
       // Februari 1520. Sten Sture körs hem i släde över Mälarens is och dör på vägen.
       async isen() {
@@ -258,7 +258,7 @@
           L.spela('sorl'); folk.forEach((u, i) => { if (i % 3 === k % 3) { u.y = 0.1; setTimeout(() => { u.y = 0; }, 170); } }); if (kr) { kr.y = 0.12; setTimeout(() => { kr.y = 0; }, 200); }
           if (k % 2 === 0) { Fx.krut(kx + 1.6, gy + 1.3, kz - 1.2); L.spela('kanon'); Scene.shake(0.16); } if (k === 3) text('');
         }, 18);
-        text('Borgarna kallar dig vår kära furstinna. Staden håller ut till september, men ingen hjälp kommer.'); await vanta(8);
+        text('Borgarna kallar dig "vår kära furstinna". Ni håller ut, vecka efter vecka, men ingen hjälp kommer.'); await vanta(8);
         L.spela('klocka'); text('Den 5 september lovar Kristian i ett brev att ingen ska straffas.'); await vanta(7);
       },
       // 31 maj 1520: Lübeck hjälper honom hem över havet, och han går i land vid Kalmar
