@@ -24,7 +24,8 @@
     Varld.handelse(typ, d);
     if (typ === 'tryck') { if (spelar) UI.tryckt(d); }
     else if (typ === 'marknad') { UI.skylt('Marknadsdag i ' + G.BAS[d.bas].namn); V.Ljud.spela('klocka'); }
-    else if (typ === 'marknadKlar') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.2, p.z, 'Marknad +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark'), d.res); V.Ljud.spela('dubbel'); }
+    else if (typ === 'marknadKlar') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.2, p.z, 'Marknad +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark'), d.res); V.Ljud.spela('dubbel');
+      if (G.s.varld === 0) UI.skylt('Marknaden i ' + G.BAS[d.bas].namn + ': +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark')); }          // förspelet: också mitt på skärmen, platsen är ofta inte i bild
     else if (typ === 'sold' && d.dubbel) UI.skylt('Soldaterna: dubbelt så många män');
     else if (typ === 'handling') { V.Ljud.spela(d.id === 'tal' ? 'sorl' : d.id === 'monstra' ? 'horn' : 'kop'); const h = D.HANDLINGAR.find(q => q.id === d.id); UI.skylt(UI.handlNamn(h) + (d.fick ? ': +' + V.tal(d.fick) + ' män' : '')); }
     else if (typ === 'skattUt') { if (!d.auto) V.Ljud.spela('kop'); }
@@ -56,9 +57,23 @@
   }
   // Årstiden följer historien, inte klockan: den är den årstid då det senaste steget skedde,
   // och står still tills nästa steg görs. Då glider den fram till det stegets månad medan hären är på väg.
-  function senaste() { const S = G.s, a = S.aktivt; if (a) return D.UPPDRAG.find(u => u.id === a.id); return S.nasta > 0 ? D.UPPDRAG[S.nasta - 1] : { ar: S.varld === 0 ? 1512 : 1521, man: 1 }; }
+  // Det steg vars datum kartan ska visa: det som pågår, annars det senaste. efterMan = månaden som scenen efter steget slutade i (förspelet).
+  function senaste() {
+    const S = G.s, a = S.aktivt; if (a) return D.UPPDRAG.find(u => u.id === a.id);
+    if (S.nasta > 0) { const p = D.UPPDRAG[S.nasta - 1]; return S.varld === 0 && p.efterMan ? { ar: p.ar, man: p.efterMan } : p; }
+    return { ar: S.varld === 0 ? 1512 : 1521, man: 1 };
+  }
   function arstidSteg(dt) {
-    const u = senaste(), a = G.s.aktivt; let df = ((((u.man - 1) / 12 - arstid) % 1) + 1) % 1; if (df > 0.96) df = 0;
+    const u = senaste(), a = G.s.aktivt, mal = (u.man - 1) / 12;
+    if (G.s.varld === 0) {
+      // Förspelet: det som händer visas i den årstid det hände (Johannes 2026-11-26). När ett steg går iväg är kartan framme vid stegets
+      // årstid inom en sekund, kortaste vägen (från höst till sommar går den bakåt genom sensommaren, inte framåt genom vintern).
+      // Bara belägringen av Stockholm låter månaderna gå medan den pågår: från april till september.
+      let d = ((((mal - arstid) % 1) + 1.5) % 1) - 0.5; if (Math.abs(d) < 0.002) return;
+      const v = a && !a.val ? (u.belagring ? Math.abs(d) / Math.max(1, a.dur - a.t) : 0.5) : 1 / 30;
+      arstid = (((arstid + Math.sign(d) * Math.min(Math.abs(d), v * dt)) % 1) + 1) % 1; return;
+    }
+    let df = (((mal - arstid) % 1) + 1) % 1; if (df > 0.96) df = 0;
     let v = 1 / 30; if (a && !a.val) v = Math.min(1 / 10, Math.max(v, df / Math.max(1, a.dur - a.t)));
     arstid = (arstid + Math.min(df, v * dt)) % 1;
   }

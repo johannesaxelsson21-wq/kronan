@@ -101,7 +101,20 @@
     roads() { const out = []; for (const [a, b] of VAGAR) if (a !== b) out.push(edges[a + '|' + b]); return out; },
     vagarVid(id) { const out = []; for (const [a, b] of VAGAR) { if (a === b) continue; if (a === id) out.push(edges[a + '|' + b]); else if (b === id) out.push(edges[b + '|' + a]); } return out; },
     // Kortaste landsvägen mellan två platser (genom vägnätet). Finns ingen väg räknas en ny ut rakt över terrängen.
-    path(a, b) {
+    // Vägen går knut för knut i vägnätet, och vid en del knutar (Gripsholm på vägen Stockholm–Nyköping, Stäket, Brännkyrka) gick den förbi
+    // avtaget, fram till knuten och samma väg tillbaka. Med kapaVandor tas sådana blindtarmar bort (förspelet, sedan 2026-11-26: Johannes såg
+    // budet till Nyköping gå fram till knuten och vända). Gustavs värld går som förut tills förspelet är klart.
+    path(a, b) { const p = R._path(a, b); return R.kapaVandor ? R.utanVandor(p) : p; },
+    utanVandor(pts) {
+      const p = pts.slice();
+      for (let i = 0; i < p.length - 3; i++) {
+        let s = 0, klipp = -1;
+        for (let j = i + 1; j < p.length && s < 16; j++) { s += Math.hypot(p[j][0] - p[j - 1][0], p[j][1] - p[j - 1][1]); if (j > i + 2 && s > 1 && Math.hypot(p[j][0] - p[i][0], p[j][1] - p[i][1]) < 0.4) klipp = j; }
+        if (klipp > 0) p.splice(i + 1, klipp - i);
+      }
+      return p;
+    },
+    _path(a, b) {
       if (a === b) return [[P[a].x, P[a].z], [P[a].x + 0.01, P[a].z]];
       const dist = {}, prev = {}, todo = new Set(Object.keys(graph)); for (const n of todo) dist[n] = 1e9; if (dist[a] === undefined || dist[b] === undefined) return astar(P[a].x, P[a].z, P[b].x, P[b].z, false);
       dist[a] = 0;

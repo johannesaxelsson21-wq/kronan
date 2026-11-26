@@ -17,6 +17,7 @@
   const W = V.Varld = {
     tomt, P: R.P,
     init(sc) {
+      R.kapaVandor = G.s.varld === 0;
       scene = sc; W._kristina = null; W._kring = null; W._kvar = null; W._borta = false; W._plats = null; W._placerad = false; if (W._foljMig === undefined) W._foljMig = 1; Folk.init(sc); Fx.init(sc); V.Gustav.init(sc, G.s.varld === 0 ? 'sten' : 'gustav'); V.Bud.init(sc, 'bud'); V.Bud.kanSkida = G.s.varld === 1;          // bud på skidor hör Dalarna och Gustavs tid till
       for (const b of D.BASER) {
         const p = R.P[b.id]; tomt[b.id] = new B.Tomt(b, p); steg[b.id] = [];

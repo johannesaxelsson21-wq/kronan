@@ -252,8 +252,13 @@
       }
     },
     marknadTa() {
-      const m = S.marknad; if (!m) return false; const id = m.bas, r = BAS[id].ger; let n = Math.max(5, G.prod(id) * (S.full ? G.fullX() : 1) * 40);
-      if (r === 'man') n = Math.max(0, Math.min(n, G.tak() - S.res.man)); S.res[r] += n; S.tot[r] += n; S.marknad = null; G.ut('marknadKlar', { bas: id, antal: n, res: r }); return true;
+      const m = S.marknad; if (!m) return false; const id = m.bas; let r = BAS[id].ger, n;
+      if (S.varld === 0) {          // förspelet: tjugo sekunder av hela inkomsten av det platsen ger, så att det alltid märks. Är armén nästan full blir det mark i stället.
+        n = Math.max(5, G.takt(r) * 20);
+        if (r === 'man' && G.tak() - S.res.man < n * 0.5 && S.las.mark) { r = 'mark'; n = Math.max(5, G.takt('mark') * 20); }
+        else if (r === 'man') n = Math.max(0, Math.min(n, G.tak() - S.res.man));
+      } else { n = Math.max(5, G.prod(id) * (S.full ? G.fullX() : 1) * 40); if (r === 'man') n = Math.max(0, Math.min(n, G.tak() - S.res.man)); }
+      S.res[r] += n; S.tot[r] += n; S.marknad = null; G.ut('marknadKlar', { bas: id, antal: n, res: r }); return true;
     },
     // Tid som gått medan spelet var stängt: baserna har arbetat på (utan fartbonus), högst åtta timmar.
     borta(sek) {

@@ -177,6 +177,7 @@
   // Uppror: vilka baser som står still tills upproret är över.
   // ---- Förspelet: Sten Sture den yngre 1512–1520 -----------------------------------------------
   // Tar ungefär tjugo minuter och slutar alltid på samma sätt. senast = den minut då uppdraget går iväg av sig självt, vad spelaren än gör.
+  // efterMan = månaden kartan står i efter steget, när scenen efteråt slutar senare än steget (gisslan i september 1518, Kalø i september 1519, Sten Stures död i februari 1520).
   // tid = uppdraget tar så här många sekunder (belägringen av Stockholm: från maj till september, och längre än pausen mellan två scener).
   const STURE = [
     // vet = en rad om vad steget betyder för det som kommer sedan (visas under krönikan)
@@ -193,13 +194,13 @@
     { id: 'sRiv', scen: 'sigill', efter: 'November 1517. Brevet är beseglat.', senast: 13, akt: 0, titel: 'Kalla rikets ledare till Stockholm', plats: 'stockholm', ar: 1517, man: 11.8, slag: 'beslut', val: 'Riv Stäket', valText: 'Rikets ledare är samlade i Stockholm. Alla väntar på vad du säger.', kostar: { mark: 80000 }, ger: { bas: ['uppsala'] },
       kronika: 'November 1517. Mötet tog ifrån Gustav Trolle hans ämbete och bestämde att hans borg skulle rivas. Alla skrev under med sitt sigill. Biskop Brask ska ha gömt en lapp under sitt: det här gör jag för att jag är tvungen.',
       vet: 'Bara påven får avsätta en ärkebiskop. Gustav Trolle glömmer inte det här.' },
-    { id: 'sBrannkyrka', med: 1, scen: 'gisslan', efter: '27 juli 1518. Du slog Kristian II vid Brännkyrka söder om Stockholm.', senast: 15.5, akt: 0, titel: 'Möt Kristian vid Brännkyrka', plats: 'brannkyrka', ar: 1518, man: 7.9, slag: 'tag', strid: 'stor', kostar: { man: 2500, mark: 170000 }, ger: { x: { man: 1.5 } },
+    { id: 'sBrannkyrka', efterMan: 9.4, med: 1, scen: 'gisslan', efter: '27 juli 1518. Du slog Kristian II vid Brännkyrka söder om Stockholm.', senast: 15.5, akt: 0, titel: 'Möt Kristian vid Brännkyrka', plats: 'brannkyrka', ar: 1518, man: 7.9, slag: 'tag', strid: 'stor', kostar: { man: 2500, mark: 170000 }, ger: { x: { man: 1.5 } },
       kronika: '27 juli 1518. Du slog Kristian II vid Brännkyrka söder om Stockholm. I september seglade han hem med sex svenskar som gisslan. En av dem var den unge Gustav Eriksson.' },
-    { id: 'sTegel', scen: 'kalo', sagt: ['vet2'], senast: 18, akt: 0, titel: 'Bär teglet från Stäket till Stockholm', plats: 'stockholm', ar: 1519, man: 6, slag: 'bygg', kostar: { man: 1500, mark: 750000 }, ger: { x: { mark: 2 } },
+    { id: 'sTegel', efterMan: 9.5, scen: 'kalo', sagt: ['vet2'], senast: 18, akt: 0, titel: 'Bär teglet från Stäket till Stockholm', plats: 'stockholm', ar: 1519, man: 6, slag: 'bygg', kostar: { man: 1500, mark: 750000 }, ger: { x: { mark: 2 } },
       kronika: '1519. Borgen Stäket var riven och teglet bars till Stockholm. Kristian klagade hos påven. Med påvens stöd lystes du och dina män i bann, kyrkans hårdaste straff.',
       vet: 'Nu kan Kristian säga att hans krig mot dig är kyrkans krig.',
       vet2: 'I september flydde Gustav Eriksson från fångenskapen i Danmark till staden Lübeck i Tyskland.' },
-    { id: 'sAsunden', med: 1, scen: 'isen', efter: '19 januari 1520. Slaget på Åsundens is var förlorat.', senast: 20.5, akt: 0, titel: 'Möt danskarna på sjön Åsundens is', plats: 'bogesund', ar: 1520, man: 1.6, slag: 'tag', strid: 'nederlag', kostar: { man: 10000, mark: 1000000 }, ger: { hjalte: 'kristina', startar: 'dagtingan' },
+    { id: 'sAsunden', efterMan: 2.1, med: 1, scen: 'isen', efter: '19 januari 1520. Slaget på Åsundens is var förlorat.', senast: 20.5, akt: 0, titel: 'Möt danskarna på sjön Åsundens is', plats: 'bogesund', ar: 1520, man: 1.6, slag: 'tag', strid: 'nederlag', kostar: { man: 10000, mark: 1000000 }, ger: { hjalte: 'kristina', startar: 'dagtingan' },
       kronika: '19 januari 1520. På isen träffades du av en kanonkula strax ovanför knät. Din armé flydde. Den 3 februari dog du i en släde på Mälarens is, 27 år gammal.' },
     { id: 'sUppsala', senast: 21.5, akt: 0, titel: 'Skicka bönderna mot Uppsala', plats: 'uppsala', ar: 1520, man: 4.2, slag: 'tag', strid: 'nederlag', kostar: { man: 3000, mark: 250000 }, ger: {},
       kronika: 'Långfredagen 6 april 1520. Bönderna som gick mot danskarna i Uppsala förlorade. Du, Kristina Gyllenstierna, höll fortfarande Stockholm.',
