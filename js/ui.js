@@ -334,7 +334,7 @@
       const S = G.s, g = u.ger || {}, x = [];
       (g.bas || []).forEach(id => x.push(basRad(id)));
       if (g.las && g.las.indexOf('mark') >= 0) x.push('<b>Mark</b> är pengar. Gruvor och städer ger mark, och den behövs till större uppdrag.');
-      const scen = !!(u.scen || u.valScen), sagt = scen && u.sagt || [];          // det scenen just visade sägs inte en gång till i rutan
+      const scen = !!S.sistaScen && (S.sistaScen === u.scen || S.sistaScen === u.valScen), sagt = scen && u.sagt || [];          // det scenen just visade sägs inte en gång till i rutan
       if (u.vet && sagt.indexOf('vet') < 0) x.push(u.vet); if (u.vet2 && sagt.indexOf('vet2') < 0) x.push(u.vet2);
       if (u.id === 'sAbo') x.push('<b>Män</b> är din armé. Platser som ger män bygger du ut med män: de du har får fler att sluta upp. Allt annat kostar mark.');
       if ((g.bas || []).some(id => G.BAS[id].slag === 'gruva')) x.push('Med kortet <b>Gruvarbetare</b> sätter du män i arbete i gruvan. De lämnar armén, och gruvan ger mer.');

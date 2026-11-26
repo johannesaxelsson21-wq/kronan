@@ -42,7 +42,7 @@
     else if (typ === 'klart') {
       const u = d.u; V.Ljud.spela(u.strid === 'nederlag' ? 'nej' : 'klart'); if (V.Musik) V.Musik.spar(V.Musik.grund());
       if (!V.tyst && Scene.cam.d < UTSIKT - 2 && !Scene.cam.locked) Scene.flyTo(Scene.cam.x, Scene.cam.z, UTSIKT, 1.8);
-      if (!V.tyst) { if (u.scen && V.Intro && V.Intro.scener[u.scen]) setTimeout(() => V.Intro.scen(u.scen, () => UI.klart(u)), 1800); else UI.klart(u); }          // först scenen, sedan rutan som säger vad som hände
+      if (!V.tyst) { if (u.scen && V.Intro && V.Intro.scener[u.scen]) setTimeout(() => V.Intro.scen(u.scen, () => UI.klart(u)), 1800 / Math.min(snabb, 10)); else UI.klart(u); }          // först scenen, sedan rutan som säger vad som hände
       if (u.ger && u.ger.titel && !V.tyst) setTimeout(() => UI.skylt(u.ger.titel === 'Kung' ? 'Sveriges kung' : u.ger.titel), 900);
       if (u.ger && u.ger.slut) setTimeout(() => UI.slut(), 5000);
       spara();

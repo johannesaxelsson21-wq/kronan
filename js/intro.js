@@ -28,6 +28,7 @@
       I.tar = () => { if (!aka) return; aka.v = Math.min(3.4, aka.v + 0.8 * aka.ork); aka.stilla = 0; L.spela(aka.ljud || (V.Gustav.sno === false ? 'hov' : 'skida')); };
     });
   }
+  const MELLAN = 120;          // så många sekunders spelande måste det gå mellan två scener. Förspelets steg ligger minst 150 sekunder isär (senast i data.js), så där får alla plats.
   let autoT = 0, GE = null;
   // Gustav Eriksson som han ser ut i sin egen värld, till fots. I förspelet är hjälten Sten Sture, så scenerna om Gustav har en egen figur.
   function gustavE() { if (!GE) { GE = Object.create(V.Gustav); GE.init(Scene.scene, 'gustav'); } GE.g.visible = true; return GE; }
@@ -269,10 +270,10 @@
       }
     },
     async scen(namn, klar, tvinga) {
-      // Ingen scen för nära den förra: har det inte gått en dryg minuts spelande hoppas den över (Johannes 2026-11-26: "man måste ha
+      // Ingen scen för nära den förra: har det inte gått två minuters spelande hoppas den över (Johannes 2026-11-26: "man måste ha
       // spelat ett tag innan en ny film kan visas"). tvinga = spela ändå (?scen=namn, för prov och skärmbilder).
-      const Sp = V.Game.s; if (!I.scener[namn] || I.aktiv || (!tvinga && Sp.scenT !== undefined && Sp.t - Sp.scenT < 75)) { if (klar) klar(); return; }
-      Sp.scenT = Sp.t;
+      const Sp = V.Game.s; if (!I.scener[namn] || I.aktiv || (!tvinga && Sp.scenT !== undefined && Sp.t - Sp.scenT < MELLAN)) { if (klar) klar(); return; }
+      Sp.scenT = Sp.t; Sp.sistaScen = namn;
       UI = V.UI; L = V.Ljud; I.aktiv = true; I.spelade++; I.nu = namn; autoT = 0; I.scenFart = Math.min(6, +new URLSearchParams(location.search).get('snabb') || 1);
       if (V.Varld.popKlart) V.Varld.popKlart();
       if (V.Musik) V.Musik.spar(V.Musik.har(namn) ? namn : { staket: 'krig', gisslan: 'krig', vallen: 'krig', kalo: 'vinter', isen: 'vinter', kalmar: 'vinter' }[namn]);          // varje scen har sitt eget spår
