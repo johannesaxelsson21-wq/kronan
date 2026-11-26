@@ -32,7 +32,7 @@
     gruva: '<svg viewBox="0 0 24 24"><path d="M4 7c5-4 11-4 16 0-5-1.6-11-1.6-16 0z" fill="currentColor"/><path d="M12 5.5V21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>',
     slott: '<svg viewBox="0 0 24 24"><path d="M3 20V6h3v2.5h2.5V6h3v2.5H14V6h3v2.5h1V6h3v14z" fill="currentColor"/></svg>'
   };
-  let root, rows = {}, krows = {}, skattRad = null, soldRad = null, fogdeKnappar = [], kortNu = null, hrows = {}, sistaHandl = '?', flikar = {}, flik = '', pilar = {}, sistaBaser = '', caption = null, capT = 0, tips = { nu: null }, valdBas = null;
+  let root, rows = {}, krows = {}, skattRad = null, soldRad = null, byggRader = [], fogdeKnappar = [], kortNu = null, hrows = {}, sistaHandl = '?', flikar = {}, flik = '', pilar = {}, sistaBaser = '', caption = null, capT = 0, tips = { nu: null }, valdBas = null;
   const sek = n => (Math.round(n * 100) / 100).toString().replace('.', ',');
   V.pek = /[?&]mobil=1/.test(location.search) || !!(window.matchMedia && matchMedia('(hover: none)').matches);          // pekskärm: inget mellanslag, ingen muspekare som svävar
   const HALL = V.pek ? 'håll in' : 'håll in mellanslag', KLICKA = V.pek ? 'tryck' : 'klicka';
@@ -116,7 +116,7 @@
         }
       }
       // flikarna med tillgångarna, och korten under dem
-      const ids = Object.keys(S.bas).filter(id => S.bas[id] && G.BAS[id]), key = ids.join(',') + '|' + (S.las.fogdar ? 1 : 0) + (S.las.konster ? 1 : 0) + (G.harSkatt() ? 1 : 0) + (S.las.sold ? 1 : 0) + (G.harKonst('langd') ? 1 : 0);
+      const ids = Object.keys(S.bas).filter(id => S.bas[id] && G.BAS[id]), key = ids.join(',') + '|' + (S.las.fogdar ? 1 : 0) + (S.las.konster ? 1 : 0) + (G.harSkatt() ? 1 : 0) + (S.las.sold ? 1 : 0) + (G.harKonst('langd') ? 1 : 0) + '|' + G.byggnader().map(b => b.id).join(',');
       if (key !== sistaBaser || force) { sistaBaser = key; UI._byggBaser(ids); }
       const fx = S.full ? G.fullX() : 1, tak = G.tak(), satt = (id, f) => { const e = $(id); if (e) f(e); };
       satt('man-v', e => { e.textContent = tal(Math.floor(S.res.man)); }); satt('man-tak', e => { e.textContent = 'av ' + tal(tak) + ' män'; }); satt('man-t', e => { e.textContent = '+' + tal(G.takt('man')) + '/s'; });
@@ -137,7 +137,8 @@
         r.row.classList.toggle('dags', dv > 0 && !mk && !stopp); r.row.classList.toggle('stopp', !!stopp); r.row.classList.toggle('vald', valdBas === id); r.row.classList.toggle('marknad', mk); r.row.classList.toggle('fogde', !!S.fogde[id]); r.row.classList.toggle('last', max && !mk);
       }
       for (const id in (UI._arows || {})) { const n = G.arb(id), full = G.arbMax(id); uppd(UI._arows[id], { namn: 'Gruvarbetare', niva: n, v: full ? 'armén är för liten än' : '+10 % i ' + (G.BAS[id].kort || G.BAS[id].namn), k: full ? '' : IK.man + tal(G.arbPris(id)), ok: G.kanArb(id), bar: 0 }); }
-      if (soldRad) { const L = S.sold || 0, dub = (L + 1) % 10 === 0; uppd(soldRad, { namn: 'Värva soldater', niva: L, v: dub ? 'dubbelt på nästa nivå' : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx) + ' män/s', k: IK.mark + tal(G.soldPris()), ok: G.kanSold(), snart: dub, bar: L ? (S.t / 4) % 1 * 100 : 0, mot: (L % 10) / 10 }); }
+      byggRader.forEach(r => uppd(r, { namn: 'Bygg: ' + r.b.namn, v: r.b.ger, k: IK.mark + tal(r.b.kostar), ok: G.kanBygga(r.b.id), snart: true }));
+      if (soldRad) { const L = S.sold || 0, dub = (L + 1) % 10 === 0; uppd(soldRad, { namn: S.varld === 0 ? 'Knektar i tjänst' : 'Värva soldater', niva: L, v: dub ? 'dubbelt på nästa nivå' : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx) + ' män/s', k: IK.mark + tal(G.soldPris()), ok: G.kanSold(), snart: dub, bar: L ? (S.t / 4) % 1 * 100 : 0, mot: (L % 10) / 10 }); }
       for (const id in krows) { const L = S.konst[id], max = L >= G.KONST_MAX, dub = (L + 1) % 10 === 0; uppd(krows[id], { namn: UI.konst(id)[0], niva: L, v: max ? 'kan inte bli bättre' : konstInfo(id).kort, k: max ? '' : IK.mark + tal(G.konstPris(id)), ok: G.kanKonst(id), snart: dub && !max, bar: 0, mot: (L % 10) / 10 }); }
       // en fogde i taget: kortet sätter en fogde på den plats där det är billigast
       for (const f of fogdeKnappar) { const utan = f.ids().filter(id => !S.fogde[id]); let b = null; for (const id of utan) if (!b || G.fogdePris(id) < G.fogdePris(b)) b = id; f.mal = b; f.r.row.style.display = b ? '' : 'none'; if (b) uppd(f.r, { namn: 'Sätt en fogde', v: 'bygger ut ' + G.BAS[b].namn + ' åt dig', k: IK.mark + tal(G.fogdePris(b)), ok: S.res.mark >= G.fogdePris(b) }); }
@@ -170,7 +171,7 @@
     },
     // Tre flikar: män, mark och egna förmågor. Tillgången står i själva fliken. Under dem ligger den valda flikens kort.
     _byggBaser(ids) {
-      const S = G.s, box = $('baser'); box.innerHTML = '<div id="flikar"></div>'; UI._arows = {}; rows = {}; krows = {}; skattRad = null; soldRad = null; fogdeKnappar = []; kortNu = null; flikar = {};
+      const S = G.s, box = $('baser'); box.innerHTML = '<div id="flikar"></div>'; UI._arows = {}; rows = {}; krows = {}; skattRad = null; soldRad = null; byggRader = []; fogdeKnappar = []; kortNu = null; flikar = {};
       const nyFlik = (f, id, huvud, titel) => {
         const knapp = el('button', 'flik', huvud + '<u class="prick"></u>'); if (id) knapp.id = id; knapp.title = titel; box.firstChild.appendChild(knapp);
         const sida = el('div', 'sida'); box.appendChild(sida); knapp.addEventListener('click', () => { flik = f; S.flik = f; UI.tick(); });
@@ -198,7 +199,8 @@
         const s = nyFlik('man', 'res-man', IK.man + '<b id="man-v"></b><span class="fl-s" id="man-tak"></span><i id="man-t"></i><u class="fl-m"><u id="man-m"></u></u>', RES.man.rad + ' Mätaren visar hur full armén är.');
         if (G.harSkatt()) { skattRad = kort(s, 'skatt', IK.mark, () => '<b>Driv in skatt</b><p>Skicka ut män för att samla in skatten. Efter tolv sekunder kommer de hem med mark. Upp till tre lag kan vara ute samtidigt, så en full armé behöver aldrig stå stilla.</p><p class="kort-g">Ger ' + IK.mark + tal(G.skattGer()) + ' mark</p><p class="kort-p">Kostar ' + IK.man + tal(G.skattPris()) + ' män</p>', row => { if (!(UI.onSkatt && UI.onSkatt())) UI._nej(row); }); skattRad.row.id = 'skatt'; }
         m.forEach(id => bas(s, id));
-        if (S.las.sold) { soldRad = kort(s, 'sold', IK.man, () => { const L = S.sold || 0, fx = S.full ? G.fullX() : 1, dub = (L + 1) % 10 === 0; return '<b>Värva soldater</b><span class="kort-n">nivå ' + L + '</span><p>Soldater som får lön stannar hos dig. Det är därför du gör egna mynt i Hedemora.</p><p class="kort-g">Ger ' + tal(G.soldProd() * fx) + ' män i sekunden.</p><p class="kort-x">Nästa nivå: ' + (dub ? 'dubbelt så många män' : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx) + ' män i sekunden') + '.</p><p class="kort-p">Kostar ' + IK.mark + tal(G.soldPris()) + ' mark</p>'; }, row => { if (G.kopSold()) V.Ljud && V.Ljud.spela(G.s.sold % 10 === 0 ? 'dubbel' : 'kop'); else UI._nej(row); }); soldRad.row.id = 'sold'; }
+        G.byggnader().forEach(b => { const r = kort(s, 'bygge', IK.pil, () => '<b>Bygg: ' + b.namn + '</b><p>' + b.vad + '</p><p class="kort-p">Kostar ' + IK.mark + tal(b.kostar) + ' mark</p>', row => { if (G.bygg(b.id)) V.Ljud && V.Ljud.spela('dubbel'); else UI._nej(row); }); r.row.id = 'bygg-' + b.id; r.b = b; byggRader.push(r); });
+        if (S.las.sold) { soldRad = kort(s, 'sold', IK.man, () => { const L = S.sold || 0, fx = S.full ? G.fullX() : 1, dub = (L + 1) % 10 === 0; return (S.varld === 0 ? '<b>Ta knektar i tjänst</b><span class="kort-n">nivå ' + L + '</span><p>Knektar som får lön stannar hos dig. De bor i huset vid slottet.</p>' : '<b>Värva soldater</b><span class="kort-n">nivå ' + L + '</span><p>Soldater som får lön stannar hos dig. Det är därför du gör egna mynt i Hedemora.</p>') + '<p class="kort-g">Ger ' + tal(G.soldProd() * fx) + ' män i sekunden.</p><p class="kort-x">Nästa nivå: ' + (dub ? 'dubbelt så många män' : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx) + ' män i sekunden') + '.</p><p class="kort-p">Kostar ' + IK.mark + tal(G.soldPris()) + ' mark</p>'; }, row => { if (G.kopSold()) V.Ljud && V.Ljud.spela(G.s.sold % 10 === 0 ? 'dubbel' : 'kop'); else UI._nej(row); }); soldRad.row.id = 'sold'; }
         fogde(s, () => m);
       };
       const mark = () => {
@@ -338,7 +340,7 @@
       if (g.las && g.las.indexOf('mark') >= 0) x.push('<b>Mark</b> är pengar. Gruvor och städer ger mark, och den behövs till större uppdrag.');
       const scen = !!S.sistaScen && (S.sistaScen === u.scen || S.sistaScen === u.valScen), sagt = scen && u.sagt || [];          // det scenen just visade sägs inte en gång till i rutan
       if (u.vet && sagt.indexOf('vet') < 0) x.push(u.vet); if (u.vet2 && sagt.indexOf('vet2') < 0) x.push(u.vet2);
-      if (u.id === 'sAbo') x.push('<b>Män</b> är din armé. Platser som ger män bygger du ut med män: de du har får fler att sluta upp. Allt annat kostar mark.');
+      if (u.id === 'sAbo') x.push('<b>Män</b> är din armé. Platser som ger män bygger du ut med män: de du har får fler att sluta upp. Under männen kan du också bygga ett <b>hus för knektar</b> för mark.');
       if ((g.bas || []).some(id => G.BAS[id].slag === 'gruva')) x.push('Med kortet <b>Gruvarbetare</b> sätter du män i arbete i gruvan. De lämnar armén, och gruvan ger mer.');
       if (g.las && g.las.indexOf('konster') >= 0) x.push((S.varld === 0 ? 'Ny flik: <b>Förmågor</b>. Där gör du din ritt och dina tryck bättre. Håll ' : 'Under fliken <b>Förmågor</b> gör du dina bud och tryck bättre. Håll ') + (V.pek ? 'fingret kvar på' : 'pekaren över') + ' ett kort så ser du exakt vad det ger.');
       if (g.las && g.las.indexOf('sold') >= 0) x.push('Nu kan du <b>värva soldater</b> för mark. De får lön, och du får fler män.');
@@ -384,6 +386,9 @@
         ['upp', '#uppdrag', 'Nästa steg i historien. Tryck på knappen när du har råd.', S.nasta === 0 && G.kanSkicka(), S.nasta > 0 || !!S.aktivt],
         ['driv', '#ak', 'Striden har börjat. Tryck så anfaller dina män.', !!G.skede(), !!(S.aktivt && S.aktivt.slag >= 3)],
         ['dags', '#baser .sida:not(.dold) .bas.dags', 'Ett stort bygge. Det kostar mark, och dina män gör dagsverken på det.', !!document.querySelector('#baser .sida:not(.dold) .bas.dags'), S.dagsN > 0],
+        ['byggFlik', '#res-man', 'Här under kan du bygga ett hus för knektar. Sedan blir mark till män.', G.kanBygga('knektar') && !synlig('#bygg-knektar'), !!(S.bygg && S.bygg.knektar) || synlig('#bygg-knektar')],
+        ['bygg', '#bygg-knektar', 'Bygg huset här. Det kostar mark.', G.kanBygga('knektar'), !!(S.bygg && S.bygg.knektar)],
+        ['knekt', '#sold', 'Ta en knekt i tjänst här. Mark blir män.', S.varld === 0 && G.kanSold() && !S.sold, S.sold > 0],
         ['skattFlik', '#res-man', 'Här under finns kortet Driv in skatt. Med det blir män till mark.', G.kanSkatt() && !S.skattN && !synlig('#skatt'), S.skattN > 0 || synlig('#skatt')],
         ['skatt', '#skatt', 'Skicka ut män här. De kommer hem med mark.', G.kanSkatt() && !S.skattN, !!S.skatt || S.skattN > 0],
         ['tak', '#res-man', 'Armén är full. Driv in skatt (det gröna kortet) så blir männen till mark.', S.res.man >= G.tak() * 0.999 && S.nasta >= 2 && !S.aktivt, S.res.man < G.tak() * 0.9]

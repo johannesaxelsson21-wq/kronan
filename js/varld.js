@@ -18,7 +18,7 @@
     tomt, P: R.P,
     init(sc) {
       R.kapaVandor = G.s.varld === 0;
-      scene = sc; W._kristina = null; W._kring = null; W._kvar = null; W._borta = false; W._plats = null; W._placerad = false; if (W._foljMig === undefined) W._foljMig = 1; Folk.init(sc); Fx.init(sc); V.Gustav.init(sc, G.s.varld === 0 ? 'sten' : 'gustav'); V.Bud.init(sc, 'bud'); V.Bud.kanSkida = G.s.varld === 1;          // bud på skidor hör Dalarna och Gustavs tid till
+      scene = sc; W._kristina = null; W._kring = null; W._kvar = null; W._borta = false; W._plats = null; W._placerad = false; W._byggda = {}; if (W._foljMig === undefined) W._foljMig = 1; Folk.init(sc); Fx.init(sc); V.Gustav.init(sc, G.s.varld === 0 ? 'sten' : 'gustav'); V.Bud.init(sc, 'bud'); V.Bud.kanSkida = G.s.varld === 1;          // bud på skidor hör Dalarna och Gustavs tid till
       for (const b of D.BASER) {
         const p = R.P[b.id]; tomt[b.id] = new B.Tomt(b, p); steg[b.id] = [];
         const g = grp[b.id] = new THREE.Group(); g.position.set(p.x, p.y, p.z); g.scale.setScalar(B.K); sc.add(g);
@@ -51,6 +51,7 @@
       const f0 = S.varld === 0;
       W._dekor('staket', f0 && S.nasta <= idx('sRiv'), () => { const mb = new V.MB(); B.borg(mb, 'liten', 0); const m = B.mesh(mb), p = R.P.staket; m.position.set(p.x, p.y, p.z); m.scale.setScalar(B.K); return m; });
       W._dekor('staketLager', f0 && S.nasta > idx('sStaket') && S.nasta <= idx('sRiv'), () => { const q = R.P.staket, c = [[4.6, 2.4], [4.8, 0.4], [3.6, -3], [0, -5]].find(o => Geo.sdAt(q.x + o[0], q.z + o[1]) > 1.6) || [4.6, 2.4]; return lager({ x: q.x + c[0], z: q.z + c[1] }, 7); });
+      if (f0 && S.bygg) for (const id in S.bygg) W._byggnad(id, true);          // byggnaderna man har köpt (se D.BYGGNADER)
       W._dekor('danskLager', f0 && S.nasta > idx('sUppsala'), () => lager(R.P.brunkeberg, 12));
       W._dekor('danskFlotta', f0 && S.nasta > idx('sUppsala'), () => W._flotta('stockholm', 4, 'danmark'));
       // belägringen av Stockholm, flottor som ligger kvar
@@ -64,6 +65,16 @@
     },
     _borg(id, sort, q, tyst) {
       const mb = new V.MB(); B.borg(mb, sort, 3); const m = B.mesh(mb); m.position.set(q[0], tomt[id].y(q[0], q[1]), q[1]); grp[id].add(m); if (!tyst) W._pop(m, id);
+    },
+    // En köpt byggnad reses vid sin plats: huset, och två knektar på vakt utanför.
+    byggPlats(id) { const b = D.BYGGNADER.find(q => q.id === id), p = b && R.P[b.plats]; return p ? { x: p.x + b.x * B.K, z: p.z + b.z * B.K } : null; },
+    _byggnad(id, tyst) {
+      if (W._byggda[id]) return; const b = D.BYGGNADER.find(q => q.id === id), t = b && tomt[b.plats]; if (!t || !grp[b.plats]) return;
+      const mb = new V.MB(); B.stuga(mb, 1.2, 0.62, 0.48, 'span', { skorsten: 1, ljus: 1 });
+      mb.box(-0.72, 0, 0.18, 0.05, 0.62, 0.05, '#5a4630'); mb.box(-0.72, 0.5, 0.18, 0.3, 0.2, 0.02, '#b8312a');          // en stång med ett rött baner vid gaveln
+      const m = B.mesh(mb); m.position.set(b.x, t.y(b.x, b.z), b.z); grp[b.plats].add(m);
+      const w = W.byggPlats(id), folk = [[-0.3, 0.62], [0.3, 0.62]].map(q => Folk.add(w.x + q[0] * B.K, w.z + q[1] * B.K, 'knekt', { pike: true, ang: 0 }));
+      W._byggda[id] = { m, folk }; if (!tyst) { W._pop(m, b.plats); Fx.damm(w.x, Geo.groundAt(w.x, w.z) + 0.1, w.z, 14); }
     },
     _dekor(key, on, make) { if (on && !dekor[key]) { dekor[key] = make(); scene.add(dekor[key]); } else if (!on && dekor[key]) { scene.remove(dekor[key]); dekor[key] = null; } },
     _flotta(plats, n, sort, stor) {
@@ -249,6 +260,7 @@
         else { Fx.guld(p.x, p.y + 0.3, p.z, 7, 1.2); Fx.damm(p.x, p.y + 0.1, p.z, 3); const m = steg[d.bas][steg[d.bas].length - 1]; if (m && !pops.some(o => o.m === m)) W._pop(m, d.bas, 0.95); }          // varje köp syns: husen ger till ett litet hopp
         while (steg[d.bas].length <= s) W.byggSteg(d.bas, false);
       } else if (typ === 'samling') { const p = R.P[d.bas]; if (!d.lopare) Fx.guld(p.x, p.y + 0.2, p.z, 10, 1.0); (vandrare[d.bas] || []).forEach(v => { v.hopp = 0.5; }); }
+      else if (typ === 'byggnad') W._byggnad(d.id, false);
       else if (typ === 'klart') {
         const u = d.u, p = R.P[u.plats]; if (vis && vis.u.strid === 'nederlag') { /* de stupade ligger kvar ett ögonblick */ }
         if (vis && vis.gustav && u.slag !== 'flotta') W._kvar = { x: V.Gustav.x, z: V.Gustav.z, ang: 0, t: G.s.varld === 0 ? 8 : 14, plats: u.plats };          // du stannar en stund där du kom fram, sedan rider du tillbaka till rundan
@@ -326,7 +338,7 @@
       }
       const a = R.along(seg.pts, gd); ry.place(a.x, a.z, a.ang, 0.85, t, dt, false); W._placerad = true;
       // kameran följer dig, tills du själv flyttar kartan. Knappen Hitta mig slår på det igen.
-      if (!kristina) { const c = Scene.cam; if (!V.tyst && c.user <= (W._foljMig || 0) && !c.fly && !c.locked && !vis) { c.tx = a.x; c.tz = a.z + (Scene.lyft ? 0 : 1.2); } }
+      if (!kristina) { const c = Scene.cam; if (!V.tyst && c.user <= (W._foljMig || 0) && !c.fly && !c.locked && !vis && performance.now() > (W._foljPaus || 0)) { if (W._foljD) { c.td = W._foljD; W._foljD = 0; } c.tx = a.x; c.tz = a.z + (Scene.lyft ? 0 : 1.2); } }
     },
     // Gustavs värld, orörd tills förspelet är klart (Johannes 2026-11-26): hjälten står på sin plats och ett bud rider rundan.
     _gustavGammal(dt, t) {

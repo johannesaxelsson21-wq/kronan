@@ -6,7 +6,7 @@
   const BAS = {}; D.BASER.forEach(b => BAS[b.id] = b);
   const KONST = {}; D.KONSTER.forEach(k => KONST[k.id] = k);
   const TID = { bud: 7, tag: 16, rid: 11, flotta: 18, bygg: 12, beslut: 2.5 };       // uppdragens längd i sekunder om världen inte säger annat
-  const KONST_MAX = 30, SOLD = { p0: 2, c0: 250, r: 1.3 }, KAMP = 0.6;          // KAMP: så långt in i ett fälttåg börjar striden
+  const KONST_MAX = 30, SOLD = { p0: 2, c0: 250, r: 1.3 }, SOLD0 = { p0: 0.25, c0: 80, r: 1.32 }, KAMP = 0.6;          // KAMP: så långt in i ett fälttåg börjar striden
 
   // varld 0 = förspelet (Sten Sture den yngre 1512–1520), varld 1 = Gustav Vasa.
   function nytt(varld) {
@@ -53,8 +53,13 @@
     takt(res) { let s = res === 'man' ? G.soldProd() : 0; for (const id in S.bas) if (BAS[id].ger === res) s += G.prod(id); return s * (S.full ? G.fullX() : 1); },
     // ---- sold: knektar som får betalt. Köps för mark och ger män, och var tionde nivå dubblar som allt annat. ----
     // Mynten i Hedemora 1521 slogs för att betala hären, och 1522 kom de första tyska legoknektarna.
-    soldProd(L) { L = L === undefined ? (S.sold || 0) : L; return L ? SOLD.p0 * L * Math.pow(2, Math.floor(L / 10)) * S.x.man * G.arvX() * G.gang('man') : 0; },
-    soldPris() { const p = SOLD.c0 * Math.pow(SOLD.r, S.sold || 0); return p < 1000 ? Math.ceil(p) : p; },
+    // I förspelet (SOLD0) är det knektar i Sten Stures tjänst, med förspelets små siffror. De låses upp av huset för knektar (D.BYGGNADER).
+    soldProd(L) { const So = S.varld === 0 ? SOLD0 : SOLD; L = L === undefined ? (S.sold || 0) : L; return L ? So.p0 * L * Math.pow(2, Math.floor(L / 10)) * S.x.man * G.arvX() * G.gang('man') : 0; },
+    soldPris() { const So = S.varld === 0 ? SOLD0 : SOLD, p = So.c0 * Math.pow(So.r, S.sold || 0); return p < 1000 ? Math.ceil(p) : p; },
+    // ---- byggnader (förspelet): köps för mark, byggs vid platsen och låser upp något ----
+    byggnader() { return S.varld === 0 && !S.slut ? D.BYGGNADER.filter(b => S.nasta >= b.fran && S.bas[b.plats] && !(S.bygg && S.bygg[b.id])) : []; },
+    kanBygga(id) { const b = G.byggnader().find(q => q.id === id); return !!b && S.res.mark >= b.kostar; },
+    bygg(id) { if (!G.kanBygga(id)) return false; const b = D.BYGGNADER.find(q => q.id === id); S.res.mark -= b.kostar; (S.bygg || (S.bygg = {}))[id] = 1; if (b.las) S.las[b.las] = true; G.ut('byggnad', { id, b }); return true; },
     kanSold() { return !!S.las.sold && S.res.mark >= G.soldPris(); },
     kopSold() { if (!G.kanSold()) return false; S.res.mark -= G.soldPris(); S.sold = (S.sold || 0) + 1; G.ut('sold', { niva: S.sold, dubbel: S.sold % 10 === 0 }); return true; },
     pris(id, L) { const b = P(id), p = b.c0 * Math.pow(b.r, L === undefined ? (S.bas[id] || 0) : L); return p < 1000 ? Math.ceil(p) : p; },
@@ -99,7 +104,7 @@
       // i förspelet kommer en ny sak i taget: breven när man blivit riksföreståndare (steg 3), talet steget efter
       if (id === 'tal') return S.nasta >= (S.varld === 0 ? 4 : 1) && harMan;
       if (id === 'brev') return S.nasta >= (S.varld === 0 ? 3 : 1) && !!S.las.mark && G.takt('mark') > 0;
-      return !!S.las.sold;                                                 // mönstra: först när armén har övats i Hedemora
+      return S.varld === 1 && !!S.las.sold;                              // mönstra: först när armén har övats i Hedemora (finns inte i förspelet)
     },
     handlingar() { return D.HANDLINGAR.filter(h => G.harHandling(h.id)); },
     handl(id) { if (!S.handl) S.handl = {}; return S.handl[id] || (S.handl[id] = { t: 0, v: 0 }); },

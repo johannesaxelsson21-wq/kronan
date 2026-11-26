@@ -39,6 +39,13 @@
   // 2026-11-26: Stockholm och Västerås ger drygt en tredjedel mer än förut, Åbo hälften mer, Nyköping en tredjedel mer och Uppsala en femtedel mer (Johannes: "Det är lite för segt, öka tempot på produktion lite"). Priserna på stegen är desamma.
   const STURE_BAS = { stockholm: { p0: 0.7, c0: 5 }, vasteras: { p0: 1.65, c0: 25 }, abo: { p0: 0.15, c0: 6 }, nykoping: { p0: 0.2, c0: 20 }, uppsala: { p0: 17, c0: 1200 } };
 
+  // Byggnader (förspelet, sedan 2026-11-26): köps för mark, byggs synligt vid en plats och låser upp något man kan göra.
+  // x, z = var huset står, i platsens egna mått. fran = från och med vilket steg kortet finns. las = det som låses upp. Grunden står i docs/historia.md.
+  const BYGGNADER = [
+    { id: 'knektar', namn: 'Hus för knektar', plats: 'stockholm', x: 0.7, z: -2.2, kostar: 1500, fran: 2, las: 'sold', ger: 'ger kortet mark för män',
+      vad: 'Ett hus vid slottet för knektar i din tjänst. När det står klart kan du ta knektar i tjänst för mark, och få fler män.' }
+  ];
+
   // Kungens egna förmågor. Var tionde nivå dubblar.
   // vad0 = texten i förspelet, där man rider själv (i Gustavs värld är det än så länge ett bud som far)
   const KONSTER = [
@@ -200,7 +207,7 @@
       kronika: '1519. Borgen Stäket var riven och teglet bars till Stockholm. Kristian klagade hos påven. Med påvens stöd lystes du och dina män i bann, kyrkans hårdaste straff.',
       vet: 'Nu kan Kristian säga att hans krig mot dig är kyrkans krig.',
       vet2: 'I september flydde Gustav Eriksson från fångenskapen i Danmark till staden Lübeck i Tyskland.' },
-    { id: 'sAsunden', efterMan: 2.1, med: 1, scen: 'isen', efter: '19 januari 1520. Slaget på Åsundens is var förlorat.', senast: 20.5, akt: 0, titel: 'Möt danskarna på sjön Åsundens is', plats: 'bogesund', ar: 1520, man: 1.6, slag: 'tag', strid: 'nederlag', kostar: { man: 10000, mark: 1000000 }, ger: { hjalte: 'kristina', startar: 'dagtingan' },
+    { id: 'sAsunden', efterMan: 2.1, med: 1, scen: 'isen', efter: '19 januari 1520. Slaget på Åsundens is var förlorat.', senast: 20.5, akt: 0, titel: 'Möt danskarna på sjön Åsundens is', plats: 'bogesund', ar: 1520, man: 1.6, slag: 'tag', strid: 'nederlag', kostar: { man: 10000, mark: 1500000 }, ger: { hjalte: 'kristina', startar: 'dagtingan' },
       kronika: '19 januari 1520. På isen träffades du av en kanonkula strax ovanför knät. Din armé flydde. Den 3 februari dog du i en släde på Mälarens is, 27 år gammal.' },
     { id: 'sUppsala', senast: 21.5, akt: 0, titel: 'Skicka bönderna mot Uppsala', plats: 'uppsala', ar: 1520, man: 4.2, slag: 'tag', strid: 'nederlag', kostar: { man: 3000, mark: 250000 }, ger: {},
       kronika: 'Långfredagen 6 april 1520. Bönderna som gick mot danskarna i Uppsala förlorade. Du, Kristina Gyllenstierna, höll fortfarande Stockholm.',
@@ -238,6 +245,6 @@
   }
 
   // UPPDRAG pekar på den värld som spelas just nu (game.js byter): VASA eller STURE.
-  V.DATA = { PLATSER, BASER, KONSTER, HANDLINGAR, GOR, UPPDRAG, VASA: UPPDRAG, STURE, STURE_BAS, UPPROR, AKTER, REGENTER };
+  V.DATA = { PLATSER, BASER, BYGGNADER, KONSTER, HANDLINGAR, GOR, UPPDRAG, VASA: UPPDRAG, STURE, STURE_BAS, UPPROR, AKTER, REGENTER };
   if (typeof module !== 'undefined' && module.exports) module.exports = V.DATA;
 })(typeof window !== 'undefined' ? window : globalThis);

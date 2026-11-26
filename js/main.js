@@ -26,7 +26,8 @@
     else if (typ === 'marknad') { UI.skylt('Marknadsdag i ' + G.BAS[d.bas].namn); V.Ljud.spela('klocka'); }
     else if (typ === 'marknadKlar') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.2, p.z, 'Marknad +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark'), d.res); V.Ljud.spela('dubbel');
       if (G.s.varld === 0) UI.skylt('Marknaden i ' + G.BAS[d.bas].namn + ': +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark')); }          // förspelet: också mitt på skärmen, platsen är ofta inte i bild
-    else if (typ === 'sold' && d.dubbel) UI.skylt('Soldaterna: dubbelt så många män');
+    else if (typ === 'sold' && d.dubbel) UI.skylt((G.s.varld === 0 ? 'Knektarna' : 'Soldaterna') + ': dubbelt så många män');
+    else if (typ === 'byggnad') { UI.skylt(d.b.namn + ' står klart'); V.Ljud.spela('hammare'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } UI.tick(true); }          // kameran går dit så att man ser huset resas
     else if (typ === 'handling') { V.Ljud.spela(d.id === 'tal' ? 'sorl' : d.id === 'monstra' ? 'horn' : 'kop'); const h = D.HANDLINGAR.find(q => q.id === d.id); UI.skylt(UI.handlNamn(h) + (d.fick ? ': +' + V.tal(d.fick) + ' män' : '')); }
     else if (typ === 'skattUt') { if (!d.auto) V.Ljud.spela('kop'); }
     else if (typ === 'skatt') { UI.skattKlar(d.mark); const p = Varld.skattTill && Varld.pos(Varld.skattTill); if (p) UI.flyt(p.x, p.y + 1.8, p.z, 'Skatt +' + V.tal(d.mark) + ' mark', 'mark'); if (!d.auto) V.Ljud.spela('samling'); }
