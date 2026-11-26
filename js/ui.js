@@ -74,7 +74,7 @@
         </div>
         <div id="kort" style="display:none"></div>
         <div id="berattar" style="display:none"></div>
-        <div id="ortnamn"></div><div id="pilar"></div><div id="slag-mal" style="display:none"><i></i><b></b></div><div id="vem-du" class="vem" style="display:none">Du</div><div id="vem-bud" class="vem" style="display:none">Ditt bud</div><div id="flyt"></div><div id="text"></div><div id="tips"></div>
+        <div id="ortnamn"></div><div id="pilar"></div><div id="slag-mal" style="display:none"><i></i><b></b></div><div id="stadmeny" style="display:none"></div><div id="vem-du" class="vem" style="display:none">Du</div><div id="vem-bud" class="vem" style="display:none">Ditt bud</div><div id="flyt"></div><div id="text"></div><div id="tips"></div>
         <div id="film"><div class="rand upp"></div><div class="rand ner"></div><div id="film-plats"></div><div id="film-text"></div><div id="film-tal"></div><div id="film-knapp"></div><div id="film-svart"></div></div>
         <div id="ruta" style="display:none"></div>`;
       $('ak').addEventListener('pointerdown', e => { e.preventDefault(); UI.onTryck && UI.onTryck(); });
@@ -178,7 +178,7 @@
       const S = G.s, box = $('baser'); box.innerHTML = '<div id="flikar"></div>'; UI._arows = {}; rows = {}; rows2 = {}; husRader = []; krows = {}; skattRad = null; soldRad = null; byggRader = []; fogdeKnappar = []; kortNu = null; flikar = {};
       const nyFlik = (f, id, huvud, titel) => {
         const knapp = el('button', 'flik', huvud + '<u class="prick"></u>'); if (id) knapp.id = id; knapp.title = titel; box.firstChild.appendChild(knapp);
-        const sida = el('div', 'sida'); box.appendChild(sida); knapp.addEventListener('click', () => { if (f === 'stad' && flik === 'stad') UI.nastaStad(); flik = f; S.flik = f; if (f === 'stad') S.stadSett = 1; UI.tick(); });          // stadens flik: ett tryck till ger nästa stad
+        const sida = el('div', 'sida'); box.appendChild(sida); knapp.addEventListener('click', () => { if (f === 'stad' && flik === 'stad') { UI.stadMeny(); return; } flik = f; S.flik = f; if (f === 'stad') S.stadSett = 1; UI.stadMeny(false); UI.tick(); });          // stadens flik: ett tryck till visar alla städerna
         flikar[f] = { knapp, sida }; return sida;
       };
       const kort = (sida, cls, ikon, text, klick, hoger) => {
@@ -229,7 +229,7 @@
       // Stadens egen flik (förspelet, Johannes 2026-11-26 21:22 och 21:25): staden, husen som ger staden mer, byggnaderna där och det de ger.
       // Den visar den stad man senast tryckte på (först Stockholm). Ett tryck på en stad, dess namn eller ett av dess hus på kartan öppnar den.
       if (S.varld === 0) { const sid = UI.stadNu(ids); if (sid) {
-        const b = G.BAS[sid], s = nyFlik('stad', 'flik-stad', SLAG[b.slag] + '<b class="fl-n">' + b.namn + '</b>' + (ids.length > 1 ? '<i class="fl-byt">›</i>' : ''), b.namn + ': staden och dess hus. Tryck på en annan stad på kartan, eller på fliken igen, för nästa stad.');
+        const b = G.BAS[sid], s = nyFlik('stad', 'flik-stad', SLAG[b.slag] + '<b class="fl-n">' + b.namn + '</b>' + (ids.length > 1 ? '<i class="fl-byt">▾</i>' : ''), b.namn + ': staden och dess hus. Tryck på fliken igen för att välja en annan stad, eller på en stad på kartan.');
         bas(s, sid, rows2);
         D.BYGGNADER.filter(h => h.niva && h.plats === sid && G.husFinns(h.id)).forEach(h => husKort(s, h));
         byggKort(s, G.byggnader().filter(h => (h.stad || h.plats) === sid));
@@ -289,6 +289,15 @@
     stadNu(ids) { const S = G.s; ids = ids || Object.keys(S.bas).filter(id => S.bas[id] && G.BAS[id]); return S.stad && S.bas[S.stad] ? S.stad : ids.indexOf('stockholm') >= 0 ? 'stockholm' : ids[0]; },
     stadVald(id) { return flik === 'stad' && UI.stadNu() === id; },
     visaStad(id) { const S = G.s; if (!S.bas[id]) return; S.stad = id; flik = 'stad'; S.flik = 'stad'; S.stadSett = 1; valdBas = id; sistaBaser = ''; UI.tick(true); },
+    // Menyn med alla städerna, ovanför stadens flik: namn, nivå och vad de ger. on = true visar, false stänger, inget = växlar.
+    stadMeny(on) {
+      const e = $('stadmeny'), S = G.s; if (!e) return; if (on === undefined) on = e.style.display === 'none'; if (!on || !$('flik-stad')) { e.style.display = 'none'; return; }
+      S.stadMenyN = (S.stadMenyN || 0) + 1; const ids = Object.keys(S.bas).filter(id => S.bas[id] && G.BAS[id]), nu = UI.stadNu(ids);
+      e.innerHTML = '<div class="sm-r">Välj stad</div>' + ids.map(id => '<button data-id="' + id + '"' + (id === nu ? ' class="vald"' : '') + '>' + SLAG[G.BAS[id].slag] + '<b>' + G.BAS[id].namn + '</b><span>nivå ' + S.bas[id] + ' · ' + tal(G.prod(id)) + ' ' + (G.BAS[id].ger === 'man' ? 'män' : 'mark') + ' i sekunden</span></button>').join('');
+      e.querySelectorAll('button').forEach(b => b.addEventListener('click', ev => { ev.stopPropagation(); e.style.display = 'none'; UI.visaStad(b.dataset.id); if (UI.onVisaBas) UI.onVisaBas(b.dataset.id); }));
+      e.style.display = ''; const r = $('flik-stad').getBoundingClientRect(); e.style.left = Math.max(8, Math.min(innerWidth - e.offsetWidth - 8, r.left + r.width / 2 - e.offsetWidth / 2)) + 'px'; e.style.bottom = (innerHeight - r.top + 6) + 'px';
+      setTimeout(() => document.addEventListener('pointerdown', function st(ev) { if (e.contains(ev.target) || (ev.target.closest && ev.target.closest('#flik-stad'))) return; e.style.display = 'none'; document.removeEventListener('pointerdown', st); }), 0);          // ett tryck någon annanstans stänger den
+    },
     nastaStad() { const S = G.s, ids = Object.keys(S.bas).filter(id => S.bas[id] && G.BAS[id]), i = ids.indexOf(UI.stadNu(ids)); S.stad = ids[(i + 1) % ids.length]; sistaBaser = ''; if (UI.onVisaBas) UI.onVisaBas(S.stad); },
     platsnamn(id) { const b = G.BAS[id]; if (b) return b.namn; return ({ brunnback: 'Brunnbäcks färja', brunkeberg: 'Brunkeberg', stegeborg: 'Stegeborg', orebro: 'Örebro', strangnas: 'Strängnäs', soderkoping: 'Söderköping', malmo: 'Malmö', lubeck: 'Lübeck', storatuna: 'Stora Tuna', skara: 'Västergötland', smaland: 'Småland', kisa: 'Kisa', virserum: 'Virserum', bornholm: 'Bornholm', staket: 'Stäket', vadla: 'Vädla', brannkyrka: 'Brännkyrka', bogesund: 'Åsundens is' })[id] || id; },
 
@@ -418,7 +427,7 @@
 
     // ---- första stegen: en pekande ruta i taget, som står kvar tills steget är gjort ------------------
     _tips() {
-      const S = G.s, T = S.tips, e = $('tips'), spel = root.classList.contains('spel') && $('ruta').style.display === 'none' && !root.classList.contains('slag');
+      const S = G.s, T = S.tips, e = $('tips'), spel = root.classList.contains('spel') && $('ruta').style.display === 'none' && $('berattar').style.display === 'none' && !root.classList.contains('slag');          // ingen ruta som pekar medan berättelsen står uppe (Johannes 2026-11-26: "Rutan ligger ovanpå här och stör")
       if (!spel) { e.innerHTML = ''; tips.nu = null; return; }
       const forst = S.varld === 0 ? 'stockholm' : 'mora', synlig = sel => { const m = document.querySelector(sel); return !!(m && m.offsetParent); };
       const steg = [
@@ -432,6 +441,7 @@
         ['bygg', '#bygg-knektar', 'Bygg huset här. Det kostar mark.', G.kanBygga('knektar'), !!(S.bygg && S.bygg.knektar)],
         ['knekt', '#sold', 'Ta en knekt i tjänst här. Mark blir män.', S.varld === 0 && G.kanSold() && !S.sold, S.sold > 0],
         ['stad', '#flik-stad', 'Varje stad har en egen flik med sina hus. Tryck på en stad på kartan, så öppnas den.', S.varld === 0 && G.husLista().length > 0 && !S.stadSett, !!S.stadSett],
+        ['stadByt', '#flik-stad', 'Tryck på fliken igen för att välja en annan stad.', S.varld === 0 && flik === 'stad' && Object.keys(S.bas).length > 1 && !S.stadMenyN, !!S.stadMenyN],
         ['skattFlik', '#res-man', 'Här under finns kortet Driv in skatt. Med det blir män till mark.', G.kanSkatt() && !S.skattN && !synlig('#skatt'), S.skattN > 0 || synlig('#skatt')],
         ['skatt', '#skatt', 'Skicka ut män här. De kommer hem med mark.', G.kanSkatt() && !S.skattN, !!S.skatt || S.skattN > 0],
         ['tak', '#res-man', 'Armén är full. Driv in skatt (det gröna kortet) så blir männen till mark.', S.res.man >= G.tak() * 0.999 && S.nasta >= 2 && !S.aktivt, S.res.man < G.tak() * 0.9]
