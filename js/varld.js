@@ -341,7 +341,7 @@
       } else if (typ === 'samling') { const p = R.P[d.bas]; if (!d.lopare) Fx.guld(p.x, p.y + 0.2, p.z, 10, 1.0); (vandrare[d.bas] || []).forEach(v => { v.hopp = 0.5; }); }
       else if (typ === 'byggnad') W._byggnad(d.id, false);
       else if (typ === 'hugg' && vis && vis.u.belagring) { if (d.traff) W._belBild(d.o && d.o.bild, true, 'hugg'); }          // belägringen: varje tryck i takt syns på vallen eller i tornen
-      else if (typ === 'hugg' && vis && d.traff) { vis.stot = 1; Scene.shake(0.08); V.Ljud && V.Ljud.spela('svard'); const e = vis.enh[Math.floor(Math.random() * Math.min(vis.enh.length, vis.bredd || 6))]; if (e) Fx.damm(e.x, Geo.groundAt(e.x, e.z), e.z, 3); }          // ett hugg i takt: leden trycker på
+      else if (typ === 'hugg' && vis && d.traff) { const q = W.malPunkt(); if (q) Fx.damm(q.x, Geo.groundAt(q.x, q.z), q.z, 5); vis.stot = 1; Scene.shake(0.08); V.Ljud && V.Ljud.spela('svard'); const e = vis.enh[Math.floor(Math.random() * Math.min(vis.enh.length, vis.bredd || 6))]; if (e) Fx.damm(e.x, Geo.groundAt(e.x, e.z), e.z, 3); }          // ett hugg i takt: leden trycker på
       else if (typ === 'orderSvar' && vis && vis.u.belagring) W._belBild(d.o.bild, d.bra, 'svar');
       else if (typ === 'orderSvar' && vis) { if (d.bra && !d.o.alltid) { vis.stot = 1; Scene.shake(0.18); } else if (d.o.alltid) vis.stot = -1.6; }          // rätt läge: en stöt framåt. Anfallet i gryningen vid Brännkyrka slås tillbaka
       else if (typ === 'kula' && vis) { const Gu = V.Gustav; Fx.krut(Gu.x, Geo.groundAt(Gu.x, Gu.z) + 0.4, Gu.z); Fx.damm(Gu.x, Geo.groundAt(Gu.x, Gu.z) + 0.1, Gu.z, 12); }
@@ -500,6 +500,32 @@
         else if (hop.length > want) Folk.remove(hop.pop());
       }
     },
+    // Var i världen ringen står i förspelets slag (Johannes 2026-11-26: "så man klickar på slagfältet"). null = ingen ring just nu.
+    malPunkt() {
+      const a = G.s.aktivt, m = a && a.mom; if (!vis || !m || m.svar || m.typ === 'vanta' || G.s.varld !== 0) return null;
+      const u = vis.u, o = u.order && u.order[m.i]; if (!o) return null; const O = G.ORDER, gy = (x, z) => Geo.groundAt(x, z), j = Math.round(m.tm / O.takt);
+      const mitt = (l, f) => { let x = 0, z = 0, n = 0; for (const e of l) if (f(e)) { x += e.x; z += e.z; n++; } return n ? { x: x / n, z: z / n } : null; };
+      if (u.belagring) {          // belägringen: lägret vid Brunkeberg, Kristina med breven, försvararna och tornen
+        const p = R.P.stockholm;
+        if (m.typ === 'hugg') { if (o.bild === 'kanon') { const t = W._tornLagen && W._tornLagen.length ? W._tornLagen : [{ x: p.x + 1.4, z: p.z - 1.3 }], q = t[j % t.length]; return { x: q.x, y: gy(q.x, q.z) + 1.4, z: q.z }; } const e = vis.enh[(j * 3) % Math.max(1, vis.enh.length)]; return e ? { x: e.x, y: gy(e.x, e.z) + 0.5, z: e.z } : null; }
+        if (o.bild === 'brev') { const k = W._kristina; return k ? { x: k.x, y: gy(k.x, k.z) + 0.6, z: k.z } : null; }
+        const b = R.P.brunkeberg || p; return { x: b.x, y: gy(b.x, b.z) + 0.4, z: b.z };
+      }
+      if (!vis.noll) return null;
+      const egen = mitt(vis.enh, e => e.br === 0 && e.fall < 0.5), fi = mitt(vis.fi, e => e.br === 0 && e.fall < 0.5);
+      if (m.typ === 'hugg') {          // huggen kommer på olika ställen längs fronten, där leden möts
+        if (!egen || !fi) { const q = egen || fi; return q ? { x: q.x, y: gy(q.x, q.z) + 0.35, z: q.z } : null; }
+        const mon = [0, 0.6, -0.5, 0.25, -0.75, 0.8, -0.2, 0.45, -0.6, 0.1], r = vis.ram || { sx: 1, sz: 0 }, k = mon[j % mon.length] * (vis.bredd || 6) * 0.32 / 2, x = (egen.x + fi.x) / 2 + r.sx * k, z = (egen.z + fi.z) / 2 + r.sz * k;
+        return { x, y: gy(x, z) + 0.35, z };
+      }
+      let q = null; const mal = o.mal || 'fiende';
+      if (mal === 'egen') q = egen;
+      else if (mal === 'flank') { const r0 = vis.fi.filter(e => e.br === 0); if (r0.length) { const a0 = r0[0], a1 = r0[r0.length - 1]; q = a0.z > a1.z ? a0 : a1; } }          // den södra flanken (söder är nedåt på kartan)
+      else if (mal === 'bak') { let mx = 0; vis.fi.forEach(e => { if ((e.br || 0) > mx) mx = e.br; }); q = mitt(vis.fi, e => (e.br || 0) === mx); }
+      else q = fi;
+      q = q || fi || egen; return q ? { x: q.x, y: gy(q.x, q.z) + 0.35, z: q.z } : null;
+    },
+    malSkarm() { const q = W.malPunkt(); if (!q) return null; const p = Scene.screenPoint(q.x, q.y, q.z); return p.behind ? null : { x: p.x, y: p.y, r: Scene.mobil ? 48 : 40 }; },          // r = hur nära man måste trycka
     // Belägringen av Stockholm 1520 (förspelet): försvarare i rad framför slottet där Kristina står, och det ögonblicken visar.
     _belStart(p) {
       const K = B.K, kr = W._kristina, kx = kr ? (kr.bx !== undefined ? kr.bx : kr.x) : p.x + 1.9 * K, kz = kr ? kr.z : p.z - 0.5 * K;
@@ -593,6 +619,7 @@
     _tag0(dt, t, a, u) {
       const Gu = V.Gustav, f = Math.min(1, a.t / a.dur), strid = !!u.strid, K0 = a.k0 || G.KAMP, gf = strid ? Math.min(1, f / K0) : f, kamp = strid && f > K0, kf = strid ? Math.max(0, (f - K0) / (1 - K0)) : 0, forlust = u.strid === 'nederlag';
       const DR = 0.4, DK = 0.32, stopp = strid ? 0.9 : 1.8, dist = Math.max(0, vis.len - stopp) * gf, lead = R.along(vis.pts, dist), fx = Math.sin(lead.ang), fz = Math.cos(lead.ang), sx = Math.cos(lead.ang), sz = -Math.sin(lead.ang);
+      vis.ram = { sx, sz };          // åt vilket håll leden står (för ringen på slagfältet)
       // leden går varandra till mötes tills det är en knapp armlängd emellan (2,2 mellan dem från början, 1,85 går de)
       const in0 = Math.min(1, kf / 0.3), A = in0 * 1.0 + (vis.stot > 0 ? 0.12 : 0.35) * (vis.stot || 0), Bf = in0 * 0.85, ut = kamp ? Geo.smooth(0, 0.22, kf) : 0, P = u.order ? G._plan(u) : null, pt = a.t - a.dur * K0, flykt = forlust ? (P ? (a.kula ? Math.min(1, (vis.kulaT = (vis.kulaT || 0) + dt) / 7) : Math.max(0, Math.min(1, (pt - P.slut) / 5))) : Math.max(0, (kf - 0.45) / 0.55)) : 0, vinst = !forlust ? (P ? Math.max(0, Math.min(1, (pt - P.slut + 3) / 5)) : Math.max(0, (kf - 0.6) / 0.4)) : 0;
       if (kamp) { W._folj(lead.x + fx * 1.1, lead.z + fz * 1.1 + 0.4, vis.bredd > 14 ? 24 : 18); if (!vis.iSlag) { vis.iSlag = true; W.foljUppdraget(); } } else W._folj(lead.x, lead.z, 30);

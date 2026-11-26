@@ -13,10 +13,11 @@
   // Ladda om sidan utan ?ny, så att den nya sparfilen gäller.
   function laddaOm() { const p = new URLSearchParams(location.search); ['ny', 'fusk', 'varld'].forEach(k => p.delete(k)); const s = p.toString(); location.href = location.pathname + (s ? '?' + s : ''); }
 
-  function tryck(auto) {
+  function tryck(auto, mal) {
     if (V.Intro && V.Intro.tar) { V.Ljud.vakna(); V.Intro.tar(); return; }          // i filmen och i scenerna är trycket det som scenen säger
     if (!spelar || (V.Intro && V.Intro.aktiv)) return; V.Ljud.vakna();
-    const f = G.tryck(auto === true); if (f && !f.skede) V.Ljud.spela(Varld._ryttare().sno ? 'skida' : 'hov');          // i striden låter världen själv (Varld._drag)
+    const m = G.s.aktivt && G.s.aktivt.mom; if (!auto && !mal && G.s.varld === 0 && m && !m.svar && m.typ !== 'vanta' && performance.now() > (tryck.sagt || 0)) { tryck.sagt = performance.now() + 3000; UI.skylt('Tryck på ringen i slaget', true); }          // knappen ger inget i ett ögonblick
+    const f = G.tryck(auto === true, mal); if (f && !f.skede) V.Ljud.spela(Varld._ryttare().sno ? 'skida' : 'hov');          // i striden låter världen själv (Varld._drag)
   }
   const UTSIKT = 32;          // en bra nivå att se sig omkring från: dit zoomar kameran ut efter ett inzoomat moment
   let haller = false, hallT = 0;          // mellanslag eller knappen hålls in: buden går i jämn takt utan att man behöver hamra
@@ -28,7 +29,7 @@
       if (G.s.varld === 0) UI.skylt('Marknaden i ' + G.BAS[d.bas].namn + ': +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark')); }          // förspelet: också mitt på skärmen, platsen är ofta inte i bild
     else if (typ === 'sold' && d.dubbel) UI.skylt((G.s.varld === 0 ? 'Knektarna' : 'Soldaterna') + ': dubbelt så många män');
     else if (typ === 'slagStart') { UI.skylt(d.u.belagring ? 'Belägringen börjar' : 'Slaget börjar', true); V.Ljud.spela('horn'); }
-    else if (typ === 'order') { const ex = d.forst ? (d.typ === 'hugg' ? 'Tryck i takt: varje gång ringen når knappen. Att hamra hjälper inte.' : d.typ === 'order' ? 'Vänta tills den ljusa ringen når knappen. Tryck då, inte förr.' : '') : ''; UI.text(d.o.rad + (ex ? '<br><b>' + ex + '</b>' : ''), d.typ === 'hugg' ? 6.8 : d.typ === 'vanta' ? 5 : 4.4, !!ex); V.Ljud.spela(d.typ === 'hugg' ? 'trumma' : 'horn'); }          // första gången förklaras varje sort
+    else if (typ === 'order') { const ex = d.forst ? (d.typ === 'hugg' ? 'Tryck på ringarna i slaget, i takt, när de har krympt till pricken. Att hamra hjälper inte.' : d.typ === 'order' ? 'Tryck på ringen i slaget när den har krympt till pricken. Inte förr.' : '') : ''; UI.text(d.o.rad + (ex ? '<br><b>' + ex + '</b>' : ''), d.typ === 'hugg' ? 6.8 : d.typ === 'vanta' ? 5 : 4.4, !!ex); V.Ljud.spela(d.typ === 'hugg' ? 'trumma' : 'horn'); }          // första gången förklaras varje sort
     else if (typ === 'orderSvar') { UI.text(d.o.alltid || (d.bra ? d.o.bra : d.o.miss), 3.2); if (!d.o.alltid) UI.skylt(d.typ === 'hugg' ? (d.bra ? 'Starkt!' : d.svar === 'otakt' ? 'Ur takt' : 'För få hugg') : d.bra ? 'Rätt läge' : d.svar === 'tidigt' ? 'För tidigt' : 'För sent', true); V.Ljud.spela(d.bra && !d.o.alltid ? 'klart' : 'nej'); }
     else if (typ === 'kula') { UI.text(d.o.rad, 6.5); V.Ljud.spela('kanon'); Scene.shake(0.5); if (d.o.efter && !V.tyst) setTimeout(() => UI.text(d.o.efter, 6), 6800 / Math.min(snabb, 10)); }
     else if (typ === 'byggnad') { UI.skylt(d.b.skylt || d.b.namn + ' står klart'); if (d.b.klart && !V.tyst) UI.text(d.b.klart, 9); V.Ljud.spela('hammare'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } UI.tick(true); }          // kameran går dit så att man ser huset resas
@@ -118,7 +119,7 @@
     UI.onBorjaOm = () => { byter = true; try { localStorage.removeItem(SPAR); } catch (e) { /* inget */ } laddaOm(); };
     UI.onIgen = arv => { byter = true; G.s.arv += arv; G.s.varv++; const s = G.ny(true); s.intro = true; skriv(); laddaOm(); };
     Scene.onClick = (e, g) => {
-      if (spelar && G.s.varld === 0 && G.skede() === 'strid') { Varld.foljUppdraget(); tryck(); return; }          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget
+      if (spelar && G.s.varld === 0 && G.skede() === 'strid') { Varld.foljUppdraget(); const q = Varld.malSkarm(); tryck(false, q && Math.hypot(q.x - e.clientX, q.y - e.clientY) <= q.r ? 'traff' : 'miss'); return; }          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget
       const id = Varld.basVid(g), egen = !!(id && spelar && G.s.bas[id]);
       if (spelar && G.s.varld === 0 && Varld.valjVid(e.clientX, e.clientY, egen)) { V.Ljud.vakna(); return; }          // förspelet: det man trycker på följs (Johannes 2026-11-26)
       if (!egen) { tryck(); return; }

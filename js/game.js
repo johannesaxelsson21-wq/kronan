@@ -124,8 +124,8 @@
 
     // Varje tryck svarar direkt: mätaren fylls på sex tryck, budet får ett ryck framåt (upp till dubbel fart),
     // och man får något direkt i handen: minst en mark eller en man, annars en kvarts sekunds inkomst.
-    tryck(auto) {          // auto = knappen hålls in och spelet trycker själv: det räknas inte som en order i ett slag
-      { const m = S.aktivt && S.aktivt.mom; if (m && !m.svar && !auto) { if (m.typ === 'hugg') G._hugg(m); else if (m.typ !== 'vanta' && m.tm > 0.8) G._orderSvar(true); } }          // att hålla in knappen räknas inte i ett slag
+    tryck(auto, mal) {          // mal = 'traff' eller 'miss' när man trycker på slagfältet i förspelets slag (main.js), annars inget          // auto = knappen hålls in och spelet trycker själv: det räknas inte som en order i ett slag
+      { const m = S.aktivt && S.aktivt.mom; if (m && !m.svar && !auto && mal) { if (m.typ === 'hugg') { if (mal === 'traff') G._hugg(m); else { m.miss++; G.ut('hugg', { traff: false }); } } else if (m.typ !== 'vanta' && m.tm > 0.8 && mal === 'traff') G._orderSvar(true); } }          // att hålla in knappen räknas inte i ett slag
       const kraft = Math.min(1, S.sistaTryck);          // det man får laddas upp över en sekund: att hamra ger inte mer än att trycka i lugn takt
       S.fart = Math.min(1, S.fart + 0.17); S.sistaTryck = 0; S.tryck++; S.ryck = Math.min(1, (S.ryck || 0) + 0.5);
       if (S.fart >= 1 && !S.full) { S.full = true; G.ut('full', {}); }

@@ -74,7 +74,7 @@
         </div>
         <div id="kort" style="display:none"></div>
         <div id="berattar" style="display:none"></div>
-        <div id="ortnamn"></div><div id="pilar"></div><div id="vem-du" class="vem" style="display:none">Du</div><div id="vem-bud" class="vem" style="display:none">Ditt bud</div><div id="flyt"></div><div id="text"></div><div id="tips"></div>
+        <div id="ortnamn"></div><div id="pilar"></div><div id="slag-mal" style="display:none"><i></i><b></b></div><div id="vem-du" class="vem" style="display:none">Du</div><div id="vem-bud" class="vem" style="display:none">Ditt bud</div><div id="flyt"></div><div id="text"></div><div id="tips"></div>
         <div id="film"><div class="rand upp"></div><div class="rand ner"></div><div id="film-plats"></div><div id="film-text"></div><div id="film-tal"></div><div id="film-knapp"></div><div id="film-svart"></div></div>
         <div id="ruta" style="display:none"></div>`;
       $('ak').addEventListener('pointerdown', e => { e.preventDefault(); UI.onTryck && UI.onTryck(); });
@@ -302,9 +302,14 @@
         lagg = (id, o, h, pa) => { const e = $(id), sp = pa && o && o.g && o.g.visible ? V.Scene.screenPoint(o.x, V.Geo.groundAt(o.x, o.z) + h, o.z) : null, syns = sp && !sp.behind && sp.y > 50 && sp.y < golv; e.style.display = syns ? 'block' : 'none'; if (syns) e.style.transform = 'translate(' + Math.round(sp.x) + 'px,' + Math.round(sp.y) + 'px) translate(-50%, -100%)'; };
         lagg('vem-du', kr ? { x: kr.x, z: kr.z, g: { visible: true } } : V.Gustav, kr ? 1.45 : V.Gustav.stupad ? 0.6 : 1.75, visa || !!kr || slag); lagg('vem-bud', V.Bud, 1.9, visa); }
       // ordern i ett slag: en ring som sluter sig kring knappen. Rätt läge är när den är framme vid knappens kant.
-      { const a = S.aktivt, m = a && a.mom, e = $('ak-order'), O = G.ORDER; if (!m || m.svar || !spel || m.typ === 'vanta') { if (e.style.display !== 'none') e.style.display = 'none'; }
+      { const a = S.aktivt, m = a && a.mom, e = $('ak-order'), O = G.ORDER; if (!m || m.svar || !spel || m.typ === 'vanta' || S.varld === 0) { if (e.style.display !== 'none') e.style.display = 'none'; }          // i förspelet står ringen i världen (nedan)
         else { const hg = m.typ === 'hugg', j = Math.round(m.tm / O.takt), sk = hg ? 1 + (1 - (m.tm % O.takt) / O.takt) * 0.55 : Math.max(0.86, 1 + (O.mal - m.tm) / O.mal * 1.1), nara = hg ? j >= 1 && Math.abs(m.tm - j * O.takt) <= O.fonster : Math.abs(m.tm - O.mal) <= O.slack, kr = $('ak').getBoundingClientRect(), wr = $('akwrap').getBoundingClientRect();
           e.style.display = 'block'; e.style.width = e.style.height = (kr.width + 6) + 'px'; e.style.left = (kr.left - wr.left - 3) + 'px'; e.style.top = (kr.top - wr.top - 3) + 'px'; e.style.transform = 'scale(' + sk.toFixed(3) + ')'; e.classList.toggle('nara', nara); } }
+      // förspelets slag: ringen står i världen där det händer (Varld.malPunkt), och man trycker på den. Den krymper till pricken när det är dags.
+      { const a = S.aktivt, m = a && a.mom, e = $('slag-mal'), O = G.ORDER, q = spel && S.varld === 0 && m && !m.svar && m.typ !== 'vanta' ? V.Varld.malSkarm() : null;
+        if (!q) { if (e.style.display !== 'none') e.style.display = 'none'; }
+        else { const hg = m.typ === 'hugg', jn = Math.round(m.tm / O.takt), d = hg ? jn * O.takt - m.tm : O.mal - m.tm, sk = hg ? 1 + Math.max(0, d) / O.takt * 1.6 : 1 + Math.max(0, d) / O.mal * 2.2, nara = hg ? jn >= 1 && Math.abs(d) <= O.fonster : Math.abs(d) <= O.slack;
+          e.style.display = 'block'; e.style.transform = 'translate(' + Math.round(q.x) + 'px,' + Math.round(q.y) + 'px) translate(-50%, -50%)'; e.firstChild.style.transform = 'scale(' + sk.toFixed(3) + ')'; e.classList.toggle('nara', nara); e.classList.toggle('hugg', hg); } }
       if (caption && performance.now() > capT) { caption.classList.add('bort'); const c = caption; caption = null; setTimeout(() => c.remove(), 900); }
     },
     // Vad den runda knappen heter annars: det man gör inför nästa steg i historien (D.GOR). Som kung tar man upp skatt när inget annat står.
@@ -312,7 +317,7 @@
     // Vad den runda knappen heter medan striden pågår: [ordet på knappen, raden under]. På vägen dit heter den som vanligt.
     drivOrd(u, sk) {
       if (sk !== 'strid') return null;
-      if (G.s.varld === 0 && u.order) { const m = G.s.aktivt && G.s.aktivt.mom; return G.s.aktivt && G.s.aktivt.kula ? ['Du är<br>träffad', ''] : m && u.order[m.i] && u.order[m.i].ord ? [u.order[m.i].ord, m.svar || m.typ === 'vanta' ? '' : m.typ === 'hugg' ? 'tryck i takt med ringen' : 'tryck när ringen når knappen'] : [u.belagring ? 'Håll<br>ut' : 'Slaget<br>börjar', 'vänta på ordern']; }
+      if (G.s.varld === 0 && u.order) { const m = G.s.aktivt && G.s.aktivt.mom; return G.s.aktivt && G.s.aktivt.kula ? ['Du är<br>träffad', ''] : m && u.order[m.i] && u.order[m.i].ord ? [u.order[m.i].ord, m.svar || m.typ === 'vanta' ? '' : m.typ === 'hugg' ? 'tryck på ringarna i slaget' : 'tryck på ringen i slaget'] : [u.belagring ? 'Håll<br>ut' : 'Slaget<br>börjar', 'vänta på ordern']; }
       return u.strid === 'nederlag' ? ['Håll<br>emot', 'tryck: håll emot'] : u.strid === 'pilar' ? ['Skjut!', 'tryck: en salva'] : u.strid === 'kanoner' || u.strid === 'sjo' ? ['Skjut!', 'tryck: kanonerna'] : ['Anfall!', 'tryck: anfall'];
     },
     // Siffra som stiger upp från en plats i världen.
