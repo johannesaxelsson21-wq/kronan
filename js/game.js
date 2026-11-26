@@ -135,7 +135,7 @@
     // Varje tryck svarar direkt: mätaren fylls på sex tryck, budet får ett ryck framåt (upp till dubbel fart),
     // och man får något direkt i handen: minst en mark eller en man, annars en kvarts sekunds inkomst.
     tryck(auto, mal) {          // mal = 'traff' eller 'miss' när man trycker på slagfältet i förspelets slag (main.js), annars inget          // auto = knappen hålls in och spelet trycker själv: det räknas inte som en order i ett slag
-      { const m = S.aktivt && S.aktivt.mom; if (m && !m.svar && !auto && mal) { if (m.typ === 'hugg') { if (mal === 'traff') G._hugg(m); else { m.miss++; G.ut('hugg', { traff: false }); } } else if (m.typ !== 'vanta' && m.tm > 0.8 && mal === 'traff') G._orderSvar(true); } }          // att hålla in knappen räknas inte i ett slag
+      { const m = S.aktivt && S.aktivt.mom; if (m && !m.svar && !auto) { if (m.typ === 'hugg') G._hugg(m); else if (m.typ !== 'vanta') { if (m.tm > 0.6) G._orderSvar(true); else G.ut('orderVanta', {}); } } }          // varje tryck räknas, på ringen, på slagfältet eller på knappen. Att hålla in räknas inte.          // att hålla in knappen räknas inte i ett slag
       const kraft = Math.min(1, S.sistaTryck);          // det man får laddas upp över en sekund: att hamra ger inte mer än att trycka i lugn takt
       S.fart = Math.min(1, S.fart + 0.17); S.sistaTryck = 0; S.tryck++; S.ryck = Math.min(1, (S.ryck || 0) + 0.5);
       if (S.fart >= 1 && !S.full) { S.full = true; G.ut('full', {}); }
@@ -155,7 +155,7 @@
     // ---- förspelets slag: order i rätt ögonblick -----------------------------------------------
     // Slaget har två eller tre ögonblick (D.STURE order). I vart och ett sluter sig en ring kring knappen, och ett tryck när den är framme
     // är rätt läge. Utgången följer historien vad man än gör: det man spelar om är hur många av männen som kommer hem (_klar).
-    ORDER: { borjan: 1.5, langd: 4.2, mellan: 1.2, mal: 3.2, slack: 0.5, hugg: 7.2, takt: 0.8, fonster: 0.2, efterKula: 9 },
+    ORDER: { borjan: 1.5, langd: 4.2, mellan: 1.2, mal: 3.2, slack: 0.7, hugg: 7.7, takt: 1.1, fonster: 0.35, efterKula: 9 },
     // Slagets ögonblick i tid: när vart och ett börjar och hur länge det varar. slut = när det sista är över (efter kanonkulan: när han är buren ur striden).
     _plan(u) {
       if (u._plan) return u._plan; const O = G.ORDER, mom = []; let t = O.borjan, kula = false;
@@ -179,11 +179,12 @@
     // Hugg i takt: en ring når knappen var takt-sekund. Ett tryck när den är där är ett hugg som tar. Tryck emellan är slag i luften.
     _hugg(m) {
       const O = G.ORDER, j = Math.round(m.tm / O.takt), n = Math.floor(O.hugg / O.takt), u = D.UPPDRAG.find(q => q.id === S.aktivt.id), o = u && u.order[m.i];
-      if (j >= 1 && j <= n && Math.abs(m.tm - j * O.takt) <= O.fonster && !m.slag[j]) { m.slag[j] = 1; m.traff++; G.ut('hugg', { traff: true, o }); } else { m.miss++; G.ut('hugg', { traff: false, o }); }
+      const d = m.tm - Math.max(1, j) * O.takt;          // hur långt från takten trycket kom: minus är för tidigt
+      if (j >= 1 && j <= n && Math.abs(d) <= O.fonster && !m.slag[j]) { m.slag[j] = 1; m.traff++; G.ut('hugg', { traff: true, o, d }); } else { m.miss++; G.ut('hugg', { traff: false, o, d, igen: !!m.slag[j] }); }
     },
     _momSlut(u, P) {
       const a = S.aktivt, m = a.mom, o = u.order[m.i], O = G.ORDER;
-      if (m.typ === 'hugg') { const n = Math.floor(O.hugg / O.takt), p = Math.max(0, Math.min(1, (m.traff - 0.5 * m.miss) / n)); m.svar = p >= 0.6 ? 'bra' : m.miss > m.traff ? 'otakt' : 'svag'; a.poang = (a.poang || 0) + p; G.ut('orderSvar', { u, o, i: m.i, bra: p >= 0.6, svar: m.svar, typ: 'hugg' }); }
+      if (m.typ === 'hugg') { const n = Math.floor(O.hugg / O.takt), p = Math.max(0, Math.min(1, (m.traff - 0.25 * m.miss) / n)); m.svar = p >= 0.5 ? 'bra' : m.miss > m.traff ? 'otakt' : 'svag'; a.poang = (a.poang || 0) + p; G.ut('orderSvar', { u, o, i: m.i, bra: p >= 0.5, svar: m.svar, typ: 'hugg' }); }
       else if (m.typ === 'vanta') m.svar = 'klar';
       else { m.tm = P.mom[m.i].langd; G._orderSvar(false); }
     },
@@ -310,7 +311,7 @@
       if (S.marknad) { S.marknad.t -= dt; if (S.marknad.t <= 0) { S.marknad = null; G.ut('marknadSlut', {}); } }
       else if (!S.slut && S.t > 40 && !(S.varld === 0 && G.skede() === 'strid')) {          // förspelet: ingen marknad mitt i ett slag
         S.marknadT = (S.marknadT === undefined ? 35 : S.marknadT) - dt;
-        if (S.marknadT <= 0) { const ids = Object.keys(S.bas).filter(id => (BAS[id].slag === 'bygd' || BAS[id].slag === 'stad') && G.prod(id) > 0); S.marknadT = 75 + Math.random() * 60; if (ids.length) { S.marknad = { bas: ids[Math.floor(Math.random() * ids.length)], t: 30 }; G.ut('marknad', { bas: S.marknad.bas }); } }
+        if (S.marknadT <= 0) { const ids = Object.keys(S.bas).filter(id => (BAS[id].slag === 'bygd' || BAS[id].slag === 'stad') && G.prod(id) > 0); S.marknadT = (S.varld === 0 ? 140 : 75) + Math.random() * 60; if (ids.length) { S.marknad = { bas: ids[Math.floor(Math.random() * ids.length)], t: 30 }; G.ut('marknad', { bas: S.marknad.bas }); } }
       }
     },
     marknadTa() {

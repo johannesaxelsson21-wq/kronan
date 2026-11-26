@@ -77,7 +77,7 @@
       const sc = sun.shadow.camera; sc.left = -r; sc.right = r; sc.top = r; sc.bottom = -r; sc.near = 50; sc.far = 900; sc.updateProjectionMatrix();
     },
     render() { if (V.Efterbild) V.Efterbild.render(renderer, scene, camera, cam.d * (cam.k || 1)); else renderer.render(scene, camera); },
-    shake(a) { cam.shake = Math.max(cam.shake, a); },
+    shake(a) { if (V.lugn) a *= 0.25; cam.shake = Math.max(cam.shake, a); },
 
     // Var på marken pekar den här punkten på skärmen?
     groundPoint(cx, cy) {

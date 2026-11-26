@@ -10,14 +10,14 @@
       if (ac) { if (ac.state === 'suspended') ac.resume(); if (V.Musik) V.Musik.vakna(); return; }
       try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { if (V.Musik) V.Musik.vakna(); return; }
       setTimeout(() => { if (V.Musik) V.Musik.vakna(); }, 0);
-      master = ac.createGain(); master.gain.value = pa ? 0.5 : 0; master.connect(ac.destination);
+      master = ac.createGain(); master.gain.value = pa ? (V.lugn ? 0.3 : 0.5) : 0; master.connect(ac.destination);
       const n = ac.sampleRate * 2; brus = ac.createBuffer(1, n, ac.sampleRate); const d = brus.getChannelData(0); for (let k = 0; k < n; k++) d[k] = Math.random() * 2 - 1;
       // vinden: brus genom ett filter som andas långsamt
       const src = ac.createBufferSource(); src.buffer = brus; src.loop = true; const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 380; const g = ac.createGain(); g.gain.value = 0.07;
       const lfo = ac.createOscillator(); lfo.frequency.value = 0.09; const lg = ac.createGain(); lg.gain.value = 160; lfo.connect(lg); lg.connect(f.frequency); lfo.start();
       src.connect(f); f.connect(g); g.connect(master); src.start(); vind = g;
     },
-    pa(on) { pa = !!on; if (master) master.gain.setTargetAtTime(pa ? 0.5 : 0, ac.currentTime, 0.05); },
+    pa(on) { pa = !!on; if (master) master.gain.setTargetAtTime(pa ? (V.lugn ? 0.3 : 0.5) : 0, ac.currentTime, 0.05); },
     vindstyrka(v) { if (vind) vind.gain.setTargetAtTime(v, ac.currentTime, 0.8); },
     ton(freq, t0, dur, typ, vol, glid) {
       if (!ac || !pa || ac.state !== 'running') return; if (t0 === undefined) t0 = ac.currentTime;

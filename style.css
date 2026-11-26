@@ -361,3 +361,18 @@ button { font-family: inherit; cursor: pointer; }
 #stadmeny button span { font-size: 12px; color: var(--svag); }
 #stadmeny button.vald { border-color: var(--guld2); background: rgba(242, 207, 90, 0.14); }
 #stadmeny button:hover { filter: brightness(1.15); }
+
+/* Slagen: NU! när det är dags att trycka, och ett tydligt svar på varje tryck */
+#slag-mal.nara b::after, #ak-order.nara::after { content: 'NU!'; position: absolute; left: 50%; top: -30px; transform: translateX(-50%); font-size: 20px; font-weight: bold; letter-spacing: 0.06em; color: #fff7df; text-shadow: 0 2px 3px #000, 0 0 8px #000; white-space: nowrap; }
+#ak-order.nara::after { top: -26px; font-size: 17px; }
+#slag-mal.nara b { background: rgba(126, 224, 138, 0.6); border-color: #ffffff; }
+.flyt.svar { font-size: 24px; font-weight: bold; letter-spacing: 0.03em; z-index: 5; }
+.flyt.svar.bra { color: #9df0a6; }
+.flyt.svar.fel { color: #ffb4a6; }
+
+/* Lugnare (Johannes 2026-11-26): ett mjukt NU bara i slaget, milda svar */
+#ak-order.nara::after { content: none; }
+#slag-mal.nara b::after { content: 'NU'; font-size: 16px; font-weight: normal; top: -26px; }
+.flyt.svar { font-size: 18px; font-weight: normal; }
+.flyt.svar.bra { color: #cdeccf; }
+.flyt.svar.fel { color: #e9dcc0; }
