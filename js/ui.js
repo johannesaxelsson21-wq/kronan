@@ -66,7 +66,7 @@
         <div id="datum"><div id="dat-ar"></div><div id="dat-titel"></div><div id="dat-tron"></div></div>
         <div id="meny"><button id="m-fraga" title="Så fungerar det">${IK.fraga}</button><button id="m-bok" title="Krönikan">${IK.bok}</button><button id="m-krona" title="Regentlängden">${IK.krona}</button><button id="m-ljud" title="Ljud">${IK.ljud}</button><button id="m-kugg" title="Inställningar">${IK.kugg}</button></div>
         <div id="konsol">
-          <div id="uppdrag"><div id="upp-akt"></div><div id="upp-titel"></div><div id="upp-kost"></div><div id="upp-bar"><div id="upp-fyll"></div></div><button id="upp-knapp"></button></div>
+          <div id="uppdrag"><span id="upp-mer" style="display:none">Läs mer</span><div id="upp-akt"></div><div id="upp-titel"></div><div id="upp-kost"></div><div id="upp-bar"><div id="upp-fyll"></div></div><button id="upp-knapp"></button></div>
           <div id="akwrap"><i id="ak-order" style="display:none"></i><button id="ak"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" class="spar"/><circle cx="60" cy="60" r="54" id="ak-ring" class="ring"/></svg><span id="ak-txt">Skicka<br>bud</span><span id="fullx"></span></button><div id="ak-hint">${HALL}</div></div>
           <div id="handl"></div>
           <div id="baser"></div>
@@ -78,6 +78,7 @@
         <div id="film"><div class="rand upp"></div><div class="rand ner"></div><div id="film-plats"></div><div id="film-text"></div><div id="film-tal"></div><div id="film-knapp"></div><div id="film-svart"></div></div>
         <div id="ruta" style="display:none"></div>`;
       $('ak').addEventListener('pointerdown', e => { e.preventDefault(); UI.onTryck && UI.onTryck(); });
+      $('uppdrag').addEventListener('click', e => { if (e.target.closest && e.target.closest('#upp-knapp')) return; const u = G.uppdrag(); if (u && u.mer) UI.merInfo(u); });          // ett tryck på steget: läs mer om varför
       $('upp-knapp').addEventListener('click', () => { const a = G.s.aktivt; if (a && a.val) { G.valj(); V.Ljud && V.Ljud.spela('klocka'); } else UI.onSkicka && UI.onSkicka(); });
       $('hitta').addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); UI.onHitta && UI.onHitta(); });
       $('m-bok').addEventListener('click', UI.kronika); $('m-krona').addEventListener('click', UI.regenter); $('m-kugg').addEventListener('click', UI.installningar); $('m-fraga').addEventListener('click', () => UI.forklara(G.s.varld, true));
@@ -101,7 +102,7 @@
       te.title = S.varld === 0 ? 'Riket hör till unionen med Danmark och Norge, men har inte erkänt någon unionskung sedan 1501. Riksföreståndaren styr i kungens ställe.' : 'Kristian II kröntes i Stockholm den 4 november 1520.';
       $('m-ljud').classList.toggle('av', !S.ljud);
       // uppdraget
-      const u = G.uppdrag(), box = $('uppdrag');
+      const u = G.uppdrag(), box = $('uppdrag'); { const m = $('upp-mer'), visa = !!(u && u.mer && !S.slut) ? '' : 'none'; if (m.style.display !== visa) m.style.display = visa; }
       if (!u || S.slut) { box.className = 'slut'; $('upp-akt').textContent = ''; $('upp-titel').textContent = S.varld === 0 ? 'Portarna är öppna' : 'Kronan går i arv'; $('upp-kost').innerHTML = ''; $('upp-knapp').style.display = 'none'; $('upp-fyll').style.width = '100%'; }
       else {
         const a = S.aktivt, k = G.kostnad(u);
@@ -285,6 +286,8 @@
     _nej(e) { e.classList.remove('skaka'); void e.offsetWidth; e.classList.add('skaka'); V.Ljud && V.Ljud.spela('trumma'); },
     kop(id) { if (G.kop(id)) { V.Ljud && V.Ljud.spela(G.s.bas[id] % 10 === 0 ? 'dubbel' : 'kop'); UI.tick(); return true; } return false; },
     valj(id) { valdBas = id; },
+    // Läs mer om ett steg: varför det händer. Spelet står still medan rutan är uppe.
+    merInfo(u) { UI.ruta('<h2>' + u.titel + '</h2><p class="mal">' + UI.platsnamn(u.plats) + ' ' + u.ar + '</p><p>' + u.mer + '</p>' + (u.merKalla ? '<p class="svag">Källa: ' + u.merKalla + '.</p>' : '') + '<button class="stang">Stäng</button>', false); UI._paus = true; },
     // Ligger punkten på skärmen under en av knapparna? Då ska ingen skylt stå där.
     _skymd(sp) { for (const id of ['handl', 'hitta', 'akwrap']) { const e = $(id); if (!e || !e.offsetParent) continue; const r = e.getBoundingClientRect(); if (sp.x > r.left - 12 && sp.x < r.right + 12 && sp.y > r.top - 14 && sp.y < r.bottom + 8) return true; } return false; },
     // Stadens flik (förspelet): vilken stad den visar, och att byta
@@ -417,6 +420,7 @@
       hn.filter(h => !S.handlSedda[h.id]).forEach(h => { S.handlSedda[h.id] = 1; x.push('Ny handling ' + (innerWidth < 720 ? 'ovanför' : 'bredvid') + ' den runda knappen: <b>' + UI.handlNamn(h) + '</b>. ' + h.vad + ' Sedan behöver du vila.'); });
       if (g.hjalte) x.push('Du är nu <b>Kristina Gyllenstierna</b>, hans änka. Du håller Stockholms slott och skriver till bönderna om hjälp.');
       UI.berattar(UI.platsnamn(u.plats) + ' ' + u.ar, [scen && u.efter ? u.efter : u.kronika].concat(x));
+      if (u.mer) { const b = $('berattar'), l = el('a', 'ber-mer', 'Läs mer om varför'); l.href = '#'; l.addEventListener('click', ev => { ev.preventDefault(); UI.merInfo(u); }); b.insertBefore(l, b.querySelector('button')); }          // och samma ruta härifrån
     },
     // Rutan i början: vem du är, hur läget ser ut och vad du ska göra. Går att ta fram igen med frågetecknet.
     forklara(varld, igen) {

@@ -381,3 +381,8 @@ button { font-family: inherit; cursor: pointer; }
 #akwrap.hugg.kraft #ak .ring { stroke: #9df0a6; }
 #akwrap.hugg #fullx { color: #fff3c9; }
 #akwrap.strid #ak-hint { font-size: 11px; }
+
+/* Läs mer: på kortet med nästa steg och i rutan efter ett steg */
+#uppdrag { position: relative; cursor: pointer; }
+#upp-mer { position: absolute; right: 8px; top: 6px; font-size: 11px; letter-spacing: 0.04em; color: var(--guld2); border-bottom: 1px dotted rgba(242, 207, 90, 0.6); }
+.ber-mer { display: inline-block; margin: 2px 14px 8px 0; font-size: 14px; color: var(--guld2); text-decoration: none; border-bottom: 1px dotted rgba(242, 207, 90, 0.6); }
