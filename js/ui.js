@@ -161,11 +161,11 @@
       for (const h of hl) { const r = hrows[h.id], o = G.handl(h.id); r.b.classList.toggle('vilar', o.v > 0 && o.t <= 0); r.b.classList.toggle('verkar', o.t > 0); r.b.classList.toggle('redo', o.v <= 0); r.v.style.height = (o.t > 0 ? 0 : Math.min(100, o.v / h.vila * 100)) + '%'; const s = o.t > 0 ? Math.ceil(o.t) : o.v > 0 ? Math.ceil(o.v) : ''; if (r._s !== s) { r._s = s; r.s.textContent = s; } }
       // medan striden pågår är den runda knappen spelarens del i den
       { const sk = G.skede(), ord = sk && u ? UI.drivOrd(u, sk) : null, nyckel = ord ? ord[0] : UI.gorOrd(u);
-        if (UI._akOrd !== nyckel) { UI._akOrd = nyckel; $('ak-txt').innerHTML = nyckel; $('ak-hint').textContent = ord ? ord[1] : HALL; $('akwrap').classList.toggle('driv', !!ord); $('akwrap').classList.toggle('strid', !!ord && sk === 'strid'); } }
+        if (UI._akOrd !== nyckel + (ord ? ord[1] : '')) { UI._akOrd = nyckel + (ord ? ord[1] : ''); $('ak-txt').innerHTML = nyckel; $('ak-hint').textContent = ord ? ord[1] : HALL; $('akwrap').classList.toggle('driv', !!ord); $('akwrap').classList.toggle('strid', !!ord && sk === 'strid'); } }
       // förspelet: under ett slag tonas allt bort utom uppdraget, den runda knappen och raderna (Johannes 2026-11-26 20:34). Kameran går nära (varld.js).
       { const slag = S.varld === 0 && G.skede() === 'strid'; if (root.classList.contains('slag') !== slag) root.classList.toggle('slag', slag); if (root.classList.contains('forspel') !== (S.varld === 0)) root.classList.toggle('forspel', S.varld === 0); }
       // farten
-      const ring = $('ak-ring'), C = 2 * Math.PI * 54; ring.style.strokeDasharray = C; ring.style.strokeDashoffset = C * (1 - S.fart);
+      const ring = $('ak-ring'), C = 2 * Math.PI * 54; ring.style.strokeDasharray = C; const hm = S.aktivt && S.aktivt.mom && S.aktivt.mom.typ === 'hugg' && !S.aktivt.mom.svar ? Math.min(1, S.aktivt.mom.traff / Math.floor(G.ORDER.hugg / G.ORDER.takt)) : null; ring.style.strokeDashoffset = C * (1 - (hm !== null ? hm : S.fart)); $('akwrap').classList.toggle('hugg', hm !== null);          // i ett hugg visar ringen hur många hugg som tog
       $('akwrap').classList.toggle('full', S.full); $('fullx').textContent = S.full ? 'allt ×' + G.fullX() : '';
       // rutan med berättelsen och textraderna ligger strax ovanför konsolen
       const h = $('konsol').offsetHeight + 22; $('berattar').style.bottom = h + 'px'; $('text').style.bottom = (h + 28) + 'px';          // ovanför knappen Hitta mig
@@ -302,8 +302,8 @@
         lagg = (id, o, h, pa) => { const e = $(id), sp = pa && o && o.g && o.g.visible ? V.Scene.screenPoint(o.x, V.Geo.groundAt(o.x, o.z) + h, o.z) : null, syns = sp && !sp.behind && sp.y > 50 && sp.y < golv; e.style.display = syns ? 'block' : 'none'; if (syns) e.style.transform = 'translate(' + Math.round(sp.x) + 'px,' + Math.round(sp.y) + 'px) translate(-50%, -100%)'; };
         lagg('vem-du', kr ? { x: kr.x, z: kr.z, g: { visible: true } } : V.Gustav, kr ? 1.45 : V.Gustav.stupad ? 0.6 : 1.75, visa || !!kr || slag); lagg('vem-bud', V.Bud, 1.9, visa); }
       // ordern i ett slag: en ring som sluter sig kring knappen. Rätt läge är när den är framme vid knappens kant.
-      { const a = S.aktivt, m = a && a.mom, e = $('ak-order'), O = G.ORDER; if (!m || m.svar || !spel) { if (e.style.display !== 'none') e.style.display = 'none'; }
-        else { const sk = Math.max(0.86, 1 + (O.mal - m.tm) / O.mal * 1.1), nara = Math.abs(m.tm - O.mal) <= O.slack, kr = $('ak').getBoundingClientRect(), wr = $('akwrap').getBoundingClientRect();
+      { const a = S.aktivt, m = a && a.mom, e = $('ak-order'), O = G.ORDER; if (!m || m.svar || !spel || m.typ === 'vanta') { if (e.style.display !== 'none') e.style.display = 'none'; }
+        else { const hg = m.typ === 'hugg', j = Math.round(m.tm / O.takt), sk = hg ? 1 + (1 - (m.tm % O.takt) / O.takt) * 0.55 : Math.max(0.86, 1 + (O.mal - m.tm) / O.mal * 1.1), nara = hg ? j >= 1 && Math.abs(m.tm - j * O.takt) <= O.fonster : Math.abs(m.tm - O.mal) <= O.slack, kr = $('ak').getBoundingClientRect(), wr = $('akwrap').getBoundingClientRect();
           e.style.display = 'block'; e.style.width = e.style.height = (kr.width + 6) + 'px'; e.style.left = (kr.left - wr.left - 3) + 'px'; e.style.top = (kr.top - wr.top - 3) + 'px'; e.style.transform = 'scale(' + sk.toFixed(3) + ')'; e.classList.toggle('nara', nara); } }
       if (caption && performance.now() > capT) { caption.classList.add('bort'); const c = caption; caption = null; setTimeout(() => c.remove(), 900); }
     },
@@ -312,7 +312,7 @@
     // Vad den runda knappen heter medan striden pågår: [ordet på knappen, raden under]. På vägen dit heter den som vanligt.
     drivOrd(u, sk) {
       if (sk !== 'strid') return null;
-      if (G.s.varld === 0 && u.order) { const m = G.s.aktivt && G.s.aktivt.mom; return G.s.aktivt && G.s.aktivt.kula ? ['Du är<br>träffad', ''] : m && u.order[m.i] && u.order[m.i].ord ? [u.order[m.i].ord, m.svar ? '' : 'tryck när ringen är framme'] : ['Slaget<br>börjar', 'vänta på ordern']; }
+      if (G.s.varld === 0 && u.order) { const m = G.s.aktivt && G.s.aktivt.mom; return G.s.aktivt && G.s.aktivt.kula ? ['Du är<br>träffad', ''] : m && u.order[m.i] && u.order[m.i].ord ? [u.order[m.i].ord, m.svar || m.typ === 'vanta' ? '' : m.typ === 'hugg' ? 'tryck i takt med ringen' : 'tryck när ringen når knappen'] : ['Slaget<br>börjar', 'vänta på ordern']; }
       return u.strid === 'nederlag' ? ['Håll<br>emot', 'tryck: håll emot'] : u.strid === 'pilar' ? ['Skjut!', 'tryck: en salva'] : u.strid === 'kanoner' || u.strid === 'sjo' ? ['Skjut!', 'tryck: kanonerna'] : ['Anfall!', 'tryck: anfall'];
     },
     // Siffra som stiger upp från en plats i världen.
@@ -363,7 +363,7 @@
       if (g.las && g.las.indexOf('konster') >= 0 && S.varld !== 0) x.push(('Under fliken <b>Förmågor</b> gör du dina bud och tryck bättre. Håll ') + (V.pek ? 'fingret kvar på' : 'pekaren över') + ' ett kort så ser du exakt vad det ger.');
       if (g.las && g.las.indexOf('sold') >= 0) x.push('Nu kan du <b>värva soldater</b> för mark. De får lön, och du får fler män.');
       if (g.x) for (const r in g.x) x.push('Allt som ger ' + (r === 'man' ? 'män' : 'mark') + ' ger nu ' + String(g.x[r]).replace('.', ',') + ' gånger så mycket.');
-      if (S.hem && S.hem.id === u.id) x.push('<b>' + tal(S.hem.hem) + '</b> av dina ' + tal(S.hem.av) + ' män kommer hem' + (S.hem.bra >= S.hem.n ? ': varje order kom i rätt läge.' : S.hem.bra ? '.' : '. Ger du order i rätt läge kommer fler hem.'));
+      if (S.hem && S.hem.id === u.id) x.push('<b>' + tal(S.hem.hem) + '</b> av dina ' + tal(S.hem.av) + ' män kommer hem' + (S.hem.p >= 0.9 ? ': du ledde slaget väl.' : S.hem.p > 0.3 ? '.' : '. Följ knappen och ringen i slaget, så kommer fler hem.'));
       if (g.markTid || g.mark) x.push('Du fick en rejäl summa mark på en gång.');
       if (g.man) x.push('Du fick ' + tal(g.man) + ' män.');
       if (g.fart) x.push('Din armé rör sig fortare från och med nu.');

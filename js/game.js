@@ -125,7 +125,7 @@
     // Varje tryck svarar direkt: mätaren fylls på sex tryck, budet får ett ryck framåt (upp till dubbel fart),
     // och man får något direkt i handen: minst en mark eller en man, annars en kvarts sekunds inkomst.
     tryck(auto) {          // auto = knappen hålls in och spelet trycker själv: det räknas inte som en order i ett slag
-      if (!auto && S.aktivt && S.aktivt.mom && !S.aktivt.mom.svar && S.aktivt.mom.tm > 0.5) G._orderSvar(true);
+      { const m = S.aktivt && S.aktivt.mom; if (m && !m.svar && !auto) { if (m.typ === 'hugg') G._hugg(m); else if (m.typ !== 'vanta' && m.tm > 0.8) G._orderSvar(true); } }          // att hålla in knappen räknas inte i ett slag
       const kraft = Math.min(1, S.sistaTryck);          // det man får laddas upp över en sekund: att hamra ger inte mer än att trycka i lugn takt
       S.fart = Math.min(1, S.fart + 0.17); S.sistaTryck = 0; S.tryck++; S.ryck = Math.min(1, (S.ryck || 0) + 0.5);
       if (S.fart >= 1 && !S.full) { S.full = true; G.ut('full', {}); }
@@ -145,19 +145,41 @@
     // ---- förspelets slag: order i rätt ögonblick -----------------------------------------------
     // Slaget har två eller tre ögonblick (D.STURE order). I vart och ett sluter sig en ring kring knappen, och ett tryck när den är framme
     // är rätt läge. Utgången följer historien vad man än gör: det man spelar om är hur många av männen som kommer hem (_klar).
-    ORDER: { borjan: 0.8, langd: 4.2, mellan: 0.6, mal: 3.2, slack: 0.5 },
+    ORDER: { borjan: 1.5, langd: 4.2, mellan: 1.2, mal: 3.2, slack: 0.5, hugg: 7.2, takt: 0.8, fonster: 0.2, efterKula: 9 },
+    // Slagets ögonblick i tid: när vart och ett börjar och hur länge det varar. slut = när det sista är över (efter kanonkulan: när han är buren ur striden).
+    _plan(u) {
+      if (u._plan) return u._plan; const O = G.ORDER, mom = []; let t = O.borjan, kula = false;
+      for (const o of u.order) { const typ = o.hand === 'kula' ? 'kula' : o.hugg ? 'hugg' : o.vanta ? 'vanta' : 'order', langd = typ === 'kula' ? 0 : typ === 'hugg' ? O.hugg : typ === 'vanta' ? o.vanta : O.langd; mom.push({ typ, start: t, langd }); if (typ === 'kula') { kula = true; t += O.efterKula; break; } t += langd + O.mellan; }
+      return (u._plan = { mom, slut: t, kula });
+    },
+    slagTid(u) { const P = G._plan(u); return P.slut + (u.strid === 'nederlag' && !P.kula ? 6 : 3); },          // och en stund efteråt: de som vann trycker på, de som förlorade flyr
     _order() {
       const a = S.aktivt; if (!a || a.val || a.kula || S.varld !== 0) return; const u = D.UPPDRAG.find(q => q.id === a.id); if (!u || !u.order || G.skede() !== 'strid') return;
-      const O = G.ORDER, per = O.langd + O.mellan, tb = a.t - a.dur * (a.k0 || KAMP) - O.borjan; if (tb < 0) return;
-      const i = Math.floor(tb / per), tm = tb - i * per;
-      if (a.mom && !a.mom.svar && (a.mom.i !== i || tm > O.langd)) { a.mom.tm = O.langd; G._orderSvar(false); }          // ögonblicket tog slut utan tryck: en miss
-      if (i >= u.order.length || tm > O.langd) return;          // slut på order, eller pausen mellan två
-      if (!a.mom || a.mom.i !== i) { const o = u.order[i]; if (o.hand === 'kula') { a.kula = true; a.mom = null; G.ut('kula', { u, o }); return; } a.mom = { i, svar: null, tm: 0 }; G.ut('order', { u, o, i }); }
+      const P = G._plan(u), tb = a.t - a.dur * (a.k0 || KAMP); if (!a.borjat) { a.borjat = 1; G.ut('slagStart', { u }); }
+      let i = -1; for (let k = 0; k < P.mom.length; k++) if (tb >= P.mom[k].start) i = k;
+      if (a.mom && !a.mom.svar && (a.mom.i !== i || tb - P.mom[a.mom.i].start > P.mom[a.mom.i].langd)) G._momSlut(u, P);          // ögonblicket är över
+      if (i < 0) return; const m = P.mom[i], tm = tb - m.start; if (tm > m.langd) return;          // pausen mellan två
+      if (!a.mom || a.mom.i !== i) {
+        const o = u.order[i]; if (m.typ === 'kula') { a.kula = true; a.mom = null; G.ut('kula', { u, o }); return; }
+        const forst = !(S.lart && S.lart[m.typ]); S.lart = S.lart || {}; S.lart[m.typ] = 1;          // första gången varje sort kommer förklaras den
+        a.mom = { i, typ: m.typ, svar: null, tm: 0, traff: 0, miss: 0, slag: {} }; G.ut('order', { u, o, i, typ: m.typ, forst });
+      }
       a.mom.tm = tm;
+    },
+    // Hugg i takt: en ring når knappen var takt-sekund. Ett tryck när den är där är ett hugg som tar. Tryck emellan är slag i luften.
+    _hugg(m) {
+      const O = G.ORDER, j = Math.round(m.tm / O.takt), n = Math.floor(O.hugg / O.takt);
+      if (j >= 1 && j <= n && Math.abs(m.tm - j * O.takt) <= O.fonster && !m.slag[j]) { m.slag[j] = 1; m.traff++; G.ut('hugg', { traff: true }); } else { m.miss++; G.ut('hugg', { traff: false }); }
+    },
+    _momSlut(u, P) {
+      const a = S.aktivt, m = a.mom, o = u.order[m.i], O = G.ORDER;
+      if (m.typ === 'hugg') { const n = Math.floor(O.hugg / O.takt), p = Math.max(0, Math.min(1, (m.traff - 0.5 * m.miss) / n)); m.svar = p >= 0.6 ? 'bra' : m.miss > m.traff ? 'otakt' : 'svag'; a.poang = (a.poang || 0) + p; G.ut('orderSvar', { u, o, i: m.i, bra: p >= 0.6, svar: m.svar, typ: 'hugg' }); }
+      else if (m.typ === 'vanta') m.svar = 'klar';
+      else { m.tm = P.mom[m.i].langd; G._orderSvar(false); }
     },
     _orderSvar(tryckt) {
       const a = S.aktivt, u = D.UPPDRAG.find(q => q.id === a.id), o = u.order[a.mom.i], O = G.ORDER, d = a.mom.tm - O.mal, bra = tryckt && Math.abs(d) <= O.slack;
-      a.mom.svar = bra ? 'bra' : !tryckt ? 'sent' : d < 0 ? 'tidigt' : 'sent'; if (bra && !o.alltid) a.bra = (a.bra || 0) + 1; G.ut('orderSvar', { u, o, i: a.mom.i, bra, svar: a.mom.svar });
+      a.mom.svar = bra ? 'bra' : !tryckt ? 'sent' : d < 0 ? 'tidigt' : 'sent'; if (bra && !o.alltid) a.poang = (a.poang || 0) + 1; G.ut('orderSvar', { u, o, i: a.mom.i, bra, svar: a.mom.svar, typ: 'order' });
     },
     fartNu() { return (0.12 + 0.88 * S.fart) * (1 + (S.ryck || 0)); },          // hur fort hjälten far just nu, som del av toppfarten
 
@@ -213,7 +235,7 @@
       const u = D.UPPDRAG.find(q => q.id === S.aktivt.id), g = u.ger || {}, akt = S.aktivt;
       S.aktivt = null; S.nasta++; S.datum = 0;
       // förspelets slag: en femtedel av männen kommer alltid hem, och upp till två tredjedelar om orderna gavs i rätt läge
-      S.hem = null; if (S.varld === 0 && u.order && akt.man) { const n = u.order.filter(o => o.ord && !o.alltid).length || 1, bra = Math.min(n, akt.bra || 0), hem = Math.round(akt.man * (0.2 + 0.45 * bra / n)); S.res.man = Math.min(G.tak(), S.res.man + hem); S.hem = { id: u.id, hem, av: akt.man, bra, n }; }
+      S.hem = null; if (S.varld === 0 && u.order && akt.man) { const n = u.order.filter(o => o.ord && !o.alltid && !o.vanta).length || 1, p = Math.min(1, (akt.poang || 0) / n), hem = Math.round(akt.man * (0.2 + 0.45 * p)); S.res.man = Math.min(G.tak(), S.res.man + hem); S.hem = { id: u.id, hem, av: akt.man, p }; }
       if (g.bas) g.bas.forEach(id => { if (!S.bas[id]) S.bas[id] = 1; });
       if (g.x) for (const r in g.x) S.x[r] *= g.x[r];
       if (g.las) g.las.forEach(l => S.las[l] = true);

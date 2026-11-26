@@ -182,7 +182,7 @@
         pts = W._runt(pts, sjalv ? hem : fran, u.plats, u.slag === 'rid');
         const sp = u.slag === 'bud' ? 4.5 : u.slag === 'rid' ? 5 : 3.4, lim = u.slag === 'bud' ? [5, 12] : [9, 26];
         dur = Math.max(lim[0], Math.min(lim[1], R.length(pts) / sp)) + (u.strid ? 10 : 0);
-        if (S.varld === 0 && u.strid) { const marsch = Math.max(6, Math.min(26, R.length(pts) / sp)), slag = u.order ? 16 : 12; dur = marsch + slag; k0 = marsch / dur; }
+        if (S.varld === 0 && u.strid) { const marsch = Math.max(6, Math.min(26, R.length(pts) / sp)), slag = u.order ? G.slagTid(u) : 12; dur = marsch + slag; k0 = marsch / dur; }
       }
       if (!G.skicka(dur ? dur * G.s.fartX : undefined, k0)) return false;
       W._startVis(u, pts, fran, man);
@@ -324,7 +324,7 @@
     // Händelser från spelet.
     handelse(typ, d) {
       if (typ === 'tryck') {
-        if (W._kristina) W._kristina.hoppT = 0.45; const ry = W._ryttare(); if (ry.g && ry.g.visible) Fx.damm(ry.x, Geo.groundAt(ry.x, ry.z) + 0.05, ry.z, 2); if (d.skede) W._drag(d.skede);
+        if (W._kristina) W._kristina.hoppT = 0.45; const ry = W._ryttare(); if (ry.g && ry.g.visible) Fx.damm(ry.x, Geo.groundAt(ry.x, ry.z) + 0.05, ry.z, 2); if (d.skede && !(vis && vis.noll && vis.u.order)) W._drag(d.skede);          // i förspelets slag syns bara hugg som tar (handelse hugg)
         // belägringen: du manar försvaret, och vart tredje tryck skjuter slottet. Det ändrar inte hur länge belägringen varar.
         if (vis && vis.u.belagring && G.s.aktivt && !G.s.aktivt.val) { W._belTryck = (W._belTryck || 0) + 1; if (W._belTryck % 3 === 0) { const p = R.P[vis.u.plats], x = p.x + 1.2 + Math.random() * 1.4, z = p.z - 1.3; Fx.krut(x, Geo.groundAt(x, z) + 1.3, z); V.Ljud && V.Ljud.spela('kanon'); Scene.shake(0.12); } }
       }
@@ -339,6 +339,7 @@
         while (steg[d.bas].length <= s) W.byggSteg(d.bas, false);
       } else if (typ === 'samling') { const p = R.P[d.bas]; if (!d.lopare) Fx.guld(p.x, p.y + 0.2, p.z, 10, 1.0); (vandrare[d.bas] || []).forEach(v => { v.hopp = 0.5; }); }
       else if (typ === 'byggnad') W._byggnad(d.id, false);
+      else if (typ === 'hugg' && vis && d.traff) { vis.stot = 1; Scene.shake(0.08); V.Ljud && V.Ljud.spela('svard'); const e = vis.enh[Math.floor(Math.random() * Math.min(vis.enh.length, vis.bredd || 6))]; if (e) Fx.damm(e.x, Geo.groundAt(e.x, e.z), e.z, 3); }          // ett hugg i takt: leden trycker på
       else if (typ === 'orderSvar' && vis) { if (d.bra && !d.o.alltid) { vis.stot = 1; Scene.shake(0.18); } else if (d.o.alltid) vis.stot = -1.6; }          // rätt läge: en stöt framåt. Anfallet i gryningen vid Brännkyrka slås tillbaka
       else if (typ === 'kula' && vis) { const Gu = V.Gustav; Fx.krut(Gu.x, Geo.groundAt(Gu.x, Gu.z) + 0.4, Gu.z); Fx.damm(Gu.x, Geo.groundAt(Gu.x, Gu.z) + 0.1, Gu.z, 12); }
       else if (typ === 'klart') {
@@ -574,7 +575,7 @@
       const Gu = V.Gustav, f = Math.min(1, a.t / a.dur), strid = !!u.strid, K0 = a.k0 || G.KAMP, gf = strid ? Math.min(1, f / K0) : f, kamp = strid && f > K0, kf = strid ? Math.max(0, (f - K0) / (1 - K0)) : 0, forlust = u.strid === 'nederlag';
       const DR = 0.4, DK = 0.32, stopp = strid ? 0.9 : 1.8, dist = Math.max(0, vis.len - stopp) * gf, lead = R.along(vis.pts, dist), fx = Math.sin(lead.ang), fz = Math.cos(lead.ang), sx = Math.cos(lead.ang), sz = -Math.sin(lead.ang);
       // leden går varandra till mötes tills det är en knapp armlängd emellan (2,2 mellan dem från början, 1,85 går de)
-      const in0 = Math.min(1, kf / 0.3), A = in0 * 1.0 + (vis.stot > 0 ? 0.12 : 0.35) * (vis.stot || 0), Bf = in0 * 0.85, ut = kamp ? Geo.smooth(0, 0.22, kf) : 0, flykt = forlust ? (u.order ? (a.kula ? Math.min(1, (vis.kulaT = (vis.kulaT || 0) + dt) / 7) : 0) : Math.max(0, (kf - 0.45) / 0.55)) : 0, vinst = !forlust ? Math.max(0, (kf - 0.6) / 0.4) : 0;
+      const in0 = Math.min(1, kf / 0.3), A = in0 * 1.0 + (vis.stot > 0 ? 0.12 : 0.35) * (vis.stot || 0), Bf = in0 * 0.85, ut = kamp ? Geo.smooth(0, 0.22, kf) : 0, P = u.order ? G._plan(u) : null, pt = a.t - a.dur * K0, flykt = forlust ? (P ? (a.kula ? Math.min(1, (vis.kulaT = (vis.kulaT || 0) + dt) / 7) : Math.max(0, Math.min(1, (pt - P.slut) / 5))) : Math.max(0, (kf - 0.45) / 0.55)) : 0, vinst = !forlust ? (P ? Math.max(0, Math.min(1, (pt - P.slut + 3) / 5)) : Math.max(0, (kf - 0.6) / 0.4)) : 0;
       if (kamp) { W._folj(lead.x + fx * 1.1, lead.z + fz * 1.1 + 0.4, vis.bredd > 14 ? 24 : 18); if (!vis.iSlag) { vis.iSlag = true; W.foljUppdraget(); } } else W._folj(lead.x, lead.z, 30);
       if (vis.gustav) { const hf = kamp ? A - 0.55 - (a.kula ? 3.2 * Math.max(0, flykt - 0.15) : flykt * 2) : 0; Gu.slass = kamp && !flykt && !a.kula ? 1 : 0; Gu.stupad = !!a.kula; Gu.place(lead.x + fx * hf, lead.z + fz * hf, lead.ang, gf < 1 ? 0.9 : 0, t, dt, false, !!a.kula); }
       if (u.rader && kamp) { const nr = Math.min(u.rader.length - 1, Math.floor(kf * u.rader.length)); if (vis.radNr !== nr) { vis.radNr = nr; if (!V.tyst) V.UI.text(u.rader[nr], 4.5); } }          // ett slag där du inte är med: raderna säger vad som händer
