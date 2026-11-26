@@ -54,7 +54,7 @@
       if (f0 && S.bygg) for (const id in S.bygg) W._byggnad(id, true);          // byggnaderna man har köpt (se D.BYGGNADER)
       // sjön Åsunden finns inte i kartans vatten: den målas dit där slaget står, långsmal längs vägen in mot Bogesund
       if (f0 && S.nasta >= idx('sAsunden') - 1 && !dekor.asunden) { const v = R.path('skara', 'bogesund'), e = v[v.length - 1], q = v[Math.max(0, v.length - 6)], L = Math.hypot(e[0] - q[0], e[1] - q[1]) || 1, dx = (e[0] - q[0]) / L, dz = (e[1] - q[1]) / L;
-        World.Paint.river([[e[0] - dx * 6.5, e[1] - dz * 6.5], [e[0] + dx * 8, e[1] + dz * 8]], 10.5); dekor.asunden = { sjo: { x: e[0] + dx * 0.7, z: e[1] + dz * 0.7, r: 8.2 } }; paintDirty = true; }
+        World.Paint.river([[e[0] - dx * 6.5, e[1] - dz * 6.5], [e[0] + dx * 8, e[1] + dz * 8]], 10.5); dekor.asunden = { sjo: { x: e[0] + dx * 0.7, z: e[1] + dz * 0.7, r: 8.2 } }; paintDirty = true; W._isAsunden(e, dx, dz); }
       W._dekor('danskLager', f0 && S.nasta > idx('sUppsala'), () => lager(R.P.brunkeberg, 12));
       W._dekor('danskFlotta', f0 && S.nasta > idx('sUppsala'), () => W._flotta('stockholm', 4, 'danmark'));
       // belägringen av Stockholm, flottor som ligger kvar
@@ -284,7 +284,7 @@
     },
     _skattLag(skattVis, s) {
       const dist = skattVis.len * Math.min(1, s.t / s.dur);
-      skattVis.enh.forEach((e, i) => { const a = R.along(skattVis.pts, Math.max(0, dist - Math.floor(i / 2) * 0.36)), kol = ((i % 2) - 0.5) * 0.3; e.x = a.x + Math.cos(a.ang) * kol; e.z = a.z - Math.sin(a.ang) * kol; e.ang = a.ang; e.gar = true; e.skidar = false; });
+      skattVis.enh.forEach((e, i) => { const a = R.along(skattVis.pts, Math.max(0, dist - Math.floor(i / 2) * 0.36)), kol = ((i % 2) - 0.5) * 0.3 + (G.s.varld === 0 ? 0.24 : 0); e.x = a.x + Math.cos(a.ang) * kol; e.z = a.z - Math.sin(a.ang) * kol; e.ang = a.ang; e.gar = true; e.skidar = false; });
     },
     // Spelaren trycker medan striden pågår: en salva pilar, kanonerna eller en stöt framåt. Striden blir inte kortare av det.
     _drag(skede) {
@@ -361,6 +361,7 @@
       // rök ur skorstenar och hyttor, gnistor ur eldar
       smokeAcc += dt; if (smokeAcc > 0.22) { smokeAcc = 0; const c = Scene.cam; for (const s of B.smoke) { if (Math.abs(s.x - c.x) > c.d * 1.2 + 10 || Math.abs(s.z - c.z) > c.d + 10) continue; if (!S.bas[s.bas] && s.slag !== 'eld') { if (Math.random() < 0.5) continue; } if (s.slag === 'eld') Fx.gnista(s.x, s.y, s.z); else if (Math.random() < 0.7) Fx.rok(s.x, s.y, s.z, false); }
         for (const u in S.uppror) if (S.uppror[u]) for (const id of D.UPPROR[u].baser) if (S.bas[id]) { const p = R.P[id]; Fx.rok(p.x + (Math.random() - 0.5) * 2, p.y + 0.4, p.z + (Math.random() - 0.5) * 2, true); } }
+      if (dekor.asundenIs) { const o = Math.max(0, Math.min(1, (V.U.uIce.value - 0.3) * 3)); dekor.asundenIs.visible = o > 0.01; dekor.asundenIs.material.opacity = o; }          // isen på Åsunden bara när sjöarna är frusna
       for (const k in dekor) { const g = dekor[k]; if (g && g.userData && g.userData.skepp) g.userData.skepp.forEach((s, i) => { s.position.y = 0.02 + Math.sin(t * 1.3 + i) * 0.025; s.rotation.z = Math.sin(t * 1.1 + i * 2) * 0.04; }); }
     },
     // Vem som rider rundan mellan platserna: du själv (Johannes 2026-11-26: "det var roligare när man åkte runt mellan städerna").
@@ -416,7 +417,8 @@
         gd -= seg.len; if (seg.to) { sistaBas = seg.to; G.besok(seg.to, false); }
         if (pre) pre = null; else gseg = (gseg + 1) % route.length; seg = route[gseg];
       }
-      const a = R.along(seg.pts, gd); ry.place(a.x, a.z, a.ang, 0.85, t, dt, false); W._placerad = true;
+      const a = R.along(seg.pts, gd), hi = []; (skattVis || []).forEach(q => q.enh.forEach(e => hi.push(e))); lopare.forEach(l => hi.push(l.u)); W._filR = W._fil(W._filR, a, dt, hi);
+      ry.place(a.x + Math.cos(a.ang) * W._filR, a.z - Math.sin(a.ang) * W._filR, a.ang, 0.85, t, dt, false); W._placerad = true;          // vägens högra sida (W._fil)
       // kameran följer dig, tills du själv flyttar kartan. Knappen Hitta mig slår på det igen.
       if (!kristina) { const c = Scene.cam; if (!V.tyst && c.user <= (W._foljMig || 0) && !c.fly && !c.locked && !vis && performance.now() > (W._foljPaus || 0)) { if (W._foljD) { c.td = W._foljD; W._foljD = 0; } c.tx = a.x; c.tz = a.z + (Scene.lyft ? 0 : 1.2); } }
     },
@@ -469,7 +471,7 @@
       for (const l of lopare) {
         l.seg %= route.length; let seg = route[l.seg]; l.d += v; let guard = 0;
         while (l.d >= seg.len && guard++ < 20) { l.d -= seg.len; if (seg.to) G.besok(seg.to, true); l.seg = (l.seg + 1) % route.length; seg = route[l.seg]; }
-        const a = R.along(seg.pts, l.d); l.u.x = a.x; l.u.z = a.z; l.u.ang = a.ang; l.u.skidar = G.s.varld === 1 && (World.snowAt(a.x, a.z) > 0.45 || World.iceAt(a.x, a.z)); l.u.lean = 0.2;
+        const a = R.along(seg.pts, l.d), ry = W._ryttare(); if (G.s.varld === 0) l.fil = W._fil(l.fil, a, dt, ry.g && ry.g.visible ? [ry] : []); const lf = l.fil || 0; l.u.x = a.x + Math.cos(a.ang) * lf; l.u.z = a.z - Math.sin(a.ang) * lf; l.u.ang = a.ang; l.u.skidar = G.s.varld === 1 && (World.snowAt(a.x, a.z) > 0.45 || World.iceAt(a.x, a.z)); l.u.lean = 0.2;
       }
     },
     // Folket i baserna: några som går omkring, och uppbådet som samlas kring elden.
@@ -481,17 +483,79 @@
         for (const v of list) {
           const u = v.u, dx = v.tx - u.x, dz = v.tz - u.z, d = Math.hypot(dx, dz);
           if (v.hopp > 0) { v.hopp -= dt; u.y = Math.abs(Math.sin(v.hopp * 12)) * 0.1; } else u.y = 0;
-          if (d > 0.06) { u.gar = true; u.ang = Math.atan2(dx, dz); const st = Math.min(d, 0.5 * dt); u.x += dx / d * st; u.z += dz / d * st; }
-          else { u.gar = false; v.vanta -= dt; if (v.vanta <= 0) { const q = W._ledig(tm); v.tx = p.x + q[0]; v.tz = p.z + q[1]; v.vanta = 1 + Math.random() * 4; } }
+          if (d > 0.06) { u.gar = true; u.ang = Math.atan2(dx, dz); const st = Math.min(d, 0.5 * dt), nx = u.x + dx / d * st, nz = u.z + dz / d * st; if (S.varld === 0 && W._iHus(tm, nx, nz) && !W._iHus(tm, u.x, u.z)) { v.tx = u.x; v.tz = u.z; } else { u.x = nx; u.z = nz; } }          // förspelet: aldrig in i ett hus
+          else { u.gar = false; v.vanta -= dt; if (v.vanta <= 0) { const q = S.varld === 0 ? W._ledigVag(tm, u.x, u.z) : W._ledig(tm); if (q) { v.tx = p.x + q[0]; v.tz = p.z + q[1]; } v.vanta = 1 + Math.random() * 4; } }
         }
       }
+      if (S.varld === 0) W._kroppar();
       // uppbådet: ju fullare hären är, desto fler står kring elden i bygderna
       const bygder = D.BASER.filter(b => b.slag === 'bygd' && S.bas[b.id]), tak = G.tak(), want = bygder.length ? Math.round(Math.min(1, S.res.man / tak) * Math.min(40, 10 + bygder.length * 8)) : 0;
       W._hopT = (W._hopT || 0) + dt;
       if (W._hopT > 0.12) { W._hopT = 0;
-        if (hop.length < want) { const b = bygder[hop.length % bygder.length], p = R.P[b.id], a = Math.random() * 6.283, d = 0.6 + Math.random() * 1.5, fz = p.z + 0.5 * B.K, x = p.x + Math.cos(a) * d, z = fz + Math.sin(a) * d * 0.8; hop.push(Folk.add(x, z, S.las.flotta && Math.random() < 0.25 ? 'knekt' : 'bonde', { ang: Math.atan2(p.x - x, fz - z), pike: Math.random() < 0.5 })); }
+        if (hop.length < want) { const b = bygder[hop.length % bygder.length], p = R.P[b.id], fz = p.z + 0.5 * B.K, xz = W._hopPlats(p.x, fz), x = xz[0], z = xz[1]; hop.push(Folk.add(x, z, S.las.flotta && Math.random() < 0.25 ? 'knekt' : 'bonde', { ang: Math.atan2(p.x - x, fz - z), pike: Math.random() < 0.5 })); }
         else if (hop.length > want) Folk.remove(hop.pop());
       }
+    },
+    // Isen på Åsunden (förspelet): sjön finns inte i kartans vatten, så den målas i marken (sync) och får här en egen yta med blå is och snödrivor,
+    // lagd efter marken, så att den syns mot snön. Den tonas in när det är is på sjöarna (update).
+    _isAsunden(e, dx, dz) {
+      const L = h => { const q = V.hexToLin(h); return new THREE.Color(q.r, q.g, q.b); }, is = L('#8fb4c9'), klar = L('#5d8ea9'), sno = L('#e4ecf2'), c = new THREE.Color();
+      const A = [e[0] - dx * 6.2, e[1] - dz * 6.2], Bp = [e[0] + dx * 7.6, e[1] + dz * 7.6], nx = -dz, nz = dx, NU = 40, NV = 14, pos = [], col = [], idx = [];
+      for (let i = 0; i <= NU; i++) for (let j = 0; j <= NV; j++) {
+        const u = i / NU, v = j / NV * 2 - 1, hw = 4.4 * Math.sqrt(Math.max(0, 1 - Math.pow(2 * u - 1, 2))) * (0.9 + 0.12 * Math.sin(u * 17 + (v > 0 ? 1 : 4))), x = A[0] + (Bp[0] - A[0]) * u + nx * v * hw, z = A[1] + (Bp[1] - A[1]) * u + nz * v * hw;
+        pos.push(x, Math.max(0.02, Geo.groundAt(x, z)) + 0.035, z);
+        const n1 = Math.sin(x * 0.9 + z * 0.35) * Math.sin(z * 0.8 - x * 0.2), drev = Math.max(0, Math.sin((x * 0.55 + z * 0.85) * 1.7 + n1 * 1.5));
+        c.copy(is).lerp(klar, Math.max(0, n1) * 0.85).lerp(sno, Math.min(1, Math.pow(drev, 8) * 0.6 + Math.pow(Math.abs(v), 5) * 0.55)); col.push(c.r, c.g, c.b);
+      }
+      for (let i = 0; i < NU; i++) for (let j = 0; j < NV; j++) { const a = i * (NV + 1) + j, b = a + NV + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
+      const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+      m.receiveShadow = true; m.renderOrder = 1; m.visible = false; scene.add(m); dekor.asundenIs = m;
+    },
+    // Fasta kroppar (förspelet, Johannes 2026-11-26: "alla modeller ska ha en fast kropp, en hitbox").
+    // Vägens högra sida: fil = hur långt till höger om vägens mitt. Ligger någon framför i samma riktning går man ut till vänster och kör om.
+    _fil(fil, a, dt, hinder) {
+      let mal = 0.16; const fx = Math.sin(a.ang), fz = Math.cos(a.ang), sx = Math.cos(a.ang), sz = -Math.sin(a.ang), x0 = a.x + sx * 0.16, z0 = a.z + sz * 0.16;
+      for (const u of hinder) { if (!u || u.vis === false) continue; const dx = u.x - x0, dz = u.z - z0, fram = dx * fx + dz * fz, sid = dx * sx + dz * sz; if (fram > -0.3 && fram < 0.9 && Math.abs(sid) < 0.3 && Math.cos((u.ang || 0) - a.ang) > 0.3) { mal = -0.24; break; } }
+      const f0 = fil === undefined ? 0.16 : fil; return f0 + (mal - f0) * Math.min(1, dt * 3);
+    },
+    // Står punkten i ett hus eller i vattnet (i en plats med hus)?
+    _iHus(tm, x, z) { const K = B.K, lx = (x - tm.p.x) / K, lz = (z - tm.p.z) / K; return Geo.sdAt(x, z) <= 0.4 || tm.occ.some(o => Math.hypot(o[0] - lx, o[1] - lz) < o[2] * 0.75); },
+    // En ledig fläck att gå till, dit vägen inte går genom något hus
+    _ledigVag(tm, x0, z0) {
+      const inne = W._iHus(tm, x0, z0);          // står man redan i ett hus (staden har vuxit runt en) får man gå ut åt vilket håll som helst
+      for (let k = 0; k < 12; k++) { const q = W._ledig(tm), x = tm.p.x + q[0], z = tm.p.z + q[1], n = Math.max(2, Math.ceil(Math.hypot(x - x0, z - z0) / 0.25)); let ok = true; if (!inne) for (let s = 1; s < n; s++) if (W._iHus(tm, x0 + (x - x0) * s / n, z0 + (z - z0) * s / n)) { ok = false; break; } if (ok) return q; }
+      return null;
+    },
+    // Folket i städerna kliver åt sidan för varandra och för dem som går på vägen (ryttaren, skattelagen, löparna, hären), men aldrig in i ett hus
+    _kroppar() {
+      const hard = [], Gu = V.Gustav, Bu = V.Bud;
+      if (Gu.g && Gu.g.visible) hard.push([Gu.x, Gu.z, 0.3]); if (Bu.g && Bu.g.visible) hard.push([Bu.x, Bu.z, 0.3]); if (W._kristina) hard.push([W._kristina.x, W._kristina.z, 0.14]);
+      (skattVis || []).forEach(q => q.enh.forEach(e => hard.push([e.x, e.z, 0.12]))); lopare.forEach(l => hard.push([l.u.x, l.u.z, 0.12])); hop.forEach(h => hard.push([h.x, h.z, 0.12]));
+      if (vis) { vis.enh.forEach(e => { if (e.vis !== false) hard.push([e.x, e.z, 0.12]); }); vis.fi.forEach(e => hard.push([e.x, e.z, 0.12])); }
+      for (const id in vandrare) {
+        const tm = tomt[id], l = vandrare[id]; if (!tm || !l.length) continue; const nara = hard.filter(h => Math.abs(h[0] - tm.p.x) < tm.R + 1 && Math.abs(h[1] - tm.p.z) < tm.R + 1);
+        for (let i = 0; i < l.length; i++) {
+          const u = l[i].u; let px = 0, pz = 0;
+          for (const h of nara) { const dx = u.x - h[0], dz = u.z - h[1], d = Math.hypot(dx, dz), m = 0.11 + h[2]; if (d < m && d > 1e-4) { px += dx / d * (m - d); pz += dz / d * (m - d); } }
+          for (let j = 0; j < l.length; j++) { if (j === i) continue; const o = l[j].u, dx = u.x - o.x, dz = u.z - o.z, d = Math.hypot(dx, dz); if (d < 0.22 && d > 1e-4) { px += dx / d * (0.22 - d) * 0.5; pz += dz / d * (0.22 - d) * 0.5; } }
+          if (px || pz) { if (!W._iHus(tm, u.x + px, u.z + pz)) { u.x += px; u.z += pz; } else if (!W._iHus(tm, u.x + pz, u.z - px)) { u.x += pz; u.z -= px; } }
+        }
+      }
+    },
+    // För provet: hur många i städerna står i varandra, i ett hus, eller i den som rider förbi
+    _provKroppar() {
+      const ut = { folk: 0, par: 0, iHus: 0, vidRyttaren: 0, pavagen: 0 }, ry = W._ryttare();
+      if (ry.g && ry.g.visible) { (skattVis || []).forEach(q => q.enh.forEach(e => { if (Math.hypot(e.x - ry.x, e.z - ry.z) < 0.15) ut.pavagen++; })); lopare.forEach(l => { if (Math.hypot(l.u.x - ry.x, l.u.z - ry.z) < 0.15) ut.pavagen++; }); }          // ryttaren i någon som går på vägen
+      for (const id in vandrare) { const tm = tomt[id], l = vandrare[id]; if (!tm) continue; ut.folk += l.length;
+        l.forEach((v, i) => { const u = v.u; if (W._iHus(tm, u.x, u.z)) ut.iHus++; if (ry.g && ry.g.visible && Math.hypot(u.x - ry.x, u.z - ry.z) < 0.25) ut.vidRyttaren++; for (let j = i + 1; j < l.length; j++) if (Math.hypot(u.x - l[j].u.x, u.z - l[j].u.z) < 0.15) ut.par++; }); }
+      return ut;
+    },
+    // En plats kring elden där ingen annan redan står (förspelet; i Gustavs värld som förut)
+    _hopPlats(cx, cz) {
+      let x = cx, z = cz;
+      for (let k = 0; k < 8; k++) { const a = Math.random() * 6.283, d = 0.6 + Math.random() * 1.5; x = cx + Math.cos(a) * d; z = cz + Math.sin(a) * d * 0.8; if (G.s.varld !== 0 || !hop.some(h => Math.hypot(h.x - x, h.z - z) < 0.24)) break; }
+      return [x, z];
     },
     _ledig(tm) { const K = B.K; for (let k = 0; k < 12; k++) { const a = Math.random() * 6.283, d = Math.random() * tm.R / K * 0.75, x = Math.cos(a) * d, z = Math.sin(a) * d * 0.85 + 0.3; if (Geo.sdAt(tm.p.x + x * K, tm.p.z + z * K) > 0.4) { let ok = true; for (const o of tm.occ) if (Math.hypot(o[0] - x, o[1] - z) < o[2] * 0.75) { ok = false; break; } if (ok) return [x * K, z * K]; } } return [0, 0.6 * K]; },
     // ---- förspelets fälttåg och slag (Johannes 2026-11-26) ----
