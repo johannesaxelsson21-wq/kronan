@@ -318,7 +318,7 @@
       }
       // ortnamnen vid varje ort (förspelet, Johannes 2026-11-26: "deras namn ska synas på nåt sätt så man ser vid orten vilken det är")
       { const lista = spel && S.varld === 0 ? V.Varld.ortnamn() : [], sett = {};          // i ett slag: vem som är vem
-        for (const o of lista) { let e = ortEl[o.id]; if (!e) { e = ortEl[o.id] = el('div', 'ortnamn', o.namn); $('ortnamn').appendChild(e); const oid = o.id; e.addEventListener('click', ev => { ev.stopPropagation(); if (G.s.bas[oid]) { V.Ljud && V.Ljud.vakna(); UI.visaStad(oid); } }); } sett[o.id] = 1;          // ett tryck på namnet öppnar stadens flik
+        for (const o of lista) { let e = ortEl[o.id]; if (!e) { e = ortEl[o.id] = el('div', 'ortnamn', o.namn); $('ortnamn').appendChild(e); const oid = o.id; e.addEventListener('click', ev => { ev.stopPropagation(); if (G.s.bas[oid]) { V.Ljud && V.Ljud.vakna(); UI.visaStad(oid); if (UI.onVisaBas) UI.onVisaBas(oid); } }); } sett[o.id] = 1;          // ett tryck på namnet öppnar stadens flik
           const sp = V.Scene.screenPoint(o.x, o.y, o.z), dold = sp.behind || sp.x < 12 || sp.x > innerWidth - 12 || sp.y < 56 || sp.y > golv + 10 || UI._skymd(sp); e.style.display = dold ? 'none' : ''; if (!dold) e.style.transform = 'translate(' + Math.round(sp.x) + 'px,' + Math.round(sp.y) + 'px) translate(-50%, 0)'; }
         for (const id in ortEl) if (!sett[id] && ortEl[id].style.display !== 'none') ortEl[id].style.display = 'none'; }
       // marknadsdag: en gyllene knapp över platsen
@@ -413,12 +413,12 @@
       if (g.slutar === 'privilegier') x.push('Städerna ger full mark igen.');
       if (g.las && g.las.indexOf('fogdar') >= 0) x.push('Nu finns kortet <b>Sätt en fogde</b>. En fogde är din man på platsen, och han bygger ut den åt dig.');
       if (g.las && g.las.indexOf('arv') >= 0) x.push('Det du bygger från och med nu går i <b>arv</b> till nästa regent.');
-      if (g.startar === 'dagtingan') x.push('De flesta herrarna har gått över till Kristian. <b>Uppsala</b> ger dig ingenting längre.');
+      if (g.startar === 'dagtingan') x.push('De flesta herrarna har gått över till Kristian. <b>Uppsala</b> ger ingenting längre.');
       else if (g.startar && D.UPPROR[g.startar].baser.length) x.push('<b>' + D.UPPROR[g.startar].namn + '</b>: ' + D.UPPROR[g.startar].baser.filter(id => S.bas[id]).map(id => G.BAS[id].namn).join(', ') + ' ger ingenting förrän du har gjort något åt det.');
       if (g.slutar && g.slutar !== 'privilegier') x.push('Baserna ger som vanligt igen.');
       const hn = G.handlingar(); if (!S.handlSedda) { S.handlSedda = {}; if (S.handlSagt) hn.forEach(h => { S.handlSedda[h.id] = 1; }); }          // äldre sparfiler räknade bara antalet
       hn.filter(h => !S.handlSedda[h.id]).forEach(h => { S.handlSedda[h.id] = 1; x.push('Ny handling ' + (innerWidth < 720 ? 'ovanför' : 'bredvid') + ' den runda knappen: <b>' + UI.handlNamn(h) + '</b>. ' + h.vad + ' Sedan behöver du vila.'); });
-      if (g.hjalte) x.push('Du är nu <b>Kristina Gyllenstierna</b>, hans änka. Du håller Stockholms slott och skriver till bönderna om hjälp.');
+      if (g.hjalte) x.push('Nu spelar du <b>Kristina Gyllenstierna</b>, hans änka. Hon håller Stockholms slott och skriver till bönderna om hjälp.');
       UI.berattar(UI.platsnamn(u.plats) + ' ' + u.ar, [scen && u.efter ? u.efter : u.kronika].concat(x));
       if (u.mer) { const b = $('berattar'), l = el('a', 'ber-mer', 'Läs mer om varför'); l.href = '#'; l.addEventListener('click', ev => { ev.preventDefault(); UI.merInfo(u); }); b.insertBefore(l, b.querySelector('button')); }          // och samma ruta härifrån
     },
@@ -428,7 +428,7 @@
         ? [['Bud', 'Den runda knappen är det du gör just nu. Först skickar du bud till din fars slott. Varje tryck ger mark, och knappen byter namn när historien går vidare.'], [IK.mark, '<b>Mark</b> är rikets pengar. Städerna ger mark hela tiden, och mer varje gång du rider förbi.'], [IK.pil, '<b>Bygg ut</b> en stad med knappen, eller ' + KLICKA + ' på den på kartan. Var tionde nivå dubblar.'], [IK.krona, '<b>Nästa steg</b> är historien. Den går vidare när du har råd.']]
         : [['Bud', 'Den runda knappen är det du gör just nu. Först skickar du bud till byarna. Varje tryck ger män, och knappen byter namn när historien går vidare.'], [IK.man, '<b>Män</b> är de som följer dig. Byarna ger män hela tiden, och du behöver dem för att slåss.'], [IK.pil, '<b>Bygg ut</b> en by med knappen, eller ' + KLICKA + ' på den på kartan. Var tionde nivå dubblar.'], [IK.krona, '<b>Nästa steg</b> är historien. Den går vidare när du har folk nog.']];
       const text = varld === 0
-        ? '<h2>Sverige 1512</h2><p>Du är <b>Sten Sture</b>, nitton år och riddare. Du är inte kung. Sverige har ingen: riket hör till en union med Danmark och Norge, men har inte erkänt unionens kung sedan 1501.</p><p>I kungens ställe styr en riksföreståndare. Det var din far, och nu är han död. Rådet tänker ge hans plats till en man som vill gå Danmarks kung till mötes.</p><p class="mal">Bygg upp dina städer, vinn folket och håll riket.</p>'
+        ? '<h2>Sverige 1512</h2><p>Du spelar <b>Sten Sture</b>, nitton år och riddare. Han är inte kung. Sverige har ingen: riket hör till en union med Danmark och Norge, men har inte erkänt unionens kung sedan 1501.</p><p>I kungens ställe styr en riksföreståndare. Det var hans far, och nu är han död. Rådet tänker ge hans plats till en man som vill gå Danmarks kung till mötes.</p><p class="mal">Bygg upp dina städer, vinn folket och håll riket.</p>'
         : '<h2>Dalarna 1521</h2><p>Du är <b>Gustav Eriksson</b>, 24 år. Sveriges kung heter nu Kristian II av Danmark, och han lät halshugga din far i Stockholm.</p><p>Dalkarlarna har valt dig till sin ledare. Resten av riket lyder Kristian.</p><p class="mal">Samla folk, ta Kopparberget och driv ut danskarna.</p>';
       UI.ruta(text + '<div class="hur">' + hur.map(h => '<div><span class="hur-i">' + h[0] + '</span><span>' + h[1] + '</span></div>').join('') + '</div><button class="stang" id="forklara-knapp">' + (igen ? 'Stäng' : 'Börja') + '</button>', !igen);
       UI._paus = !igen; if (!igen && V.Musik) V.Musik.spar('titel');
@@ -470,7 +470,7 @@
     kronika() {
       const S = G.s; let h = '<h2>Krönikan</h2><div class="krono">', akt = -1; const alla = G.alla();
       for (const k of S.kronika) { const u = alla.find(q => q.id === k.id); if (!u) continue; if (u.akt !== akt) { akt = u.akt; h += '<h3>' + D.AKTER[akt] + '</h3>'; } h += '<p>' + u.kronika + '</p>'; }
-      if (!S.kronika.length && S.varld === 0) h += '<p class="svag">Året är 1512. Du är Sten Sture, nitton år. Din far riksföreståndaren har just dött, och rådet vill ha en annan man i hans ställe.</p>';
+      if (!S.kronika.length && S.varld === 0) h += '<p class="svag">Sten Sture är nitton år. Hans far riksföreståndaren har just dött, och rådet vill ha en annan man i hans ställe.</p>';
       else if (!S.kronika.length) h += '<p class="svag">Julen 1520 talade Gustav Eriksson till männen i Mora. De sade nej, och han åkte mot Norge. I Sälen hann två skidlöpare upp honom: Mora hade ändrat sig. Så berättar Peder Svarts krönika.</p>';
       UI.ruta(h + '</div><button class="stang">Stäng</button>');
     },

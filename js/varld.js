@@ -164,7 +164,8 @@
       const S = G.s, ids = Object.keys(S.bas), tour = R.tour(ids), key = tour.join(','); if (key === W._ruttKey) return; W._ruttKey = key;
       const fr = W._ruttKlar && W._placerad ? W._framTill() : null;          // vägen han är på just nu, i den gamla rundan
       route = [];
-      if (tour.length === 1) {
+      if (tour.length === 1 && S.varld === 0) { /* förspelet: en enda plats och ingen runda, han står vid slottet (se _gustav) */ }
+      else if (tour.length === 1) {
         const u = D.UPPDRAG[S.nasta], mal = u && R.P[u.plats] ? u.plats : 'rattvik', full = R.path(tour[0], mal), ut = []; let d = 0;
         for (let q = 0; q < full.length && d < 3.4; q++) { ut.push(full[q]); if (q) d += Math.hypot(full[q][0] - full[q - 1][0], full[q][1] - full[q - 1][1]); }
         route.push({ pts: ut, len: R.length(ut), to: null }, { pts: ut.slice().reverse(), len: R.length(ut), to: tour[0] });
@@ -347,6 +348,7 @@
     _malUppdrag() { return { pos: () => vis && W._foljVis ? { x: W._foljVis.x, z: W._foljVis.z, d: G.skede() === 'strid' ? W._foljVis.d : 0 } : null }; },
     _malHjalten() { const Gu = V.Gustav; return { pos: () => { const k = G.s.hjalte === 'kristina' && W._kristina; if (k) return { x: k.x, z: k.z }; if (vis && vis.gustav && W._foljVis) return W._malUppdrag().pos(); return Gu.g.visible ? { x: Gu.x, z: Gu.z } : null; } }; },
     foljUppdraget() { if (vis && !V.tyst) W._foljer = Object.assign({ t: performance.now() }, W._malUppdrag()); },          // i slaget: varje tryck tar kameran tillbaka dit
+    foljPlats(id) { if (!V.tyst && R.P[id]) W._foljer = { t: performance.now(), pos: () => ({ x: R.P[id].x, z: R.P[id].z }) }; },          // en vald stad: kameran står där tills man drar eller väljer något annat
     foljHjalten() { if (!V.tyst) W._foljer = Object.assign({ t: performance.now() }, W._malHjalten()); },          // knappen Hitta mig
     _foljNu() {
       const fo = W._foljer; if (!fo) return; const c = Scene.cam, p = c.user > fo.t || c.locked || V.tyst ? null : fo.pos();
@@ -449,7 +451,8 @@
         if (W._borta) { W._borta = false; W._tillRundan(Gu.x, Gu.z, W._plats); W._plats = null; }
       }
       const ry = kristina ? Bu : Gu;
-      if (!route.length) { if (kristina) Bu.g.visible = false; else { const q = W.sate(); Gu.place(q.x, q.z, q.ang, 0, t, dt, false, true); } return; }
+      if (!route.length) { if (kristina) Bu.g.visible = false; else { const q = W.sate(); Gu.place(q.x, q.z, q.ang, 0, t, dt, false, true); W._placerad = true; W._stodStilla = true; } return; }          // han står still vid slottet, och kameran står still
+      if (W._stodStilla && !kristina) { W._stodStilla = false; if (Scene.cam.user <= (W._foljMig || 0) || Scene.cam.user < 1) W._foljMig = performance.now(); }          // nu rider han iväg: först nu följer kameran honom (om man inte själv har flyttat kartan)
       // jämn takt: trycken gör ingen resa snabbare (Johannes 2026-11-26: "Det får inte snabba upp något typ av resande"). Förmågan Hästar gör den snabbare för gott.
       const v = G.hastighet() * JAMN * dt; let seg = pre || route[gseg]; gd += v;
       let guard = 0;

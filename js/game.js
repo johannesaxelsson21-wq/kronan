@@ -25,7 +25,32 @@
     ny(arv) { const gammal = S; S = nytt(1); if (arv) { S.arv = gammal.arv; S.varv = gammal.varv; S.intro = true; S.ljud = gammal.ljud; S.forspel = gammal.forspel; } return S; },
     // Byt värld. Från förspelet följer städernas storlek med (de står kvar, nu i Kristians händer) och krönikan.
     nyVarld(v) { const g = S; S = nytt(v); S.ljud = g.ljud; S.arv = g.arv; S.varv = g.varv; if (v === 1 && g.varld === 0 && g.nasta > 0) { S.forspel = Object.assign({}, g.bas); S.kronika = g.kronika.slice(); } return S; },
-    ladda(o) { S = Object.assign(nytt(o.varld === 0 ? 0 : 1), o); S.res = Object.assign({ man: 0, mark: 0 }, o.res); S.x = Object.assign({ man: 1, mark: 1 }, o.x); S.konst = Object.assign({ skidor: 0, tal: 0, bud: 0, sigill: 0, langd: 0 }, o.konst); if (S.varld === 1 && S.nasta > D.VASA.findIndex(u => u.id === 'hedemora')) S.las.sold = true; if (!S.skattLag) S.skattLag = S.skatt ? [Object.assign({ nr: 1 }, S.skatt)] : []; return S; },
+    // ---- en ny sak i taget (förspelet, Johannes 2026-11-26): varje ny knapp, byggnad och förmåga kommer för sig, med en lugn rad om vad den är ----
+    // nar = när den annars hade funnits. Den första som kan komma kommer, sedan dröjer det minst INFOR_MELLAN sekunder till nästa.
+    INFOR_MELLAN: 55,
+    INFOR: [
+      { id: 'bryggor', nar: () => G.husFinns0('bryggor'), text: 'Stockholm har bryggor där Hansans skepp lägger till. Under Stockholms flik kan du bygga ut dem, så ger staden mer mark.' },
+      { id: 'skatt', nar: () => G.harSkatt0(), text: 'Nu kan du driva in skatt: skicka ut män, så kommer de hem med mark. Kortet ligger under Män.' },
+      { id: 'knektar', nar: () => G.byggnader0().some(b => b.id === 'knektar'), text: 'Vid slottet kan du bygga ett hus för knektar. Sedan kan mark bli män.' },
+      { id: 'vhamn', nar: () => G.husFinns0('vhamn'), text: 'I Västerås hamn skeppas järn och koppar från Bergslagen ut. Under Västerås flik kan den byggas ut.' },
+      { id: 'garnison', nar: () => G.husFinns0('garnison'), text: 'Vid Åbo slott ligger en garnison. Under Åbos flik kan den växa, så ger Åbo fler män.' },
+      { id: 'h:tal', nar: () => G.harHandling0('tal'), text: 'Sten Sture kan tala till folket. Knappen Tala ger män, och sedan behöver han vila en stund.' },
+      { id: 'radstuga', nar: () => G.byggnader0().some(b => b.id === 'radstuga'), text: 'I Stockholm kan du bygga rådstugan. Där skrivs och beseglas breven.' },
+      { id: 'k:tal', nar: () => G.harKonst0('tal'), text: 'Sedan bönderna valde Sten Sture lyssnar fler när han kommer. Förmågan Ordets makt ligger under Män.' },
+      { id: 'gardar', nar: () => G.husFinns0('gardar'), text: 'Kring Nyköping kan det bli fler gårdar. Då ger bönderna där fler män.' },
+      { id: 'marknad', nar: () => S.t > 60, text: 'Ibland är det marknadsdag i en stad. Då står en gyllene knapp över staden: tryck på den.' },
+      { id: 'ladugard', nar: () => G.byggnader0().some(b => b.id === 'ladugard'), text: 'Kronans gård vid Vädla kan byggas ut. Då rymmer armén fler.' },
+      { id: 'k:bud', nar: () => G.harKonst0('bud'), text: 'Efter segern vid Vädla kan Sten Sture skicka fler bud. Förmågan Fler bud ligger under Mark.' },
+      { id: 'disting', nar: () => G.husFinns0('disting'), text: 'Uppsala har en stor marknad i februari, Distingen. Under Uppsalas flik kan den byggas ut.' },
+      { id: 'torn', nar: () => G.byggnader0().some(b => b.id === 'torn'), text: 'Stockholms mur kan få nya torn. De ger fler män och skjuter när staden belägras.' },
+    ],
+    inford(id) { return S.varld !== 0 || !G.INFOR.some(q => q.id === id) || !!(S.inford && S.inford[id]); },
+    _infor() {
+      if (S.varld !== 0 || S.slut || G.skede() || S.t < 45 || S.t - (S.infordT || 0) < G.INFOR_MELLAN) return; const inf = S.inford || (S.inford = {});
+      for (const q of G.INFOR) { if (inf[q.id] || !q.nar()) continue; inf[q.id] = S.t; S.infordT = S.t; G.ut('infor', { id: q.id, text: q.text }); return; }
+    },
+    inforAlla() { const inf = S.inford || (S.inford = {}); for (const q of G.INFOR) if (!inf[q.id]) inf[q.id] = S.t || 1; },          // för provet
+    ladda(o) { S = Object.assign(nytt(o.varld === 0 ? 0 : 1), o); S.res = Object.assign({ man: 0, mark: 0 }, o.res); S.x = Object.assign({ man: 1, mark: 1 }, o.x); S.konst = Object.assign({ skidor: 0, tal: 0, bud: 0, sigill: 0, langd: 0 }, o.konst); if (S.varld === 1 && S.nasta > D.VASA.findIndex(u => u.id === 'hedemora')) S.las.sold = true; if (!S.skattLag) S.skattLag = S.skatt ? [Object.assign({ nr: 1 }, S.skatt)] : []; if (S.varld === 0 && !S.inford && S.t > 0) { S.inford = {}; for (const q of G.INFOR) if (q.nar()) S.inford[q.id] = 1; } return S; },
     alla() { return D.STURE.concat(D.VASA); },
 
     // Hären kan inte bli hur stor som helst: taket följer vad nästa fälttåg kräver (uppdragens manskap är historiens siffror).
@@ -58,12 +83,14 @@
     soldProd(L) { const So = S.varld === 0 ? SOLD0 : SOLD; L = L === undefined ? (S.sold || 0) : L; return L ? So.p0 * L * Math.pow(2, Math.floor(L / 10)) * S.x.man * G.arvX() * G.gang('man') : 0; },
     soldPris() { const So = S.varld === 0 ? SOLD0 : SOLD, p = So.c0 * Math.pow(So.r, S.sold || 0); return p < 1000 ? Math.ceil(p) : p; },
     // ---- byggnader (förspelet): köps för mark, byggs vid platsen och låser upp något ----
-    byggnader() { return S.varld === 0 && !S.slut ? D.BYGGNADER.filter(b => !b.niva && S.nasta >= b.fran && (!b.plats || S.bas[b.plats]) && !(S.bygg && S.bygg[b.id])) : []; },
+    byggnader() { return G.byggnader0().filter(b => G.inford(b.id)); },
+    byggnader0() { return S.varld === 0 && !S.slut ? D.BYGGNADER.filter(b => !b.niva && S.nasta >= b.fran && (!b.plats || S.bas[b.plats]) && !(S.bygg && S.bygg[b.id])) : []; },
     kanBygga(id) { const b = G.byggnader().find(q => q.id === id); return !!b && S.res.mark >= b.kostar; },
     bygg(id) { if (!G.kanBygga(id)) return false; const b = D.BYGGNADER.find(q => q.id === id); S.res.mark -= b.kostar; (S.bygg || (S.bygg = {}))[id] = 1; if (b.las) S.las[b.las] = true; if (b.xman) S.x.man *= b.xman; G.ut('byggnad', { id, b }); return true; },
     // ---- stadens hus (förspelet): köps i stadens flik, och varje nivå ger staden mer av det den ger (Johannes 2026-11-26) ----
     hus(id) { return (S.hus && S.hus[id]) || 0; },
-    husFinns(id) { const h = D.BYGGNADER.find(q => q.id === id); return S.varld === 0 && !S.slut && !!h && !!h.niva && S.nasta >= h.fran && !!S.bas[h.plats]; },
+    husFinns(id) { return G.husFinns0(id) && G.inford(id); },
+    husFinns0(id) { const h = D.BYGGNADER.find(q => q.id === id); return S.varld === 0 && !S.slut && !!h && !!h.niva && S.nasta >= h.fran && !!S.bas[h.plats]; },
     husLista() { return D.BYGGNADER.filter(h => h.niva && G.husFinns(h.id)).map(h => h.id); },
     husRes(h) { return BAS[h.plats].ger; },
     husPris(id) { const h = D.BYGGNADER.find(q => q.id === id), p = h.c0 * Math.pow(h.r, G.hus(id)); return p < 1000 ? Math.ceil(p) : p; },
@@ -97,7 +124,8 @@
     // ---- kungens förmågor ---------------------------------------------------------------------
     konstPris(id) { const k = KONST[id], p = k.c0 * Math.pow(k.r, S.konst[id]); return p < 1000 ? Math.ceil(p) : p; },
     // I förspelet kommer varje förmåga från en byggnad eller ett steg (KONSTER bygg0 och steg0). I Gustavs värld låses alla upp på en gång.
-    harKonst(id) {
+    harKonst(id) { return G.harKonst0(id) && (S.varld !== 0 || !KONST[id].steg0 || G.inford('k:' + id)); },
+    harKonst0(id) {
       if (id === 'langd' && !G.harSkatt()) return false;          // skattelistor först när det finns skatt att driva in
       if (S.varld !== 0) return !!S.las.konster; const k = KONST[id];
       return k.bygg0 ? !!(S.bygg && S.bygg[k.bygg0]) : S.nasta > D.STURE.findIndex(u => u.id === k.steg0);
@@ -114,7 +142,8 @@
 
     // ---- farten: mätaren fylls av tryck, sjunker sakta och ger dubbel produktion när den är full ----
     // ---- egna handlingar: sådant hjälten gör själv, med vila emellan ------------------------------
-    harHandling(id) {
+    harHandling(id) { return G.harHandling0(id) && (id !== 'tal' || G.inford('h:tal')); },
+    harHandling0(id) {
       if (S.slut) return false; const harMan = Object.keys(S.bas).some(b => BAS[b].ger === 'man');
       // i förspelet kommer en ny sak i taget: breven när man blivit riksföreståndare (steg 3), talet steget efter
       if (id === 'tal') return S.nasta >= (S.varld === 0 ? 4 : 1) && harMan;
@@ -196,7 +225,8 @@
 
     // ---- driv in skatt: skicka ut män som kommer hem med mark ---------------------------------
     // Det kostar fyra tiondelar av vad hären rymmer och ger en kvarts minuts inkomst. Så är män värda något också mellan fälttågen.
-    harSkatt() { return !!S.las.mark && G.takt('mark') > 0 && Object.keys(S.bas).some(id => BAS[id].ger === 'man'); },
+    harSkatt() { return G.harSkatt0() && G.inford('skatt'); },
+    harSkatt0() { return !!S.las.mark && G.takt('mark') > 0 && Object.keys(S.bas).some(id => BAS[id].ger === 'man'); },
     skattPris() { return Math.max(10, Math.ceil(G.tak() * 0.4 / 5) * 5); },
     skattGer() { return Math.max(10, G.takt('mark') * G.skattSek()); },
     skattMax() { return 3; },                                              // så många skattelag kan vara ute på en gång
@@ -307,9 +337,10 @@
         S.fullT = S.res.man >= G.tak() * 0.999 ? (S.fullT || 0) + dt : 0;
         if ((S.las.fogdar ? S.fullT > 0 : S.fullT > 4) && !G.kanSkicka() && G.kanSkatt()) G.skatt(0, true);
       }
+      G._infor();          // förspelet: en ny sak i taget
       // marknadsdag: då och då är det marknad i en bygd eller stad. Den som trycker där får en klump på en gång.
       if (S.marknad) { S.marknad.t -= dt; if (S.marknad.t <= 0) { S.marknad = null; G.ut('marknadSlut', {}); } }
-      else if (!S.slut && S.t > 40 && !(S.varld === 0 && G.skede() === 'strid')) {          // förspelet: ingen marknad mitt i ett slag
+      else if (!S.slut && S.t > 40 && !(S.varld === 0 && G.skede() === 'strid') && G.inford('marknad')) {          // förspelet: ingen marknad mitt i ett slag
         S.marknadT = (S.marknadT === undefined ? 35 : S.marknadT) - dt;
         if (S.marknadT <= 0) { const ids = Object.keys(S.bas).filter(id => (BAS[id].slag === 'bygd' || BAS[id].slag === 'stad') && G.prod(id) > 0); S.marknadT = (S.varld === 0 ? 140 : 75) + Math.random() * 60; if (ids.length) { S.marknad = { bas: ids[Math.floor(Math.random() * ids.length)], t: 30 }; G.ut('marknad', { bas: S.marknad.bas }); } }
       }

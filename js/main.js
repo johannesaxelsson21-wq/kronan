@@ -27,6 +27,7 @@
     else if (typ === 'marknadKlar') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.2, p.z, 'Marknad +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark'), d.res); V.Ljud.spela('dubbel');
     }
     else if (typ === 'sold' && d.dubbel) UI.skylt((G.s.varld === 0 ? 'Knektarna' : 'Soldaterna') + ': dubbelt så många män');
+    else if (typ === 'infor') { if (!V.tyst) { UI.text(d.text, 10); V.Ljud.spela('klart'); } UI.tick(true); }          // en ny sak i taget, med en lugn rad
     else if (typ === 'slagStart') { UI.skylt(d.u.belagring ? 'Belägringen börjar' : 'Slaget börjar', true); V.Ljud.spela('horn'); }
     else if (typ === 'order') { const a0 = G.s.aktivt, ex = d.typ !== 'vanta' && a0 && !a0.forklarad ? 'Tryck på knappen många gånger. Ringen runt den fylls, och ju fler tryck, desto mer händer. Håll inte in.' : ''; if (ex) a0.forklarad = 1; UI.text(d.o.rad + (d.o.hur ? '<br>' + d.o.hur : '') + (ex ? '<br><b>' + ex + '</b>' : ''), d.typ === 'hugg' ? 6.8 : d.typ === 'vanta' ? 5.5 : 5, !!ex); V.Ljud.spela(d.typ === 'hugg' ? 'trumma' : 'horn'); }          // första gången förklaras varje sort          // i början av varje slag
     else if (typ === 'hugg') { UI.svar(d.traff ? 'Träff' : d.igen ? 'Vänta på nästa ring' : d.d < 0 ? 'Lite tidigt' : 'Lite sent', d.traff); }          // varje hugg får ett svar där ringen är
@@ -119,7 +120,7 @@
     const p = q.has('lon') ? Geo.place(+q.get('lon'), +q.get('lat')) : hemma(); Scene.jump(p.x, p.z + 1.5, +q.get('d') || 30);
     UI.onTryck = tryck; UI.onSkicka = () => Varld.skicka(); UI.onSkatt = () => G.skatt();
     UI.onHitta = () => { const w = Varld.gustavVid(); Scene.cam.user = performance.now(); Varld._foljMig = Scene.cam.user; Scene.flyTo(w.x, w.z + 1.2, UTSIKT, 0.9); if (G.s.varld === 0) Varld.foljHjalten(); };          // knappen Hitta mig
-    UI.onVisaBas = id => { const w = Varld.pos(id); Scene.flyTo(w.x, w.z + 1.2, Math.min(Scene.cam.d, 30), 0.9); };
+    UI.onVisaBas = id => { const w = Varld.pos(id); Scene.flyTo(w.x, w.z + 1.2, Math.min(Scene.cam.d, 30), 0.9); if (G.s.varld === 0) Varld.foljPlats(id); };          // förspelet: kameran stannar vid staden
     UI.onBorjaOm = () => { byter = true; try { localStorage.removeItem(SPAR); } catch (e) { /* inget */ } laddaOm(); };
     UI.onIgen = arv => { byter = true; G.s.arv += arv; G.s.varv++; const s = G.ny(true); s.intro = true; skriv(); laddaOm(); };
     Scene.onClick = (e, g) => {
@@ -128,7 +129,7 @@
       if (spelar && G.s.varld === 0 && Varld.valjVid(e.clientX, e.clientY, egen)) { V.Ljud.vakna(); return; }          // förspelet: det man trycker på följs (Johannes 2026-11-26)
       if (!egen) { tryck(); return; }
       if (G.s.marknad && G.s.marknad.bas === id) { V.Ljud.vakna(); G.marknadTa(); UI.tick(); return; }
-      if (G.s.varld === 0 && !UI.stadVald(id)) { V.Ljud.vakna(); UI.visaStad(id); return; }          // förspelet: första trycket på en stad eller ett av dess hus öppnar stadens flik, nästa bygger ut den
+      if (G.s.varld === 0 && !UI.stadVald(id)) { V.Ljud.vakna(); UI.visaStad(id); Varld.foljPlats(id); return; }          // förspelet: första trycket på en stad eller ett av dess hus öppnar stadens flik, nästa bygger ut den
       UI.valj(id); V.Ljud.vakna();
       if (!UI.kop(id)) { const w = Varld.pos(id), res = G.prisRes(id), fattas = G.pris(id) - G.s.res[res]; UI.flyt(w.x, w.y + 2.4, w.z, G.stoppad(id) ? 'Uppror' : fattas > 0 ? 'Fattas ' + V.tal(Math.ceil(fattas)) + (res === 'man' ? ' män' : ' mark') : 'Fattas ' + V.tal(Math.ceil(G.dagsverke(id) - G.s.res.man)) + ' män till dagsverken', 'nej'); V.Ljud.spela('trumma'); }
     };

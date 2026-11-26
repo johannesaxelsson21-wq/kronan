@@ -176,7 +176,7 @@
         const talt = () => { const q = ring[satta++]; if (!q) return; const mb = new V.MB(); B.talt(mb); const m = B.mesh(mb); m.position.set(q[0], Geo.groundAt(q[0], q[1]), q[1]); m.rotation.y = satta * 1.7; m.scale.setScalar(K); Scene.scene.add(m); tempM.push(m);
           const u = Folk.add(q[0] + (p.x - q[0]) * 0.16, q[1] + (p.z - q[1]) * 0.16, satta % 2 ? 'knekt' : 'bonde', { pike: true, ang: Math.atan2(p.x - q[0], p.z - q[1]) }); temp.push(u); Fx.damm(q[0], Geo.groundAt(q[0], q[1]), q[1], 5); };
         Scene.jump(p.x, p.z + 1.6, 25); plats('Stäket vid Mälaren, 1516');
-        await vanta(2); text('Ärkebiskop Gustav Trolle håller på Danmarks kung. Du stänger in honom i hans borg.'); await vanta(7);
+        await vanta(2); text('Ärkebiskop Gustav Trolle håller på Danmarks kung. Sten Sture stänger in honom i hans borg.'); await vanta(7);
         text('Tryck för att slå läger runt borgen');
         await tryckN('Slå läger', 6, k => { for (let j = 0; j < per; j++) talt(); L.spela('hammare'); L.spela('trumma'); if (k === 2) text(''); }, 18);
         while (satta < ring.length) talt();
@@ -239,7 +239,7 @@
         };
         const s = R.along(pts, d0); Bu.ang = s.ang; lagg(s, 0, tid, 0.016); Scene.jump(s.x, s.z + 1.5, 19); plats('Mälarens is, februari 1520');
         let slut = s; hooks.push(dt => { if (!aka) lagg(slut, 0, tid, dt); });
-        await vanta(2); text('En kanonkula har krossat ditt knä. Armén är slagen, och du körs hem mot Stockholm i släde.'); await vanta(7.5);
+        await vanta(2); text('En kanonkula har krossat Sten Stures knä. Armén är slagen, och han körs hem mot Stockholm i släde.'); await vanta(7.5);
         hooks = []; await akFard(pts, d0, d1, 1, 'Kör', 'Tryck för att köra', { kd: 18, ljud: 'hov', satt: lagg });
         UI.film.knapp(null); I.tar = null; slut = { x: Bu.x, z: Bu.z, ang: Bu.ang }; hooks.push(dt => lagg(slut, 0, tid, dt));
         L.spela('klocka'); text('Den 3 februari dör Sten Sture på isen, 27 år gammal.'); await vanta(7);
@@ -252,7 +252,7 @@
         for (let j = 0; j < 4; j++) for (const s of [-1, 1]) stall(kx + s * (0.6 + j * 0.56), kz + 0.04 + (j % 2) * 0.14, j % 2 ? 'borgare' : 'knekt', { pike: j % 2 === 0, ang: 0 });          // i rad framför slottsmuren, där hon står
         for (let i = 0; i < 4; i++) stall(kx - 3.1 - (i % 2) * 0.5, kz + 0.5 + Math.floor(i / 2) * 0.5, i % 2 ? 'knekt' : 'borgare', { pike: i === 1, ang: 1.3 });
         Scene.jump(kx - 0.4, kz + 2.0, 19); plats('Stockholms slott, sommaren 1520'); skylt('Kristina', () => kr || { x: kx, z: kz }, 1.5);
-        await vanta(2); text('September 1520. Ni har hållit ut hela sommaren, men ingen hjälp har kommit.'); await vanta(7);
+        await vanta(2); text('September 1520. Stockholm har hållit ut hela sommaren, men ingen hjälp har kommit.'); await vanta(7);
         if (!V.Game.s.aktivt || !V.Game.s.aktivt.val) {          // spelas scenen för sig själv (?scen=vallen) manar man som förut
         text('Tryck för att mana dem');
         await tryckN('Mana', 8, k => {
