@@ -3,7 +3,7 @@
 // Musiken startar vid första trycket (det kräver webbläsaren) och tonar över när stämningen byts.
 (function () {
   'use strict';
-  const V = window.VASA, LISTA = window.VASA_MUSIK || {}, SPAR = ['bygget', 'krig', 'blodbadet', 'vinter'], VOL = 0.3, STEG = 0.025;
+  const V = window.VASA, LISTA = window.VASA_MUSIK || {}, SPAR = Object.keys(LISTA), VOL = 0.3, STEG = 0.025;          // SPAR: allt som står i spellistan
   const lat = {}; let vill = null, pa = true, vaken = false, tm = null;
   // Ett spår är ett vanligt ljudelement. På nätet går det genom ljudmotorn, så att volymen går att styra också på iPhone
   // (där en sida inte får ändra ett ljudelements egen volym). Från fil (dubbelklick) styrs elementets volym direkt.
@@ -29,7 +29,8 @@
   const ga = () => { if (!tm) tm = setInterval(tona, 100); };
   const M = V.Musik = {
     SPAR,
-    finns() { return SPAR.some(n => !!LISTA[n]); },          // finns det någon musik alls? (annars visas ingen musikknapp)
+    finns() { return SPAR.length > 0; },          // finns det någon musik alls? (annars visas ingen musikknapp)
+    har(n) { return !!LISTA[n]; },
     // Byt stämning (tonar över). Okända namn struntas i. Saknar stämningen en fil tystnar musiken.
     spar(n) { if (SPAR.indexOf(n) < 0 || n === vill) return; vill = n; if (vaken) { skaffa(n); ga(); } },
     // Stämningen som hör till läget i spelet när inget särskilt händer

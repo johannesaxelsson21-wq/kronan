@@ -73,7 +73,7 @@
         </div>
         <div id="kort" style="display:none"></div>
         <div id="berattar" style="display:none"></div>
-        <div id="pilar"></div><div id="flyt"></div><div id="text"></div><div id="tips"></div>
+        <div id="pilar"></div><div id="vem-du" class="vem" style="display:none">Du</div><div id="vem-bud" class="vem" style="display:none">Ditt bud</div><div id="flyt"></div><div id="text"></div><div id="tips"></div>
         <div id="film"><div class="rand upp"></div><div class="rand ner"></div><div id="film-plats"></div><div id="film-text"></div><div id="film-tal"></div><div id="film-knapp"></div><div id="film-svart"></div></div>
         <div id="ruta" style="display:none"></div>`;
       $('ak').addEventListener('pointerdown', e => { e.preventDefault(); UI.onTryck && UI.onTryck(); });
@@ -109,7 +109,7 @@
           box.className = a.val ? 'val' : 'pagar'; $('upp-kost').innerHTML = a.val ? '' : '<span class="plats">' + UI.platsnamn(u.plats) + ' ' + u.ar + '</span>' + (G.skede() === 'strid' ? '<span class="chip strid">strid</span>' : '');
           $('upp-fyll').style.width = Math.min(100, a.t / a.dur * 100) + '%'; $('upp-knapp').textContent = a.val ? u.val : ''; $('upp-knapp').style.display = a.val ? '' : 'none'; $('upp-knapp').disabled = false;
         } else {
-          let h = ''; for (const r of ['man', 'mark']) if (k[r] > 0) { const ok = S.res[r] >= k[r]; h += '<span class="chip' + (ok ? ' ok' : '') + '" title="' + (r === 'man' ? (u.slag === 'bygg' ? 'Män som gör dagsverken på bygget' : 'Män som skickas iväg') : 'Mark som det kostar') + '">' + IK[r] + tal(k[r]) + (r === 'man' ? (u.slag === 'bygg' ? ' dagsverken' : ' män') : ' mark') + '</span>'; }
+          let h = ''; for (const r of ['mark', 'man']) if (k[r] > 0) { const ok = S.res[r] >= k[r]; h += '<span class="chip' + (ok ? ' ok' : '') + '" title="' + (r === 'man' ? (u.slag === 'bygg' ? 'Män som gör dagsverken på bygget' : 'Män som skickas iväg') : 'Mark som det kostar') + '">' + IK[r] + tal(k[r]) + (r === 'man' ? (u.slag === 'bygg' ? ' dagsverken' : ' män') : ' mark') + '</span>'; }
           if (u.lan) h = '<span class="chip ok">' + IK.skuld + 'på kredit</span>'; if (!h) h = '<span class="chip ok">' + IK.krona + 'ditt ord' + '</span>';
           const ok = G.kanSkicka(); box.className = ok ? 'redo' : ''; $('upp-kost').innerHTML = h; $('upp-fyll').style.width = G.framsteg(u) * 100 + '%';
           $('upp-knapp').style.display = ''; $('upp-knapp').textContent = u.titel.split(' ')[0]; $('upp-knapp').disabled = !ok;
@@ -211,7 +211,7 @@
         });
         fogde(s, () => m);
       };
-      if (S.varld === 0) { mark(); man(); } else { man(); mark(); }
+      mark(); man();          // alltid samma ordning: mark, män, förmågor (Johannes 2026-11-26)
       if (S.las.konster) {
         const s = nyFlik('konst', '', IK.krona + '<b class="fl-n">Förmågor</b>', 'Dina egna förmågor gör buden, trycken och skatten bättre.');
         for (const kd of D.KONSTER) {
@@ -283,6 +283,9 @@
         const w = V.Varld.pos(mk), sp = V.Scene.screenPoint(w.x, w.y + 4.4, w.z), dold = sp.behind || sp.x < 20 || sp.x > innerWidth - 40 || sp.y < 60 || sp.y > golv;
         mb.style.display = dold ? 'none' : ''; mb.style.transform = 'translate(' + (sp.x - 23) + 'px,' + (sp.y - 46) + 'px)';
       }
+      // de första minuterna i en värld står det vem som är vem: du själv, och budet som rider åt dig
+      { const visa = spel && S.t < 150 && !S.slut, lagg = (id, o, h) => { const e = $(id), sp = visa && o && o.g && o.g.visible ? V.Scene.screenPoint(o.x, V.Geo.groundAt(o.x, o.z) + h, o.z) : null, syns = sp && !sp.behind && sp.y > 50 && sp.y < golv; e.style.display = syns ? 'block' : 'none'; if (syns) e.style.transform = 'translate(' + Math.round(sp.x) + 'px,' + Math.round(sp.y) + 'px) translate(-50%, -100%)'; };
+        lagg('vem-du', V.Gustav, 1.75); lagg('vem-bud', V.Bud, 1.9); }
       if (caption) { capT -= 1 / 60; if (capT <= 0) { caption.classList.add('bort'); const c = caption; caption = null; setTimeout(() => c.remove(), 900); } }
     },
     // Vad den runda knappen heter annars: det man gör inför nästa steg i historien (D.GOR). Som kung tar man upp skatt när inget annat står.
@@ -365,7 +368,7 @@
         ? '<h2>Sverige 1512</h2><p>Du är <b>Sten Sture</b>, nitton år och riddare. Du är inte kung. Sverige har ingen: riket hör till en union med Danmark och Norge, men har inte erkänt unionens kung sedan 1501.</p><p>I kungens ställe styr en riksföreståndare. Det var din far, och nu är han död. Rådet tänker ge hans plats till en man som vill gå Danmarks kung till mötes.</p><p class="mal">Bygg upp dina städer, vinn folket och håll riket.</p>'
         : '<h2>Dalarna 1521</h2><p>Du är <b>Gustav Eriksson</b>, 24 år. Sveriges kung heter nu Kristian II av Danmark, och han lät halshugga din far i Stockholm.</p><p>Dalkarlarna har valt dig till sin ledare. Resten av riket lyder Kristian.</p><p class="mal">Samla folk, ta Kopparberget och driv ut danskarna.</p>';
       UI.ruta(text + '<div class="hur">' + hur.map(h => '<div><span class="hur-i">' + h[0] + '</span><span>' + h[1] + '</span></div>').join('') + '</div><button class="stang" id="forklara-knapp">' + (igen ? 'Stäng' : 'Börja') + '</button>', !igen);
-      UI._paus = !igen;
+      UI._paus = !igen; if (!igen && V.Musik) V.Musik.spar('titel');
     },
 
     // ---- första stegen: en pekande ruta i taget, som står kvar tills steget är gjort ------------------
@@ -394,7 +397,7 @@
 
     // ---- rutor --------------------------------------------------------------------------------
     ruta(html, last) { const r = $('ruta'); r.innerHTML = '<div class="ruta-in">' + html + '</div>'; r.style.display = ''; UI._last = !!last; const x = r.querySelector('.stang'); if (x) x.addEventListener('click', UI.stang); return r; },
-    stang() { $('ruta').style.display = 'none'; UI._last = false; UI._paus = false; },
+    stang() { if (UI._paus && V.Musik) V.Musik.spar(V.Musik.grund()); $('ruta').style.display = 'none'; UI._last = false; UI._paus = false; },
     kronika() {
       const S = G.s; let h = '<h2>Krönikan</h2><div class="krono">', akt = -1; const alla = G.alla();
       for (const k of S.kronika) { const u = alla.find(q => q.id === k.id); if (!u) continue; if (u.akt !== akt) { akt = u.akt; h += '<h3>' + D.AKTER[akt] + '</h3>'; } h += '<p>' + u.kronika + '</p>'; }
@@ -416,7 +419,7 @@
     },
     borta(b) {
       const h = Math.floor(b.sek / 3600), m = Math.floor(b.sek % 3600 / 60);
-      UI.ruta('<h2>Medan du var borta</h2><p>' + (h ? h + ' tim ' : '') + m + ' min har gått. Baserna har arbetat på.</p><div class="fick">' + (b.fick.man > 0 ? '<span class="chip ok">' + IK.man + '+' + tal(b.fick.man) + ' män</span>' : '') + (b.fick.mark > 0 ? '<span class="chip ok">' + IK.mark + '+' + tal(b.fick.mark) + ' mark</span>' : '') + '</div><button class="stang">Fortsätt</button>');
+      UI.ruta('<h2>Medan du var borta</h2><p>' + (h ? h + ' tim ' : '') + m + ' min har gått. Baserna har arbetat på.</p><div class="fick">' + (b.fick.mark > 0 ? '<span class="chip ok">' + IK.mark + '+' + tal(b.fick.mark) + ' mark</span>' : '') + (b.fick.man > 0 ? '<span class="chip ok">' + IK.man + '+' + tal(b.fick.man) + ' män</span>' : '') + '</div><button class="stang">Fortsätt</button>');
     },
     slut() {
       const S = G.s, arv = S.arvNu || G.arvVid();

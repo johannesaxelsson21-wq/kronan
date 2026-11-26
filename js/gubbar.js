@@ -197,7 +197,7 @@
       this.x = x; this.z = z; let da = ang - this.ang; while (da > Math.PI) da -= 6.283; while (da < -Math.PI) da += 6.283; this.ang += da * Math.min(1, dt * 8);
       this.fart += (fart - this.fart) * Math.min(1, dt * 6); this.sno = sno; const f = this.fart; this.steg += dt * (sno ? 4 + f * 6 : 5 + f * 9); const w = this.steg, s = Math.sin(w), ror = Math.min(1, f * 3);
       this.g.visible = !tillSjoss; this.g.position.set(x, gy, z); this.g.rotation.y = this.ang;
-      d.skV.visible = d.skH.visible = d.stavV.visible = d.stavH.visible = sno; d.hast.visible = !sno && !tillFots; d.ring.visible = !tillFots;
+      d.skV.visible = d.skH.visible = d.stavV.visible = d.stavH.visible = sno; d.hast.visible = !sno && !tillFots; d.ring.visible = this.sort !== 'bud';          // ringen visar vem som är du. Budet har ingen.
       if (tillFots && f > 0.04) {       // går till fots (scenerna om Gustav Eriksson före 1520)
         const gg = Math.min(1, f * 4); d.kropp.position.set(0, 0.02 + Math.abs(s) * 0.02 * gg, 0); d.kropp.rotation.set(0.08 * gg, 0, 0);
         d.benV.rotation.set(s * 0.55 * gg, 0, 0); d.benH.rotation.set(-s * 0.55 * gg, 0, 0); d.armV.rotation.set(-s * 0.45 * gg, 0, 0.1); d.armH.rotation.set(s * 0.45 * gg, 0, -0.1);

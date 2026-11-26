@@ -315,3 +315,7 @@ button { font-family: inherit; cursor: pointer; }
 #hitta svg { width: 20px; height: 20px; }
 #hitta:hover { filter: brightness(1.15); } #hitta:active { transform: translateY(1px); }
 @media (max-width: 720px) { #hitta { height: 38px; font-size: 13px; margin-bottom: 6px; } }
+
+/* de första minuterna: vem som är du och vem som är ditt bud */
+.vem { position: absolute; left: 0; top: 0; padding: 1px 8px 2px; font-size: 12.5px; letter-spacing: 0.04em; color: #2b1c08; background: #fff3c9; border: 1px solid #8a6a1f; border-radius: 10px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45); white-space: nowrap; }
+#vem-bud { background: #e9dcc0; }
