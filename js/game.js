@@ -32,7 +32,7 @@
     // Män är alltså en mätare som fylls på, inte en hög som växer: de används till fälttåg, till att bygga ut bygderna och till att driva in skatt.
     tak() {
       let n = 0; for (let k = S.nasta; k < D.UPPDRAG.length && !n; k++) n = D.UPPDRAG[k].kostar.man || 0;
-      const t = Math.max(30, Math.ceil(n * 1.25 / 10) * 10); if (!(S.tak >= t)) S.tak = t; return S.tak;
+      const lg = S.varld === 0 && S.bygg && S.bygg.ladugard ? 1.25 : 1, t = Math.max(30, Math.ceil(n * 1.25 * lg / 10) * 10); if (!(S.tak >= t)) S.tak = t; return S.tak;          // kungsladugården föder fler
     },
     // En bygd kan inte bli större än hären tillåter: kostar nästa nivå fler män än hären rymmer får den vänta tills hären har vuxit.
     maxad(id) { return G.prisRes(id) === 'man' && !!S.bas[id] && G.pris(id) > G.tak(); },
@@ -57,9 +57,9 @@
     soldProd(L) { const So = S.varld === 0 ? SOLD0 : SOLD; L = L === undefined ? (S.sold || 0) : L; return L ? So.p0 * L * Math.pow(2, Math.floor(L / 10)) * S.x.man * G.arvX() * G.gang('man') : 0; },
     soldPris() { const So = S.varld === 0 ? SOLD0 : SOLD, p = So.c0 * Math.pow(So.r, S.sold || 0); return p < 1000 ? Math.ceil(p) : p; },
     // ---- byggnader (förspelet): köps för mark, byggs vid platsen och låser upp något ----
-    byggnader() { return S.varld === 0 && !S.slut ? D.BYGGNADER.filter(b => S.nasta >= b.fran && S.bas[b.plats] && !(S.bygg && S.bygg[b.id])) : []; },
+    byggnader() { return S.varld === 0 && !S.slut ? D.BYGGNADER.filter(b => S.nasta >= b.fran && (!b.plats || S.bas[b.plats]) && !(S.bygg && S.bygg[b.id])) : []; },
     kanBygga(id) { const b = G.byggnader().find(q => q.id === id); return !!b && S.res.mark >= b.kostar; },
-    bygg(id) { if (!G.kanBygga(id)) return false; const b = D.BYGGNADER.find(q => q.id === id); S.res.mark -= b.kostar; (S.bygg || (S.bygg = {}))[id] = 1; if (b.las) S.las[b.las] = true; G.ut('byggnad', { id, b }); return true; },
+    bygg(id) { if (!G.kanBygga(id)) return false; const b = D.BYGGNADER.find(q => q.id === id); S.res.mark -= b.kostar; (S.bygg || (S.bygg = {}))[id] = 1; if (b.las) S.las[b.las] = true; if (b.xman) S.x.man *= b.xman; G.ut('byggnad', { id, b }); return true; },
     kanSold() { return !!S.las.sold && S.res.mark >= G.soldPris(); },
     kopSold() { if (!G.kanSold()) return false; S.res.mark -= G.soldPris(); S.sold = (S.sold || 0) + 1; G.ut('sold', { niva: S.sold, dubbel: S.sold % 10 === 0 }); return true; },
     pris(id, L) { const b = P(id), p = b.c0 * Math.pow(b.r, L === undefined ? (S.bas[id] || 0) : L); return p < 1000 ? Math.ceil(p) : p; },
@@ -86,7 +86,12 @@
     kopArb(id) { if (!G.kanArb(id)) return false; S.res.man -= G.arbPris(id); if (!S.arb) S.arb = {}; S.arb[id] = G.arb(id) + 1; G.ut('arbetare', { bas: id, antal: S.arb[id] }); return true; },
     // ---- kungens förmågor ---------------------------------------------------------------------
     konstPris(id) { const k = KONST[id], p = k.c0 * Math.pow(k.r, S.konst[id]); return p < 1000 ? Math.ceil(p) : p; },
-    harKonst(id) { return !!S.las.konster && (id !== 'langd' || G.harSkatt()); },          // skattelängder först när det finns skatt att driva in
+    // I förspelet kommer varje förmåga från en byggnad eller ett steg (KONSTER bygg0 och steg0). I Gustavs värld låses alla upp på en gång.
+    harKonst(id) {
+      if (id === 'langd' && !G.harSkatt()) return false;          // skattelistor först när det finns skatt att driva in
+      if (S.varld !== 0) return !!S.las.konster; const k = KONST[id];
+      return k.bygg0 ? !!(S.bygg && S.bygg[k.bygg0]) : S.nasta > D.STURE.findIndex(u => u.id === k.steg0);
+    },
     kanKonst(id) { return G.harKonst(id) && S.konst[id] < KONST_MAX && S.res.mark >= G.konstPris(id); },
     tryckSek() { return 0.3 * (1 + 0.05 * S.konst.sigill); },                 // så många sekunders inkomst ger ett tryck
     skattSek() { return 12 * (1 + 0.05 * S.konst.langd); },                    // och så många ger en skatteindrivning
@@ -103,7 +108,7 @@
       if (S.slut) return false; const harMan = Object.keys(S.bas).some(b => BAS[b].ger === 'man');
       // i förspelet kommer en ny sak i taget: breven när man blivit riksföreståndare (steg 3), talet steget efter
       if (id === 'tal') return S.nasta >= (S.varld === 0 ? 4 : 1) && harMan;
-      if (id === 'brev') return S.nasta >= (S.varld === 0 ? 3 : 1) && !!S.las.mark && G.takt('mark') > 0;
+      if (id === 'brev') return (S.varld === 0 ? !!(S.bygg && S.bygg.radstuga) : S.nasta >= 1) && !!S.las.mark && G.takt('mark') > 0;          // i förspelet skrivs breven i rådstugan
       return S.varld === 1 && !!S.las.sold;                              // mönstra: först när armén har övats i Hedemora (finns inte i förspelet)
     },
     handlingar() { return D.HANDLINGAR.filter(h => G.harHandling(h.id)); },

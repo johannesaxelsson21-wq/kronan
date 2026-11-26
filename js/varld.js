@@ -70,14 +70,34 @@
       const mb = new V.MB(); B.borg(mb, sort, 3); const m = B.mesh(mb); m.position.set(q[0], tomt[id].y(q[0], q[1]), q[1]); grp[id].add(m); if (!tyst) W._pop(m, id);
     },
     // En köpt byggnad reses vid sin plats: huset, och två knektar på vakt utanför.
-    byggPlats(id) { const b = D.BYGGNADER.find(q => q.id === id), p = b && R.P[b.plats]; return p ? { x: p.x + b.x * B.K, z: p.z + b.z * B.K } : null; },
+    byggPlats(id) { const b = D.BYGGNADER.find(q => q.id === id), p = b && R.P[b.plats || b.vid]; return p ? (b.vid ? { x: p.x + b.x, z: p.z + b.z } : { x: p.x + b.x * B.K, z: p.z + b.z * B.K }) : null; },          // vid = står för sig själv utanför en plats (världens mått)
     _byggnad(id, tyst) {
-      if (W._byggda[id]) return; const b = D.BYGGNADER.find(q => q.id === id), t = b && tomt[b.plats]; if (!t || !grp[b.plats]) return;
-      const mb = new V.MB(); B.stuga(mb, 1.2, 0.62, 0.48, 'span', { skorsten: 1, ljus: 1 });
-      mb.box(-0.72, 0, 0.18, 0.05, 0.62, 0.05, '#5a4630'); mb.box(-0.72, 0.5, 0.18, 0.3, 0.2, 0.02, '#b8312a');          // en stång med ett rött baner vid gaveln
-      const m = B.mesh(mb); m.position.set(b.x, t.y(b.x, b.z), b.z); grp[b.plats].add(m);
-      const w = W.byggPlats(id), folk = [[-0.3, 0.62], [0.3, 0.62]].map(q => Folk.add(w.x + q[0] * B.K, w.z + q[1] * B.K, 'knekt', { pike: true, ang: 0 }));
-      W._byggda[id] = { m, folk }; if (!tyst) { W._pop(m, b.plats); Fx.damm(w.x, Geo.groundAt(w.x, w.z) + 0.1, w.z, 14); }
+      if (W._byggda[id]) return; const b = D.BYGGNADER.find(q => q.id === id); if (!b) return; const t = b.plats && tomt[b.plats], w = W.byggPlats(id), K = B.K, mb = new V.MB(); let folk = [], m;
+      const vakt = (q, slag, pik) => Folk.add(w.x + q[0] * K, w.z + q[1] * K, slag, { pike: pik, ang: 0 });
+      if (id === 'knektar') {
+        B.stuga(mb, 1.2, 0.62, 0.48, 'span', { skorsten: 1, ljus: 1 });
+        mb.box(-0.72, 0, 0.18, 0.05, 0.62, 0.05, '#5a4630'); mb.box(-0.72, 0.5, 0.18, 0.3, 0.2, 0.02, '#b8312a');          // en stång med ett rött baner vid gaveln
+        folk = [[-0.3, 0.62], [0.3, 0.62]].map(q => vakt(q, 'knekt', true));
+      } else if (id === 'radstuga') {          // ett stenhus med brant tegeltak och en liten takryttare, vid torget
+        B.stuga(mb, 0.9, 0.62, 0.66, 'tegel', { vagg: '#b9ad98', vaggLag: '#8f8473', gavel: '#b9ad98', brant: 0.85, ljus: 1 });
+        mb.box(0, 1.05, 0, 0.13, 0.26, 0.13, '#8f8473'); mb.cone(0, 1.31, 0, 0.12, 0.26, 4, '#a04a30', { snowLow: 0, snowTip: 0 });
+        folk = [vakt([0.15, 0.6], 'borgare', false)];
+      } else if (id === 'ladugard') {          // kronans gård: en stor lada med halmtak, ett boningshus och en gärdsgård
+        mb.push().move(0, 0, 0); B.stuga(mb, 1.6, 0.8, 0.5, 'halm', {}); mb.pop();
+        mb.push().move(1.25, 0, 0.75).rotY(1.2); B.stuga(mb, 0.85, 0.58, 0.34, 'torv', { skorsten: 1, ljus: 1 }); mb.pop();
+        for (let k = 0; k < 9; k++) { mb.box(-1.3 + k * 0.33, 0, 1.25, 0.04, 0.2, 0.04, '#6b5743'); if (k < 8) mb.box(-1.135 + k * 0.33, 0.13, 1.25, 0.33, 0.03, 0.02, '#7a6650'); }
+        folk = [vakt([-0.5, 0.75], 'bonde', false), vakt([0.4, 0.95], 'by', false)];
+        World.Paint.yard(w.x, w.z + 0.4, 2.0); World.Paint.field(w.x - 2.6, w.z + 1.2, 2.6, 1.8, 0.2); World.Paint.field(w.x - 2.2, w.z - 1.6, 2.2, 1.6, -0.15); paintDirty = true;
+      } else if (id === 'torn') {          // tre torn utanför husen, åt de håll där det är land
+        const p0 = R.P[b.plats], lagen = []; for (let k = 0; k < 12 && lagen.length < 3; k++) { const a = 2.0 + k * 0.52, x = Math.cos(a) * 6.0, z = Math.sin(a) * 6.0 * 0.9; if (Geo.sdAt(p0.x + x * K, p0.z + z * K) > 0.8 && !lagen.some(q => Math.hypot(q[0] - x, q[1] - z) < 2.6)) lagen.push([x, z]); }
+        lagen.forEach(q => { mb.push().move(q[0], t.y(q[0], q[1]), q[1]); mb.cyl(0, 0, 0, 0.34, 0.38, 1.15, 8, '#9a948a', { low: '#6a655d' }); mb.cyl(0, 1.15, 0, 0.4, 0.4, 0.12, 8, '#8a8479', { cap: '#8a8479' }); mb.cone(0, 1.27, 0, 0.36, 0.5, 8, '#4a3e34', {}); mb.pop(); });
+        W._tornLagen = lagen.map(q => ({ x: p0.x + q[0] * K, z: p0.z + q[1] * K }));
+      }
+      m = B.mesh(mb);
+      if (b.vid) { m.position.set(w.x, Geo.groundAt(w.x, w.z), w.z); m.scale.setScalar(K); scene.add(m); }
+      else if (id === 'torn') grp[b.plats].add(m);
+      else { if (!t || !grp[b.plats]) return; m.position.set(b.x, t.y(b.x, b.z), b.z); grp[b.plats].add(m); }
+      W._byggda[id] = { m, folk }; if (!tyst) { if (b.vid) { m.scale.setScalar(0.01); pops.push({ m, t: 0, fran: 0.01, till: K }); } else W._pop(m, b.plats); Fx.damm(w.x, Geo.groundAt(w.x, w.z) + 0.1, w.z, 14); }
     },
     _dekor(key, on, make) { if (on && !dekor[key]) { dekor[key] = make(); scene.add(dekor[key]); } else if (!on && dekor[key]) { scene.remove(dekor[key]); dekor[key] = null; } },
     _flotta(plats, n, sort, stor) {
@@ -91,7 +111,7 @@
     },
     _pop(m, id, liten) { const fran = liten === true ? 0.82 : liten ? liten : 0.01; m.scale.setScalar(fran); pops.push({ m, t: 0, fran }); const p = R.P[id]; if (!liten) { Fx.damm(p.x, p.y, p.z, 26); Fx.guld(p.x, p.y + 0.2, p.z, 40, tomt[id].R * 0.6); } },
     // Hus som håller på att växa fram ställs färdiga på en gång (innan en scen, där världen annars står still med halvstora hus)
-    popKlart() { pops.forEach(p => p.m.scale.setScalar(1)); pops.length = 0; },
+    popKlart() { pops.forEach(p => p.m.scale.setScalar(p.till || 1)); pops.length = 0; },
     // Under en scen syns inte skattelagen och de extra buden: spelet står still då, och de skulle stå som statyer mitt i bilden
     scenDolj(on) { (skattVis || []).forEach(v => v.enh.forEach(e => { e.vis = !on; })); lopare.forEach(l => { l.u.vis = !on; }); },
     pos(id) { const p = R.P[id]; return p ? { x: p.x, y: p.y || 0, z: p.z } : null; },
@@ -164,6 +184,7 @@
     fri() {
       const l = [], G0 = V.Gustav, Bu = V.Bud, lagg = (x, z, r) => { if (l.length < 8) l.push([x, z, r]); };
       if (dekor.asunden) { const q = dekor.asunden.sjo; lagg(q.x, q.z, q.r * 1.9); }          // inga träd på sjön
+      if (W._byggda && W._byggda.ladugard) { const q = W.byggPlats('ladugard'); lagg(q.x + 0.4, q.z + 0.4, 4.2); }          // och inga genom kungsladugården
       if (G0.g && G0.g.visible) lagg(G0.x, G0.z, 1.0); if (Bu.g && Bu.g.visible) lagg(Bu.x, Bu.z, 0.9);
       const rb = vis && vis.noll && G.skede() === 'strid' ? 1.0 + vis.bredd * 0.17 : 0;          // i ett slag i förspelet står de i bredd: större glänta
       if (vis && vis.enh.length) { const e = vis.enh; lagg(e[0].x, e[0].z, Math.max(1.3, rb)); if (e.length > 6) { const m = e[e.length >> 1], s = e[e.length - 1]; lagg(m.x, m.z, Math.max(1.3, rb)); lagg(s.x, s.z, 1.3); } }
@@ -280,7 +301,7 @@
     // ---- varje bildruta -------------------------------------------------------------------------
     update(dt, t) {
       const S = G.s;
-      for (let k = pops.length - 1; k >= 0; k--) { const p = pops[k]; p.t += dt / 0.65; const e = p.t >= 1 ? 1 : 1 + 2.2 * Math.pow(p.t - 1, 3) + 1.2 * Math.pow(p.t - 1, 2); p.m.scale.setScalar(Math.max(0.01, p.fran + (1 - p.fran) * e)); if (p.t >= 1) pops.splice(k, 1); }
+      for (let k = pops.length - 1; k >= 0; k--) { const p = pops[k]; p.t += dt / 0.65; const e = p.t >= 1 ? 1 : 1 + 2.2 * Math.pow(p.t - 1, 3) + 1.2 * Math.pow(p.t - 1, 2); p.m.scale.setScalar(Math.max(0.01, p.fran + ((p.till || 1) - p.fran) * e)); if (p.t >= 1) pops.splice(k, 1); }
       if (paintDirty && !pops.length) { World.Paint.commit(); paintDirty = false; }
       W._gustav(dt, t); W._lopare(dt, t); W._folk(dt, t); W._uppdrag(dt, t); W._skatt();
       if (S.marknad && Math.random() < dt * 5) { const p = R.P[S.marknad.bas]; Fx.guld(p.x, p.y + 0.3, p.z, 2, tomt[S.marknad.bas].R * 0.6); }
@@ -467,7 +488,7 @@
       if (vis.noll) return W._tag0(dt, t, a, u);          // förspelets fälttåg och slag har sin egen ordning
       if (u.belagring && !a.val) {          // Stockholm sommaren 1520: lägret på Brunkeberg och slottet skjuter på varandra medan månaderna går
         W._belT = (W._belT === undefined ? 1.5 : W._belT) - dt;
-        if (W._belT <= 0) { W._belN = (W._belN || 0) + 1; W._belT = 1.8 + Math.random() * 2.4; const ute = W._belN % 2 === 1, q = ute ? R.P.brunkeberg : p, x = q.x + (Math.random() - 0.5) * 1.6, z = q.z + (ute ? 0.5 : -0.9); Fx.krut(x, Geo.groundAt(x, z) + (ute ? 0.3 : 1.2), z); if (!ute && V.Ljud) V.Ljud.spela('kanon'); }
+        if (W._belT <= 0) { W._belN = (W._belN || 0) + 1; W._belT = 1.8 + Math.random() * 2.4; const ute = W._belN % 2 === 1, q = ute ? R.P.brunkeberg : p, x = q.x + (Math.random() - 0.5) * 1.6, z = q.z + (ute ? 0.5 : -0.9); Fx.krut(x, Geo.groundAt(x, z) + (ute ? 0.3 : 1.2), z); if (!ute && V.Ljud) V.Ljud.spela('kanon'); if (!ute && W._tornLagen && W._tornLagen.length) { const q = W._tornLagen[W._belN % W._tornLagen.length]; Fx.krut(q.x, Geo.groundAt(q.x, q.z) + 1.7, q.z); } }
       }
       if (vis.pts && (u.slag === 'tag' || u.slag === 'bud' || u.slag === 'rid')) {
         const stopp = strid ? (u.strid === 'pilar' ? 2.2 : u.strid === 'kanoner' ? 1.6 : 0.9) : u.slag === 'tag' ? 1.8 : 0, dist = Math.max(0, vis.len - stopp) * gf;
