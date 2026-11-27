@@ -9,7 +9,7 @@
     ['brunnback', 'sala'], ['sala', 'vasteras'], ['sala', 'uppsala'], ['gavle', 'uppsala'], ['uppsala', 'brunkeberg'], ['brunkeberg', 'stockholm'], ['vasteras', 'orebro'], ['vasteras', 'strangnas'],
     ['strangnas', 'gripsholm'], ['gripsholm', 'rafsnas'], ['rafsnas', 'nykoping'], ['gripsholm', 'stockholm'], ['nykoping', 'soderkoping'], ['soderkoping', 'stegeborg'], ['soderkoping', 'vadstena'], ['orebro', 'vadstena'],
     ['soderkoping', 'kisa'], ['kisa', 'virserum'], ['virserum', 'smaland'], ['smaland', 'kalmar'], ['vadstena', 'skara'], ['skara', 'alvsborg'], ['mora', 'oxberg'], ['oxberg', 'evertsberg'], ['evertsberg', 'salen'],
-    ['salen', 'lima'], ['gavle', 'halsingland'], ['staket', 'stockholm'], ['vadla', 'stockholm'], ['brannkyrka', 'stockholm'], ['brannkyrka', 'nykoping'], ['skara', 'bogesund'], ['abo', 'helsingfors'], ['helsingfors', 'viborg'], ['viborg', 'kivinebb'], ['lubeck', 'lubeck']];
+    ['salen', 'lima'], ['gavle', 'halsingland'], ['staket', 'stockholm'], ['vadla', 'stockholm'], ['brannkyrka', 'stockholm'], ['brannkyrka', 'nykoping'], ['vasteras', 'uppsala'], ['skara', 'bogesund'], ['abo', 'helsingfors'], ['helsingfors', 'viborg'], ['viborg', 'kivinebb'], ['lubeck', 'lubeck']];
   const HAMN = { nykoping: 1, stockholm: 1, kalmar: 1, abo: 1, helsingfors: 1, viborg: 1, soderkoping: 1, lubeck: 1, malmo: 1, kopenhamn: 1, gavle: 1, alvsborg: 1, stegeborg: 1, vasteras: 0 };
   const TILL_SJOSS = { bornholm: 1, ostersjon: 1, finskaviken: 1 };
   const RADIE = { bygd: 5.2, gruva: 5.6, stad: 6.4, slott: 5.6 };

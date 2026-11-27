@@ -228,7 +228,7 @@
         const r = W.vagFor(u); pts = r.pts; fran = r.fran;
         const sp = u.slag === 'bud' ? 4.5 : u.slag === 'rid' ? 5 : 3.4, lim = u.slag === 'bud' ? [5, 12] : [9, 26];
         dur = Math.max(lim[0], Math.min(lim[1], R.length(pts) / sp)) + (u.strid ? 10 : 0);
-        if (S.varld === 0 && u.strid) { const marsch = Math.max(6, Math.min(26, R.length(pts) / sp)), slag = u.order ? G.slagTid(u) : 12; dur = marsch + slag; k0 = marsch / dur; }
+        if (u.strid && (S.varld === 0 || u.order)) { const marsch = Math.max(6, Math.min(26, R.length(pts) / sp)), slag = u.order ? G.slagTid(u) : 12; dur = marsch + slag; k0 = marsch / dur; }
       }
       if (!G.skicka(dur ? dur * G.s.fartX : undefined, k0)) return false;
       W._startVis(u, pts, fran, man); W._vagKey = null;
@@ -313,7 +313,7 @@
     _startVis(u, pts, fran, man) {
       W._slutVis(); const p = R.P[u.plats];
       vis = { u, pts, len: pts ? R.length(pts) : 0, enh: [], fi: [], skepp: [], t0: V.U.uTime.value, start: performance.now() };
-      if (u.slag === 'tag' && G.s.varld === 0) W._tag0Start(u, pts);
+      if (u.slag === 'tag' && (G.s.varld === 0 || u.order || !u.strid)) W._tag0Start(u, pts);
       else if (u.slag === 'tag') {
         vis.gustav = !!u.med;
         const n = Math.max(8, Math.min(40, Math.round(4 + Math.log10(Math.max(10, u.kostar.man || 100)) * 8)));
@@ -569,8 +569,8 @@
     _slagNamn() {
       const ut = [], gy = (x, z) => Geo.groundAt(x, z), mitt = l => { let x = 0, z = 0, n = 0; for (const e of l) if (e.vis !== false && e.fall < 0.5) { x += e.x; z += e.z; n++; } return n ? { x: x / n, z: z / n } : null; };
       if (vis.u.belagring) { const b = R.P.brunkeberg; if (b) ut.push({ id: 'slag-lager', namn: 'Kristians läger', x: b.x, z: b.z + 0.9, y: gy(b.x, b.z) + 0.2 }); const f = mitt(vis.enh); if (f) ut.push({ id: 'slag-egen', namn: 'Försvararna', x: f.x, z: f.z + 0.4, y: gy(f.x, f.z) }); return ut; }
-      const e = mitt(vis.enh), f = mitt(vis.fi), egen = vis.u.id === 'sUppsala' ? 'Bönderna' : 'Sten Stures män';
-      if (e) ut.push({ id: 'slag-egen', namn: egen, x: e.x, z: e.z, y: gy(e.x, e.z) + 1.1 }); if (f) ut.push({ id: 'slag-fiende', namn: 'Danskarna', x: f.x, z: f.z, y: gy(f.x, f.z) + 1.1 });
+      const e = mitt(vis.enh), f = mitt(vis.fi), egen = vis.u.egen || (vis.u.id === 'sUppsala' ? 'Bönderna' : 'Sten Stures män');
+      if (e) ut.push({ id: 'slag-egen', namn: egen, x: e.x, z: e.z, y: gy(e.x, e.z) + 1.1 }); if (f) ut.push({ id: 'slag-fiende', namn: vis.u.fiende || 'Danskarna', x: f.x, z: f.z, y: gy(f.x, f.z) + 1.1 });
       return ut;
     },
     // Belägringen av Stockholm 1520 (förspelet): försvarare i rad framför slottet där Kristina står, och det ögonblicken visar.
@@ -660,10 +660,10 @@
       const S = G.s, tak = Scene.mobil ? 180 : 260, n = Math.min(tak, (u.folk && u.folk[0]) || 24), m = u.strid ? Math.min(tak, (u.folk && u.folk[1]) || n) : 0;
       vis.gustav = !!u.med; vis.noll = true; vis.kol = n > 60 ? 6 : 4; vis.bredd = Math.max(6, Math.min(26, Math.ceil(Math.sqrt(Math.max(n, m) * 2.3))));
       const platser = []; for (let r = 0; platser.length < n; r++) for (let c = 0; c < vis.bredd && platser.length < n; c++) { const bk = c - (vis.bredd - 1) / 2; if (vis.gustav && r < 3 && Math.abs(bk) < 1.3) continue; platser.push([r, bk]); }          // en lucka mitt i de främsta leden, där du rider
-      for (let k = 0; k < n; k++) { const e = Folk.add(pts[0][0], pts[0][1], S.sold > 0 && k % 5 === 0 ? 'knekt' : 'bonde', { pike: k % 2 === 0, rad: Math.floor(k / vis.kol), kol: k % vis.kol - (vis.kol - 1) / 2, gar: true }); e.br = platser[k][0]; e.bk = platser[k][1]; vis.enh.push(e); }
-      const f = B.flagga('sverige'); f.scale.setScalar(0.8); scene.add(f); vis.fana = f;
+      for (let k = 0; k < n; k++) { const e = Folk.add(pts[0][0], pts[0][1], u.egnaSlag || (S.sold > 0 && k % 5 === 0 ? 'knekt' : 'bonde'), { pike: k % 2 === 0, rad: Math.floor(k / vis.kol), kol: k % vis.kol - (vis.kol - 1) / 2, gar: true }); e.br = platser[k][0]; e.bk = platser[k][1]; vis.enh.push(e); }
+      const f = B.flagga(S.titel === 'Kung' || S.varld === 0 ? 'sverige' : 'vasa'); f.scale.setScalar(0.8); scene.add(f); vis.fana = f;
       if (m) { const e = R.along(pts, vis.len), fx = Math.sin(e.ang), fz = Math.cos(e.ang), sx = Math.cos(e.ang), sz = -Math.sin(e.ang);
-        for (let k = 0; k < m; k++) { const r = Math.floor(k / vis.bredd), c = k % vis.bredd - (vis.bredd - 1) / 2, x = e.x + fx * (1.3 + r * 0.4) + sx * c * 0.32, z = e.z + fz * (1.3 + r * 0.4) + sz * c * 0.32, q = Folk.add(x, z, 'dansk', { pike: k % 2 === 0, ang: e.ang + Math.PI }); q.bx = x; q.bz = z; q.br = r; vis.fi.push(q); } }
+        for (let k = 0; k < m; k++) { const r = Math.floor(k / vis.bredd), c = k % vis.bredd - (vis.bredd - 1) / 2, x = e.x + fx * (1.3 + r * 0.4) + sx * c * 0.32, z = e.z + fz * (1.3 + r * 0.4) + sz * c * 0.32, q = Folk.add(x, z, u.fiendeSlag || 'dansk', { pike: k % 2 === 0, ang: e.ang + Math.PI }); q.bx = x; q.bz = z; q.br = r; vis.fi.push(q); } }
     },
     _tag0(dt, t, a, u) {
       const Gu = V.Gustav, f = Math.min(1, a.t / a.dur), strid = !!u.strid, K0 = a.k0 || G.KAMP, gf = strid ? Math.min(1, f / K0) : f, kamp = strid && f > K0, kf = strid ? Math.max(0, (f - K0) / (1 - K0)) : 0, forlust = u.strid === 'nederlag';
