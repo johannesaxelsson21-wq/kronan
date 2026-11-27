@@ -10,21 +10,21 @@
 
   // varld 0 = förspelet (Sten Sture den yngre 1512–1520), varld 1 = Gustav Vasa.
   function nytt(varld) {
-    const v = varld === 0 ? 0 : 1;
-    return { v: 1, varld: v, t: 0, sparad: Date.now(), res: { man: 0, mark: 0 }, tot: { man: 0, mark: 0 }, skuld: 0, skuldMax: 0, bas: v ? { mora: 1 } : { stockholm: 1 }, konst: { skidor: 0, tal: 0, bud: 0, sigill: 0, langd: 0 }, sold: 0, handl: {},
-      nasta: 0, aktivt: null, x: { man: 1, mark: 1 }, las: v ? {} : { mark: true }, uppror: {}, fart: 0, full: false, sistaTryck: 99, tryck: 0, fartX: 1, fogde: {}, titel: v ? 'Hövitsman' : 'Riddare', hjalte: v ? 'gustav' : 'sten',
+    const v = D.VARLDAR[varld] ? varld : 1, Vd = D.VARLDAR[v];          // varje värld: sin start, sin hjälte, sin titel (D.VARLDAR)
+    return { v: 1, varld: v, t: 0, sparad: Date.now(), res: { man: 0, mark: 0 }, tot: { man: 0, mark: 0 }, skuld: 0, skuldMax: 0, bas: Object.assign({}, Vd.start), konst: { skidor: 0, tal: 0, bud: 0, sigill: 0, langd: 0 }, sold: 0, handl: {},
+      nasta: 0, aktivt: null, x: { man: 1, mark: 1 }, las: Object.assign({}, Vd.las), uppror: {}, fart: 0, full: false, sistaTryck: 99, tryck: 0, fartX: 1, fogde: {}, titel: Vd.titel, hjalte: Vd.hjalte,
       kronika: [], datum: 0, intro: false, arv: 0, varv: 0, slut: false, borg: {}, ljud: true, tips: {}, forspel: {}, husPlan: 1 };
   }
-  let S = nytt();
+  let S = nytt(1);
   const par = {};          // basens siffror i den värld som spelas
-  function P(id) { const k = S.varld + id; return par[k] || (par[k] = S.varld === 0 && D.STURE_BAS[id] ? Object.assign({}, BAS[id], D.STURE_BAS[id]) : BAS[id]); }
-  Object.defineProperty(D, 'UPPDRAG', { get() { return S.varld === 0 ? D.STURE : D.VASA; }, configurable: true });
+  function P(id) { const k = S.varld + id, O = S.varld === 0 ? D.STURE_BAS : S.varld === 2 ? D.ERIK_BAS : null; return par[k] || (par[k] = O && O[id] ? Object.assign({}, BAS[id], O[id]) : BAS[id]); }          // förspelet och Eriks värld har egna siffror
+  Object.defineProperty(D, 'UPPDRAG', { get() { return D[(D.VARLDAR[S.varld] || D.VARLDAR[1]).lista]; }, configurable: true });
   const G = V.Game = {
     get s() { return S; }, BAS, KONST, KONST_MAX,
     ut: function () {},                 // händelser till gränssnittet: (typ, data)
-    ny(arv) { const gammal = S; S = nytt(1); if (arv) { S.arv = gammal.arv; S.varv = gammal.varv; S.intro = true; S.ljud = gammal.ljud; S.forspel = gammal.forspel; } return S; },
+    ny(arv) { const gammal = S; S = nytt(gammal.varld); if (arv) { S.arv = gammal.arv; S.varv = gammal.varv; S.intro = true; S.ljud = gammal.ljud; S.forspel = gammal.forspel; } return S; },
     // Byt värld. Från förspelet följer städernas storlek med (de står kvar, nu i Kristians händer) och krönikan.
-    nyVarld(v) { const g = S; S = nytt(v); S.ljud = g.ljud; S.arv = g.arv; S.varv = g.varv; if (v === 1 && g.varld === 0 && g.nasta > 0) { S.forspel = Object.assign({}, g.bas); S.kronika = g.kronika.slice(); } return S; },
+    nyVarld(v) { const g = S; S = nytt(v); S.ljud = g.ljud; S.arv = g.arv; S.varv = g.varv; if (v === 1 && g.varld === 0 && g.nasta > 0) { S.forspel = Object.assign({}, g.bas); S.kronika = g.kronika.slice(); } if (v === 2 && g.varld === 1) S.forspel = Object.assign({}, g.bas); return S; },          // Gustavs städer står kvar när Erik tar över
     // ---- en ny sak i taget (förspelet, Johannes 2026-11-26): varje ny knapp, byggnad och förmåga kommer för sig, med en lugn rad om vad den är ----
     // nar = när den annars hade funnits. Den första som kan komma kommer, sedan dröjer det minst INFOR_MELLAN sekunder till nästa.
     INFOR_MELLAN: 55,
@@ -50,7 +50,7 @@
       for (const q of G.INFOR) { if (inf[q.id] || !q.nar()) continue; inf[q.id] = S.t; S.infordT = S.t; G.ut('infor', { id: q.id, text: q.text }); return; }
     },
     inforAlla() { const inf = S.inford || (S.inford = {}); for (const q of G.INFOR) if (!inf[q.id]) inf[q.id] = S.t || 1; },          // för provet
-    ladda(o) { S = Object.assign(nytt(o.varld === 0 ? 0 : 1), o); S.res = Object.assign({ man: 0, mark: 0 }, o.res); S.x = Object.assign({ man: 1, mark: 1 }, o.x); S.konst = Object.assign({ skidor: 0, tal: 0, bud: 0, sigill: 0, langd: 0 }, o.konst); if (S.varld === 1 && S.nasta > D.VASA.findIndex(u => u.id === 'hedemora')) S.las.sold = true; if (!S.husPlan) { S.husPos = {}; S.husPlan = 1; } if (!S.skattLag) S.skattLag = S.skatt ? [Object.assign({ nr: 1 }, S.skatt)] : []; if (S.varld === 0 && !S.inford && S.t > 0) { S.inford = {}; for (const q of G.INFOR) if (q.nar()) S.inford[q.id] = 1; } return S; },
+    ladda(o) { S = Object.assign(nytt(D.VARLDAR[o.varld] ? o.varld : 1), o); S.res = Object.assign({ man: 0, mark: 0 }, o.res); S.x = Object.assign({ man: 1, mark: 1 }, o.x); S.konst = Object.assign({ skidor: 0, tal: 0, bud: 0, sigill: 0, langd: 0 }, o.konst); if (S.varld === 1 && S.nasta > D.VASA.findIndex(u => u.id === 'hedemora')) S.las.sold = true; if (!S.husPlan) { S.husPos = {}; S.husPlan = 1; } if (!S.skattLag) S.skattLag = S.skatt ? [Object.assign({ nr: 1 }, S.skatt)] : []; if (S.varld === 0 && !S.inford && S.t > 0) { S.inford = {}; for (const q of G.INFOR) if (q.nar()) S.inford[q.id] = 1; } return S; },
     alla() { return D.STURE.concat(D.VASA); },
 
     // Hären kan inte bli hur stor som helst: taket följer vad nästa fälttåg kräver (uppdragens manskap är historiens siffror).
@@ -89,14 +89,15 @@
     bygg(id) { if (!G.kanBygga(id)) return false; const b = D.BYGGNADER.find(q => q.id === id); S.res.mark -= b.kostar; (S.bygg || (S.bygg = {}))[id] = 1; if (b.las) S.las[b.las] = true; if (b.xman) S.x.man *= b.xman; G.ut('byggnad', { id, b }); return true; },
     // ---- stadens hus (förspelet): köps i stadens flik, och varje nivå ger staden mer av det den ger (Johannes 2026-11-26) ----
     hus(id) { return (S.hus && S.hus[id]) || 0; },
+    iVarld(h) { const v = h.varld || 0; return Array.isArray(v) ? v.indexOf(S.varld) >= 0 : v === S.varld; },          // hör huset till världen som spelas?
     husFinns(id) { return G.husFinns0(id) && G.inford(id); },
-    husFinns0(id) { const h = D.BYGGNADER.find(q => q.id === id); return !!h && (h.varld || 0) === S.varld && !S.slut && !!h.niva && S.nasta >= h.fran && !!S.bas[h.plats]; },
+    husFinns0(id) { const h = D.BYGGNADER.find(q => q.id === id); return !!h && G.iVarld(h) && !S.slut && !!h.niva && S.nasta >= h.fran && !!S.bas[h.plats]; },
     husLista() { return D.BYGGNADER.filter(h => h.niva && G.husFinns(h.id)).map(h => h.id); },
     husRes(h) { return BAS[h.plats].ger; },
     husPris(id) { const h = D.BYGGNADER.find(q => q.id === id), p = (h.c0 || P(h.plats).c0 * h.cx) * Math.pow(h.r, G.hus(id)); return p < 1000 ? Math.ceil(p) : p; },          // Gustavs hus: cx gånger platsens första pris
     kanHus(id) { const h = D.BYGGNADER.find(q => q.id === id); return G.husFinns(id) && S.res[G.husRes(h)] >= G.husPris(id); },
     kopHus(id) { if (!G.kanHus(id)) return false; const h = D.BYGGNADER.find(q => q.id === id), res = G.husRes(h); S.res[res] -= G.husPris(id); (S.hus || (S.hus = {}))[id] = G.hus(id) + 1; G.ut('hus', { id, h, niva: S.hus[id] }); return true; },
-    husX(plats) { if (!S.hus) return 1; let x = 1; for (const h of D.BYGGNADER) if (h.niva && (h.varld || 0) === S.varld && h.plats === plats && S.hus[h.id]) x *= 1 + h.ger * S.hus[h.id]; return x; },
+    husX(plats) { if (!S.hus) return 1; let x = 1; for (const h of D.BYGGNADER) if (h.niva && G.iVarld(h) && h.plats === plats && S.hus[h.id]) x *= 1 + h.ger * S.hus[h.id]; return x; },
     kanSold() { return !!S.las.sold && S.res.mark >= G.soldPris(); },
     kopSold() { if (!G.kanSold()) return false; S.res.mark -= G.soldPris(); S.sold = (S.sold || 0) + 1; G.ut('sold', { niva: S.sold, dubbel: S.sold % 10 === 0 }); return true; },
     pris(id, L) { const b = P(id), p = b.c0 * Math.pow(b.r, L === undefined ? (S.bas[id] || 0) : L); return p < 1000 ? Math.ceil(p) : p; },
@@ -148,7 +149,7 @@
       // i förspelet kommer en ny sak i taget: breven när man blivit riksföreståndare (steg 3), talet steget efter
       if (id === 'tal') return S.nasta >= (S.varld === 0 ? 4 : 1) && harMan;
       if (id === 'brev') return (S.varld === 0 ? !!(S.bygg && S.bygg.radstuga) : S.nasta >= 1) && !!S.las.mark && G.takt('mark') > 0;          // i förspelet skrivs breven i rådstugan
-      return S.varld === 1 && !!S.las.sold;                              // mönstra: först när armén har övats i Hedemora (finns inte i förspelet)
+      return S.varld >= 1 && !!S.las.sold;                              // mönstra: först när armén har övats i Hedemora (finns inte i förspelet)
     },
     handlingar() { return D.HANDLINGAR.filter(h => G.harHandling(h.id)); },
     handl(id) { if (!S.handl) S.handl = {}; return S.handl[id] || (S.handl[id] = { t: 0, v: 0 }); },
@@ -166,7 +167,7 @@
     tryck(auto, mal) {          // mal = 'traff' eller 'miss' när man trycker på slagfältet i förspelets slag (main.js), annars inget          // auto = knappen hålls in och spelet trycker själv: det räknas inte som en order i ett slag
       { const m = S.aktivt && S.aktivt.mom; if (m && !m.svar && !auto && m.typ !== 'vanta') {          // förspelets slag: först ringen i slaget, sedan knappen. Att hålla in räknas inte.
         if (mal !== 'ring') { if (mal !== 'karta') G.ut('malForst', {}); }          // knappen räknas inte: man trycker på ringen
-        else { m.n = (m.n || 0) + 1; const a = S.aktivt, u = D.UPPDRAG.find(q => q.id === a.id); a.lage = Math.min(u && u.strid === 'nederlag' ? 0.7 : 0.94, (a.lage === undefined ? 0.5 : a.lage) + 0.018); G.ut('slagTryck', { o: u && u.order && u.order[m.i] }); } } }
+        else { m.n = (m.n || 0) + 1; const a = S.aktivt, u = D.UPPDRAG.find(q => q.id === a.id); a.lage = Math.min(u && (u.strid === 'nederlag' || u.forlust) ? 0.7 : 0.94, (a.lage === undefined ? 0.5 : a.lage) + 0.018); G.ut('slagTryck', { o: u && u.order && u.order[m.i] }); } } }
       const kraft = Math.min(1, S.sistaTryck);          // det man får laddas upp över en sekund: att hamra ger inte mer än att trycka i lugn takt
       S.fart = Math.min(1, S.fart + 0.17); S.sistaTryck = 0; S.tryck++; S.ryck = Math.min(1, (S.ryck || 0) + 0.5);
       if (S.fart >= 1 && !S.full) { S.full = true; G.ut('full', {}); }
@@ -314,7 +315,7 @@
     // ---- tidens gång --------------------------------------------------------------------------
     // Kalendern rör sig mot nästa uppdrags datum i takt med att man närmar sig det.
     datum() {
-      const prev = S.nasta > 0 ? D.UPPDRAG[S.nasta - 1] : { ar: S.varld === 0 ? 1512 : 1521, man: 1 }, next = D.UPPDRAG[S.nasta] || prev, akt = S.aktivt ? D.UPPDRAG.find(u => u.id === S.aktivt.id) : null;
+      const prev = S.nasta > 0 ? D.UPPDRAG[S.nasta - 1] : { ar: D.VARLDAR[S.varld].ar0, man: D.VARLDAR[S.varld].man0 || 1 }, next = D.UPPDRAG[S.nasta] || prev, akt = S.aktivt ? D.UPPDRAG.find(u => u.id === S.aktivt.id) : null;
       if (akt) return { ar: akt.ar, man: akt.man };
       const tot = (next.ar - prev.ar) * 12 + (next.man - prev.man), f = Math.max(S.datum, G.framsteg(next) * 0.92); S.datum = f;
       const m = (prev.ar * 12 + prev.man - 1) + Math.max(0, tot) * f;

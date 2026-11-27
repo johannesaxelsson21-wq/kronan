@@ -64,7 +64,7 @@
       // förspelet är över: portarna är öppnade. Nästa värld börjar med filmen om blodbadet.
       // Rutan med vad som hände står kvar tills spelaren trycker Fortsätt (eller en halv minut har gått).
       byter = true; Scene.cam.locked = true; let gjort = false;
-      const vidare = () => { if (gjort) return; gjort = true; UI.visa(false); UI.dolj(); UI.film.svart(1, 3); setTimeout(() => { G.nyVarld(1); skriv(); laddaOm(); }, 3500); };
+      const vidare = () => { if (gjort) return; gjort = true; UI.visa(false); UI.dolj(); UI.film.svart(1, 3); setTimeout(() => { G.nyVarld(G.s.varld + 1); skriv(); laddaOm(); }, 3500); };
       UI.efter = vidare; setTimeout(vidare, 30000 / Math.min(snabb, 10));
     }
   }
@@ -74,7 +74,7 @@
   function senaste() {
     const S = G.s, a = S.aktivt; if (a) return D.UPPDRAG.find(u => u.id === a.id);
     if (S.nasta > 0) { const p = D.UPPDRAG[S.nasta - 1]; return S.varld === 0 && p.efterMan ? { ar: p.ar, man: p.efterMan } : p; }
-    return { ar: S.varld === 0 ? 1512 : 1521, man: 1 };
+    return { ar: D.VARLDAR[S.varld].ar0, man: D.VARLDAR[S.varld].man0 || 1 };          // världens början
   }
   function arstidSteg(dt) {
     const u = senaste(), a = G.s.aktivt, mal = (u.man - 1) / 12;
@@ -99,7 +99,7 @@
     G.s.res.man = G.tak() * 0.7; G.s.tryck = 10; G.s.tips = { ak: 1, full: 1, kop: 1, upp: 1, tak: 1, skatt: 1 }; G.s.handlSagt = 3; if (G.s.varld === 1 && G.s.nasta > 4) G.s.las.sold = true; G.s.skattSagt = 1; V.tyst = false; Varld.sync(true);
   };
 
-  function hemma() { return Varld.pos(G.s.varld === 0 ? 'stockholm' : 'mora'); }
+  function hemma() { return Varld.pos((D.VARLDAR[G.s.varld] || D.VARLDAR[1]).hem); }
   function start(nyss) {
     spelar = true; UI.visa(true); UI.film.pa(false); Scene.cam.locked = false;
     const p = hemma(); if (nyss) Scene.flyTo(p.x, p.z + 1.5, G.s.varld === 0 ? 34 : 30, 2.2); UI.tick(true);
@@ -122,6 +122,7 @@
     UI.onHitta = () => { const w = Varld.gustavVid(); Scene.cam.user = performance.now(); Varld._foljMig = Scene.cam.user; Scene.flyTo(w.x, w.z + 1.2, UTSIKT, 0.9); Varld.foljHjalten(); };          // knappen Hitta mig
     UI.onVisaBas = id => { const w = Varld.pos(id); Scene.flyTo(w.x, w.z + 1.2, Math.min(Scene.cam.d, 30), 0.9); Varld.foljPlats(id); };          // förspelet: kameran stannar vid staden
     UI.onBorjaOm = () => { byter = true; try { localStorage.removeItem(SPAR); } catch (e) { /* inget */ } laddaOm(); };
+    UI.onVidare = arv => { byter = true; G.s.arv += arv; G.s.varv++; G.nyVarld(G.s.varld + 1); skriv(); laddaOm(); };          // nästa regents värld, med arvet
     UI.onIgen = arv => { byter = true; G.s.arv += arv; G.s.varv++; const s = G.ny(true); s.intro = true; skriv(); laddaOm(); };
     Scene.onClick = (e, g) => {
       if (spelar && G.skede() === 'strid' && (G.uppdrag() || {}).order) { Varld.foljUppdraget(); const q = Varld.malSkarm(); tryck(false, q && Math.hypot(q.x - e.clientX, q.y - e.clientY) <= q.r + 12 ? 'ring' : 'karta'); return; }          // ett tryck på ringen räknas, annars inte          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget
@@ -140,8 +141,9 @@
     const S = G.s, film = q.get('intro') !== '0' && V.Intro;
     if (film && S.varld === 0 && S.t === 0) V.Intro.titel(() => { start(true); UI.forklara(0); });                                      // helt nytt spel: titeln, sedan Sten Stures tid
     else if (film && S.varld === 1 && !S.intro) V.Intro.kor(() => { G.s.intro = true; arstid = 0.04; start(true); spara(); UI.forklara(1); });      // Gustavs värld börjar med blodbadet
+    else if (film && S.varld >= 2 && !S.intro) { G.s.intro = true; start(true); spara(); UI.forklara(S.varld); }          // Eriks värld börjar med rutan om vem man är
     else {
-      if (S.varld === 1) S.intro = true; start(false);
+      if (S.varld >= 1) S.intro = true; start(false);
       if (q.has('scen') && V.Intro) setTimeout(() => V.Intro.scen(q.get('scen'), null, true), 1200);          // ?scen=kalo spelar en scen direkt (för prov och skärmbilder)
       if (hade) { const b = G.borta((Date.now() - S.sparad) / 1000); if (b && (b.fick.man > 1 || b.fick.mark > 1)) UI.borta(b); }
     }

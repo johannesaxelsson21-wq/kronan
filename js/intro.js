@@ -37,6 +37,9 @@
   const MELLAN = 100;          // så många sekunders spelande måste det gå mellan två scener (120 fram till 2026-11-26, sänkt när produktionen höjdes och stegen kom tätare)
   let autoT = 0, GE = null;
   // Gustav Eriksson som han ser ut i sin egen värld, till fots. I förspelet är hjälten Sten Sture, så scenerna om Gustav har en egen figur.
+  // Erik XIV i sina scener: först i hertigens dräkt, sedan krönt
+  let EE = null;
+  function erikE(kung) { if (!EE) { EE = Object.create(V.Gustav); EE.init(Scene.scene, 'erik'); } EE.klad(kung ? 'Kung' : 'Hertig'); EE.g.visible = true; EE.utanRing = false; return EE; }
   function gustavE() { if (!GE) { GE = Object.create(V.Gustav); GE.init(Scene.scene, 'gustav'); } GE.g.visible = true; GE.utanRing = false; return GE; }
   // Spelaren trycker n gånger på knappen (eller väntar ut tiden). vid(k) körs för varje tryck. Löfte som blir klart när det är gjort.
   function tryckN(knapp, n, vid, sek) {
@@ -211,6 +214,48 @@
         for (let k = n; k < 3; k++) { text(delar[k]); await vanta(4); }
         await vanta(4); text('Sedan läses hans testamente upp.'); await vanta(6);
         text('Det är sista gången kungen talar till riksdagen.'); await vanta(6);
+      },
+      // 29 juni 1561. Erik går från Uppsala slott till domkyrkan på en röd matta, och man bär själv fram de nya regalierna.
+      async kroning() {
+        const p = R.P.uppsala, K = B.K; Scene.setSeason(0.47);
+        const a = [p.x + 2.0 * K, p.z - 0.4 * K], b = [p.x - 0.6 * K, p.z - 1.0 * K], L0 = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / L0, uz = (b[1] - a[1]) / L0;
+        const mb = new V.MB(); mb.snow = 0; mb.box(0, 0, 0, 0.34, 0.02, L0, '#b3262a', { low: '#8a1f24' }); const matta = B.mesh(mb); matta.position.set((a[0] + b[0]) / 2, Geo.groundAt((a[0] + b[0]) / 2, (a[1] + b[1]) / 2) + 0.015, (a[1] + b[1]) / 2); matta.rotation.y = Math.atan2(ux, uz); Scene.scene.add(matta); tempM.push(matta);
+        for (let i = 1; i < 6; i++) for (const s of [-1, 1]) { const x = a[0] + ux * L0 * i / 6 - uz * s * 0.45, z = a[1] + uz * L0 * i / 6 + ux * s * 0.45; temp.push(Folk.add(x, z, 'knekt', { pike: true, ang: Math.atan2(uz * s, -ux * s) })); }          // vakterna med sköldarna
+        const ek = erikE(false), g = { x: a[0], z: a[1], ang: Math.atan2(ux, uz), v: 0 }; hooks.push(dt => ek.place(g.x, g.z, g.ang, g.v, tid, dt, false, true)); skylt('Erik', () => g, 1.8);
+        Scene.jump((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 2, 18); plats('Uppsala, 29 juni 1561');
+        await vanta(2); text('Erik går från slottet till domkyrkan på en röd matta, under en himmel av röd sammet.'); await vanta(6);
+        await akFard([a, b], 0, L0 - 0.15, 0.6, 'Gå', 'Tryck för att gå till kyrkan', { kd: 16, ljud: 'steg', satt: (q, v) => { g.x = q.x; g.z = q.z; g.ang = q.ang; g.v = v; } });
+        UI.film.knapp(null); I.tar = null;
+        text('Vakterna bär sköldar med hans valspråk: Gud ger åt vem han vill.'); await vanta(6);
+        const delar = ['Kronan. En sluten krona har ingen kung i Norden haft förut.', 'Spiran.', 'Äpplet.', 'Nyckeln. Den finns inte i något annat land.'];
+        text('Tryck för att bära fram regalierna');
+        const n = await tryckN('Bär fram', 4, k => { text(delar[k - 1]); L.spela('klocka'); if (k === 1) erikE(true); }, 22);
+        if (n < 1) erikE(true); for (let k = n; k < 4; k++) { text(delar[k]); await vanta(3); }
+        await vanta(3); text('Ärkebiskop Laurentius Petri predikar, och Erik svär sin ed på Bibeln.'); await vanta(7);
+      },
+      // 24 maj 1567, Uppsala slott. Allvarligt och lugnt: inget blod, bara det som hände. Ingen knapp att trycka på.
+      async sturemord() {
+        const p = R.P.uppsala, K = B.K, bx = p.x + 2.4 * K, bz = p.z - 1.5 * K; Scene.setSeason(0.4);
+        Scene.jump(bx, bz + 2.2, 20); plats('Uppsala slott, 24 maj 1567');
+        await vanta(2); text('Sturarna sitter fångna på slottet. Kungen besöker Svante Sture och ber honom om förlåtelse.'); await vanta(8);
+        text('Sedan förlorar kungen all besinning.'); await vanta(6);
+        UI.film.svart(0.65, 2); await vanta(2.5);
+        text('Svante Sture och hans söner Nils och Erik dödas, och med dem Abraham Stenbock och Ivar Ivarsson.'); await vanta(8);
+        text('Kungen flyr ut i landet. Tre dagar senare hittas han förklädd i Odensala.'); await vanta(7);
+        UI.film.svart(0, 2); await vanta(1);
+        text('Sturarnas kläder finns kvar i Uppsala domkyrka än i dag.'); await vanta(7);
+      },
+      // 4 juli 1568. Kungen gifter sig med Karin Månsdotter inför alla. Man ringer själv i kyrkklockorna.
+      async brollop() {
+        const p = R.P.stockholm, K = B.K, st = V.Varld.tomt.stockholm, T = st && st.plan ? st.plan().torg : { x: 0, z: 0.2 }, cx = p.x + T.x * K, cz = p.z + T.z * K; Scene.setSeason(0.5);
+        const ek = erikE(true), g = { x: cx - 0.25, z: cz - 0.55 }; hooks.push(dt => ek.place(g.x, g.z, 0, 0, tid, dt, false, true)); skylt('Kung Erik', () => g, 1.8);
+        const karin = Folk.add(cx + 0.3, cz - 0.55, 'kvinna', { col: '#f2eee2', col2: '#8a1f24', sc: 1.3, ang: 0 }); temp.push(karin); skylt('Karin Månsdotter', () => karin, 1.6);
+        const folk = []; for (let r = 0; r < 3; r++) for (let i = 0; i < 7; i++) { const u = Folk.add(cx + (i - 3) * 0.36, cz + 0.3 + r * 0.4, (i + r) % 3 ? 'borgare' : 'kvinna', { ang: Math.PI }); folk.push(u); temp.push(u); }
+        Scene.cam.lut = 60; Scene.jump(cx, cz + 1.3, 14); plats('Stockholm, 4 juli 1568');
+        await vanta(2); text('Kungen gifter sig med Karin Månsdotter, en knekts dotter. De har redan två barn, Sigrid och Gustav.'); await vanta(8);
+        text('Tryck för att ringa i kyrkklockorna');
+        await tryckN('Ring', 4, k => { L.spela('klocka'); folk.forEach((u, i) => { if (i % 4 === k % 4) { u.y = 0.1; setTimeout(() => { u.y = 0; }, 200); } }); if (k === 2) text(''); }, 18);
+        text('Dagen efter kröns Karin till drottning.'); await vanta(6);
       },
       // 1516. Ärkebiskopen stängs in i sin borg Stäket. Man slår själv läger runt borgen, tält för tält, tills ringen är sluten.
       async staket() {

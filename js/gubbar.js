@@ -137,6 +137,7 @@
   const DRAKT = {
     gustav: [{ rock: '#7b8690', rock2: '#59636d', hatt: '#b0352c', mantel: null }, { rock: '#2f4a7a', rock2: '#22375c', hatt: '#1e1c22', mantel: '#5a4030', kedja: 1, fjader: 1 }, { rock: '#8a1f24', rock2: '#641519', hatt: '#1e1c22', mantel: '#f2eee2', kedja: 1, krona: 1 }],
     bud: [{ rock: '#7a6a52', rock2: '#5c4f3d', hatt: '#8a3a2a', mantel: null }],
+    erik: [{ rock: '#2a6a5a', rock2: '#1e4d42', hatt: '#1e1c22', mantel: '#8a1f24', kedja: 1, fjader: 1 }, { rock: '#2a6a5a', rock2: '#1e4d42', hatt: '#1e1c22', mantel: '#8a1f24', kedja: 1, fjader: 1 }, { rock: '#8a1f24', rock2: '#641519', hatt: '#1e1c22', mantel: '#f2eee2', kedja: 1, krona: 1 }],
     sten: [{ rock: '#2f4f8a', rock2: '#223c6c', hatt: '#d9b030', mantel: '#a8322a', fjader: 1 }, { rock: '#2f4f8a', rock2: '#223c6c', hatt: '#d9b030', mantel: '#d9b030', kedja: 1, fjader: 1 }]
   };
   function del(fn) { const b = new MB(); b.snow = 0; fn(b); const m = new THREE.Mesh(b.geometry(), V.Bygge.material(true)); m.castShadow = true; return m; }
@@ -186,7 +187,7 @@
     g.userData = { kropp, bal, huvud, armV, armH, stavV, stavH, svH, benV, benH, skV, skH, hast, hb, svans, ring };
     return g;
   }
-  const RANG = { Riddare: 0, 'Hövitsman': 0, 'Riksföreståndare': 1, Kung: 2, Kristina: 1 };
+  const RANG = { Riddare: 0, 'Hövitsman': 0, 'Riksföreståndare': 1, Hertig: 1, Kung: 2, Kristina: 1 };
   V.Gustav = {
     init(scene, sort) { this.scene = scene; this.sort = sort || 'gustav'; this.kanSkida = this.sort === 'gustav'; this.rang = 0; this.g = hjalteModell(this.sort, 0); this.g.scale.setScalar(SKALA * (this.sort === 'bud' ? 1.0 : 1.18)); this.g.visible = false; scene.add(this.g); this.x = 0; this.z = 0; this.ang = 0; this.fart = 0; this.steg = 0; this.spar = []; this.initSpar(scene); },
     // Byt kläder när titeln ändras.
