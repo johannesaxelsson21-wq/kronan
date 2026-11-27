@@ -29,7 +29,7 @@
     // Se till att världen stämmer med spelets läge (vid start, efter laddning och efter varje uppdrag).
     sync(tyst) {
       const S = G.s; if (!S.bas[sistaBas]) sistaBas = Object.keys(S.bas)[0];
-      if (S.varld === 0 && S.husPos) for (const id in S.husPos) { const h = D.BYGGNADER.find(q => q.id === id), t = h && tomt[h.plats]; if (t && !(t._hus && t._hus[id])) { t.take(S.husPos[id][0], S.husPos[id][1], 0.9); (t._hus || (t._hus = {}))[id] = 1; } }          // stadens hus står kvar där de byggdes, och inga andra hus på dem if (V.Gustav.klad) V.Gustav.klad(S.titel);
+      if (S.varld === 0 && S.husPos) for (const id in S.husPos) { const h = D.BYGGNADER.find(q => q.id === id), t = h && tomt[h.plats]; if (t && !(t._hus && t._hus[id])) { t.take(S.husPos[id][0], S.husPos[id][1], 0.9); (t._hus || (t._hus = {}))[id] = 1; } } if (V.Gustav.klad) V.Gustav.klad(S.titel);          // stadens hus står kvar där de byggdes, och inga andra hus på dem
       for (const b of D.BASER) {
         // det som byggdes i förspelet står kvar, också i Kristians händer
         const L = S.bas[b.id] || 0, forr = stegAv(S.forspel && S.forspel[b.id]), want = L ? Math.max(stegAv(L), forr) : (finns(b) ? forr : -1);

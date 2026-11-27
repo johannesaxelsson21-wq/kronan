@@ -165,8 +165,8 @@
     // och man får något direkt i handen: minst en mark eller en man, annars en kvarts sekunds inkomst.
     tryck(auto, mal) {          // mal = 'traff' eller 'miss' när man trycker på slagfältet i förspelets slag (main.js), annars inget          // auto = knappen hålls in och spelet trycker själv: det räknas inte som en order i ett slag
       { const m = S.aktivt && S.aktivt.mom; if (m && !m.svar && !auto && m.typ !== 'vanta') {          // förspelets slag: först ringen i slaget, sedan knappen. Att hålla in räknas inte.
-        if (!m.vald) { if (mal === 'ring') { m.vald = 1; G.ut('malVald', {}); } else G.ut('malForst', {}); }
-        else if (mal !== 'karta') { m.n = (m.n || 0) + 1; const a = S.aktivt, u = D.UPPDRAG.find(q => q.id === a.id); a.lage = Math.min(u && u.strid === 'nederlag' ? 0.7 : 0.94, (a.lage === undefined ? 0.5 : a.lage) + 0.018); G.ut('slagTryck', { o: u && u.order && u.order[m.i] }); } } }
+        if (mal !== 'ring') { if (mal !== 'karta') G.ut('malForst', {}); }          // knappen räknas inte: man trycker på ringen
+        else { m.n = (m.n || 0) + 1; const a = S.aktivt, u = D.UPPDRAG.find(q => q.id === a.id); a.lage = Math.min(u && u.strid === 'nederlag' ? 0.7 : 0.94, (a.lage === undefined ? 0.5 : a.lage) + 0.018); G.ut('slagTryck', { o: u && u.order && u.order[m.i] }); } } }
       const kraft = Math.min(1, S.sistaTryck);          // det man får laddas upp över en sekund: att hamra ger inte mer än att trycka i lugn takt
       S.fart = Math.min(1, S.fart + 0.17); S.sistaTryck = 0; S.tryck++; S.ryck = Math.min(1, (S.ryck || 0) + 0.5);
       if (S.fart >= 1 && !S.full) { S.full = true; G.ut('full', {}); }
@@ -222,7 +222,7 @@
       const a = S.aktivt, m = a.mom, o = u.order[m.i], O = G.ORDER;
       if (m.typ === 'vanta') { m.svar = 'klar'; return; }
       const mal = Math.max(4, P.mom[m.i].langd * O.tps), p = Math.min(1, (m.n || 0) / mal), bra = p >= 0.5;          // halva vägen räcker för att det ska gå bra
-      m.svar = bra ? 'bra' : 'svag'; if (!o.alltid) a.poang = (a.poang || 0) + p; else a.lage = Math.max(0.12, (a.lage || 0.5) - 0.3);          // anfallet som slogs tillbaka G.ut('orderSvar', { u, o, i: m.i, bra, svar: m.svar, typ: m.typ });
+      m.svar = bra ? 'bra' : 'svag'; if (!o.alltid) a.poang = (a.poang || 0) + p; else a.lage = Math.max(0.12, (a.lage || 0.5) - 0.3); G.ut('orderSvar', { u, o, i: m.i, bra, svar: m.svar, typ: m.typ });          // anfallet som slogs tillbaka
     },
     _orderSvar(tryckt) {
       const a = S.aktivt, u = D.UPPDRAG.find(q => q.id === a.id), o = u.order[a.mom.i], O = G.ORDER, d = a.mom.tm - O.mal, bra = tryckt && Math.abs(d) <= O.slack;
