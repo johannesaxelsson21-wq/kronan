@@ -65,6 +65,7 @@
       W._dekor('lager', S.nasta > idx('brunkeberg') && S.nasta <= idx('intag'), () => lager(R.P.brunkeberg, 9));
       W._dekor('blockad', S.nasta > idx('blockad') && S.nasta <= idx('intag'), () => W._flotta('stockholm', 3, 'lubeck'));
       W._dekor('lybska', S.nasta > idx('lubeck') && S.nasta <= idx('blockad'), () => W._flotta('soderkoping', 4, 'lubeck'));
+      W._dekor('salen', S.varld === 1, () => { const p = R.P.salen, mb = new V.MB(); B.stuga(mb, 0.95, 0.62, 0.34, 'torv', { skorsten: 1, ljus: 1 }); mb.push().move(1.4, 0, 0.6).rotY(0.5); B.stuga(mb, 1.1, 0.66, 0.38, 'span', {}); mb.pop(); mb.push().move(-1.3, 0, 0.9).rotY(-0.4); B.stuga(mb, 0.9, 0.6, 0.33, 'torv', { skorsten: 1 }); mb.pop(); const m = B.mesh(mb), x = p.x + 1.2, z = p.z - 1.1; m.position.set(x, Geo.groundAt(x, z), z); m.scale.setScalar(B.K); return m; });          // Sälen, där skidlöparna hann upp Gustav
       W._dekor('kravelen', S.nasta > idx('kravelen'), () => W._flotta('stockholm', 1, 'sverige', true));
       for (const b of D.BASER) if (S.bas[b.id] && !dekor['gard' + b.id]) { World.Paint.yard(R.P[b.id].x, R.P[b.id].z, tomt[b.id].R * 0.8); dekor['gard' + b.id] = 1; paintDirty = true; }
       for (const b of D.BASER) if (!S.bas[b.id] && finns(b) && !dekor['gard0' + b.id]) { World.Paint.yard(R.P[b.id].x, R.P[b.id].z, tomt[b.id].R * 0.55); dekor['gard0' + b.id] = 1; paintDirty = true; }
@@ -148,6 +149,7 @@
       const ut = [], lagg = (id, namn, x, z) => ut.push({ id, namn, x, z, y: Math.max(0.02, Geo.groundAt(x, z)) });
       for (const b of D.BASER) { if (!steg[b.id] || !steg[b.id].length) continue; const p = R.P[b.id], r = tomt[b.id] ? tomt[b.id].R * 0.34 : 1; lagg(b.id, b.namn, p.x, p.z + r); }
       if (dekor.staket) { const p = R.P.staket; lagg('staket', 'Stäket', p.x, p.z + 1.5); }
+      if (dekor.salen) { const p = R.P.salen; lagg('salen', 'Sälen', p.x + 1.2, p.z + 0.6); }
       return ut;
     },
     // Vilken bas ligger under den här punkten på marken?

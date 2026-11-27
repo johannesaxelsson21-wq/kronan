@@ -104,7 +104,7 @@
       Scene.setSeason(0.965); Fx.sno = true; if (V.Musik) V.Musik.spar('vinter'); L.vindstyrka(0.11);
       const mora = R.P.mora, ratt = R.P.rattvik, fz = mora.z + 0.5 * K, rank = Geo.place(15.75, 60.45), isala = Geo.place(15.87, 60.71), Wv = V.Varld;
       const nara = (q, c, r) => Math.hypot(q[0] - c.x, q[1] - c.z) < r, gard = p => { const mb = new V.MB(); B.stuga(mb, 0.95, 0.62, 0.34, 'torv', { skorsten: 1, ljus: 1 }); mb.push().move(1.35, 0, 0.5).rotY(0.6); B.stuga(mb, 1.15, 0.7, 0.4, 'span', {}); mb.pop(); const m = B.mesh(mb), x = p.x + 1.1, z = p.z - 1.0; m.position.set(x, Geo.groundAt(x, z), z); m.scale.setScalar(K); Scene.scene.add(m); tempM.push(m); };
-      gard(rank); gard(isala);
+      gard(rank); gard(isala); const salen = R.P.salen; gard(salen); gard({ x: salen.x - 2.6, z: salen.z + 1.4 });          // byn Sälen
       const start = [rank.x + 5, rank.z + 22], talplats = [mora.x - 0.4, mora.z + 3.4];
       const ben1 = Wv._runt([start, [rank.x, rank.z + 0.9]], null, null, true), ben2 = Wv._runt([[rank.x, rank.z + 0.9], [isala.x, isala.z + 0.9]], null, null, true);
       const ben3 = Wv._runt([[isala.x, isala.z + 0.9], [ratt.x + 0.3, ratt.z + 3.0]].concat(R.path('rattvik', 'mora').filter(q => !nara(q, mora, 3.6) && !nara(q, ratt, 3.2)), [talplats]), null, null, true);
@@ -134,10 +134,19 @@
       // sista benet: västerut mot Norge. Vid Sälen hinner två skidlöpare från Mora upp honom.
       const jag = [0, 1].map(k => { const u = Folk.add(talplats[0], talplats[1] - 400, 'bonde', { gar: true, skidar: true, lean: 0.25, col: k ? '#7a6a55' : '#6a5f52' }); temp.push(u); return { u, d: -1 }; });
       hooks.push(dt => { if (!aka || aka.d < L4 - 17) return; jag.forEach((j, k) => { if (j.d < 0) j.d = aka.d - 11 - k * 1.2; j.d = Math.min(L4 - 2.4 - k * 0.7, j.d + 4.4 * dt); const a = R.along(ben4, j.d); j.u.x = a.x + k * 0.3; j.u.z = a.z; j.u.ang = a.ang; }); });
-      await akFard(ben4, 0, L4 - 1.5, 1.05, 'Åk', 'Tryck för att åka', { rader: [[0.5, '', 'Han ger upp och åker västerut, mot Norge.'], [L4 - 9, 'Sälen', 'Två skidlöpare från Mora hinner upp honom.']] });
+      skylt('Sälen', () => ({ x: salen.x + 0.6, z: salen.z - 0.6 }), 1.5);          // byn syns med namn redan när han åker dit
+      await akFard(ben4, 0, L4 - 1.5, 1.05, 'Åk', 'Tryck för att åka', { rader: [[0.5, '', 'Han ger upp och åker västerut, mot Norge.'], [L4 - 12, 'Sälen', 'Bakom honom kommer två skidlöpare från Mora.']] });
       UI.film.knapp(null); I.tar = null;
       await new Promise(res => hooks.push(dt => { let klara = 0; jag.forEach((j, k) => { const mal = L4 - 2.4 - k * 0.7; if (j.d < 0) j.d = L4 - 12 - k * 1.2; j.d = Math.min(mal, j.d + 6 * dt); const a = R.along(ben4, j.d); j.u.x = a.x + k * 0.3; j.u.z = a.z; j.u.ang = a.ang; if (j.d >= mal) { klara++; j.u.gar = false; j.u.lean = 0; } }); if (klara === 2) { hooks = []; res(); } }));
-      plats('Sälen'); text('Budet om blodbadet har nått Dalarna. Mora har ändrat sig.'); await vanta(6.5);
+      { const ga = R.along(ben4, L4 - 1.5); hooks.push(dt => V.Gustav.place(ga.x, ga.z, ga.ang + Math.PI, 0, tid, dt, false)); Scene.flyTo(ga.x, ga.z + 1, 13, 2); }          // han vänder sig om mot dem
+      skylt('Lars från Kättilbo', () => jag[0].u, 1.2); skylt('Engelbrekt från Morkarlby', () => jag[1].u, 1.75);          // namnen på olika höjd så att de inte ligger på varandra
+      plats('Sälen, nyåret 1521'); text('I Sälen hinner skidlöparna Lars och Engelbrekt upp honom.'); L.spela('klart'); await vanta(6.5);
+      text('Budet om blodbadet har nått Dalarna. Mora har ändrat sig.'); await vanta(6.5);
+      // färden tillbaka mot Mora: man åker själv, skidlöparna efter
+      hooks = []; const tillbaka = ben4.slice().reverse(), LT = R.length(tillbaka);
+      hooks.push(() => { if (!aka) return; jag.forEach((j, k) => { const a = R.along(tillbaka, Math.max(0, aka.d - 0.9 - k * 0.8)); j.u.x = a.x + k * 0.3; j.u.z = a.z; j.u.ang = a.ang; j.u.gar = aka.v > 0.05; j.u.lean = aka.v > 0.05 ? 0.25 : 0; }); });
+      await akFard(tillbaka, 1.5, Math.min(LT - 4, 18), 1.05, 'Åk hem', 'Tryck för att åka tillbaka till Mora', { rader: [[3, '', 'Tillsammans åker de tillbaka till Mora.'], [11, '', 'Samma väg, från Sälen till Mora, åker tusentals människor i dag i Vasaloppet.']] });
+      UI.film.knapp(null); I.tar = null; await vanta(2);
       UI.film.svart(1, 1.5); text(''); plats(''); await vanta(1.8);
       // ---- Mora, januari 1521 ----
       rensa(); Scene.setSeason(0.04); Scene.jump(mora.x, fz + 1.5, 24); V.Gustav.place(mora.x, fz - 1.3, 0, 0, 0, 1, false);

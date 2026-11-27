@@ -4,28 +4,28 @@
 // Flera filer inom [ ] spelas en i taget och turas om. Ett namn utan fil är tyst. Andra tagningar ligger i alt/.
 window.VASA_MUSIK = {
   // vardagen (förspelet och Gustav Vasa)
-  bygget: ['audio/music/bygget.mp3?v=202611271837', 'audio/music/bygget2.mp3?v=202611271837'],
-  krig: 'audio/music/krig.mp3?v=202611271837',
-  vinter: 'audio/music/vinter.mp3?v=202611271837',
+  bygget: ['audio/music/bygget.mp3?v=202611271857', 'audio/music/bygget2.mp3?v=202611271857'],
+  krig: 'audio/music/krig.mp3?v=202611271857',
+  vinter: 'audio/music/vinter.mp3?v=202611271857',
   // början och filmen
-  titel: 'audio/music/titel.mp3?v=202611271837',
-  blodbadet: 'audio/music/blodbadet.mp3?v=202611271837',
+  titel: 'audio/music/titel.mp3?v=202611271857',
+  blodbadet: 'audio/music/blodbadet.mp3?v=202611271857',
   // scenerna
-  staket: 'audio/music/staket.mp3?v=202611271837',
-  sigill: 'audio/music/sigill.mp3?v=202611271837',
-  gisslan: 'audio/music/gisslan.mp3?v=202611271837',
-  kalo: 'audio/music/kalo.mp3?v=202611271837',
-  isen: 'audio/music/isen.mp3?v=202611271837',
-  vallen: 'audio/music/vallen.mp3?v=202611271837',
-  kalmar: 'audio/music/kalmar.mp3?v=202611271837',
+  staket: 'audio/music/staket.mp3?v=202611271857',
+  sigill: 'audio/music/sigill.mp3?v=202611271857',
+  gisslan: 'audio/music/gisslan.mp3?v=202611271857',
+  kalo: 'audio/music/kalo.mp3?v=202611271857',
+  isen: 'audio/music/isen.mp3?v=202611271857',
+  vallen: 'audio/music/vallen.mp3?v=202611271857',
+  kalmar: 'audio/music/kalmar.mp3?v=202611271857',
   // Erik XIV:s värld
-  'erik-hov': 'audio/music/erik/hov.mp3?v=202611271837',
-  'erik-krig': 'audio/music/erik/krig.mp3?v=202611271837',
-  'erik-titel': 'audio/music/erik/titel.mp3?v=202611271837',
-  'erik-kroning': 'audio/music/erik/kroning.mp3?v=202611271837',
-  'erik-karin': 'audio/music/erik/karin.mp3?v=202611271837',
-  'erik-sturemorden': 'audio/music/erik/sturemorden.mp3?v=202611271837',
-  'erik-fange': 'audio/music/erik/fange.mp3?v=202611271837'
+  'erik-hov': 'audio/music/erik/hov.mp3?v=202611271857',
+  'erik-krig': 'audio/music/erik/krig.mp3?v=202611271857',
+  'erik-titel': 'audio/music/erik/titel.mp3?v=202611271857',
+  'erik-kroning': 'audio/music/erik/kroning.mp3?v=202611271857',
+  'erik-karin': 'audio/music/erik/karin.mp3?v=202611271857',
+  'erik-sturemorden': 'audio/music/erik/sturemorden.mp3?v=202611271857',
+  'erik-fange': 'audio/music/erik/fange.mp3?v=202611271857'
 };
 // Världarnas egna spår: värld (nummer i js/data.js, VARLDAR) -> stämning -> spår ovan. Det som saknas här spelas som vanligt.
 window.VASA_MUSIK_VARLD = {
