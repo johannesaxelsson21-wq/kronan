@@ -266,8 +266,7 @@
     const m = treeMat = new THREE.MeshLambertMaterial({ vertexColors: true });
     m.onBeforeCompile = sh => {
       Object.assign(sh.uniforms, U);
-      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vBare; varying float vSnowK;\nfloat hashB(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }')
-        .replace('#include <map_fragment>', 'if (vBare > 0.5 && hashB(floor(gl_FragCoord.xy * 0.75)) < (vBare - 0.5) * 1.2) discard;')       // kala kronor ritas glest, som kvistar
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vBare; varying float vSnowK;')
         .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.93, 0.96, 1.0), smoothstep(0.38, 0.6, abs(vSnowK)) * step(0.0, vSnowK) + smoothstep(0.2, 0.9, -vSnowK) * 0.5);');
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 aFx; uniform float uTime, uSnow, uAutumn, uBare; uniform vec2 uMap; ' + FRI_DEKL + ' varying float vBare; varying float vSnowK;')
         .replace('#include <color_vertex>', `#include <color_vertex>
