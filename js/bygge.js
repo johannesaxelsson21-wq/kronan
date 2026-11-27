@@ -360,7 +360,7 @@
   }
 
   V.Bygge = {
-    K, material, Tomt, steg, flagga, fire, smoke, talt, eld, stallning, stapel, stuga, kyrka, borg,
+    K, material, Tomt, steg, flagga, fire, smoke, talt, eld, stallning, stapel, stuga, kyrka, borg, hytta,
     mesh(mb) { const m = new THREE.Mesh(mb.geometry(), material()); m.castShadow = true; m.receiveShadow = true; return m; }
   };
 })();

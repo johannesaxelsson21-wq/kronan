@@ -59,6 +59,15 @@
     { id: 'vhamn', niva: 1, namn: 'Hamnen', plats: 'vasteras', modell: 'bod', fran: 1, c0: 500, r: 2.6, ger: 0.08, vad: 'Hit kommer järn och koppar från Bergslagen och skeppas ut över Mälaren. Västerås ger mer mark.' },
     { id: 'garnison', niva: 1, namn: 'Garnisonen', plats: 'abo', modell: 'garnison', fran: 2, c0: 50, r: 2.6, ger: 0.08, vad: 'Knektar i läger vid Åbo slott. Åbo ger fler män.' },
     { id: 'gardar', niva: 1, namn: 'Gårdarna', plats: 'nykoping', modell: 'gardar', fran: 3, c0: 100, r: 2.6, ger: 0.08, vad: 'Fler gårdar i bygden kring Nyköping. Bönderna där ger fler män.' },
+    { id: 'gardarMora', varld: 1, niva: 1, namn: 'Gårdarna', plats: 'mora', modell: 'gardar', fran: 1, cx: 30, r: 2.6, ger: 0.08, vad: 'Fler gårdar i Mora socken. Bönderna där ger fler män.' },
+    { id: 'hytta', varld: 1, niva: 1, namn: 'Hyttan', plats: 'kopparberget', modell: 'hytta', fran: 3, cx: 30, r: 2.6, ger: 0.08, vad: 'En hytta där kopparmalmen smälts till koppar. Kopparberget ger mer mark.' },
+    { id: 'myntet', varld: 1, niva: 1, namn: 'Myntverket', plats: 'hedemora', modell: 'bod', fran: 5, cx: 30, r: 2.6, ger: 0.08, vad: 'Här slås klippingar, fyrkantiga mynt, för att betala hären. Hedemora ger mer mark.' },
+    { id: 'vhamn1', varld: 1, niva: 1, namn: 'Hamnen', plats: 'vasteras', modell: 'bod', fran: 7, cx: 30, r: 2.6, ger: 0.08, vad: 'Hit kommer järn och koppar från Bergslagen och skeppas ut över Mälaren. Västerås ger mer mark.' },
+    { id: 'disting1', varld: 1, niva: 1, namn: 'Distingsmarknaden', plats: 'uppsala', modell: 'disting', fran: 8, cx: 30, r: 2.6, ger: 0.08, vad: 'Den stora marknaden i Uppsala i februari. Uppsala ger mer mark.' },
+    { id: 'tullen', varld: 1, niva: 1, namn: 'Tullen', plats: 'kalmar', modell: 'bod', fran: 15, cx: 30, r: 2.6, ger: 0.08, vad: 'Skeppen som går genom sundet vid Kalmar betalar tull. Kalmar ger mer mark.' },
+    { id: 'bryggor1', varld: 1, niva: 1, namn: 'Bryggorna', plats: 'stockholm', modell: 'hamn', fran: 17, cx: 30, r: 2.6, ger: 0.08, vad: 'Bryggor där skeppen lägger till. Handeln ger Stockholm mer mark.' },
+    { id: 'garnison1', varld: 1, niva: 1, namn: 'Garnisonen', plats: 'abo', modell: 'garnison', fran: 18, cx: 30, r: 2.6, ger: 0.08, vad: 'Knektar i läger vid Åbo slott. Åbo ger fler män.' },
+    { id: 'silverhytta', varld: 1, niva: 1, namn: 'Silverhyttan', plats: 'sala', modell: 'hytta', fran: 31, cx: 30, r: 2.6, ger: 0.08, vad: 'Hyttan där silvermalmen från gruvan smälts. Sala ger mer mark.' },
     { id: 'disting', niva: 1, namn: 'Distingsmarknaden', plats: 'uppsala', modell: 'disting', fran: 6, c0: 80000, r: 2.6, ger: 0.08, vad: 'Den stora marknaden i Uppsala i februari. Uppsala ger mer mark.' }
   ];
 

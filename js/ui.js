@@ -230,7 +230,7 @@
       man(); mark();          // alltid samma ordning: män, mark, förmågor (Johannes 2026-11-26, sista beskedet)
       // Stadens egen flik (förspelet, Johannes 2026-11-26 21:22 och 21:25): staden, husen som ger staden mer, byggnaderna där och det de ger.
       // Den visar den stad man senast tryckte på (först Stockholm). Ett tryck på en stad, dess namn eller ett av dess hus på kartan öppnar den.
-      if (S.varld === 0) { const sid = UI.stadNu(ids); if (sid) {
+      { const sid = UI.stadNu(ids); if (sid) {
         const b = G.BAS[sid], s = nyFlik('stad', 'flik-stad', SLAG[b.slag] + '<b class="fl-n">' + b.namn + '</b>' + (ids.length > 1 ? '<i class="fl-byt">▾</i>' : ''), b.namn + ': staden och dess hus. Tryck på fliken igen för att välja en annan stad, eller på en stad på kartan.');
         bas(s, sid, rows2);
         D.BYGGNADER.filter(h => h.niva && h.plats === sid && G.husFinns(h.id)).forEach(h => husKort(s, h));
@@ -459,8 +459,8 @@
         ['byggFlik', '#flik-stad', 'Under Stockholm kan du bygga ett hus för knektar. Sedan blir mark till män.', G.kanBygga('knektar') && !synlig('#bygg-knektar'), !!(S.bygg && S.bygg.knektar) || synlig('#bygg-knektar')],
         ['bygg', '#bygg-knektar', 'Bygg huset här. Det kostar mark.', G.kanBygga('knektar'), !!(S.bygg && S.bygg.knektar)],
         ['knekt', '#sold', 'Ta en knekt i tjänst här. Mark blir män.', S.varld === 0 && G.kanSold() && !S.sold, S.sold > 0],
-        ['stad', '#flik-stad', 'Varje stad har en egen flik med sina hus. Tryck på en stad på kartan, så öppnas den.', S.varld === 0 && G.husLista().length > 0 && !S.stadSett, !!S.stadSett],
-        ['stadByt', '#flik-stad', 'Tryck på fliken igen för att välja en annan stad.', S.varld === 0 && flik === 'stad' && Object.keys(S.bas).length > 1 && !S.stadMenyN, !!S.stadMenyN],
+        ['stad', '#flik-stad', 'Varje stad har en egen flik med sina hus. Tryck på en stad på kartan, så öppnas den.', G.husLista().length > 0 && !S.stadSett, !!S.stadSett],
+        ['stadByt', '#flik-stad', 'Tryck på fliken igen för att välja en annan stad.', flik === 'stad' && Object.keys(S.bas).length > 1 && !S.stadMenyN, !!S.stadMenyN],
         ['skattFlik', '#res-man', 'Här under finns kortet Driv in skatt. Med det blir män till mark.', G.kanSkatt() && !S.skattN && !synlig('#skatt'), S.skattN > 0 || synlig('#skatt')],
         ['skatt', '#skatt', 'Skicka ut män här. De kommer hem med mark.', G.kanSkatt() && !S.skattN, !!S.skatt || S.skattN > 0],
         ['tak', '#res-man', 'Armén är full. Driv in skatt (det gröna kortet) så blir männen till mark.', S.res.man >= G.tak() * 0.999 && S.nasta >= 2 && !S.aktivt, S.res.man < G.tak() * 0.9]

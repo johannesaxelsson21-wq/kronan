@@ -53,7 +53,7 @@
       W._dekor('staket', f0 && S.nasta <= idx('sRiv'), () => { const mb = new V.MB(); B.borg(mb, 'liten', 0); const m = B.mesh(mb), p = R.P.staket; m.position.set(p.x, p.y, p.z); m.scale.setScalar(B.K); return m; });
       W._dekor('staketLager', f0 && S.nasta > idx('sStaket') && S.nasta <= idx('sRiv'), () => { const q = R.P.staket, c = [[4.6, 2.4], [4.8, 0.4], [3.6, -3], [0, -5]].find(o => Geo.sdAt(q.x + o[0], q.z + o[1]) > 1.6) || [4.6, 2.4]; return lager({ x: q.x + c[0], z: q.z + c[1] }, 7); });
       if (f0 && S.bygg) for (const id in S.bygg) W._byggnad(id, true);
-      if (f0 && S.hus) for (const id in S.hus) if (S.hus[id]) W._byggnad(id, true);          // och stadens hus          // byggnaderna man har köpt (se D.BYGGNADER)
+      if (S.hus) for (const id in S.hus) if (S.hus[id]) W._byggnad(id, true);          // och stadens hus          // byggnaderna man har köpt (se D.BYGGNADER)
       // sjön Åsunden finns inte i kartans vatten: den målas dit där slaget står, långsmal längs vägen in mot Bogesund
       if (f0 && S.nasta >= idx('sAsunden') - 1 && !dekor.asunden) { const v = R.path('skara', 'bogesund'), e = v[v.length - 1], q = v[Math.max(0, v.length - 6)], L = Math.hypot(e[0] - q[0], e[1] - q[1]) || 1, dx = (e[0] - q[0]) / L, dz = (e[1] - q[1]) / L;
         World.Paint.river([[e[0] - dx * 6.5, e[1] - dz * 6.5], [e[0] + dx * 8, e[1] + dz * 8]], 10.5); dekor.asunden = { sjo: { x: e[0] + dx * 0.7, z: e[1] + dz * 0.7, r: 8.2 } }; paintDirty = true; W._isAsunden(e, dx, dz); }
@@ -100,6 +100,9 @@
         folk = [vakt([0.2, 0.8], 'borgare', false)];
         const p0 = R.P[b.plats], dx = w.x - p0.x, dz = w.z - p0.z, L = Math.hypot(dx, dz) || 1; let sx = w.x, sz = w.z; for (let k = 0; k < 40 && Geo.sdAt(sx, sz) > -0.6; k++) { sx += dx / L * 0.2; sz += dz / L * 0.2; }
         if (Geo.sdAt(sx, sz) <= -0.6) { const s = V.skepp('sverige'); s.scale.setScalar(1.6); s.position.set(sx, 0.02, sz); s.rotation.y = Math.atan2(dx, dz) + 1.57; scene.add(s); dekor['skepp' + id] = { userData: { skepp: [s] } }; }
+      } else if (b.modell === 'hytta') {          // en hytta med rök, och malm i högar
+        B.hytta(mb, true); for (let k = 0; k < 2; k++) mb.box(-0.45 + k * 0.9, 0, 0.55, 0.3, 0.16, 0.24, b.plats === 'sala' ? '#9a9da3' : '#8a4f33');
+        folk = [vakt([0.1, 0.8], 'bergsman', false)];
       } else if (b.modell === 'bod') {          // ett lagerhus av sten vid hamnen, med en stång och flagga
         B.stuga(mb, 0.8, 0.55, 0.55, 'tegel', { vagg: '#b9ad98', vaggLag: '#8f8473', gavel: '#b9ad98', ljus: 1 }); mb.box(0.52, 0, 0.3, 0.05, 0.7, 0.05, '#5a4630'); mb.box(0.52, 0.56, 0.3, 0.3, 0.18, 0.02, '#c9a24a');
         for (let k = 0; k < 3; k++) mb.box(-0.3 + k * 0.3, 0, 0.55, 0.22, 0.2, 0.22, '#6a4a2a');          // järn och koppar i lådor
