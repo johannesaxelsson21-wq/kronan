@@ -205,7 +205,7 @@
           row => { if (G.kopKonst(id)) V.Ljud && V.Ljud.spela('kop'); else UI._nej(row); });
       };
       const byggKort = (s2, lista) => lista.forEach(b => { const r = kort(s2, 'bygge', IK.pil, () => '<b>Bygg: ' + b.namn + '</b><p>' + b.vad + '</p><p class="kort-p">Kostar ' + IK.mark + tal(b.kostar) + ' mark</p>', row => { if (G.bygg(b.id)) V.Ljud && V.Ljud.spela('dubbel'); else UI._nej(row); }); r.row.id = 'bygg-' + b.id; r.b = b; byggRader.push(r); });
-      const konstUnder = (s, f) => { if (S.varld === 0) D.KONSTER.filter(k => k.flik0 === f && !k.bygg0 && G.harKonst(k.id)).forEach(k => konstKort(s, k)); };          // förspelet: förmågorna ligger under männen och marken
+      const konstUnder = (s, f) => { D.KONSTER.filter(k => k.flik0 === f && (S.varld !== 0 || !k.bygg0) && G.harKonst(k.id)).forEach(k => konstKort(s, k)); };          // förspelet: förmågorna ligger under männen och marken
       const soldKort = s => { soldRad = kort(s, 'sold', IK.man, () => { const L = S.sold || 0, fx = S.full ? G.fullX() : 1, dub = (L + 1) % 10 === 0; return (S.varld === 0 ? '<b>Ta knektar i tjänst</b><span class="kort-n">nivå ' + L + '</span><p>Knektar som får lön stannar hos dig. De bor i huset vid slottet.</p>' : '<b>Värva soldater</b><span class="kort-n">nivå ' + L + '</span><p>Soldater som får lön stannar hos dig. Det är därför du gör egna mynt i Hedemora.</p>') + '<p class="kort-g">Ger ' + tal(G.soldProd() * fx) + ' män i sekunden.</p><p class="kort-x">Nästa nivå: ' + (dub ? 'dubbelt så många män' : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx) + ' män i sekunden') + '.</p><p class="kort-p">Kostar ' + IK.mark + tal(G.soldPris()) + ' mark</p>'; }, row => { if (G.kopSold()) V.Ljud && V.Ljud.spela(G.s.sold % 10 === 0 ? 'dubbel' : 'kop'); else UI._nej(row); }); soldRad.row.id = 'sold'; };
       // ett av stadens hus: nivå, vad nästa nivå ger staden, och priset i det staden ger
       const husKort = (s, h) => { const r = kort(s, 'hus', IK.pil, () => { const L = G.hus(h.id), res = G.husRes(h), enh = res === 'man' ? 'män' : 'mark'; return '<b>' + h.namn + '</b><span class="kort-n">nivå ' + L + '</span><p>' + h.vad + '</p><p class="kort-g">Nu: ' + (L ? G.BAS[h.plats].namn + ' ger ' + Math.round(h.ger * L * 100) + ' % mer ' + enh : 'inte byggt än') + '.</p><p class="kort-x">Nästa nivå: ' + Math.round(h.ger * 100) + ' % mer ' + enh + ' till.</p><p class="kort-p">Kostar ' + IK[res] + tal(G.husPris(h.id)) + ' ' + enh + '</p>'; }, row => { if (G.kopHus(h.id)) V.Ljud && V.Ljud.spela(G.hus(h.id) === 1 ? 'hammare' : 'kop'); else UI._nej(row); }); r.h = h; r.row.id = 'hus-' + h.id; husRader.push(r); };
@@ -235,15 +235,10 @@
         bas(s, sid, rows2);
         D.BYGGNADER.filter(h => h.niva && h.plats === sid && G.husFinns(h.id)).forEach(h => husKort(s, h));
         byggKort(s, G.byggnader().filter(h => (h.stad || h.plats) === sid));
-        if (sid === 'stockholm' && S.las.sold) soldKort(s);
-        D.KONSTER.filter(k => { const h = k.bygg0 && D.BYGGNADER.find(q => q.id === k.bygg0); return h && (h.stad || h.plats) === sid && G.harKonst(k.id); }).forEach(k => konstKort(s, k));
+        if (S.varld === 0 && sid === 'stockholm' && S.las.sold) soldKort(s);          // i Gustavs värld ligger soldaterna under männen
+        if (S.varld === 0) D.KONSTER.filter(k => { const h = k.bygg0 && D.BYGGNADER.find(q => q.id === k.bygg0); return h && (h.stad || h.plats) === sid && G.harKonst(k.id); }).forEach(k => konstKort(s, k));          // förmågor från förspelets byggnader
       } }
-      if (S.las.konster && S.varld !== 0) {          // i förspelet finns ingen flik för förmågor: de ligger hos det de hör till
-        const s = nyFlik('konst', '', IK.krona + '<b class="fl-n">Förmågor</b>', G.s.varld === 0 ? 'Dina egna förmågor gör din ritt, dina tryck och skatten bättre.' : 'Dina egna förmågor gör buden, trycken och skatten bättre.');
-        for (const kd of D.KONSTER) {
-          if (G.harKonst(kd.id)) konstKort(s, kd);
-        }
-      }
+      // Ingen egen flik för förmågor: de ligger under männen och marken, hos det de hör till (förspelet 2026-11-26, Gustavs värld 2026-11-27)
       if (!flikar[flik]) flik = flikar[S.flik] ? S.flik : Object.keys(flikar)[0];
       // två rader kort om det får plats på bredden, annars tre
       const fri = innerWidth - 16 - 226 - 104 - ($('handl').offsetWidth || 0) - 8 * 4 - 22; let flest = 0; for (const f in flikar) flest = Math.max(flest, flikar[f].sida.children.length);
@@ -283,7 +278,7 @@
     handlNamn(h) { const S = G.s; return S.hjalte === 'kristina' && h.kristina ? h.kristina : S.varld === 0 && h.sture ? h.sture : h.namn; },
     handla(n) { const h = G.handlingar()[n]; if (h && G.handla(h.id)) UI.tick(); },
     // Förmågornas namn och vad de gör, i den värld som spelas.
-    konst(id) { const k = G.KONST[id], f = G.s.varld === 0; return [f && k.sture ? k.sture : k.namn, f && k.vad0 ? k.vad0 : k.vad]; },
+    konst(id) { const k = G.KONST[id], f = G.s.varld === 0; return [f && k.sture ? k.sture : k.namn, k.vad0 || k.vad]; },          // hjälten rider själv i båda världarna
     _nej(e) { e.classList.remove('skaka'); void e.offsetWidth; e.classList.add('skaka'); V.Ljud && V.Ljud.spela('trumma'); },
     kop(id) { if (G.kop(id)) { V.Ljud && V.Ljud.spela(G.s.bas[id] % 10 === 0 ? 'dubbel' : 'kop'); UI.tick(); return true; } return false; },
     valj(id) { valdBas = id; },
@@ -410,7 +405,7 @@
       if (u.id === 'sAbo') x.push('<b>Män</b> är din armé. Platser som ger män bygger du ut med män: de du har får fler att sluta upp. Under männen kan du också bygga ett <b>hus för knektar</b> för mark.');
       if ((g.bas || []).some(id => G.BAS[id].slag === 'gruva')) x.push('Med kortet <b>Gruvarbetare</b> sätter du män i arbete i gruvan. De lämnar armén, och gruvan ger mer.');
       if (S.varld === 0) D.KONSTER.filter(k => k.steg0 === u.id).forEach(k => x.push('Nytt kort under ' + (k.flik0 === 'man' ? 'männen' : 'marken') + ': <b>' + UI.konst(k.id)[0] + '</b>. ' + UI.konst(k.id)[1]));
-      if (g.las && g.las.indexOf('konster') >= 0 && S.varld !== 0) x.push(('Under fliken <b>Förmågor</b> gör du dina bud och tryck bättre. Håll ') + (V.pek ? 'fingret kvar på' : 'pekaren över') + ' ett kort så ser du exakt vad det ger.');
+      if (g.las && g.las.indexOf('konster') >= 0 && S.varld !== 0) x.push(('Nya kort under männen och marken: <b>förmågor</b> som gör din ritt, dina tryck och skatten bättre. Håll ') + (V.pek ? 'fingret kvar på' : 'pekaren över') + ' ett kort så ser du exakt vad det ger.');
       if (g.las && g.las.indexOf('sold') >= 0) x.push('Nu kan du <b>värva soldater</b> för mark. De får lön, och du får fler män.');
       if (g.x) for (const r in g.x) x.push('Allt som ger ' + (r === 'man' ? 'män' : 'mark') + ' ger nu ' + String(g.x[r]).replace('.', ',') + ' gånger så mycket.');
       if (S.hem && S.hem.id === u.id) x.push('<b>' + tal(S.hem.hem) + '</b> av dina ' + tal(S.hem.av) + ' män kommer hem' + (S.hem.p >= 0.9 ? ': du ledde slaget väl.' : S.hem.p > 0.3 ? '.' : '. Följ knappen och ringen i slaget, så kommer fler hem.'));
