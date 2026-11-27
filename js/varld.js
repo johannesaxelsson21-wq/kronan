@@ -196,32 +196,67 @@
 
     // ---- uppdrag ------------------------------------------------------------------------------
     // Räkna ut vägen och hur lång tid färden tar, och be spelet skicka iväg dem.
+    // Varifrån en förflyttning går: stegets egen start, annars där hjälten står om han själv är med, annars den närmaste platsen som ger män.
+    franId(u) {
+      const S = G.s; if (!u) return null; if (u.fran) return u.fran;
+      if (u.slag === 'rid') { const fr = W._framTill(); if (S.varld !== 0 && fr && fr.id) return fr.id; return W._kvar && W._kvar.plats && R.P[W._kvar.plats] ? W._kvar.plats : (W.sate(), W._sateId); }
+      if (u.slag === 'tag' && u.med) { W.sate(); return W._sateId; }
+      if (u.slag !== 'tag' && u.slag !== 'bud') return null;
+      let fran = null, bd = 1e9; for (const id in S.bas) { if (!G.BAS[id] || G.BAS[id].ger !== 'man' || ['abo'].indexOf(id) >= 0) continue; const p = R.P[id], q = R.P[u.plats], d = Math.hypot(p.x - q.x, p.z - q.z); if (d < bd && d > 1) { bd = d; fran = id; } }
+      return fran;
+    },
+    // Vägen som en förflyttning tar, från start till mål.
+    vagFor(u) {
+      const S = G.s; let pts = null, fran = u.fran, hem = null; const sjalv = u.slag === 'rid' || (u.slag === 'tag' && !!u.med);          // hjälten är själv med: då går tåget från platsen där han står
+      if (u.slag === 'flotta') return { pts: R.seaPath(fran, u.plats), fran, hem, sjalv: false };
+      if (sjalv) fran = null; else if (!fran) fran = W.franId(u);
+      if (sjalv) { W.sate(); hem = u.fran && R.P[u.fran] ? u.fran : W._sateId; const a = grafHar(hem) ? hem : sistaBas, full = R.path(a, R.P[u.plats] && grafHar(u.plats) ? u.plats : a); const mal = R.P[u.plats];          // med en egen start (Brännkyrka) samlas hären där
+        if (u.slag === 'rid') {          // du rider dit själv, därifrån du är: vägen du är på fram till nästa plats, och vidare därifrån
+          const fr = W._framTill(), stod = S.varld === 0 && W._kvar && W._kvar.plats && R.P[W._kvar.plats] ? W._kvar.plats : null;
+          if (fr && grafHar(fr.id) && grafHar(u.plats)) { pts = fr.pts.concat(R.path(fr.id, u.plats).slice(1)); hem = fr.id; }
+          else if (stod && stod !== u.plats) pts = [[V.Gustav.x, V.Gustav.z]].concat(R.path(stod, u.plats));
+          else pts = grafHar(u.plats) ? [[V.Gustav.x, V.Gustav.z]].concat(full) : [[V.Gustav.x, V.Gustav.z], [mal.x, mal.z]];
+        }
+        else { const ut = W._utanfor(hem, mal), c = R.P[hem], rr = Math.hypot(ut[0] - c.x, ut[1] - c.z) + 0.5; pts = [ut].concat(grafHar(u.plats) ? full.filter(q => Math.hypot(q[0] - c.x, q[1] - c.z) > rr) : [[mal.x, mal.z]]); if (pts.length < 2) pts.push([mal.x, mal.z]); }          // armén samlas utanför staden, på den sida som vetter mot målet
+      }
+      else pts = grafHar(u.plats) && grafHar(fran) ? R.path(fran, u.plats) : [[R.P[fran].x, R.P[fran].z], [R.P[u.plats].x, R.P[u.plats].z]];
+      pts = W._runt(pts, sjalv ? hem : fran, u.plats, u.slag === 'rid');
+      return { pts, fran, hem, sjalv };
+    },
+    // Räkna ut vägen och hur lång tid färden tar, och be spelet skicka iväg dem.
     skicka() {
       const S = G.s, u = D.UPPDRAG[S.nasta]; if (!u || !G.kanSkicka()) return false;
-      const man = S.res.man; let pts = null, dur = null, fran = u.fran, hem = null, k0 = 0;
-      if (u.slag === 'flotta') { pts = R.seaPath(fran, u.plats); dur = Math.max(10, Math.min(24, R.length(pts) / 7)) + (u.strid ? 8 : 0); }
+      const man = S.res.man; let pts = null, dur = null, k0 = 0, fran = u.fran;
+      if (u.slag === 'flotta') { pts = W.vagFor(u).pts; dur = Math.max(10, Math.min(24, R.length(pts) / 7)) + (u.strid ? 8 : 0); }
       else if (u.slag === 'tag' || u.slag === 'bud' || u.slag === 'rid') {
-        const sjalv = u.slag === 'rid' || (u.slag === 'tag' && !!u.med);          // hjälten är själv med: då går tåget från platsen där han står
-        if (sjalv) fran = null;
-        else if (!fran) { let bd = 1e9; for (const id in S.bas) { if (G.BAS[id].ger !== 'man' || ['abo'].indexOf(id) >= 0) continue; const p = R.P[id], q = R.P[u.plats], d = Math.hypot(p.x - q.x, p.z - q.z); if (d < bd && d > 1) { bd = d; fran = id; } } }
-        if (sjalv) { W.sate(); hem = W._sateId; const a = grafHar(hem) ? hem : sistaBas, full = R.path(a, R.P[u.plats] && grafHar(u.plats) ? u.plats : a); const mal = R.P[u.plats];
-          if (u.slag === 'rid') {          // du rider dit själv, därifrån du är: vägen du är på fram till nästa plats, och vidare därifrån
-            const fr = W._framTill(), stod = S.varld === 0 && W._kvar && W._kvar.plats && R.P[W._kvar.plats] ? W._kvar.plats : null;
-            if (fr && grafHar(fr.id) && grafHar(u.plats)) { pts = fr.pts.concat(R.path(fr.id, u.plats).slice(1)); hem = fr.id; }
-            else if (stod && stod !== u.plats) pts = [[V.Gustav.x, V.Gustav.z]].concat(R.path(stod, u.plats));
-            else pts = grafHar(u.plats) ? [[V.Gustav.x, V.Gustav.z]].concat(full) : [[V.Gustav.x, V.Gustav.z], [mal.x, mal.z]];
-          }
-          else { const ut = W._utanfor(hem, mal), c = R.P[hem], rr = Math.hypot(ut[0] - c.x, ut[1] - c.z) + 0.5; pts = [ut].concat(grafHar(u.plats) ? full.filter(q => Math.hypot(q[0] - c.x, q[1] - c.z) > rr) : [[mal.x, mal.z]]); if (pts.length < 2) pts.push([mal.x, mal.z]); }          // armén samlas utanför staden, på den sida som vetter mot målet
-        }
-        else pts = grafHar(u.plats) && grafHar(fran) ? R.path(fran, u.plats) : [[R.P[fran].x, R.P[fran].z], [R.P[u.plats].x, R.P[u.plats].z]];
-        pts = W._runt(pts, sjalv ? hem : fran, u.plats, u.slag === 'rid');
+        const r = W.vagFor(u); pts = r.pts; fran = r.fran;
         const sp = u.slag === 'bud' ? 4.5 : u.slag === 'rid' ? 5 : 3.4, lim = u.slag === 'bud' ? [5, 12] : [9, 26];
         dur = Math.max(lim[0], Math.min(lim[1], R.length(pts) / sp)) + (u.strid ? 10 : 0);
         if (S.varld === 0 && u.strid) { const marsch = Math.max(6, Math.min(26, R.length(pts) / sp)), slag = u.order ? G.slagTid(u) : 12; dur = marsch + slag; k0 = marsch / dur; }
       }
       if (!G.skicka(dur ? dur * G.s.fartX : undefined, k0)) return false;
-      W._startVis(u, pts, fran, man);
+      W._startVis(u, pts, fran, man); W._vagKey = null;
       return true;
+    },
+    // Vägen dit nästa förflyttning går syns streckad på marken: medan steget väntar och medan de är på väg, tills de är framme (Johannes 2026-11-27).
+    _vagSyn(dt) {
+      const S = G.s, u = D.UPPDRAG[S.nasta], a = S.aktivt; let visa = !!u && !S.slut && ['bud', 'flotta', 'tag', 'rid'].indexOf(u.slag) >= 0 && !(a && a.val) && !(V.Intro && V.Intro.aktiv);
+      if (visa && a) { const k0 = a.k0 || (u.strid ? G.KAMP : 1); if (a.t / a.dur >= k0 * 0.97 || !vis || !vis.pts) visa = false; }
+      W._vagT = (W._vagT || 0) - dt;
+      const key = visa ? u.id + (a ? ':ute' : ':hem') : null;
+      if (key && key === W._vagKey && (a || W._vagT > 0)) return;
+      W._vagT = 2;
+      if (W._vagM) { scene.remove(W._vagM); W._vagM.geometry.dispose(); W._vagM = null; } W._vagKey = key; if (!key) return;
+      let pts = null; try { pts = a ? vis.pts : W.vagFor(u).pts; } catch (e) { pts = null; } if (!pts || pts.length < 2) return;
+      const L = R.length(pts), pos = [], idx = [], hav = u.slag === 'flotta', w = hav ? 0.18 : 0.12, yv = (x, z) => (hav ? Math.max(Geo.groundAt(x, z), 0) : Geo.groundAt(x, z)) + 0.07;
+      for (let s = 0.6; s < L - 0.6; s += hav ? 0.9 : 0.62) {
+        const p = R.along(pts, s), q = R.along(pts, Math.min(L, s + (hav ? 0.45 : 0.3))), dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz) || 1, nx = -dz / d * w / 2, nz = dx / d * w / 2, i = pos.length / 3;
+        pos.push(p.x + nx, yv(p.x, p.z), p.z + nz, p.x - nx, yv(p.x, p.z), p.z - nz, q.x - nx, yv(q.x, q.z), q.z - nz, q.x + nx, yv(q.x, q.z), q.z + nz); idx.push(i, i + 1, i + 2, i, i + 2, i + 3);
+      }
+      if (!pos.length) return;
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
+      if (!W._vagMat) W._vagMat = new THREE.MeshBasicMaterial({ color: 0xf0c75a, transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide });
+      W._vagM = new THREE.Mesh(g, W._vagMat); W._vagM.renderOrder = 2; scene.add(W._vagM);
     },
     // Gläntorna i skogen kring dem som rör sig, så att ingen går genom ett träd. Varje glänta är en sträcka med en bredd (en kapsel): [x1, z1, x2, z2, r].
     // I förspelet kliver träden åt sidan (Johannes 2026-11-26: "fixa så att träden flyttar på sig för gubbarna också"), och kring ett tåg eller ett slag
@@ -395,6 +430,7 @@
 
     // ---- varje bildruta -------------------------------------------------------------------------
     update(dt, t) {
+      W._vagSyn(dt);          // den streckade vägen till nästa förflyttning
       const S = G.s;
       for (let k = pops.length - 1; k >= 0; k--) { const p = pops[k]; p.t += dt / 0.65; const e = p.t >= 1 ? 1 : 1 + 2.2 * Math.pow(p.t - 1, 3) + 1.2 * Math.pow(p.t - 1, 2); p.m.scale.setScalar(Math.max(0.01, p.fran + ((p.till || 1) - p.fran) * e)); if (p.t >= 1) pops.splice(k, 1); }
       if (paintDirty && !pops.length) { World.Paint.commit(); paintDirty = false; }

@@ -66,7 +66,7 @@
         <div id="datum"><div id="dat-ar"></div><div id="dat-titel"></div><div id="dat-tron"></div></div>
         <div id="meny"><button id="m-fraga" title="Så fungerar det">${IK.fraga}</button><button id="m-bok" title="Krönikan">${IK.bok}</button><button id="m-krona" title="Regentlängden">${IK.krona}</button><button id="m-ljud" title="Ljud">${IK.ljud}</button><button id="m-kugg" title="Inställningar">${IK.kugg}</button></div>
         <div id="konsol">
-          <div id="uppdrag"><span id="upp-mer" style="display:none">Läs mer</span><div id="upp-akt"></div><div id="upp-titel"></div><div id="upp-kost"></div><div id="upp-bar"><div id="upp-fyll"></div></div><button id="upp-knapp"></button></div>
+          <div id="uppdrag"><span id="upp-mer" style="display:none">Läs mer</span><div id="upp-akt"></div><div id="upp-titel"></div><div id="upp-vag" style="display:none"></div><div id="upp-kost"></div><div id="upp-bar"><div id="upp-fyll"></div></div><button id="upp-knapp"></button></div>
           <div id="akwrap"><i id="ak-order" style="display:none"></i><button id="ak"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" class="spar"/><circle cx="60" cy="60" r="54" id="ak-ring" class="ring"/></svg><span id="ak-txt">Skicka<br>bud</span><span id="fullx"></span></button><div id="ak-hint">${HALL}</div></div>
           <div id="handl"></div>
           <div id="baser"></div>
@@ -103,10 +103,11 @@
       $('m-ljud').classList.toggle('av', !S.ljud);
       // uppdraget
       const u = G.uppdrag(), box = $('uppdrag'); { const m = $('upp-mer'), visa = !!(u && u.mer && !S.slut) ? '' : 'none'; if (m.style.display !== visa) m.style.display = visa; }
-      if (!u || S.slut) { box.className = 'slut'; $('upp-akt').textContent = ''; $('upp-titel').textContent = S.varld === 0 ? 'Portarna är öppna' : 'Kronan går i arv'; $('upp-kost').innerHTML = ''; $('upp-knapp').style.display = 'none'; $('upp-fyll').style.width = '100%'; }
+      if (!u || S.slut) { box.className = 'slut'; $('upp-akt').textContent = ''; $('upp-titel').textContent = S.varld === 0 ? 'Portarna är öppna' : 'Kronan går i arv'; $('upp-vag').style.display = 'none'; $('upp-kost').innerHTML = ''; $('upp-knapp').style.display = 'none'; $('upp-fyll').style.width = '100%'; }
       else {
         const a = S.aktivt, k = G.kostnad(u);
         $('upp-akt').textContent = 'Steg ' + (S.nasta + 1) + ' av ' + D.UPPDRAG.length + ' · ' + D.AKTER[u.akt]; $('upp-titel').textContent = u.titel;
+        { const v = UI.vagText(u), e = $('upp-vag'); if (e.textContent !== v) e.textContent = v; const d = v ? '' : 'none'; if (e.style.display !== d) e.style.display = d; }          // varifrån och vart
         if (a) {
           box.className = a.val ? 'val' : 'pagar'; $('upp-kost').innerHTML = a.val ? '' : '<span class="plats">' + UI.platsnamn(u.plats) + ' ' + u.ar + '</span>' + (G.skede() === 'strid' ? '<span class="chip strid">strid</span>' : '');
           $('upp-fyll').style.width = Math.min(100, a.t / a.dur * 100) + '%'; $('upp-knapp').textContent = a.val ? u.val : ''; $('upp-knapp').style.display = a.val ? '' : 'none'; $('upp-knapp').disabled = false;
@@ -287,7 +288,7 @@
     kop(id) { if (G.kop(id)) { V.Ljud && V.Ljud.spela(G.s.bas[id] % 10 === 0 ? 'dubbel' : 'kop'); UI.tick(); return true; } return false; },
     valj(id) { valdBas = id; },
     // Läs mer om ett steg: varför det händer. Spelet står still medan rutan är uppe.
-    merInfo(u) { UI.ruta('<h2>' + u.titel + '</h2><p class="mal">' + UI.platsnamn(u.plats) + ' ' + u.ar + '</p><p>' + u.mer + '</p>' + (u.merKalla ? '<p class="svag">Källa: ' + u.merKalla + '.</p>' : '') + '<button class="stang">Stäng</button>', false); UI._paus = true; },
+    merInfo(u) { UI.ruta('<h2>' + u.titel + '</h2><p class="mal">' + (UI.vagText(u) || UI.platsnamn(u.plats)) + ', ' + u.ar + '</p><p>' + u.mer + '</p>' + (u.merKalla ? '<p class="svag">Källa: ' + u.merKalla + '.</p>' : '') + '<button class="stang">Stäng</button>', false); UI._paus = true; },
     // Ligger punkten på skärmen under en av knapparna? Då ska ingen skylt stå där.
     _skymd(sp) { for (const id of ['handl', 'hitta', 'akwrap']) { const e = $(id); if (!e || !e.offsetParent) continue; const r = e.getBoundingClientRect(); if (sp.x > r.left - 12 && sp.x < r.right + 12 && sp.y > r.top - 14 && sp.y < r.bottom + 8) return true; } return false; },
     // Stadens flik (förspelet): vilken stad den visar, och att byta
@@ -304,6 +305,11 @@
       setTimeout(() => document.addEventListener('pointerdown', function st(ev) { if (e.contains(ev.target) || (ev.target.closest && ev.target.closest('#flik-stad'))) return; e.style.display = 'none'; document.removeEventListener('pointerdown', st); }), 0);          // ett tryck någon annanstans stänger den
     },
     nastaStad() { const S = G.s, ids = Object.keys(S.bas).filter(id => S.bas[id] && G.BAS[id]), i = ids.indexOf(UI.stadNu(ids)); S.stad = ids[(i + 1) % ids.length]; sistaBaser = ''; if (UI.onVisaBas) UI.onVisaBas(S.stad); },
+    // "Från Stockholm till Vädla" för ett steg där någon ger sig av (Johannes 2026-11-27: tydligt varifrån och vart)
+    vagText(u) {
+      if (!u || ['bud', 'flotta', 'tag', 'rid'].indexOf(u.slag) < 0) return ''; if (u.vag) return u.vag;
+      const f = V.Varld.franId(u); return f && f !== u.plats ? 'Från ' + UI.platsnamn(f) + ' till ' + UI.platsnamn(u.plats) : 'Till ' + UI.platsnamn(u.plats);
+    },
     platsnamn(id) { const b = G.BAS[id]; if (b) return b.namn; return ({ brunnback: 'Brunnbäcks färja', brunkeberg: 'Brunkeberg', stegeborg: 'Stegeborg', orebro: 'Örebro', strangnas: 'Strängnäs', soderkoping: 'Söderköping', malmo: 'Malmö', lubeck: 'Lübeck', storatuna: 'Stora Tuna', skara: 'Västergötland', smaland: 'Småland', kisa: 'Kisa', virserum: 'Virserum', bornholm: 'Bornholm', staket: 'Stäket', vadla: 'Vädla', brannkyrka: 'Brännkyrka', bogesund: 'Åsundens is' })[id] || id; },
 
     // ---- varje bildruta: pilar över baser som går att bygga ut -----------------------------------
