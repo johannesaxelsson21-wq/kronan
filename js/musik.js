@@ -1,15 +1,22 @@
 // Musik: loopande spår efter stämning. Vilka filer som finns står i audio/music/spellista.js, och en stämning utan fil är tyst.
 // Spåret följer det som händer: bygget i vardagen, krig under fälttåg och belägring, vinter i Dalarna och på isen, blodbadet i filmen.
+// Varje värld kan ha egen musik (VASA_MUSIK_VARLD i spellistan): i Erik XIV:s värld blir bygget hans hov, krig hans krig och så vidare.
+// Ett spår med flera filer spelas en i taget och turas om (bygget, sedan bygget2, sedan bygget igen).
 // Musiken startar vid första trycket (det kräver webbläsaren) och tonar över när stämningen byts.
 (function () {
   'use strict';
-  const V = window.VASA, LISTA = window.VASA_MUSIK || {}, SPAR = Object.keys(LISTA), VOL = 0.3, STEG = 0.025;          // SPAR: allt som står i spellistan
+  const V = window.VASA, LISTA = window.VASA_MUSIK || {}, VARLD = window.VASA_MUSIK_VARLD || {}, VOL = 0.3, STEG = 0.025;
+  const SPAR = Object.keys(LISTA).concat(...Object.keys(VARLD).map(k => Object.keys(VARLD[k])));          // SPAR: alla stämningar som går att be om
   const lat = {}; let vill = null, pa = true, vaken = false, tm = null;
+  const filer = n => [].concat(LISTA[n] || []);
+  // Stämningens namn i den värld som spelas: 'bygget' blir 'erik-hov' i Erik XIV:s värld. Utan eget spår där gäller det vanliga.
+  function egen(n) { const S = V.Game && V.Game.s, t = S && VARLD[S.varld]; return t && t[n] && LISTA[t[n]] ? t[n] : n; }
   // Ett spår är ett vanligt ljudelement. På nätet går det genom ljudmotorn, så att volymen går att styra också på iPhone
   // (där en sida inte får ändra ett ljudelements egen volym). Från fil (dubbelklick) styrs elementets volym direkt.
   function skaffa(n) {
     if (lat[n] || !LISTA[n]) return lat[n] || null;
-    const a = new Audio(LISTA[n]), o = lat[n] = { a, g: null, v: 0 }; a.loop = true; a.preload = 'auto';
+    const f = filer(n), a = new Audio(f[0]), o = lat[n] = { a, g: null, v: 0, i: 0 }; a.loop = f.length === 1; a.preload = 'auto';
+    if (f.length > 1) a.addEventListener('ended', () => { o.i = (o.i + 1) % f.length; a.src = f[o.i]; const p = a.play(); if (p && p.catch) p.catch(() => { }); });          // nästa fil i turordningen
     const ac = V.Ljud && V.Ljud.ac;
     if (ac && location.protocol !== 'file:') { try { const src = ac.createMediaElementSource(a); o.g = ac.createGain(); o.g.gain.value = 0; src.connect(o.g); o.g.connect(ac.destination); } catch (e) { o.g = null; } }
     if (!o.g) { try { a.volume = 0; } catch (e) { /* får inte ändras */ } }
@@ -29,17 +36,18 @@
   const ga = () => { if (!tm) tm = setInterval(tona, 100); };
   const M = V.Musik = {
     SPAR,
-    finns() { return SPAR.length > 0; },          // finns det någon musik alls? (annars visas ingen musikknapp)
-    har(n) { return !!LISTA[n]; },
+    finns() { return Object.keys(LISTA).length > 0; },          // finns det någon musik alls? (annars visas ingen musikknapp)
+    har(n) { return !!LISTA[egen(n)]; },
     // Byt stämning (tonar över). Okända namn struntas i. Saknar stämningen en fil tystnar musiken.
-    spar(n) { if (SPAR.indexOf(n) < 0 || n === vill) return; vill = n; if (vaken) { skaffa(n); ga(); } },
+    spar(n) { if (SPAR.indexOf(n) < 0) return; n = egen(n); if (n === vill) return; vill = n; if (vaken) { skaffa(n); ga(); } },
     // Stämningen som hör till läget i spelet när inget särskilt händer
     grund() {
       const S = V.Game.s, D = V.DATA;
       if (S.varld === 0) return S.hjalte === 'kristina' && S.nasta >= D.UPPDRAG.length - 1 ? 'krig' : 'bygget';          // Stockholm belägras
+      if (S.varld === 2) return S.slut ? 'fange' : 'bygget';                                                                 // Erik: hovet, och fångenskapen när portarna öppnats 1568
       return S.nasta < 3 ? 'vinter' : 'bygget';                                                                              // Dalarna vintern 1521
     },
-    vakna() { if (vaken) return; vaken = true; if (!vill) vill = M.grund(); skaffa(vill); ga(); },
+    vakna() { if (vaken) return; vaken = true; if (!vill) vill = egen(M.grund()); skaffa(vill); ga(); },
     satt(on) { pa = !!on; if (vaken) ga(); },
     nu() { return vill; }
   };
