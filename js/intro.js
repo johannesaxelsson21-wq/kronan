@@ -159,10 +159,10 @@
         lagg(); const forst = skepp[0].position, pts = [[sx, sz], [forst.x, forst.z]];
         const bat = V.skepp('sverige'); bat.scale.setScalar(0.95); bat.position.set(sx, 0.02, sz); bat.rotation.y = Math.atan2(forst.x - sx, forst.z - sz); Scene.scene.add(bat); tempM.push(bat);
         const sex = []; for (let i = 0; i < 5; i++) { const u = Folk.add(sx - 1.0 - (i % 3) * 0.32, sz - 0.25 + Math.floor(i / 3) * 0.38, 'borgare', { ang: 1.6 }); sex.push(u); temp.push(u); }
-        const ge = gustavE(), star = dt => ge.place(sx - 1.72, sz + 0.2, 1.6, 0, tid, dt, false, true); ge.ang = 1.6; ge.utanRing = true; hooks.push(star); const gs = skylt('Gustav Eriksson', () => ({ x: sx - 1.72, z: sz + 0.2 }), 1.8);          // den sjätte är Gustav Eriksson, 22 år
+        const ge = gustavE(), star = dt => ge.place(sx - 1.72, sz + 0.2, 1.6, 0, tid, dt, false, true); ge.ang = 1.6; ge.utanRing = true; hooks.push(star); /* inget namn över honom här: att han är en av de sex får man veta i texten (Johannes 2026-11-27) */          // den sjätte är Gustav Eriksson, 22 år
         Scene.jump((sx + forst.x) / 2, sz + 2.4, 30); plats('Stockholm, september 1518'); hooks.push(lagg);
         await vanta(2); text('Kristian har förlorat slaget och vill förhandla. Hans bud kräver sex svenska herrar ombord på skeppen, som säkerhet.'); await vanta(8.5);
-        sex.forEach(u => Folk.remove(u)); temp = temp.filter(u => sex.indexOf(u) < 0); hooks = hooks.filter(h => h !== star); ge.g.visible = false; gs.bort();
+        sex.forEach(u => Folk.remove(u)); temp = temp.filter(u => sex.indexOf(u) < 0); hooks = hooks.filter(h => h !== star); ge.g.visible = false;
         await akFard(pts, 0, R.length(pts) - 0.9, 0.7, 'Skicka', 'Tryck för att skicka ut dem', { kd: innerWidth < innerHeight ? 31 : 27, sikt: [forst.x, forst.z], ljud: 'vag', satt: a => { bat.position.set(a.x, 0.02 + Math.sin(tid * 2) * 0.02, a.z); bat.rotation.y = a.ang; } });
         UI.film.knapp(null); I.tar = null; Scene.scene.remove(bat); L.spela('nej'); text('När de sex är ombord hissar Kristian segel.');
         hooks.push(dt => { d = Math.min(26, d + dt * 1.5); const c = Scene.cam, f = Math.min(1, dt * 1.2); c.tx += (forst.x - c.tx) * f; c.tz += (forst.z + 2 - c.tz) * f; c.td = 36; });
