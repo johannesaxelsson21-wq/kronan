@@ -198,7 +198,7 @@
     // Varifrån en förflyttning går: stegets egen start, annars där hjälten står om han själv är med, annars den närmaste platsen som ger män.
     franId(u) {
       const S = G.s; if (!u) return null; if (u.fran) return u.fran;
-      if (u.slag === 'rid') { const fr = W._framTill(); if (fr && fr.id) return fr.id; return W._kvar && W._kvar.plats && R.P[W._kvar.plats] ? W._kvar.plats : (W.sate(), W._sateId); }
+      if (u.slag === 'rid') return W._kvar && W._kvar.plats && R.P[W._kvar.plats] ? W._kvar.plats : sistaBas && R.P[sistaBas] && G.s.bas[sistaBas] ? sistaBas : (W.sate(), W._sateId);          // där han senast var
       if (u.slag === 'tag' && u.med) { W.sate(); return W._sateId; }
       if (u.slag !== 'tag' && u.slag !== 'bud') return null;
       let fran = null, bd = 1e9; for (const id in S.bas) { if (!G.BAS[id] || G.BAS[id].ger !== 'man' || ['abo'].indexOf(id) >= 0) continue; const p = R.P[id], q = R.P[u.plats], d = Math.hypot(p.x - q.x, p.z - q.z); if (d < bd && d > 1) { bd = d; fran = id; } }
