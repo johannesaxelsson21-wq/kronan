@@ -164,7 +164,9 @@
     // Varje tryck svarar direkt: mätaren fylls på sex tryck, budet får ett ryck framåt (upp till dubbel fart),
     // och man får något direkt i handen: minst en mark eller en man, annars en kvarts sekunds inkomst.
     tryck(auto, mal) {          // mal = 'traff' eller 'miss' när man trycker på slagfältet i förspelets slag (main.js), annars inget          // auto = knappen hålls in och spelet trycker själv: det räknas inte som en order i ett slag
-      { const m = S.aktivt && S.aktivt.mom; if (m && !m.svar && !auto && m.typ !== 'vanta') { m.n = (m.n || 0) + 1; const u = D.UPPDRAG.find(q => q.id === S.aktivt.id); G.ut('slagTryck', { o: u && u.order && u.order[m.i] }); } }          // förspelets slag: varje tryck räknas, på knappen eller i slaget. Att hålla in räknas inte.
+      { const m = S.aktivt && S.aktivt.mom; if (m && !m.svar && !auto && m.typ !== 'vanta') {          // förspelets slag: först ringen i slaget, sedan knappen. Att hålla in räknas inte.
+        if (!m.vald) { if (mal === 'ring') { m.vald = 1; G.ut('malVald', {}); } else G.ut('malForst', {}); }
+        else if (mal !== 'karta') { m.n = (m.n || 0) + 1; const a = S.aktivt, u = D.UPPDRAG.find(q => q.id === a.id); a.lage = Math.min(u && u.strid === 'nederlag' ? 0.7 : 0.94, (a.lage === undefined ? 0.5 : a.lage) + 0.018); G.ut('slagTryck', { o: u && u.order && u.order[m.i] }); } } }
       const kraft = Math.min(1, S.sistaTryck);          // det man får laddas upp över en sekund: att hamra ger inte mer än att trycka i lugn takt
       S.fart = Math.min(1, S.fart + 0.17); S.sistaTryck = 0; S.tryck++; S.ryck = Math.min(1, (S.ryck || 0) + 0.5);
       if (S.fart >= 1 && !S.full) { S.full = true; G.ut('full', {}); }
@@ -184,7 +186,7 @@
     // ---- förspelets slag: order i rätt ögonblick -----------------------------------------------
     // Slaget har två eller tre ögonblick (D.STURE order). I vart och ett sluter sig en ring kring knappen, och ett tryck när den är framme
     // är rätt läge. Utgången följer historien vad man än gör: det man spelar om är hur många av männen som kommer hem (_klar).
-    ORDER: { borjan: 1.5, langd: 5, mellan: 1.5, mal: 3.2, slack: 0.7, hugg: 7, takt: 1.1, fonster: 0.35, tps: 2.5, efterKula: 9 },          // tps = tryck i sekunden som ger fullt
+    ORDER: { borjan: 1.5, langd: 5, mellan: 1.5, mal: 3.2, slack: 0.7, hugg: 7, takt: 1.1, fonster: 0.35, tps: 2.2, efterKula: 9 },          // tps = tryck i sekunden som ger fullt
     // Slagets ögonblick i tid: när vart och ett börjar och hur länge det varar. slut = när det sista är över (efter kanonkulan: när han är buren ur striden).
     _plan(u) {
       if (u._plan) return u._plan; const O = G.ORDER, mom = []; let t = O.borjan, kula = false;
@@ -192,14 +194,19 @@
       return (u._plan = { mom, slut: t, kula });
     },
     slagTid(u) { const P = G._plan(u); return P.slut + (u.strid === 'nederlag' && !P.kula ? 6 : 3); },          // och en stund efteråt: de som vann trycker på, de som förlorade flyr
-    _order() {
+    _order(dt) {
       const a = S.aktivt; if (!a || a.val || a.kula || S.varld !== 0) return; const u = D.UPPDRAG.find(q => q.id === a.id); if (!u || !u.order || G.skede() !== 'strid') return;
-      const P = G._plan(u), tb = a.t - (u.belagring ? 0 : a.dur * (a.k0 || KAMP)); if (!a.borjat) { a.borjat = 1; G.ut('slagStart', { u }); }
+      const P = G._plan(u), tb = a.t - (u.belagring ? 0 : a.dur * (a.k0 || KAMP)); if (!a.borjat) { a.borjat = 1; a.lage = 0.5; G.ut('slagStart', { u }); }
+      { const seger = u.strid !== 'nederlag';          // dragkampen: dina tryck för den mot dig, motståndaren tar tillbaka, och efter sista ordern går den dit historien gick
+        if (tb > P.slut) a.lage += ((seger ? 0.88 : 0.12) - a.lage) * Math.min(1, (dt || 0) * 0.8);
+        else if (a.mom && !a.mom.svar && a.mom.typ !== 'vanta') a.lage -= 0.035 * (dt || 0);
+        else a.lage += (0.5 - a.lage) * 0.12 * (dt || 0);
+        a.lage = Math.max(0.04, Math.min(0.96, a.lage)); }
       let i = -1; for (let k = 0; k < P.mom.length; k++) if (tb >= P.mom[k].start) i = k;
       if (a.mom && !a.mom.svar && (a.mom.i !== i || tb - P.mom[a.mom.i].start > P.mom[a.mom.i].langd)) G._momSlut(u, P);          // ögonblicket är över
       if (i < 0) return; const m = P.mom[i], tm = tb - m.start; if (tm > m.langd) return;          // pausen mellan två
       if (!a.mom || a.mom.i !== i) {
-        const o = u.order[i]; if (m.typ === 'kula') { a.kula = true; a.mom = null; G.ut('kula', { u, o }); return; }
+        const o = u.order[i]; if (m.typ === 'kula') { a.kula = true; a.mom = null; a.lage = 0.22; G.ut('kula', { u, o }); return; }
         const forst = !(S.lart && S.lart[m.typ]); S.lart = S.lart || {}; S.lart[m.typ] = 1;          // första gången varje sort kommer förklaras den
         a.mom = { i, typ: m.typ, svar: null, tm: 0, traff: 0, miss: 0, slag: {} }; G.ut('order', { u, o, i, typ: m.typ, forst });
       }
@@ -215,7 +222,7 @@
       const a = S.aktivt, m = a.mom, o = u.order[m.i], O = G.ORDER;
       if (m.typ === 'vanta') { m.svar = 'klar'; return; }
       const mal = Math.max(4, P.mom[m.i].langd * O.tps), p = Math.min(1, (m.n || 0) / mal), bra = p >= 0.5;          // halva vägen räcker för att det ska gå bra
-      m.svar = bra ? 'bra' : 'svag'; if (!o.alltid) a.poang = (a.poang || 0) + p; G.ut('orderSvar', { u, o, i: m.i, bra, svar: m.svar, typ: m.typ });
+      m.svar = bra ? 'bra' : 'svag'; if (!o.alltid) a.poang = (a.poang || 0) + p; else a.lage = Math.max(0.12, (a.lage || 0.5) - 0.3);          // anfallet som slogs tillbaka G.ut('orderSvar', { u, o, i: m.i, bra, svar: m.svar, typ: m.typ });
     },
     _orderSvar(tryckt) {
       const a = S.aktivt, u = D.UPPDRAG.find(q => q.id === a.id), o = u.order[a.mom.i], O = G.ORDER, d = a.mom.tm - O.mal, bra = tryckt && Math.abs(d) <= O.slack;
@@ -325,7 +332,7 @@
       const tak = G.tak(); if (S.res.man > tak) S.res.man = tak;
       if (S.aktivt && S.aktivt.val && S.varld === 0) { S.aktivt.valT = (S.aktivt.valT || 0) + dt; if (S.aktivt.valT > 30) G.valj(); }      // i förspelet väntar historien inte
       if (S.aktivt && !S.aktivt.val) {
-        S.aktivt.t += dt; G._order();
+        S.aktivt.t += dt; G._order(dt);
         if (S.aktivt.t >= S.aktivt.dur) { const u = D.UPPDRAG.find(q => q.id === S.aktivt.id); if (u.val && !S.aktivt.valt) { S.aktivt.val = true; G.ut('val', { u }); } else G._klar(); }
       }
       if (S.las.fogdar) for (const id in S.fogde) { let n = 0; while (S.fogde[id] && G.kanKopa(id) && G.pris(id) <= S.res[G.prisRes(id)] * 0.12 && n++ < 5) G.kop(id); }

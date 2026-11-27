@@ -389,3 +389,18 @@ button { font-family: inherit; cursor: pointer; }
 
 /* Läs mer ska inte ligga över raden med steget */
 #upp-akt { padding-right: 60px; }
+
+/* Ringen i slaget (Johannes 2026-11-27): där kan man trycka, lika bra som på knappen */
+#slag-mal::after { content: 'tryck här'; position: absolute; left: 50%; top: 100%; margin-top: 6px; transform: translateX(-50%); font-size: 14px; letter-spacing: 0.03em; color: #fff7df; text-shadow: 0 1px 2px #000, 0 0 6px #000; white-space: nowrap; }
+#slag-mal i { border-color: rgba(255, 243, 184, 0.95); }
+#slag-mal.hugg i { border-color: rgba(255, 200, 170, 0.95); }
+
+/* Slagen: ringen innan den är vald (tryck här) och efter (grön), knappen väntar tills ringen är vald, och dragkampen högst upp */
+#slag-mal.vald i { border-color: #9df0a6; box-shadow: 0 0 12px rgba(157, 240, 166, 0.8); }
+#slag-mal.vald::after { content: none; }
+#akwrap.vantar #ak { filter: brightness(0.75); }
+#slag-bar { position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); width: min(80vw, 460px); display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; padding: 5px 10px; background: rgba(20, 14, 9, 0.7); border: 1px solid rgba(201, 162, 74, 0.5); border-radius: 8px; font-size: 13px; color: #fff7df; text-shadow: 0 1px 1px #000; }
+#slag-bar .sb-spar { position: relative; height: 12px; border-radius: 6px; background: #a8322a; overflow: hidden; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4) inset; }
+#slag-bar .sb-fyll { position: absolute; left: 0; top: 0; bottom: 0; width: 50%; background: linear-gradient(90deg, #2f4f8a, #4a78c0); transition: width 0.25s ease-out; }
+#slag-bar .sb-fyll::after { content: ''; position: absolute; right: -1px; top: -2px; bottom: -2px; width: 3px; background: #f2cf5a; }
+@media (max-width: 720px) { #slag-bar { font-size: 11.5px; padding: 4px 8px; gap: 6px; width: calc(100vw - 24px); } }

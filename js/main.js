@@ -28,8 +28,11 @@
     }
     else if (typ === 'sold' && d.dubbel) UI.skylt((G.s.varld === 0 ? 'Knektarna' : 'Soldaterna') + ': dubbelt så många män');
     else if (typ === 'infor') { if (!V.tyst) { UI.text(d.text, 10); V.Ljud.spela('klart'); } UI.tick(true); }          // en ny sak i taget, med en lugn rad
+    else if (typ === 'slagTryck') UI._studs = performance.now();
+    else if (typ === 'malVald') { UI._studs = performance.now(); UI.svar('Tryck nu på knappen', true); V.Ljud.spela('kop'); }
+    else if (typ === 'malForst') { if (performance.now() > (UI._forstT || 0)) { UI._forstT = performance.now() + 1800; UI.svar('Tryck först på ringen i slaget', false); } }          // ringen i slaget studsar till
     else if (typ === 'slagStart') { UI.skylt(d.u.belagring ? 'Belägringen börjar' : 'Slaget börjar', true); V.Ljud.spela('horn'); }
-    else if (typ === 'order') { const a0 = G.s.aktivt, ex = d.typ !== 'vanta' && a0 && !a0.forklarad ? 'Tryck på knappen många gånger. Ringen runt den fylls, och ju fler tryck, desto mer händer. Håll inte in.' : ''; if (ex) a0.forklarad = 1; UI.text(d.o.rad + (d.o.hur ? '<br>' + d.o.hur : '') + (ex ? '<br><b>' + ex + '</b>' : ''), d.typ === 'hugg' ? 6.8 : d.typ === 'vanta' ? 5.5 : 5, !!ex); V.Ljud.spela(d.typ === 'hugg' ? 'trumma' : 'horn'); }          // första gången förklaras varje sort          // i början av varje slag
+    else if (typ === 'order') { const a0 = G.s.aktivt, ex = d.typ !== 'vanta' && a0 && !a0.forklarad ? 'Först trycker du på ringen i slaget, där ordern gäller. Sedan trycker du många gånger på knappen. Stapeln högst upp visar vem som är på väg att vinna.' : ''; if (ex) a0.forklarad = 1; UI.text(d.o.rad + (d.o.hur ? '<br>' + d.o.hur : '') + (ex ? '<br><b>' + ex + '</b>' : ''), d.typ === 'hugg' ? 6.8 : d.typ === 'vanta' ? 5.5 : 5, !!ex); V.Ljud.spela(d.typ === 'hugg' ? 'trumma' : 'horn'); }          // första gången förklaras varje sort          // i början av varje slag
     else if (typ === 'hugg') { UI.svar(d.traff ? 'Träff' : d.igen ? 'Vänta på nästa ring' : d.d < 0 ? 'Lite tidigt' : 'Lite sent', d.traff); }          // varje hugg får ett svar där ringen är
     else if (typ === 'orderVanta') UI.svar('Vänta tills ringen når pricken', false);
     else if (typ === 'orderSvar') { if (!d.o.alltid && d.bra) UI.svar('Bra', true); }
@@ -124,7 +127,7 @@
     UI.onBorjaOm = () => { byter = true; try { localStorage.removeItem(SPAR); } catch (e) { /* inget */ } laddaOm(); };
     UI.onIgen = arv => { byter = true; G.s.arv += arv; G.s.varv++; const s = G.ny(true); s.intro = true; skriv(); laddaOm(); };
     Scene.onClick = (e, g) => {
-      if (spelar && G.s.varld === 0 && G.skede() === 'strid') { Varld.foljUppdraget(); tryck(false, 'karta'); return; }          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget
+      if (spelar && G.s.varld === 0 && G.skede() === 'strid') { Varld.foljUppdraget(); const q = Varld.malSkarm(); tryck(false, q && Math.hypot(q.x - e.clientX, q.y - e.clientY) <= q.r + 12 ? 'ring' : 'karta'); return; }          // ett tryck på ringen räknas, annars inte          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget
       const id = Varld.basVid(g) || Varld.byggVid(g), egen = !!(id && spelar && G.s.bas[id]);
       if (spelar && G.s.varld === 0 && Varld.valjVid(e.clientX, e.clientY, egen)) { V.Ljud.vakna(); return; }          // förspelet: det man trycker på följs (Johannes 2026-11-26)
       if (!egen) { tryck(); return; }
