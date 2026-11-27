@@ -53,7 +53,7 @@
       opt = opt || {}; const o = opt.over === undefined ? 0.06 : opt.over, x0 = x - w / 2 - o, x1 = x + w / 2 + o, z0 = z - d / 2 - o, z1 = z + d / 2 + o, yr = y + h, ye = y - o * (h / (d / 2)) * 0.6, hex2 = opt.ridge || hex;
       this.quad([x0, ye, z1], [x1, ye, z1], [x1, yr, z], [x0, yr, z], hex, hex2, 1);
       this.quad([x1, ye, z0], [x0, ye, z0], [x0, yr, z], [x1, yr, z], hex, hex2, 1);
-      const g = opt.gable; if (g) { this.tri([x - w / 2, y, z + d / 2], [x - w / 2, y, z - d / 2], [x - w / 2, yr - 0.01, z], g, 0); this.tri([x + w / 2, y, z - d / 2], [x + w / 2, y, z + d / 2], [x + w / 2, yr - 0.01, z], g, 0); }
+      const g = opt.gable; if (g) { this.tri([x - w / 2, y, z - d / 2], [x - w / 2, y, z + d / 2], [x - w / 2, yr - 0.01, z], g, 0); this.tri([x + w / 2, y, z + d / 2], [x + w / 2, y, z - d / 2], [x + w / 2, yr - 0.01, z], g, 0); }          // gavelspetsarna vända utåt (de var vända inåt och syntes inte utifrån: taket såg ut att sitta fel)
       return this;
     }
     // Pyramidtak (tälttak) på en fyrkant.

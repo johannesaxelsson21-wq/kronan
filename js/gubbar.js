@@ -137,7 +137,7 @@
   const DRAKT = {
     gustav: [{ rock: '#7b8690', rock2: '#59636d', hatt: '#b0352c', mantel: null }, { rock: '#2f4a7a', rock2: '#22375c', hatt: '#1e1c22', mantel: '#5a4030', kedja: 1, fjader: 1 }, { rock: '#8a1f24', rock2: '#641519', hatt: '#1e1c22', mantel: '#f2eee2', kedja: 1, krona: 1 }],
     bud: [{ rock: '#7a6a52', rock2: '#5c4f3d', hatt: '#8a3a2a', mantel: null }],
-    sten: [{ rock: '#2f4f8a', rock2: '#223c6c', hatt: '#d9b030', mantel: null, fjader: 1 }, { rock: '#2f4f8a', rock2: '#223c6c', hatt: '#d9b030', mantel: '#d9b030', kedja: 1, fjader: 1 }]
+    sten: [{ rock: '#2f4f8a', rock2: '#223c6c', hatt: '#d9b030', mantel: '#a8322a', fjader: 1 }, { rock: '#2f4f8a', rock2: '#223c6c', hatt: '#d9b030', mantel: '#d9b030', kedja: 1, fjader: 1 }]
   };
   function del(fn) { const b = new MB(); b.snow = 0; fn(b); const m = new THREE.Mesh(b.geometry(), V.Bygge.material(true)); m.castShadow = true; return m; }
   function hjalteModell(sort, rang) {

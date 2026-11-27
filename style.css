@@ -386,3 +386,6 @@ button { font-family: inherit; cursor: pointer; }
 #uppdrag { position: relative; cursor: pointer; }
 #upp-mer { position: absolute; right: 8px; top: 6px; font-size: 11px; letter-spacing: 0.04em; color: var(--guld2); border-bottom: 1px dotted rgba(242, 207, 90, 0.6); }
 .ber-mer { display: inline-block; margin: 2px 14px 8px 0; font-size: 14px; color: var(--guld2); text-decoration: none; border-bottom: 1px dotted rgba(242, 207, 90, 0.6); }
+
+/* Läs mer ska inte ligga över raden med steget */
+#upp-akt { padding-right: 60px; }

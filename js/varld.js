@@ -621,8 +621,9 @@
     // Fasta kroppar (förspelet, Johannes 2026-11-26: "alla modeller ska ha en fast kropp, en hitbox").
     // Vägens högra sida: fil = hur långt till höger om vägens mitt. Ligger någon framför i samma riktning går man ut till vänster och kör om.
     _fil(fil, a, dt, hinder) {
-      let mal = 0.16; const fx = Math.sin(a.ang), fz = Math.cos(a.ang), sx = Math.cos(a.ang), sz = -Math.sin(a.ang), x0 = a.x + sx * 0.16, z0 = a.z + sz * 0.16;
-      for (const u of hinder) { if (!u || u.vis === false) continue; const dx = u.x - x0, dz = u.z - z0, fram = dx * fx + dz * fz, sid = dx * sx + dz * sz; if (fram > -0.3 && fram < 0.9 && Math.abs(sid) < 0.3 && Math.cos((u.ang || 0) - a.ang) > 0.3) { mal = -0.24; break; } }
+      let mal = 0.16; for (const id in G.s.bas) { const q = R.P[id]; if (q && Math.hypot(q.x - a.x, q.z - a.z) < 2.6) { mal = 0; break; } }          // inne i en stad: mitt på vägen
+      const fx = Math.sin(a.ang), fz = Math.cos(a.ang), sx = Math.cos(a.ang), sz = -Math.sin(a.ang), x0 = a.x + sx * 0.16, z0 = a.z + sz * 0.16;
+      if (mal) for (const u of hinder) { if (!u || u.vis === false) continue; const dx = u.x - x0, dz = u.z - z0, fram = dx * fx + dz * fz, sid = dx * sx + dz * sz; if (fram > -0.3 && fram < 0.9 && Math.abs(sid) < 0.3 && Math.cos((u.ang || 0) - a.ang) > 0.3) { mal = -0.24; break; } }
       const f0 = fil === undefined ? 0.16 : fil; return f0 + (mal - f0) * Math.min(1, dt * 3);
     },
     // Står punkten i ett hus eller i vattnet (i en plats med hus)?

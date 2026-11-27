@@ -38,13 +38,20 @@
   }
 
   // ---- husdelar -------------------------------------------------------------------------------
-  function dorr(mb, x, z, h, w) { w = w || 0.14; mb.quad([x - w / 2, 0.05, z], [x + w / 2, 0.05, z], [x + w / 2, 0.05 + h, z], [x - w / 2, 0.05 + h, z], '#2c1f16', '#3a2a1e', 0); }
-  function fonster(mb, x, y, z, s, lit) { mb.quad([x - s, y, z], [x + s, y, z], [x + s, y + s * 2.2, z], [x - s, y + s * 2.2, z], lit ? '#e8b85a' : '#2a2520', null, 0); }
+  function dorr(mb, x, z, h, w) { w = w || 0.14; mb.quad([x - w / 2 - 0.016, 0.045, z - 0.002], [x + w / 2 + 0.016, 0.045, z - 0.002], [x + w / 2 + 0.016, 0.066 + h, z - 0.002], [x - w / 2 - 0.016, 0.066 + h, z - 0.002], '#8a6a45', '#a5845a', 0); mb.quad([x - w / 2, 0.05, z], [x + w / 2, 0.05, z], [x + w / 2, 0.05 + h, z], [x - w / 2, 0.05 + h, z], '#2c1f16', '#3a2a1e', 0); }
+  // Fönster med ljus karm och spröjs i kors
+  function fonster(mb, x, y, z, s, lit) {
+    const k = '#ead9b8', p = lit ? '#f0c060' : '#2f3a44', H = s * 2.2, f = 0.013, sp = 0.0045;
+    mb.quad([x - s - f, y - f, z - 0.002], [x + s + f, y - f, z - 0.002], [x + s + f, y + H + f, z - 0.002], [x - s - f, y + H + f, z - 0.002], k, null, 0);
+    mb.quad([x - s, y, z], [x + s, y, z], [x + s, y + H, z], [x - s, y + H, z], p, null, 0);
+    mb.quad([x - sp, y, z + 0.001], [x + sp, y, z + 0.001], [x + sp, y + H, z + 0.001], [x - sp, y + H, z + 0.001], k, null, 0); mb.quad([x - s, y + H * 0.55 - sp, z + 0.001], [x + s, y + H * 0.55 - sp, z + 0.001], [x + s, y + H * 0.55 + sp, z + 0.001], [x - s, y + H * 0.55 + sp, z + 0.001], k, null, 0);
+  }
   // Timrad stuga. Nocken längs x, dörren mot söder.
   function stuga(mb, w, d, h, tak, opt) {
     opt = opt || {}; const t = TAK[tak || 'torv'];
     mb.box(0, 0, 0, w + 0.08, 0.06, d + 0.08, '#8d877d', { low: '#6f6a62' });
     mb.box(0, 0.06, 0, w, h, d, opt.vagg || '#7b6650', { low: opt.vaggLag || '#4f3f31', noTop: true });
+    if (!opt.vagg) for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (let k = 0; k < 4; k++) mb.box(sx * (w / 2 + 0.014), 0.06 + h * (k + 0.5) / 4 - 0.018, sz * (d / 2 + 0.014), 0.052, 0.036, 0.052, '#5e4a38');          // knutar
     for (let k = 1; k < 4; k++) { const y = 0.06 + h * k / 4; mb.quad([-w / 2 - 0.005, y - 0.012, d / 2 + 0.004], [w / 2 + 0.005, y - 0.012, d / 2 + 0.004], [w / 2 + 0.005, y + 0.012, d / 2 + 0.004], [-w / 2 - 0.005, y + 0.012, d / 2 + 0.004], '#4a3a2c', null, 0); }
     mb.gable(0, 0.06 + h, 0, w, d * (opt.brant || 0.58), d, t.c, { over: 0.1, gable: opt.gavel || '#6a5642', ridge: t.r });
     dorr(mb, opt.dx || -w * 0.18, d / 2 + 0.006, h * 0.72); fonster(mb, w * 0.24, 0.06 + h * 0.4, d / 2 + 0.006, 0.045, opt.ljus);
@@ -87,7 +94,10 @@
   // Borgarhus i en stad: smalt, högt, gaveln mot gatan (söder).
   function stadshus(mb, w, d, h, puts, tak) {
     const t = TAK[tak || 'tegel'];
-    mb.push().rotY(Math.PI / 2); mb.box(0, 0, 0, d, h, w, puts, { low: '#6f6253', noTop: true }); mb.gable(0, h, 0, d, w * 0.85, w, t.c, { over: 0.05, gable: puts, ridge: t.r }); mb.pop();
+    const th = w * 0.6, sten = puts !== '#7b6650';          // takhöjden: lagom brant (förut 0,85 och taket stack ut som en fena)
+    mb.push().rotY(Math.PI / 2); mb.box(0, 0, 0, d, h, w, puts, { low: '#6f6253', noTop: true }); mb.gable(0, h, 0, d, th, w, t.c, { over: 0.035, gable: puts, ridge: t.r }); mb.pop();
+    if (sten) { for (let i = 1; i <= 3; i++) { const f = i / 4, y = h + th * f - 0.03, x = (w / 2) * (1 - f) + 0.02; for (const s of [-1, 1]) mb.box(s * x, y, d / 2 - 0.035, 0.075, 0.07, 0.075, puts, { low: puts }); } mb.box(0, h + th - 0.02, d / 2 - 0.035, 0.08, 0.08, 0.075, puts, { low: puts }); }          // trappgavel
+    fonster(mb, 0, h + th * 0.22, d / 2 + 0.006, 0.026, false);          // gavelfönster
     dorr(mb, -w * 0.15, d / 2 + 0.006, 0.26, 0.11); fonster(mb, w * 0.2, 0.12, d / 2 + 0.006, 0.04, false); fonster(mb, -w * 0.2, h * 0.62, d / 2 + 0.006, 0.035, false); fonster(mb, w * 0.2, h * 0.62, d / 2 + 0.006, 0.035, false);
   }
   function mur(mb, x0, z0, x1, z1, h) {
@@ -96,14 +106,16 @@
     for (let k = 0; k < Math.floor(L / 0.22); k++) mb.box(-L / 2 + 0.11 + k * 0.22, h, 0.05, 0.1, 0.09, 0.06, '#9a948a', { low: '#827c73' });
     mb.pop();
   }
-  function rundtorn(mb, x, z, r, h, sten, tak, spets) { mb.cyl(x, 0, z, r, r * 0.94, h, 9, sten || '#9a948a', { low: '#6a655d' }); mb.cyl(x, h, z, r * 1.1, r * 1.1, 0.1, 9, sten || '#9a948a', { low: '#827c73' }); mb.cone(x, h + 0.1, z, r * 1.15, spets || r * 1.5, 9, tak || '#4a3e34', { low: '#372e28' }); }
-  function fyrtorn(mb, x, z, w, h, sten, tak) { mb.box(x, 0, z, w, h, w, sten || '#9a948a', { low: '#6a655d', noTop: true }); mb.hip(x, h, z, w, w * 0.8, w, tak || '#4a3e34', 0.06); }
+  function glugg(mb, x, y, z, h) { mb.quad([x - 0.016, y, z], [x + 0.016, y, z], [x + 0.016, y + h, z], [x - 0.016, y + h, z], '#1e1a17', null, 0); }          // skottglugg
+  function port(mb, x, z, w, h) { mb.quad([x - w / 2 - 0.03, 0, z - 0.002], [x + w / 2 + 0.03, 0, z - 0.002], [x + w / 2 + 0.03, h + 0.05, z - 0.002], [x - w / 2 - 0.03, h + 0.05, z - 0.002], '#7f786d', '#8f887c', 0); mb.quad([x - w / 2, 0, z], [x + w / 2, 0, z], [x + w / 2, h * 0.75, z], [x - w / 2, h * 0.75, z], '#2a2018', '#3a2c20', 0); mb.tri([x - w / 2, h * 0.75, z], [x + w / 2, h * 0.75, z], [x, h, z], '#3a2c20', 0); }
+  function rundtorn(mb, x, z, r, h, sten, tak, spets) { glugg(mb, x, h * 0.45, z + r * 0.97 + 0.004, 0.12); glugg(mb, x, h * 0.75, z + r * 0.955 + 0.004, 0.1); mb.cyl(x, 0, z, r, r * 0.94, h, 9, sten || '#9a948a', { low: '#6a655d' }); mb.cyl(x, h, z, r * 1.1, r * 1.1, 0.1, 9, sten || '#9a948a', { low: '#827c73' }); mb.cone(x, h + 0.1, z, r * 1.15, spets || r * 1.5, 9, tak || '#4a3e34', { low: '#372e28' }); }
+  function fyrtorn(mb, x, z, w, h, sten, tak) { glugg(mb, x, h * 0.5, z + w / 2 + 0.004, 0.13); fonster(mb, x, h * 0.72, z + w / 2 + 0.005, 0.03, false); mb.box(x, 0, z, w, h, w, sten || '#9a948a', { low: '#6a655d', noTop: true }); mb.hip(x, h, z, w, w * 0.8, w, tak || '#4a3e34', 0.06); }
 
   // Borgar. Varje sort har en tydlig siluett.
   function borg(mb, sort, steg) {
     if (sort === 'liten') {
       mur(mb, -1, 0.8, 1, 0.8, 0.5); mur(mb, -1, -0.8, 1, -0.8, 0.5); mur(mb, -1, -0.8, -1, 0.8, 0.5); mur(mb, 1, -0.8, 1, 0.8, 0.5);
-      fyrtorn(mb, -0.1, -0.2, 0.8, 1.25, '#a39c90', '#4a3e34'); rundtorn(mb, 1, 0.8, 0.3, 0.8); rundtorn(mb, -1, 0.8, 0.26, 0.7); mb.box(0.5, 0, -0.35, 0.6, 0.5, 0.5, '#a39c90', { low: '#6a655d', noTop: true }); mb.gable(0.5, 0.5, -0.35, 0.6, 0.3, 0.5, '#4a3e34', { gable: '#a39c90' });
+      port(mb, -0.45, 0.885, 0.3, 0.34); fyrtorn(mb, -0.1, -0.2, 0.8, 1.25, '#a39c90', '#4a3e34'); rundtorn(mb, 1, 0.8, 0.3, 0.8); rundtorn(mb, -1, 0.8, 0.26, 0.7); mb.box(0.5, 0, -0.35, 0.6, 0.5, 0.5, '#a39c90', { low: '#6a655d', noTop: true }); mb.gable(0.5, 0.5, -0.35, 0.6, 0.3, 0.5, '#4a3e34', { gable: '#a39c90' });
     } else if (sort === 'kalmar') {
       mur(mb, -1.1, 1.1, 1.1, 1.1, 0.62); mur(mb, -1.1, -1.1, 1.1, -1.1, 0.62); mur(mb, -1.1, -1.1, -1.1, 1.1, 0.62); mur(mb, 1.1, -1.1, 1.1, 1.1, 0.62);
       for (const [x, z] of [[-1.1, -1.1], [1.1, -1.1], [-1.1, 1.1], [1.1, 1.1]]) rundtorn(mb, x, z, 0.38, 1.05, '#a8a093', '#4a3e34', 0.7);
@@ -111,7 +123,8 @@
     } else if (sort === 'stockholm') {
       // Stockholms slott: det runda kärntornet från 1200-talet mitt i en muromgärdad borg. Namnet Tre Kronor kom först 1588.
       mur(mb, -1.7, 1.2, 1.7, 1.2, 0.75); mur(mb, -1.7, -1.2, 1.7, -1.2, 0.75); mur(mb, -1.7, -1.2, -1.7, 1.2, 0.75); mur(mb, 1.7, -1.2, 1.7, 1.2, 0.75);
-      for (const [x, z] of [[-1.7, -1.2], [1.7, -1.2], [-1.7, 1.2], [1.7, 1.2]]) fyrtorn(mb, x, z, 0.52, 1.1, '#a39c90');
+      port(mb, -0.75, 1.285, 0.34, 0.4); for (const [x, z] of [[-1.7, -1.2], [1.7, -1.2], [-1.7, 1.2], [1.7, 1.2]]) fyrtorn(mb, x, z, 0.52, 1.1, '#a39c90');
+      for (const y of [0.7, 1.25, 1.7]) fonster(mb, 0.2, y, -0.1 + 0.565, 0.035, y < 1);          // fönster i kärntornet
       mb.cyl(0.2, 0, -0.1, 0.56, 0.52, 2.0, 12, '#aba395', { low: '#6a655d' }); mb.cyl(0.2, 2.0, -0.1, 0.62, 0.62, 0.14, 12, '#aba395', { low: '#8a8479' }); mb.cone(0.2, 2.14, -0.1, 0.6, 0.7, 12, '#4a3e34', { low: '#372e28' });
       mb.box(-0.95, 0, -0.65, 1.1, 0.95, 0.6, '#a8a093', { low: '#6a655d', noTop: true }); mb.gable(-0.95, 0.95, -0.65, 1.1, 0.4, 0.6, '#4a3e34', { gable: '#a8a093' });
       mb.box(1.05, 0, 0.5, 0.9, 0.8, 0.55, '#a39c90', { low: '#6a655d', noTop: true }); mb.gable(1.05, 0.8, 0.5, 0.9, 0.36, 0.55, '#4a3e34', { gable: '#a39c90' }); fyrtorn(mb, 0, 1.2, 0.5, 0.95, '#9a948a');
