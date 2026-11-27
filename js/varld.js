@@ -142,7 +142,7 @@
     pos(id) { const p = R.P[id]; return p ? { x: p.x, y: p.y || 0, z: p.z } : null; },
     // Ortnamnen på kartan (förspelet): varje plats som syns, och borgen Stäket så länge den står. Namnet står strax nedanför husen.
     ortnamn() {
-      if (vis && (vis.noll || vis.u.belagring) && G.skede() === 'strid') return W._slagNamn();          // i ett slag: vem som är vem, inte städernas namn
+      if (vis && (vis.noll || vis.u.belagring || (vis.u.slag === 'flotta' && vis.u.order)) && G.skede() === 'strid') return W._slagNamn();          // i ett slag: vem som är vem, inte städernas namn
       const ut = [], lagg = (id, namn, x, z) => ut.push({ id, namn, x, z, y: Math.max(0.02, Geo.groundAt(x, z)) });
       for (const b of D.BASER) { if (!steg[b.id] || !steg[b.id].length) continue; const p = R.P[b.id], r = tomt[b.id] ? tomt[b.id].R * 0.34 : 1; lagg(b.id, b.namn, p.x, p.z + r); }
       if (dekor.staket) { const p = R.P.staket; lagg('staket', 'Stäket', p.x, p.z + 1.5); }
@@ -226,7 +226,7 @@
     skicka() {
       const S = G.s, u = D.UPPDRAG[S.nasta]; if (!u || !G.kanSkicka()) return false;
       const man = S.res.man; let pts = null, dur = null, k0 = 0, fran = u.fran;
-      if (u.slag === 'flotta') { pts = W.vagFor(u).pts; dur = Math.max(10, Math.min(24, R.length(pts) / 7)) + (u.strid ? 8 : 0); }
+      if (u.slag === 'flotta') { pts = W.vagFor(u).pts; dur = Math.max(10, Math.min(24, R.length(pts) / 7)) + (u.strid ? 8 : 0); if (u.strid && u.order) { const marsch = Math.max(10, Math.min(24, R.length(pts) / 7)); dur = marsch + G.slagTid(u); k0 = marsch / dur; } }          // sjöslaget med order: först seglatsen, sedan slaget
       else if (u.slag === 'tag' || u.slag === 'bud' || u.slag === 'rid') {
         const r = W.vagFor(u); pts = r.pts; fran = r.fran;
         const sp = u.slag === 'bud' ? 4.5 : u.slag === 'rid' ? 5 : 3.4, lim = u.slag === 'bud' ? [5, 12] : [9, 26];
@@ -415,6 +415,7 @@
       else if (typ === 'hugg' && vis && vis.u.belagring) { if (d.traff) W._belBild(d.o && d.o.bild, true, 'hugg'); }          // belägringen: varje tryck i takt syns på vallen eller i tornen
       else if (typ === 'hugg' && vis && d.traff) { const q = W.malPunkt(); if (q) Fx.damm(q.x, Geo.groundAt(q.x, q.z), q.z, 5); vis.stot = 1; Scene.shake(0.08); V.Ljud && V.Ljud.spela('svard'); const e = vis.enh[Math.floor(Math.random() * Math.min(vis.enh.length, vis.bredd || 6))]; if (e) Fx.damm(e.x, Geo.groundAt(e.x, e.z), e.z, 3); }          // ett hugg i takt: leden trycker på
       else if (typ === 'orderSvar' && vis && vis.u.belagring) W._belBild(d.o.bild, d.bra, 'svar');
+      else if (typ === 'orderSvar' && vis && vis.u.slag === 'flotta' && vis.u.order && d.o === vis.u.order[vis.u.order.length - 1]) vis.flyr = 1;          // sjöslaget: sista ordern, Lübecks skepp flyr
       else if (typ === 'orderSvar' && vis) { if (d.bra && !d.o.alltid) { vis.stot = 1; Scene.shake(0.18); } else if (d.o.alltid) vis.stot = -1.6; }          // rätt läge: en stöt framåt. Anfallet i gryningen vid Brännkyrka slås tillbaka
       else if (typ === 'kula' && vis) { const Gu = V.Gustav; Fx.krut(Gu.x, Geo.groundAt(Gu.x, Gu.z) + 0.4, Gu.z); Fx.damm(Gu.x, Geo.groundAt(Gu.x, Gu.z) + 0.1, Gu.z, 12); }
       else if (typ === 'klart') {
@@ -533,6 +534,7 @@
     // Ett tryck i förspelets slag: leden trycker på och det dammar vid fronten, eller (belägringen) tornen skjuter, försvararna jublar, brevet beseglas.
     _slagTryck(o) {
       if (vis.u.belagring) { W._belBild(o && o.bild, true, 'hugg'); return; }
+      if (vis.u.slag === 'flotta') { const s = vis.skepp[Math.floor(Math.random() * vis.skepp.length)], f = (vis.fiende || [])[Math.floor(Math.random() * (vis.fiende || []).length)]; if (s && f) W._kula(s.position.x, 0.7, s.position.z, f.position.x + (Math.random() - 0.5) * 0.8, f.position.z + (Math.random() - 0.5) * 0.8, false); V.Ljud && V.Ljud.spela('kanon'); return; }
       vis.stot = 1; Scene.shake(0.14); const fi = vis.fi.filter(e => e.br === 0 && e.fall < 0.5), e = fi[Math.floor(Math.random() * fi.length)] || vis.enh[0];
       if (e) Fx.damm(e.x, Geo.groundAt(e.x, e.z), e.z, 3); if (Math.random() < 0.5) V.Ljud && V.Ljud.spela('svard');
     },
@@ -552,6 +554,7 @@
         if (o.bild === 'brev') { const k = W._kristina; return k ? { x: k.x, y: gy(k.x, k.z) + 0.6, z: k.z } : null; }
         const b = R.P.brunkeberg || p; return { x: b.x, y: gy(b.x, b.z) + 0.4, z: b.z };
       }
+      if (u.slag === 'flotta') { const l = (o.mal === 'egen' ? vis.skepp : vis.fiende) || [], s = l.length ? l[(m.typ === 'hugg' ? j : 0) % l.length] : null; return s ? { x: s.position.x, y: 0.6, z: s.position.z } : null; }          // sjöslaget
       if (!vis.noll) return null;
       const egen = mitt(vis.enh, e => e.br === 0 && e.fall < 0.5), fi = mitt(vis.fi, e => e.br === 0 && e.fall < 0.5);
       if (m.typ === 'hugg') {          // huggen kommer på olika ställen längs fronten, där leden möts
@@ -578,6 +581,7 @@
       const ut = [], gy = (x, z) => Geo.groundAt(x, z), mitt = l => { let x = 0, z = 0, n = 0; for (const e of l) if (e.vis !== false && e.fall < 0.5) { x += e.x; z += e.z; n++; } return n ? { x: x / n, z: z / n } : null; };
       if (vis.u.belagring === 2) { (vis.lager || []).forEach((c, i) => ut.push({ id: 'slag-lager' + i, namn: 'Gustavs läger', x: c.x, z: c.z + 1.1, y: gy(c.x, c.z) + 0.2 })); const s = vis.skepp[0]; if (s) ut.push({ id: 'slag-skepp', namn: 'Lübecks skepp', x: s.position.x, z: s.position.z + 1.2, y: 0.4 }); const n = (vis.fiende || [])[0]; if (n && vis.norby > 0.05) ut.push({ id: 'slag-norby', namn: 'Søren Norby', x: n.position.x, z: n.position.z + 1.2, y: 0.4 }); return ut; }
       if (vis.u.belagring) { const b = R.P.brunkeberg; if (b) ut.push({ id: 'slag-lager', namn: 'Kristians läger', x: b.x, z: b.z + 0.9, y: gy(b.x, b.z) + 0.2 }); const f = mitt(vis.enh); if (f) ut.push({ id: 'slag-egen', namn: 'Försvararna', x: f.x, z: f.z + 0.4, y: gy(f.x, f.z) }); return ut; }
+      if (vis.u.slag === 'flotta') { const s = vis.skepp[0], fl = mitt((vis.fiende || []).map(q => ({ x: q.position.x, z: q.position.z, fall: 0 }))); if (s) ut.push({ id: 'slag-egen', namn: 'Stora Kravelen', x: s.position.x, z: s.position.z + 1.2, y: 0.5 }); if (fl) ut.push({ id: 'slag-fiende', namn: vis.u.fiende || 'Fienden', x: fl.x, z: fl.z + 1.4, y: 0.5 }); return ut; }
       const e = mitt(vis.enh), f = mitt(vis.fi), egen = vis.u.egen || (vis.u.id === 'sUppsala' ? 'Bönderna' : 'Sten Stures män');
       if (e) ut.push({ id: 'slag-egen', namn: egen, x: e.x, z: e.z, y: gy(e.x, e.z) + 1.1 }); if (f) ut.push({ id: 'slag-fiende', namn: vis.u.fiende || 'Danskarna', x: f.x, z: f.z, y: gy(f.x, f.z) + 1.1 });
       return ut;
@@ -784,7 +788,8 @@
         const dist = vis.len * gf; { const l0 = R.along(vis.pts, dist); W._folj(l0.x, l0.z, 46); }
         vis.skepp.forEach((s, i) => { const a2 = R.along(vis.pts, Math.max(0, dist - i * 2.3)); s.position.set(a2.x + Math.cos(a2.ang) * ((i % 2) - 0.5) * 1.5, 0.02 + Math.sin(t * 1.4 + i) * 0.03, a2.z - Math.sin(a2.ang) * ((i % 2) - 0.5) * 1.5); s.rotation.y = a2.ang; s.rotation.z = Math.sin(t * 1.2 + i * 2) * 0.05; });
         if (vis.gustav) { const s0 = vis.skepp[0].position; V.Gustav.place(s0.x, s0.z, 0, 0, t, dt, true); }
-        if (kamp && vis.fiende) { W._kampT = (W._kampT || 0) + dt; if (W._kampT > 0.25) { W._kampT = 0; const s = vis.skepp[Math.floor(Math.random() * vis.skepp.length)].position; Fx.krut(s.x, 0.4, s.z); V.Ljud && V.Ljud.spela('kanon'); } vis.fiende.forEach((s, i) => { if (kf > 0.4 + i * 0.12) { s.position.y -= dt * 0.25; s.rotation.z += dt * 0.3; } }); }
+        if (kamp && vis.fiende && u.order) { if (vis.flyr) vis.fiende.forEach((s, i) => { s.position.x += dt * (1.2 + i * 0.2); s.position.z -= dt * 0.4; s.rotation.y = 1.4; }); }          // Lübecks skepp flyr österut
+        else if (kamp && vis.fiende) { W._kampT = (W._kampT || 0) + dt; if (W._kampT > 0.25) { W._kampT = 0; const s = vis.skepp[Math.floor(Math.random() * vis.skepp.length)].position; Fx.krut(s.x, 0.4, s.z); V.Ljud && V.Ljud.spela('kanon'); } vis.fiende.forEach((s, i) => { if (kf > 0.4 + i * 0.12) { s.position.y -= dt * 0.25; s.rotation.z += dt * 0.3; } }); }
       } else if (u.slag === 'bygg') {
         vis.enh.forEach(e => { e.gar = true; e.ang += dt * (0.5 + e.fas); }); if (Math.random() < dt * 5) Fx.damm(vis.stallning.position.x + (Math.random() - 0.5), p.y + 0.1, vis.stallning.position.z + (Math.random() - 0.5), 1);
         vis.stallning.scale.set(1, 0.3 + 0.7 * f, 1);
