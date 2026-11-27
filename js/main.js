@@ -78,17 +78,14 @@
   }
   function arstidSteg(dt) {
     const u = senaste(), a = G.s.aktivt, mal = (u.man - 1) / 12;
-    if (G.s.varld === 0) {
-      // Förspelet: det som händer visas i den årstid det hände (Johannes 2026-11-26). När ett steg går iväg är kartan framme vid stegets
+    {
+      // Det som händer visas i den årstid det hände (Johannes 2026-11-26). När ett steg går iväg är kartan framme vid stegets
       // årstid inom en sekund, kortaste vägen (från höst till sommar går den bakåt genom sensommaren, inte framåt genom vintern).
       // Bara belägringen av Stockholm låter månaderna gå medan den pågår: från april till september.
       let d = ((((mal - arstid) % 1) + 1.5) % 1) - 0.5; if (Math.abs(d) < 0.002) return;
       const v = a && !a.val ? (u.belagring ? Math.abs(d) / Math.max(1, a.dur - a.t) : 0.5) : 1 / 30;
       arstid = (((arstid + Math.sign(d) * Math.min(Math.abs(d), v * dt)) % 1) + 1) % 1; return;
     }
-    let df = (((mal - arstid) % 1) + 1) % 1; if (df > 0.96) df = 0;
-    let v = 1 / 30; if (a && !a.val) v = Math.min(1 / 10, Math.max(v, df / Math.max(1, a.dur - a.t)));
-    arstid = (arstid + Math.min(df, v * dt)) % 1;
   }
   // Datumet uppe i hörnet: året då det senaste steget skedde, årstiden så som den syns på kartan.
   V.kalender = () => ({ ar: senaste().ar, man: arstid * 12 + 1 });
@@ -114,7 +111,7 @@
     // sparfilen läses innan världen befolkas, eftersom förspelet och Gustavs värld har olika hjältar
     const hade = !q.has('ny') && ladda();
     if (!hade) G.nyVarld(q.has('varld') ? +q.get('varld') : q.has('fusk') ? 1 : 0);
-    V.lugn = G.s.varld === 0;          // förspelet är lugnt: färre gnistor, lägre ljud, nästan ingen skakning (Johannes 2026-11-26: "det ska vara lugnt och skönt")
+    V.lugn = true;          // förspelet är lugnt: färre gnistor, lägre ljud, nästan ingen skakning (Johannes 2026-11-26: "det ska vara lugnt och skönt")
     UI.init(); Varld.init(Scene.scene);
     G.ut = handelse; V.Ljud.init(); V.Ljud.pa(G.s.ljud); if (V.Musik) { V.Musik.satt(G.s.ljud && G.s.musik === true); V.Musik.spar(V.Musik.grund()); }
     if (q.has('fusk')) V.fusk(+q.get('fusk'));
@@ -122,14 +119,14 @@
     arstid = hade && G.s.arstid >= 0 && !q.has('fusk') ? G.s.arstid % 1 : ((senaste().man - 1) / 12) % 1; Scene.setSeason(q.has('season') ? +q.get('season') : arstid);
     const p = q.has('lon') ? Geo.place(+q.get('lon'), +q.get('lat')) : hemma(); Scene.jump(p.x, p.z + 1.5, +q.get('d') || 30);
     UI.onTryck = tryck; UI.onSkicka = () => Varld.skicka(); UI.onSkatt = () => G.skatt();
-    UI.onHitta = () => { const w = Varld.gustavVid(); Scene.cam.user = performance.now(); Varld._foljMig = Scene.cam.user; Scene.flyTo(w.x, w.z + 1.2, UTSIKT, 0.9); if (G.s.varld === 0) Varld.foljHjalten(); };          // knappen Hitta mig
-    UI.onVisaBas = id => { const w = Varld.pos(id); Scene.flyTo(w.x, w.z + 1.2, Math.min(Scene.cam.d, 30), 0.9); if (G.s.varld === 0) Varld.foljPlats(id); };          // förspelet: kameran stannar vid staden
+    UI.onHitta = () => { const w = Varld.gustavVid(); Scene.cam.user = performance.now(); Varld._foljMig = Scene.cam.user; Scene.flyTo(w.x, w.z + 1.2, UTSIKT, 0.9); Varld.foljHjalten(); };          // knappen Hitta mig
+    UI.onVisaBas = id => { const w = Varld.pos(id); Scene.flyTo(w.x, w.z + 1.2, Math.min(Scene.cam.d, 30), 0.9); Varld.foljPlats(id); };          // förspelet: kameran stannar vid staden
     UI.onBorjaOm = () => { byter = true; try { localStorage.removeItem(SPAR); } catch (e) { /* inget */ } laddaOm(); };
     UI.onIgen = arv => { byter = true; G.s.arv += arv; G.s.varv++; const s = G.ny(true); s.intro = true; skriv(); laddaOm(); };
     Scene.onClick = (e, g) => {
-      if (spelar && G.s.varld === 0 && G.skede() === 'strid') { Varld.foljUppdraget(); const q = Varld.malSkarm(); tryck(false, q && Math.hypot(q.x - e.clientX, q.y - e.clientY) <= q.r + 12 ? 'ring' : 'karta'); return; }          // ett tryck på ringen räknas, annars inte          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget
+      if (spelar && G.skede() === 'strid' && (G.uppdrag() || {}).order) { Varld.foljUppdraget(); const q = Varld.malSkarm(); tryck(false, q && Math.hypot(q.x - e.clientX, q.y - e.clientY) <= q.r + 12 ? 'ring' : 'karta'); return; }          // ett tryck på ringen räknas, annars inte          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget
       const id = Varld.basVid(g) || Varld.byggVid(g), egen = !!(id && spelar && G.s.bas[id]);
-      if (spelar && G.s.varld === 0 && Varld.valjVid(e.clientX, e.clientY, egen)) { V.Ljud.vakna(); return; }          // förspelet: det man trycker på följs (Johannes 2026-11-26)
+      if (spelar && Varld.valjVid(e.clientX, e.clientY, egen)) { V.Ljud.vakna(); return; }          // förspelet: det man trycker på följs (Johannes 2026-11-26)
       if (!egen) { tryck(); return; }
       if (G.s.marknad && G.s.marknad.bas === id) { V.Ljud.vakna(); G.marknadTa(); UI.tick(); return; }
       if (G.s.varld === 0 && !UI.stadVald(id)) { V.Ljud.vakna(); UI.visaStad(id); Varld.foljPlats(id); return; }          // förspelet: första trycket på en stad eller ett av dess hus öppnar stadens flik, nästa bygger ut den

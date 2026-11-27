@@ -195,7 +195,7 @@
     },
     slagTid(u) { const P = G._plan(u); return P.slut + (u.strid === 'nederlag' && !P.kula ? 6 : 3); },          // och en stund efteråt: de som vann trycker på, de som förlorade flyr
     _order(dt) {
-      const a = S.aktivt; if (!a || a.val || a.kula || S.varld !== 0) return; const u = D.UPPDRAG.find(q => q.id === a.id); if (!u || !u.order || G.skede() !== 'strid') return;
+      const a = S.aktivt; if (!a || a.val || a.kula) return; const u = D.UPPDRAG.find(q => q.id === a.id); if (!u || !u.order || G.skede() !== 'strid') return;
       const P = G._plan(u), tb = a.t - (u.belagring ? 0 : a.dur * (a.k0 || KAMP)); if (!a.borjat) { a.borjat = 1; a.lage = 0.5; G.ut('slagStart', { u }); }
       { const seger = u.strid !== 'nederlag';          // dragkampen: dina tryck för den mot dig, motståndaren tar tillbaka, och efter sista ordern går den dit historien gick
         if (tb > P.slut) a.lage += ((seger ? 0.88 : 0.12) - a.lage) * Math.min(1, (dt || 0) * 0.8);
@@ -283,7 +283,7 @@
       const u = D.UPPDRAG.find(q => q.id === S.aktivt.id), g = u.ger || {}, akt = S.aktivt;
       S.aktivt = null; S.nasta++; S.datum = 0;
       // förspelets slag: en femtedel av männen kommer alltid hem, och upp till två tredjedelar om orderna gavs i rätt läge
-      S.hem = null; if (S.varld === 0 && u.order && akt.man && !u.belagring) { const n = u.order.filter(o => o.ord && !o.alltid && !o.vanta).length || 1, p = Math.min(1, (akt.poang || 0) / n), hem = Math.round(akt.man * (0.2 + 0.45 * p)); S.res.man = Math.min(G.tak(), S.res.man + hem); S.hem = { id: u.id, hem, av: akt.man, p }; }
+      S.hem = null; if (u.order && akt.man && !u.belagring) { const n = u.order.filter(o => o.ord && !o.alltid && !o.vanta).length || 1, p = Math.min(1, (akt.poang || 0) / n), hem = Math.round(akt.man * (0.2 + 0.45 * p)); S.res.man = Math.min(G.tak(), S.res.man + hem); S.hem = { id: u.id, hem, av: akt.man, p }; }
       if (g.bas) g.bas.forEach(id => { if (!S.bas[id]) S.bas[id] = 1; });
       if (g.x) for (const r in g.x) S.x[r] *= g.x[r];
       if (g.las) g.las.forEach(l => S.las[l] = true);
@@ -347,9 +347,9 @@
       G._infor();          // förspelet: en ny sak i taget
       // marknadsdag: då och då är det marknad i en bygd eller stad. Den som trycker där får en klump på en gång.
       if (S.marknad) { S.marknad.t -= dt; if (S.marknad.t <= 0) { S.marknad = null; G.ut('marknadSlut', {}); } }
-      else if (!S.slut && S.t > 40 && !(S.varld === 0 && G.skede() === 'strid') && G.inford('marknad')) {          // förspelet: ingen marknad mitt i ett slag
+      else if (!S.slut && S.t > 40 && G.skede() !== 'strid' && G.inford('marknad')) {          // förspelet: ingen marknad mitt i ett slag
         S.marknadT = (S.marknadT === undefined ? 35 : S.marknadT) - dt;
-        if (S.marknadT <= 0) { const ids = Object.keys(S.bas).filter(id => (BAS[id].slag === 'bygd' || BAS[id].slag === 'stad') && G.prod(id) > 0); S.marknadT = (S.varld === 0 ? 140 : 75) + Math.random() * 60; if (ids.length) { S.marknad = { bas: ids[Math.floor(Math.random() * ids.length)], t: 30 }; G.ut('marknad', { bas: S.marknad.bas }); } }
+        if (S.marknadT <= 0) { const ids = Object.keys(S.bas).filter(id => (BAS[id].slag === 'bygd' || BAS[id].slag === 'stad') && G.prod(id) > 0); S.marknadT = 140 + Math.random() * 60; if (ids.length) { S.marknad = { bas: ids[Math.floor(Math.random() * ids.length)], t: 30 }; G.ut('marknad', { bas: S.marknad.bas }); } }
       }
     },
     marknadTa() {
