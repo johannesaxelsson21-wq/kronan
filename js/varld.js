@@ -138,7 +138,7 @@
     // Hus som håller på att växa fram ställs färdiga på en gång (innan en scen, där världen annars står still med halvstora hus)
     popKlart() { pops.forEach(p => p.m.scale.setScalar(p.till || 1)); pops.length = 0; },
     // Under en scen syns inte skattelagen och de extra buden: spelet står still då, och de skulle stå som statyer mitt i bilden
-    scenDolj(on) { (skattVis || []).forEach(v => v.enh.forEach(e => { e.vis = !on; })); lopare.forEach(l => { l.u.vis = !on; }); },
+    scenDolj(on) { (skattVis || []).forEach(v => v.enh.forEach(e => { e.vis = !on; })); lopare.forEach(l => { l.u.vis = !on; }); if (W._vagM) W._vagM.visible = !on; },          // och den streckade vägen
     pos(id) { const p = R.P[id]; return p ? { x: p.x, y: p.y || 0, z: p.z } : null; },
     // Ortnamnen på kartan (förspelet): varje plats som syns, och borgen Stäket så länge den står. Namnet står strax nedanför husen.
     ortnamn() {

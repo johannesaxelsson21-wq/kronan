@@ -168,6 +168,50 @@
         hooks.push(dt => { d = Math.min(26, d + dt * 1.5); const c = Scene.cam, f = Math.min(1, dt * 1.2); c.tx += (forst.x - c.tx) * f; c.tz += (forst.z + 2 - c.tz) * f; c.td = 36; });
         await vanta(6); text('Det blir inget möte. De sex förs till Danmark som fångar. En av dem är Gustav Eriksson, 22 år.'); await vanta(8.5);
       },
+      // Midsommar 1523. Stockholm har gett upp efter två års belägring, och den nyvalde kungen rider in längs landsvägen söderifrån till torget.
+      async intag() {
+        const p = R.P.stockholm, K = B.K, st = V.Varld.tomt.stockholm, T = st && st.plan ? st.plan().torg : { x: 0, z: 0.2 }; Scene.setSeason(0.47);
+        let vag = null, bz = -1e9; for (const l of V.Rike.vagarVid('stockholm')) { const q = l.find(q => Math.hypot(q[0] - p.x, q[1] - p.z) > 9) || l[l.length - 1]; if (q[1] > bz) { bz = q[1]; vag = l; } }
+        const ut = (vag || [[p.x, p.z], [p.x, p.z + 10]]).filter(q => Math.hypot(q[0] - p.x, q[1] - p.z) < 11).reverse(), mal = [p.x + T.x * K, p.z + T.z * K], pts = ut.concat([mal]);
+        const L0 = V.Rike.length(pts), folk = [];
+        for (let s = L0 * 0.45; s < L0 - 0.8; s += 0.55) { const a = V.Rike.along(pts, s); for (const sd of [-1, 1]) { const x = a.x + Math.cos(a.ang) * 0.75 * sd, z = a.z - Math.sin(a.ang) * 0.75 * sd; if (Geo.sdAt(x, z) > 0.4) { const u = Folk.add(x, z, folk.length % 4 === 3 ? 'kvinna' : 'borgare', { ang: a.ang + sd * 1.571 }); folk.push(u); temp.push(u); } } }
+        const ge = gustavE(), g = { x: pts[0][0], z: pts[0][1], ang: 0, v: 0 }; hooks.push(dt => ge.place(g.x, g.z, g.ang, g.v, tid, dt, false, false));          // till häst skylt('Gustav', () => g, 1.8);
+        Scene.jump(pts[0][0], pts[0][1] + 2, 24); plats('Stockholm, midsommar 1523');
+        await vanta(2); text('Stockholm har gett upp efter två års belägring. Portarna står öppna.'); await vanta(7);
+        await akFard(pts, 0, L0 - 0.3, 0.7, 'Rid in', 'Tryck för att rida in i staden', { kd: 20, ljud: 'hov', satt: (a, v) => { g.x = a.x; g.z = a.z; g.ang = a.ang; g.v = v; } });
+        UI.film.knapp(null); I.tar = null; folk.forEach((u, i) => setTimeout(() => { u.y = 0.1; setTimeout(() => { u.y = 0; }, 180); }, i * 40)); L.spela('klart');
+        text('Gustav rider in i staden som kung. Han är 27 år.'); await vanta(6.5);
+        text('Traditionen säger att det är midsommarafton.'); await vanta(6);
+      },
+      // Juni 1527. Riksdagen i Västerås, i dominikanklostrets sal. Man kallar själv in stånden, ett i taget. Sedan kommer valet.
+      async riksdag() {
+        const p = R.P.vasteras, K = B.K, st = V.Varld.tomt.vasteras, T = st && st.plan ? st.plan().torg : { x: 0, z: 0.2 }, cx = p.x + T.x * K, cz = p.z + T.z * K; Scene.setSeason(0.45);
+        const ge = gustavE(), g = { x: cx, z: cz - 0.9 }; hooks.push(dt => ge.place(g.x, g.z, 0, 0, tid, dt, false, true)); skylt('Kungen', () => g, 1.8);
+        const stand = [['Rådet', 'borgare', '#5a2f2f'], ['Adeln', 'borgare', '#2f4f8a'], ['Borgarna', 'borgare', null], ['Bergsmännen', 'bergsman', null], ['Bönderna', 'bonde', null]], skyltar0 = [];
+        const kallaIn = k => { const s = stand[k]; if (!s) return; const rz = cz + 0.1 + k * 0.42; for (let i = 0; i < 5; i++) { const x = cx + (i - 2) * 0.38, u = Folk.add(x, rz, s[1], s[2] ? { col: s[2], ang: Math.PI } : { ang: Math.PI }); temp.push(u); u.y = 0.1; setTimeout(() => { u.y = 0; }, 160); } skyltar0.push(skylt(s[0], () => ({ x: cx + 1.25, z: rz }), 0.9)); Fx.damm(cx, Geo.groundAt(cx, rz), rz, 4); };
+        Scene.cam.lut = 60; Scene.jump(cx, cz + 1.4, 15); plats('Västerås, juni 1527');
+        await vanta(2); text('Kungen har kallat riksdagen till Västerås. Den samlas i dominikanklostrets sal.'); await vanta(7);
+        text('Tryck för att kalla in stånden');
+        const n = await tryckN('Kalla in', 5, k => { kallaIn(k - 1); L.spela('trumma'); if (k === 2) text(''); }, 20);
+        for (let k = n; k < 5; k++) kallaIn(k);
+        text('Rådet, 129 adelsmän, borgare, 14 bergsmän och över hundra bönder.'); await vanta(7);
+        text('Kronan har stora skulder, och kyrkan äger omkring en femtedel av jorden. Kungen vill att kyrkans rikedomar ska gå till kronan.'); await vanta(8);
+        skyltar0.forEach(s => s.bort());
+      },
+      // Midsommar 1560. Kungen tar farväl av ständerna i Stockholm. Man låter honom själv tala, en sak i taget. Sedan läses testamentet upp.
+      async farval() {
+        const p = R.P.stockholm, K = B.K, st = V.Varld.tomt.stockholm, T = st && st.plan ? st.plan().torg : { x: 0, z: 0.2 }, cx = p.x + T.x * K, cz = p.z + T.z * K; Scene.setSeason(0.47);
+        const ge = gustavE(), g = { x: cx, z: cz - 0.9 }; hooks.push(dt => ge.place(g.x, g.z, 0, 0, tid, dt, false, true)); skylt('Kung Gustav, 64 år', () => g, 1.8);
+        const lyss = []; for (let r = 0; r < 4; r++) for (let i = 0; i < 6; i++) { const u = Folk.add(cx + (i - 2.5) * 0.36, cz + 0.15 + r * 0.4, r === 3 ? 'bonde' : r === 2 ? 'bergsman' : 'borgare', r === 0 ? { col: '#2f4f8a', ang: Math.PI } : { ang: Math.PI }); lyss.push(u); temp.push(u); }
+        Scene.cam.lut = 60; Scene.jump(cx, cz + 1.4, 15); plats('Stockholm, midsommar 1560');
+        await vanta(2); text('Gustav har styrt riket i nästan fyrtio år. Nu har han kallat riksdagen till Stockholm för att tala till den en sista gång.'); await vanta(8);
+        const delar = ['Han påminner om hur riket blev fritt.', 'Han ber dem hålla fast vid den nya läran.', 'Han ber dem vara trogna mot hans söner.'];
+        text('Tryck för att låta kungen tala');
+        const n = await tryckN('Tala', 3, k => { text(delar[k - 1]); L.spela('sorl'); lyss.forEach((u, i) => { if (i % 3 === k % 3) { u.y = 0.08; setTimeout(() => { u.y = 0; }, 200); } }); }, 24);
+        for (let k = n; k < 3; k++) { text(delar[k]); await vanta(4); }
+        await vanta(4); text('Sedan läses hans testamente upp.'); await vanta(6);
+        text('Det är sista gången kungen talar till riksdagen.'); await vanta(6);
+      },
       // 1516. Ärkebiskopen stängs in i sin borg Stäket. Man slår själv läger runt borgen, tält för tält, tills ringen är sluten.
       async staket() {
         const K = B.K, p = R.P.staket, ring = []; Scene.setSeason(0.75);
