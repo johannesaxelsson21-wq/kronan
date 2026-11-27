@@ -179,9 +179,11 @@
 
   // ---- en tomt håller reda på var det redan står något ----------------------------------------
   class Tomt {
-    constructor(base, p) { this.b = base; this.p = p; this.K = K; this.occ = [];
+    constructor(base, p) { this.b = base; this.p = p; this.K = K; this.occ = []; this.vag = [];
       // vägarna in till platsen hålls fria, så blir det gator mellan husen
-      for (const pts of (V.Rike.vagarVid ? V.Rike.vagarVid(base.id) : [])) { let last = null; for (const q of pts) { const d = Math.hypot(q[0] - p.x, q[1] - p.z); if (d > 9) break; if (last && Math.hypot(q[0] - last[0], q[1] - last[1]) < 0.5) continue; last = q; this.occ.push([(q[0] - p.x) / K, (q[1] - p.z) / K, 0.36]); } } this.rnd = Geo.rng(base.id.length * 7919 + base.id.charCodeAt(0) * 131 + base.id.charCodeAt(1)); this.R = V.Rike.RADIE[base.slag] * (base.stor ? 1.35 : 1); }
+      for (const pts of (V.Rike.vagarVid ? V.Rike.vagarVid(base.id) : [])) { let last = null; for (const q of pts) { const d = Math.hypot(q[0] - p.x, q[1] - p.z); if (d > 9) break; if (last && Math.hypot(q[0] - last[0], q[1] - last[1]) < 0.5) continue; last = q; this.occ.push([(q[0] - p.x) / K, (q[1] - p.z) / K, 0.36]); this.vag.push([(q[0] - p.x) / K, (q[1] - p.z) / K]); } }
+      for (const h of V.DATA.BYGGNADER) if (h.plats === base.id && !h.niva && h.x !== undefined && h.id !== 'torn') this.occ.push([h.x, h.z, 0.75]);          // köpta byggnader har sin plats från början
+      this.rnd = Geo.rng(base.id.length * 7919 + base.id.charCodeAt(0) * 131 + base.id.charCodeAt(1)); this.R = V.Rike.RADIE[base.slag] * (base.stor ? 1.35 : 1); }
     ok(x, z, r) {
       const wx = this.p.x + x * K, wz = this.p.z + z * K; if (Geo.sdAt(wx, wz) < 0.45 || Geo.riverAt(wx, wz) < 0.3) return false;
       for (const o of this.occ) if (Math.hypot(o[0] - x, o[1] - z) < o[2] + r) return false; return true;
@@ -193,6 +195,76 @@
       return null;
     }
     y(x, z) { return (Geo.groundAt(this.p.x + x * K, this.p.z + z * K) - this.p.y) / K; }
+    // Huset vänder dörren mot den närmaste vägen, eller mot mitten av platsen om ingen väg är nära (förut stod husen åt alla håll).
+    vand(x, z) {
+      let bx = 0, bz = 0.5, bd = 2.2; for (const q of this.vag) { const d = Math.hypot(q[0] - x, q[1] - z); if (d < bd) { bd = d; bx = q[0]; bz = q[1]; } }
+      return Math.atan2(bx - x, bz - z) + (this.rnd() - 0.5) * 0.2;
+    }
+    // Stadsplanen (Johannes 2026-11-27). Vägarna in till staden blir dess gator. Där de möts ligger torget. Husen står tätt i rader på båda sidor
+    // om gatorna, med gaveln och dörren mot gatan, som i en medeltida stad. Smala gränder går ut från gatorna med fler hus. Tomterna är
+    // sorterade från torget och utåt, så staden växer längs sina gator. Är staden omgiven av en mur står alla hus innanför den.
+    plan() {
+      if (this._plan) return this._plan;
+      const b = this.b, p = this.p, k = b.stor ? 1.45 : 1, Rw = this.R / K * 0.92, rnd = Geo.rng(b.id.length * 131 + b.id.charCodeAt(0) * 7 + 17);
+      const P = this._plan = { hus: [], torg: null };
+      const ell = (x, z) => Math.sqrt((x * x) / (Rw * Rw) + (z * z) / (Rw * Rw * 0.72)) * Rw, inne = (x, z) => b.mur ? (ell(x, z) < Rw - 0.55 || (ell(x, z) > Rw + 0.55 && Math.hypot(x, z) < this.R / K * 1.25)) : Math.hypot(x, z) < this.R / K * 1.15;          // är staden omgiven av en mur står husen innanför, och när det blir fullt där växer förstäder utanför (som på malmarna kring Stockholm)
+      // en tomt: läge, vart dörren vetter (fx, fz), ordning (d) och gatbiten framför huset (seg)
+      const lot = (x, z, fx, fz, d, seg) => { if (inne(x, z)) P.hus.push({ x: x + (rnd() - 0.5) * 0.03, z: z + (rnd() - 0.5) * 0.03, a: Math.atan2(fx, fz) + (rnd() - 0.5) * 0.06, d, seg }); };
+      const vagar = (V.Rike.vagarVid ? V.Rike.vagarVid(b.id) : []).map(pts => pts.map(q => [(q[0] - p.x) / K, (q[1] - p.z) / K])).filter(l => l.length > 1);
+      // torget: långt åt det håll stranden går (eller längs den första vägen in)
+      let ux = 1, uz = 0;
+      if (p.hav) { const dx = p.hav.x - p.x, dz = p.hav.z - p.z, L = Math.hypot(dx, dz) || 1; ux = -dz / L; uz = dx / L; }
+      else if (vagar[0]) { const q = vagar[0].find(q => Math.hypot(q[0], q[1]) > 2) || vagar[0][vagar[0].length - 1], L = Math.hypot(q[0], q[1]) || 1; ux = q[0] / L; uz = q[1] / L; }
+      const vx = -uz, vz = ux, TU = 0.9 * k, TV = 0.7 * k, cz = 0.2, T = P.torg = { x: 0, z: cz, ux, uz, vx, vz, TU, TV, a: Math.atan2(ux, uz) };
+      const UV = (u, v) => [u * ux + v * vx, cz + u * uz + v * vz];
+      T.stand = [[-0.6, -0.45], [0.6, 0.45], [0.6, -0.45], [-0.6, 0.45]].map(q => UV(q[0] * TU, q[1] * TV));
+      for (const s of [-1, 1]) {
+        for (let u = -TU + 0.33; u <= TU - 0.32; u += 0.66) { const q = UV(u, s * (TV + 0.42)); lot(q[0], q[1], -s * vx, -s * vz, -2 + Math.abs(u), 'torg'); }
+        for (let v = -TV + 0.33; v <= TV - 0.32; v += 0.66) { const q = UV(s * (TU + 0.42), v); lot(q[0], q[1], -s * ux, -s * uz, -1.5 + Math.abs(v), 'torg'); }
+      }
+      // huvudgatorna: vägarna in, med hus tätt på båda sidor. Var 2,3 längdenhet går en gränd ut åt båda håll.
+      const fran = Math.hypot(TU, TV) + 0.55, GR = 2.3, glangd = 3.0 * k;
+      vagar.forEach(pts => {
+        let acc = 0, nasta = fran, gnasta = fran + 1.0;
+        for (let i = 1; i < pts.length; i++) {
+          const ax = pts[i - 1][0], az = pts[i - 1][1], bx = pts[i][0], bz = pts[i][1], L = Math.hypot(bx - ax, bz - az); if (L < 1e-6) continue;
+          const tx = (bx - ax) / L, tz = (bz - az) / L, nx = -tz, nz = tx, vid = f => [ax + (bx - ax) * f, az + (bz - az) * f];
+          while (Math.min(nasta, gnasta) <= acc + L) {
+            if (gnasta <= nasta) {
+              const [x, z] = vid((gnasta - acc) / L);
+              for (const s of [-1, 1]) for (let e = 1.5; e <= glangd; e += 0.66) {
+                const seg = [[x + nx * s * (e - 0.4), z + nz * s * (e - 0.4)], [x + nx * s * (e + 0.33), z + nz * s * (e + 0.33)]];
+                for (const r of [-1, 1]) lot(x + nx * s * e + tx * r * 0.62, z + nz * s * e + tz * r * 0.62, -tx * r, -tz * r, gnasta + e * 1.1, seg);
+              }
+              gnasta += GR;
+            } else {
+              const [x, z] = vid((nasta - acc) / L);
+              if (Math.abs(nasta - (gnasta - GR)) > 0.45 && Math.abs(nasta - gnasta) > 0.45) for (const s of [-1, 1]) lot(x + nx * s * 0.68, z + nz * s * 0.68, -nx * s, -nz * s, nasta, null);
+              nasta += 0.66;
+            }
+          }
+          acc += L; if (Math.hypot(ax, az) > this.R / K * 1.2) break;
+        }
+      });
+      // rutnätet fyller ut mellan vägarna: gator i torgets riktning med hus på båda sidor, och gränder tvärs över var 2,6 längdenhet
+      const GS = 2.1, AL = 2.6;
+      for (let j = -4; j <= 4; j++) for (const s of [-1, 1]) for (let i = -13; i <= 13; i++) {
+        const u = i * 0.66, v = j * GS + s * 0.62, m = ((u % AL) + AL) % AL; if (Math.abs(m - AL / 2) < 0.4 || (j === 0 && Math.abs(u) < TU + 0.5)) continue;
+        const q = UV(u, v); lot(q[0], q[1], -s * vx, -s * vz, Math.hypot(u, v) + 0.5 + (b.mur && ell(q[0], q[1]) > Rw ? 6 : 0), [UV(u - 0.36, j * GS), UV(u + 0.36, j * GS)]);
+      }
+      P.hus.sort((a, c) => a.d - c.d);
+      return P;
+    }
+    // Nästa lediga tomt i planen. Gatan framför huset målas på marken när huset byggs.
+    lott() {
+      for (const q of this.plan().hus) {
+        if (q.tagen || !this.ok(q.x, q.z, 0.25)) continue; q.tagen = 1; this.take(q.x, q.z, 0.4);
+        if (q.seg) (this._nyGata || (this._nyGata = [])).push(q.seg);
+        return q;
+      }
+      return null;
+    }
+    torg() { const T = this.plan().torg; for (let u = -T.TU * 0.75; u <= T.TU * 0.75 + 1e-6; u += T.TU * 0.375) for (let v = -T.TV * 0.5; v <= T.TV * 0.5 + 1e-6; v += T.TV * 0.5) this.take(u * T.ux + v * T.vx, T.z + u * T.uz + v * T.vz, 0.32); }
   }
   const fire = [], smoke = [];        // lägereldar och skorstenar (världskoordinater), läses av Folk
   function addSmoke(t, x, y, z, slag) { smoke.push({ x: t.p.x + x * K, y: t.p.y + y * K, z: t.p.z + z * K, slag: slag || 'rok', bas: t.b.id }); }
@@ -200,7 +272,7 @@
   // Bygg ett steg av en bas. Ger ett nät i tomtens egna koordinater.
   function steg(t, s, paint) {
     const mb = new MB(), b = t.b, rnd = t.rnd, put = (x, z, a, fn) => { mb.push().move(x, t.y(x, z), z); if (a) mb.rotY(a); fn(mb); mb.pop(); };
-    const hus = (rmin, rmax, n, fn, rad) => { for (let k = 0; k < n; k++) { const q = t.find(rmin, rmax, rad || 0.62); if (q) put(q[0], q[1], (rnd() - 0.5) * 0.9, m => fn(m, q)); } };
+    const hus = (rmin, rmax, n, fn, rad) => { for (let k = 0; k < n; k++) { const q = t.find(rmin, rmax, rad || 0.62); if (q) put(q[0], q[1], t.vand(q[0], q[1]), m => fn(m, q)); } };
     if (b.slag === 'bygd') {
       const tak = () => rnd() < 0.6 ? 'torv' : 'span';
       if (s === 0) {
@@ -228,17 +300,20 @@
       } else if (s === 1) { put(0.1, -1.2, 1.2, spel); hus(1.9, 3.0, 1, m => hytta(m, true), 0.7); addSmoke(t, t.occ[t.occ.length - 1][0] + 0.2, 1.0, t.occ[t.occ.length - 1][1], 'rok'); hus(1.9, 3.2, 2, mila, 0.4); addSmoke(t, t.occ[t.occ.length - 1][0], 0.35, t.occ[t.occ.length - 1][1], 'rok'); hus(1.7, 2.8, 2, m => malm(m, c), 0.3); }
       else { hus(2.0, 3.6, 1, m => hytta(m, s % 2 === 0), 0.7); addSmoke(t, t.occ[t.occ.length - 1][0] + 0.2, 1.0, t.occ[t.occ.length - 1][1], 'rok'); hus(2.0, 3.8, 2, m => stuga(m, 0.9, 0.6, 0.33, 'span', { skorsten: 1, ljus: rnd() < 0.5 })); hus(2.0, 3.8, 1 + (s % 2), mila, 0.4); addSmoke(t, t.occ[t.occ.length - 1][0], 0.35, t.occ[t.occ.length - 1][1], 'rok'); hus(1.6, 3.2, 2, m => malm(m, c), 0.3); if (s === 2) put(-0.3, 0.9, 2.4, spel); }
     } else if (b.slag === 'stad') {
-      const k = b.stor ? 1.45 : 1, husN = (n, rmin, rmax) => hus(rmin * k, rmax * k, Math.round(n * k), m => { const w = 0.46 + rnd() * 0.16, timmer = rnd() < (b.stor ? 0.3 : 0.5); stadshus(m, w, 0.62 + rnd() * 0.2, 0.5 + rnd() * 0.42, timmer ? '#7b6650' : PUTS[Math.floor(rnd() * PUTS.length)], timmer ? 'span' : rnd() < 0.7 ? 'tegel' : 'span'); }, 0.4);
+      const k = b.stor ? 1.45 : 1, ritaHus = m => { const w = 0.46 + rnd() * 0.16, timmer = rnd() < (b.stor ? 0.3 : 0.5); stadshus(m, w, 0.62 + rnd() * 0.2, 0.5 + rnd() * 0.42, timmer ? '#7b6650' : PUTS[Math.floor(rnd() * PUTS.length)], timmer ? 'span' : rnd() < 0.7 ? 'tegel' : 'span'); };
+      const husN = n => { for (let i = 0; i < Math.round(n * k); i++) { const q = t.lott(); if (!q) break; put(q.x, q.z, q.a, ritaHus); } };          // på tomterna i stadsplanen, med gaveln mot gatan
+      const stand2 = n => { const T = t.plan().torg; for (let i = 0; i < n && T.stand.length; i++) { const q = T.stand.shift(); put(q[0], q[1], T.a, stand); } };          // marknadsstånd på torget
       if (s === 0) {
         if (b.borg) { const bx = b.stor ? 2.6 : 2.4, bz = b.stor ? -2.2 : -1.5; t.take(bx, bz, b.borg === 'stockholm' ? 2.2 : 1.6); put(bx, bz, 0, m => borg(m, b.borg, 0)); t.flag = [bx + (b.borg === 'stockholm' ? 0.2 : -0.1), b.borg === 'stockholm' ? 2.84 : b.borg === 'viborg' ? 3.0 : 2.1, bz + (b.borg === 'stockholm' ? -0.1 : -0.2)]; }
         if (b.dom) { const dx = b.stor ? -1.6 : -0.9, dz = b.stor ? -1.9 : -1.9; t.take(dx, dz, 1.5 * (b.stor ? 0.8 : 0.72)); put(dx, dz, 0, m => domkyrka(m, b.dom, b.stor ? 0.8 : 0.72)); }
         else if (b.kyrka) { t.take(-0.6, -1.8, 1.1); put(-0.6, -1.8, 0, kyrka); }
         if (b.mynt) { t.take(1.4, -0.9, 0.7); put(1.4, -0.9, 0, m => { m.box(0, 0, 0, 0.9, 0.5, 0.7, '#9a948a', { low: '#6a655d', noTop: true }); m.gable(0, 0.5, 0, 0.9, 0.4, 0.7, TAK.tegel.c, { gable: '#9a948a' }); m.box(0.25, 0.5, 0, 0.18, 0.6, 0.18, '#7a746b'); dorr(m, -0.1, 0.356, 0.3, 0.14); }); addSmoke(t, 1.65, 1.2, -0.9, 'rok'); }
-        t.take(0, 0.2, 0.55 * k); husN(b.stor ? 11 : 6, 0.8, b.stor ? 2.4 : 2.0);
         if (b.hamn && t.p.hav) hamn(t, mb, b.stor ? 3 : 2);
-      } else if (s === 1) { husN(6, 1.2, 2.6); hus(0.3, 1.0, 2, stand, 0.36); }
-      else if (s === 2) { husN(6, 1.6, 3.2); if (b.mur) stadsmur(t, mb, put); }
-      else { husN(6, 1.8, 3.9); if (s === 3) hus(0.3, 1.2, 2, stand, 0.36); }
+        t.torg(); husN(b.stor ? 11 : 6);
+      } else if (s === 1) { husN(6); stand2(2); }
+      else if (s === 2) { husN(6); if (b.mur) stadsmur(t, mb, put); }
+      else { husN(6); if (s === 3) stand2(2); }
+      if (paint && t._nyGata) { for (const g of t._nyGata) { if (g === 'torg') { if (!t._torgRitat) { t._torgRitat = 1; const T = t.plan().torg; paint.yard(t.p.x, t.p.z + T.z * K, (Math.max(T.TU, T.TV) + 0.35) * K); } } else paint.road(g.map(q => [t.p.x + q[0] * K, t.p.z + q[1] * K]), 0.2); } t._nyGata = null; }          // gatorna syns på marken
       if (b.ny && s === 0) { /* en nygrundad stad har inga gamla hus */ }
     } else if (b.slag === 'slott') {
       if (s === 0) t.take(0, -0.3, 1.9);

@@ -13,7 +13,7 @@
     const v = varld === 0 ? 0 : 1;
     return { v: 1, varld: v, t: 0, sparad: Date.now(), res: { man: 0, mark: 0 }, tot: { man: 0, mark: 0 }, skuld: 0, skuldMax: 0, bas: v ? { mora: 1 } : { stockholm: 1 }, konst: { skidor: 0, tal: 0, bud: 0, sigill: 0, langd: 0 }, sold: 0, handl: {},
       nasta: 0, aktivt: null, x: { man: 1, mark: 1 }, las: v ? {} : { mark: true }, uppror: {}, fart: 0, full: false, sistaTryck: 99, tryck: 0, fartX: 1, fogde: {}, titel: v ? 'Hövitsman' : 'Riddare', hjalte: v ? 'gustav' : 'sten',
-      kronika: [], datum: 0, intro: false, arv: 0, varv: 0, slut: false, borg: {}, ljud: true, tips: {}, forspel: {} };
+      kronika: [], datum: 0, intro: false, arv: 0, varv: 0, slut: false, borg: {}, ljud: true, tips: {}, forspel: {}, husPlan: 1 };
   }
   let S = nytt();
   const par = {};          // basens siffror i den värld som spelas
@@ -50,7 +50,7 @@
       for (const q of G.INFOR) { if (inf[q.id] || !q.nar()) continue; inf[q.id] = S.t; S.infordT = S.t; G.ut('infor', { id: q.id, text: q.text }); return; }
     },
     inforAlla() { const inf = S.inford || (S.inford = {}); for (const q of G.INFOR) if (!inf[q.id]) inf[q.id] = S.t || 1; },          // för provet
-    ladda(o) { S = Object.assign(nytt(o.varld === 0 ? 0 : 1), o); S.res = Object.assign({ man: 0, mark: 0 }, o.res); S.x = Object.assign({ man: 1, mark: 1 }, o.x); S.konst = Object.assign({ skidor: 0, tal: 0, bud: 0, sigill: 0, langd: 0 }, o.konst); if (S.varld === 1 && S.nasta > D.VASA.findIndex(u => u.id === 'hedemora')) S.las.sold = true; if (!S.skattLag) S.skattLag = S.skatt ? [Object.assign({ nr: 1 }, S.skatt)] : []; if (S.varld === 0 && !S.inford && S.t > 0) { S.inford = {}; for (const q of G.INFOR) if (q.nar()) S.inford[q.id] = 1; } return S; },
+    ladda(o) { S = Object.assign(nytt(o.varld === 0 ? 0 : 1), o); S.res = Object.assign({ man: 0, mark: 0 }, o.res); S.x = Object.assign({ man: 1, mark: 1 }, o.x); S.konst = Object.assign({ skidor: 0, tal: 0, bud: 0, sigill: 0, langd: 0 }, o.konst); if (S.varld === 1 && S.nasta > D.VASA.findIndex(u => u.id === 'hedemora')) S.las.sold = true; if (!S.husPlan) { S.husPos = {}; S.husPlan = 1; } if (!S.skattLag) S.skattLag = S.skatt ? [Object.assign({ nr: 1 }, S.skatt)] : []; if (S.varld === 0 && !S.inford && S.t > 0) { S.inford = {}; for (const q of G.INFOR) if (q.nar()) S.inford[q.id] = 1; } return S; },
     alla() { return D.STURE.concat(D.VASA); },
 
     // Hären kan inte bli hur stor som helst: taket följer vad nästa fälttåg kräver (uppdragens manskap är historiens siffror).
