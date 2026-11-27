@@ -123,6 +123,7 @@
     UI.onVisaBas = id => { const w = Varld.pos(id); Scene.flyTo(w.x, w.z + 1.2, Math.min(Scene.cam.d, 30), 0.9); Varld.foljPlats(id); };          // förspelet: kameran stannar vid staden
     UI.onBorjaOm = () => { byter = true; try { localStorage.removeItem(SPAR); } catch (e) { /* inget */ } laddaOm(); };
     UI.onVidare = arv => { byter = true; G.s.arv += arv; G.s.varv++; G.nyVarld(G.s.varld + 1); skriv(); laddaOm(); };          // nästa regents värld, med arvet
+    UI.onTestVarld = v => { byter = true; const lj = G.s.ljud, mu = G.s.musik; G.ny(); G.s.ljud = lj; G.s.musik = mu; if (v === 2) G.s.arv = 40; G.nyVarld(v); skriv(); laddaOm(); };          // testläget: vilken värld som helst från början, med dess film (Eriks värld är vägd för ungefär 40 arv från Gustav)
     UI.onIgen = arv => { byter = true; G.s.arv += arv; G.s.varv++; const s = G.ny(true); s.intro = true; skriv(); laddaOm(); };
     Scene.onClick = (e, g) => {
       if (spelar && G.skede() === 'strid' && (G.uppdrag() || {}).order) { Varld.foljUppdraget(); const q = Varld.malSkarm(); tryck(false, q && Math.hypot(q.x - e.clientX, q.y - e.clientY) <= q.r + 12 ? 'ring' : 'karta'); return; }          // ett tryck på ringen räknas, annars inte          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget

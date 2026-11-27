@@ -207,6 +207,7 @@ button { font-family: inherit; cursor: pointer; }
 .regent { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 16px; margin: 6px 0 10px; }
 .reg { display: flex; align-items: baseline; gap: 7px; font-size: 14.5px; color: #8a7a62; padding: 2px 0; }
 .reg b { font-weight: normal; } .reg span { font-size: 12px; } .reg i { font-size: 11px; color: #8a6a1f; margin-left: auto; }
+.reg-spela { margin-left: 6px; width: auto !important; margin-top: 0 !important; padding: 1px 10px !important; font-size: 12px !important; align-self: center; }
 .reg-k { width: 18px; height: 16px; } .reg-k svg { width: 18px; height: 18px; vertical-align: -4px; }
 .reg.nu { color: #2b2017; } .reg.nu b { font-weight: bold; }
 .fick { display: flex; gap: 8px; margin: 12px 0 4px; } .fick .chip { background: #2b2017; font-size: 17px; padding: 4px 12px 4px 6px; }

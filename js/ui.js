@@ -35,6 +35,9 @@
   let root, rows = {}, krows = {}, skattRad = null, soldRad = null, byggRader = [], fogdeKnappar = [], kortNu = null, hrows = {}, sistaHandl = '?', flikar = {}, flik = '', pilar = {}, ortEl = {}, rows2 = {}, husRader = [], sistaBaser = '', caption = null, capT = 0, tips = { nu: null }, valdBas = null;
   const sek = n => (Math.round(n * 100) / 100).toString().replace('.', ',');
   V.pek = /[?&]mobil=1/.test(location.search) || !!(window.matchMedia && matchMedia('(hover: none)').matches);          // pekskärm: inget mellanslag, ingen muspekare som svävar
+  // Testläge (Johannes 2026-11-27): i Regentlängden (kronan uppe till höger) kan man börja vilken byggd värld som helst direkt.
+  // Sätt till false inför Steam-släppet, så försvinner knapparna.
+  V.TESTLAGE = true;
   const HALL = V.pek ? 'håll in' : 'håll in mellanslag', KLICKA = V.pek ? 'tryck' : 'klicka';
   // Skriv bara i sidan när något har ändrats. Ett kort är namn och nivå överst, och under det vad nästa köp ger och vad det kostar.
   function uppd(r, o) {
@@ -538,10 +541,12 @@
       UI.ruta(h + '</div><button class="stang">Stäng</button>');
     },
     regenter() {
-      const S = G.s; let h = '<h2>Regentlängden</h2><div class="regent">'; const nu = S.varld - 1;
-      h += '<div class="reg' + (nu === -1 ? ' nu' : '') + '"><div class="reg-k">' + (nu === -1 ? IK.krona : '') + '</div><b>Sten Sture den yngre</b><span>riksföreståndare 1512–1520</span><i>' + (nu === -1 ? 'pågår' : 'förspel') + '</i></div><div></div>';
-      D.REGENTER.forEach((r, i) => { h += '<div class="reg' + (i === nu ? ' nu' : '') + '"><div class="reg-k">' + (i === nu ? IK.krona : '') + '</div><b>' + r[0] + '</b><span>' + r[1] + '–' + (r[2] || '') + '</span>' + (i === nu ? '<i>' + (S.slut ? 'klar' : 'pågår') + '</i>' : i === nu + 1 ? '<i>nästa värld</i>' : '') + '</div>'; });
-      UI.ruta(h + '</div><p class="svag">Varje regent blir en egen värld. Det du bygger går i arv till nästa.</p><button class="stang">Stäng</button>');
+      const S = G.s; let h = '<h2>Regentlängden</h2><div class="regent">'; const nu = S.varld - 1, T = V.TESTLAGE;
+      const spela = v => T && D.VARLDAR[v] ? '<button class="reg-spela" data-v="' + v + '">Spela</button>' : '';
+      h += '<div class="reg' + (nu === -1 ? ' nu' : '') + '"><div class="reg-k">' + (nu === -1 ? IK.krona : '') + '</div><b>Sten Sture den yngre</b><span>riksföreståndare 1512–1520</span><i>' + (nu === -1 ? 'pågår' : 'förspel') + '</i>' + spela(0) + '</div><div></div>';
+      D.REGENTER.forEach((r, i) => { h += '<div class="reg' + (i === nu ? ' nu' : '') + '"><div class="reg-k">' + (i === nu ? IK.krona : '') + '</div><b>' + r[0] + '</b><span>' + r[1] + '–' + (r[2] || '') + '</span>' + (i === nu ? '<i>' + (S.slut ? 'klar' : 'pågår') + '</i>' : i === nu + 1 ? '<i>nästa värld</i>' : '') + spela(i + 1) + '</div>'; });
+      UI.ruta(h + '</div><p class="svag">Varje regent blir en egen värld. Det du bygger går i arv till nästa.' + (T ? ' Testläge: Spela börjar den världen från början.' : '') + '</p><button class="stang">Stäng</button>');
+      document.querySelectorAll('.reg-spela').forEach(b => b.addEventListener('click', () => { if (confirm('Börja ' + (b.dataset.v === '0' ? 'förspelet' : D.REGENTER[b.dataset.v - 1][0]) + ' från början? Det du har nu försvinner.')) UI.onTestVarld && UI.onTestVarld(+b.dataset.v); }));
     },
     installningar() {
       const musikText = () => 'Musik: ' + (G.s.musik !== false ? 'på' : 'av');
