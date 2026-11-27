@@ -284,13 +284,14 @@
       const u = D.UPPDRAG.find(q => q.id === S.aktivt.id), g = u.ger || {}, akt = S.aktivt;
       S.aktivt = null; S.nasta++; S.datum = 0;
       // förspelets slag: en femtedel av männen kommer alltid hem, och upp till två tredjedelar om orderna gavs i rätt läge
+      S.fick = { mark: 0, man: g.man || 0 };          // det som kom in på en gång, för medaljongerna i rutan
       S.hem = null; if (u.order && akt.man && !u.belagring) { const n = u.order.filter(o => o.ord && !o.alltid && !o.vanta).length || 1, p = Math.min(1, (akt.poang || 0) / n), hem = Math.round(akt.man * (0.2 + 0.45 * p)); S.res.man = Math.min(G.tak(), S.res.man + hem); S.hem = { id: u.id, hem, av: akt.man, p }; }
       if (g.bas) g.bas.forEach(id => { if (!S.bas[id]) S.bas[id] = 1; });
       if (g.x) for (const r in g.x) S.x[r] *= g.x[r];
       if (g.las) g.las.forEach(l => S.las[l] = true);
-      if (g.mark) { const m = g.mark * S.x.mark; S.res.mark += m; S.tot.mark += m; }
+      if (g.mark) { const m = g.mark * S.x.mark; S.res.mark += m; S.tot.mark += m; S.fick.mark += m; }
       if (g.man) { S.res.man = Math.min(G.tak(), S.res.man + g.man); S.tot.man += g.man; }
-      if (g.markTid) { const m = Math.max(1000, G.takt('mark') / (S.full ? G.fullX() : 1) * g.markTid); S.res.mark += m; S.tot.mark += m; }
+      if (g.markTid) { const m = Math.max(1000, G.takt('mark') / (S.full ? G.fullX() : 1) * g.markTid); S.res.mark += m; S.tot.mark += m; S.fick.mark += m; }
       if (g.fart) S.fartX *= g.fart;
       if (g.titel) S.titel = g.titel;
       if (g.borg) Object.assign(S.borg, g.borg);

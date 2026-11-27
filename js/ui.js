@@ -154,7 +154,7 @@
       if (hk !== sistaHandl) {
         sistaHandl = hk; const box = $('handl'); box.innerHTML = ''; hrows = {};
         hl.forEach((h, i) => {
-          const b = el('button', 'hk', '<span class="hk-b">' + IK[h.id] + '<i class="hk-v"></i><b class="hk-s"></b><u class="hk-n">' + (i + 1) + '</u></span><span class="hk-t">' + UI.handlNamn(h).split(' ')[0] + '</span>'); box.appendChild(b); hrows[h.id] = { b, v: b.querySelector('.hk-v'), s: b.querySelector('.hk-s') };
+          const b = el('button', 'hk', '<span class="hk-b">' + IK[h.id] + '<i class="hk-v"></i><b class="hk-s"></b><u class="hk-n">' + (i + 1) + '</u></span><span class="hk-t">' + UI.handlNamn(h).split(' ')[0] + '</span>'); b.id = 'hk-' + h.id; box.appendChild(b); hrows[h.id] = { b, v: b.querySelector('.hk-v'), s: b.querySelector('.hk-s') };
           b.addEventListener('click', () => { if (b._hallen) { b._hallen = false; return; } if (G.handla(h.id)) UI.tick(); else UI._nej(b); });
           UI._svava(b, () => { kortNu = { row: b, t: performance.now(), kort: () => { const o = G.handl(h.id); return '<b>' + UI.handlNamn(h) + '</b>' + (V.pek ? '' : '<span class="kort-n">tangent ' + (i + 1) + '</span>') + '<p>' + h.vad + '</p>' + (o.t > 0 ? '<p class="kort-g">Verkar i ' + Math.ceil(o.t) + ' sekunder till.</p>' : '') + (o.v > 0 ? '<p class="kort-x">Vilar i ' + Math.ceil(o.v) + ' sekunder.</p>' : '<p class="kort-p">Redo.</p>'); } }; UI._kort(); },
             () => { if (kortNu && kortNu.row === b) { kortNu = null; UI._kort(); } });
@@ -203,6 +203,7 @@
       const konstKort = (s, kd) => { const id = kd.id;
         krows[id] = kort(s, 'konst', IK.krona, () => { const L = S.konst[id], i = konstInfo(id), max = L >= G.KONST_MAX; return '<b>' + UI.konst(id)[0] + '</b><span class="kort-n">nivå ' + L + '</span><p>' + UI.konst(id)[1] + '</p>' + (S.varld === 0 && kd.fran0 ? '<p class="svag">' + (kd.bygg0 ? 'Den kommer från ' : 'Du har den ') + kd.fran0 + '.</p>' : '') + '<p class="kort-g">Nu: ' + i.nu + '</p>' + (max ? '' : '<p class="kort-x">Nästa nivå: ' + i.nasta + '</p><p class="kort-p">Kostar ' + IK.mark + tal(G.konstPris(id)) + ' mark</p>'); },
           row => { if (G.kopKonst(id)) V.Ljud && V.Ljud.spela('kop'); else UI._nej(row); });
+        krows[id].row.id = 'konst-' + id;
       };
       const byggKort = (s2, lista) => lista.forEach(b => { const r = kort(s2, 'bygge', IK.pil, () => '<b>Bygg: ' + b.namn + '</b><p>' + b.vad + '</p><p class="kort-p">Kostar ' + IK.mark + tal(b.kostar) + ' mark</p>', row => { if (G.bygg(b.id)) V.Ljud && V.Ljud.spela('dubbel'); else UI._nej(row); }); r.row.id = 'bygg-' + b.id; r.b = b; byggRader.push(r); });
       const konstUnder = (s, f) => { D.KONSTER.filter(k => k.flik0 === f && (S.varld !== 0 || !k.bygg0) && G.harKonst(k.id)).forEach(k => konstKort(s, k)); };          // förspelet: förmågorna ligger under männen och marken
@@ -363,7 +364,7 @@
     // Siffra som stiger upp från en plats i världen.
     flyt(x, y, z, txt, cls) {
       const sp = V.Scene.screenPoint(x, y, z); if (sp.behind || !root.classList.contains('spel')) return;
-      const e = el('div', 'flyt ' + (cls || ''), txt); e.style.left = sp.x + 'px'; e.style.top = sp.y + 'px'; $('flyt').appendChild(e); setTimeout(() => e.remove(), 1500);
+      const e = el('div', 'flyt ' + (cls || ''), txt); e.style.left = sp.x + 'px'; e.style.top = sp.y + 'px'; $('flyt').appendChild(e); setTimeout(() => e.remove(), /stor/.test(cls || '') ? 2600 : 1500);
     },
     // Varje tryck syns: det man fick stiger upp ur knappen, och knappen ger till ett litet hopp.
     tryckt(f) {
@@ -386,60 +387,84 @@
     skylt(t, iSlag) { if (!iSlag && root.classList.contains('slag')) return; const e = el('div', 'skylt', t); $('text').appendChild(e); setTimeout(() => e.classList.add('bort'), 2600); setTimeout(() => e.remove(), 3400); },
 
     // ---- berättelsen: en ruta ovanför konsolen som står kvar tills man trycker bort den -------------
-    berattar(rubrik, rader) {
-      const b = $('berattar'); b.innerHTML = '<div class="ber-r">' + rubrik + '</div>' + rader.map((r, i) => '<p' + (i ? ' class="ber-x"' : '') + '>' + r + '</p>').join('') + '<button>Fortsätt</button>';
+    berattar(plats, ar, text, med, mer) {
+      const b = $('berattar'), M = V.MED || {};
+      b.innerHTML = '<i class="ber-hk a"></i><i class="ber-hk b"></i><i class="ber-hk c"></i><i class="ber-hk d"></i>' +
+        '<div class="ber-band"><span>' + plats + (ar ? '<em>' + ar + '</em>' : '') + '</span></div>' +
+        '<div class="ber-perg"><p class="ber-txt">' + text + '</p>' +
+        (med.length ? '<div class="ber-lin">✦</div><div class="ber-med' + (med.length > 3 ? ' manga' : '') + '">' + med.map(m => '<div class="ber-mk' + (m.ny ? ' ny' : '') + '"><div class="ber-rund">' + (M[m.ik] || M.krona || '') + '</div><div class="ber-stor' + (String(m.stor).length > 11 ? ' lang' : '') + '">' + m.stor + '</div><div class="ber-liten">' + m.liten + '</div></div>').join('') + '</div>' : '') +
+        '<div class="ber-fot">' + (mer ? '<a href="#" class="ber-mer">' + IK.bok + 'Läs mer</a>' : '<span></span>') + '<button>Fortsätt <svg viewBox="0 0 14 14"><path d="M3 2l8 5-8 5z"/></svg></button></div></div>';
       b.style.display = ''; b.classList.remove('in'); void b.offsetWidth; b.classList.add('in'); if (caption) { caption.remove(); caption = null; }
+      if (mer) b.querySelector('.ber-mer').addEventListener('click', ev => { ev.preventDefault(); mer(); });
       b.querySelector('button').addEventListener('click', () => { b.style.display = 'none'; const f = UI.efter; UI.efter = null; if (f) f(); });
     },
     dolj() { $('berattar').style.display = 'none'; },
+    berattarUppe() { return $('berattar').style.display !== 'none' || !!(V.Intro && V.Intro.aktiv); },
     textBort() { if (caption) { caption.remove(); caption = null; } },          // raden mitt på skärmen (valets fråga) ska inte ligga kvar över en scen
     // Tiden står still medan rutan i början läses.
     pausar() { return !!UI._paus && $('ruta').style.display !== 'none'; },
-    // Ett uppdrag är klart: vad som hände, och vad det betyder för spelet.
+    // Vad en handling gör, med några få ord (till pekbubblan när den dyker upp).
+    handlKort(h) {
+      if (h.direkt) return 'en tredjedel av armén på en gång';
+      const r = Object.keys(h.ger || {})[0], n = (h.ger || {})[r];
+      return (n === 2 ? 'dubbelt' : n === 3 ? 'tre gånger' : '×' + n) + ' ' + (r === 'man' ? 'män' : 'mark') + ' i ' + h.tid + ' s';
+    },
+    // Ett uppdrag är klart. Rutan säger vad som hände med en eller två rader, och visar det du fick som bilder.
+    // Det som är nytt att trycka på förklaras inte här: det glöder sedan i konsolen med en liten pekbubbla (S.nytt, se _tips).
+    // Johannes 2026-11-27: "mycket text att läsa ... kan vi jobba mer i bilder och enkelhet?"
     klart(u) {
-      const S = G.s, g = u.ger || {}, x = [];
-      (g.bas || []).forEach(id => x.push(basRad(id)));
-      if (g.las && g.las.indexOf('mark') >= 0) x.push('<b>Mark</b> är pengar. Gruvor och städer ger mark, och den behövs till större uppdrag.');
-      const scen = !!S.sistaScen && (S.sistaScen === u.scen || S.sistaScen === u.valScen), sagt = scen && u.sagt || [];          // det scenen just visade sägs inte en gång till i rutan
-      if (u.vet && sagt.indexOf('vet') < 0) x.push(u.vet); if (u.vet2 && sagt.indexOf('vet2') < 0) x.push(u.vet2);
-      if (u.id === 'sAbo') x.push('<b>Män</b> är din armé. Platser som ger män bygger du ut med män: de du har får fler att sluta upp. Under männen kan du också bygga ett <b>hus för knektar</b> för mark.');
-      if ((g.bas || []).some(id => G.BAS[id].slag === 'gruva')) x.push('Med kortet <b>Gruvarbetare</b> sätter du män i arbete i gruvan. De lämnar armén, och gruvan ger mer.');
-      if (S.varld === 0) D.KONSTER.filter(k => k.steg0 === u.id).forEach(k => x.push('Nytt kort under ' + (k.flik0 === 'man' ? 'männen' : 'marken') + ': <b>' + UI.konst(k.id)[0] + '</b>. ' + UI.konst(k.id)[1]));
-      if (g.las && g.las.indexOf('konster') >= 0 && S.varld !== 0) x.push(('Nya kort under männen och marken: <b>förmågor</b> som gör din ritt, dina tryck och skatten bättre. Håll ') + (V.pek ? 'fingret kvar på' : 'pekaren över') + ' ett kort så ser du exakt vad det ger.');
-      if (g.las && g.las.indexOf('sold') >= 0) x.push('Nu kan du <b>värva soldater</b> för mark. De får lön, och du får fler män.');
-      if (g.x) for (const r in g.x) x.push('Allt som ger ' + (r === 'man' ? 'män' : 'mark') + ' ger nu ' + String(g.x[r]).replace('.', ',') + ' gånger så mycket.');
-      if (S.hem && S.hem.id === u.id) x.push('<b>' + tal(S.hem.hem) + '</b> av dina ' + tal(S.hem.av) + ' män kommer hem' + (S.hem.p >= 0.9 ? ': du ledde slaget väl.' : S.hem.p > 0.3 ? '.' : '. Följ knappen och ringen i slaget, så kommer fler hem.'));
-      if (g.markTid || g.mark) x.push('Du fick en rejäl summa mark på en gång.');
-      if (g.man) x.push('Du fick ' + tal(g.man) + ' män.');
-      if (g.fart) x.push('Din armé rör sig fortare från och med nu.');
-      if (g.titel === 'Kung') x.push('Du är nu <b>Sveriges kung</b>.');
-      if (u.lan) x.push('Du har nu en <b>skuld</b> till Lübeck. Den syns bredvid dina mark.');
-      if (g.las && g.las.indexOf('privilegier') >= 0) x.push('Så länge Lübeck har handeln ger dina <b>städer bara hälften</b> så mycket mark.');
-      if (g.slutar === 'privilegier') x.push('Städerna ger full mark igen.');
-      if (g.las && g.las.indexOf('fogdar') >= 0) x.push('Nu finns kortet <b>Sätt en fogde</b>. En fogde är din man på platsen, och han bygger ut den åt dig.');
-      if (g.las && g.las.indexOf('arv') >= 0) x.push('Det du bygger från och med nu går i <b>arv</b> till nästa regent.');
-      if (g.startar === 'dagtingan') x.push('De flesta herrarna har gått över till Kristian. <b>Uppsala</b> ger ingenting längre.');
-      else if (g.startar && D.UPPROR[g.startar].baser.length) x.push('<b>' + D.UPPROR[g.startar].namn + '</b>: ' + D.UPPROR[g.startar].baser.filter(id => S.bas[id]).map(id => G.BAS[id].namn).join(', ') + ' ger ingenting förrän du har gjort något åt det.');
-      if (g.slutar && g.slutar !== 'privilegier') x.push('Baserna ger som vanligt igen.');
+      const S = G.s, g = u.ger || {}, med = [], ny = [], fick = S.fick || {};
+      const scen = !!S.sistaScen && (S.sistaScen === u.scen || S.sistaScen === u.valScen), sagt = scen && u.sagt || [];          // det scenen just visade sägs inte en gång till
+      let text = scen && u.efter ? u.efter : u.kronika;
+      if (u.vet && sagt.indexOf('vet') < 0) text += ' ' + u.vet; if (u.vet2 && sagt.indexOf('vet2') < 0) text += ' ' + u.vet2;
+      if (V.KORT && V.KORT[u.id]) text = V.KORT[u.id];          // den korta raden; hela texten finns i Krönikan
+      const m = (ik, stor, liten, nytt) => med.push({ ik, stor, liten, ny: !!nytt });
+      (g.bas || []).forEach(id => { const b = G.BAS[id]; m(b.borg && b.slag === 'bygd' ? 'slott' : b.slag, b.kort || b.namn, 'ger ' + ger(id), 1); });
+      if (g.hjalte) m('kvinna', 'Kristina', 'du spelar nu', 1);
+      if (S.hem && S.hem.id === u.id) m('man', tal(S.hem.hem) + '<small> / ' + tal(S.hem.av) + '</small>', 'kom hem');
+      if (fick.mark >= 1) m('mark', '+' + tal(fick.mark), 'mark');
+      if (fick.man >= 1) m('man', '+' + tal(fick.man), 'män');
+      if (g.x) for (const r in g.x) m('upp', '×' + String(g.x[r]).replace('.', ','), 'allt som ger ' + (r === 'man' ? 'män' : 'mark'));
+      if (g.fart) m('fart', 'Fortare', 'armén rör sig');
+      if (g.titel === 'Kung') m('krona', 'Kung', 'av Sverige', 1);
+      if (u.lan) m('skuld', 'Skuld', 'till Lübeck', 1);
+      if (g.las && g.las.indexOf('privilegier') >= 0) m('kogg', '½', 'mark från städerna');
+      if (g.slutar === 'privilegier') m('stad', 'Full', 'mark från städerna igen');
+      if (g.las && g.las.indexOf('arv') >= 0) m('kista', 'Arv', 'till nästa regent', 1);
+      if (g.startar === 'dagtingan') m('uppror', 'Uppsala', 'ger ingenting nu');
+      else if (g.startar && D.UPPROR[g.startar].baser.length) { const st = D.UPPROR[g.startar].baser.filter(id => S.bas[id]); m('uppror', st.length === 1 ? G.BAS[st[0]].namn : st.length + ' platser', 'ger ingenting nu'); }
+      if (g.slutar && g.slutar !== 'privilegier') m('frid', 'Lugnt', 'allt ger igen');
+      // nytt att trycka på: en pekbubbla i taget efter rutan
+      if (g.las && g.las.indexOf('mark') >= 0) ny.push('mark');
+      if (u.id === 'sAbo') ny.push('man');
+      if ((g.bas || []).some(id => G.BAS[id].slag === 'gruva')) ny.push('arb');
+      if (S.varld === 0) D.KONSTER.filter(k => k.steg0 === u.id).forEach(k => ny.push('k:' + k.id));
+      if (g.las && g.las.indexOf('konster') >= 0 && S.varld !== 0) ny.push('konster');
+      if (g.las && g.las.indexOf('sold') >= 0) ny.push('sold');
+      if (g.las && g.las.indexOf('fogdar') >= 0) ny.push('fogde');
+      if (u.lan) ny.push('skuld');
       const hn = G.handlingar(); if (!S.handlSedda) { S.handlSedda = {}; if (S.handlSagt) hn.forEach(h => { S.handlSedda[h.id] = 1; }); }          // äldre sparfiler räknade bara antalet
-      hn.filter(h => !S.handlSedda[h.id]).forEach(h => { S.handlSedda[h.id] = 1; x.push('Ny handling ' + (innerWidth < 720 ? 'ovanför' : 'bredvid') + ' den runda knappen: <b>' + UI.handlNamn(h) + '</b>. ' + h.vad + ' Sedan behöver du vila.'); });
-      if (g.hjalte) x.push('Nu spelar du <b>Kristina Gyllenstierna</b>, hans änka. Hon håller Stockholms slott och skriver till bönderna om hjälp.');
-      UI.berattar(UI.platsnamn(u.plats) + ' ' + u.ar, [scen && u.efter ? u.efter : u.kronika].concat(x));
-      if (u.mer) { const b = $('berattar'), l = el('a', 'ber-mer', 'Läs mer om varför'); l.href = '#'; l.addEventListener('click', ev => { ev.preventDefault(); UI.merInfo(u); }); b.insertBefore(l, b.querySelector('button')); }          // och samma ruta härifrån
+      hn.filter(h => !S.handlSedda[h.id]).forEach(h => { S.handlSedda[h.id] = 1; ny.push('h:' + h.id); });
+      S.nytt = (S.nytt || []).concat(ny);
+      const plats = UI.platsnamn(u.plats);
+      UI.berattar(plats, u.ar, text, med.slice(0, 4), u.mer ? () => UI.merInfo(u) : null);
+      // när rutan trycks bort stiger det man fick upp ur platsen på kartan
+      const fore = UI.efter; UI.efter = () => {
+        if (fore) fore(); const w = V.Varld && V.Varld.pos && (V.Varld.pos(u.plats) || ((g.bas || [])[0] && V.Varld.pos(g.bas[0])));
+        if (w) { let d = 0; if (fick.mark >= 1) { const t = '+' + tal(fick.mark) + IK.mark; setTimeout(() => UI.flyt(w.x, w.y + 2.6, w.z, t, 'mark stor'), d); d += 500; } if (fick.man >= 1) { const t = '+' + tal(fick.man) + IK.man; setTimeout(() => UI.flyt(w.x, w.y + 2.6, w.z, t, 'man stor'), d); } }
+      };
     },
     // Rutan i början: vem du är, hur läget ser ut och vad du ska göra. Går att ta fram igen med frågetecknet.
     forklara(varld, igen) {
-      const hur = varld === 2
-        ? [['Rid', 'Den runda knappen är det du gör just nu. Varje tryck ger mark och män, och knappen byter namn när historien går vidare.'], [IK.mark, '<b>Mark</b> är rikets pengar. Städerna ger mark hela tiden, och mer varje gång du rider förbi.'], [IK.pil, '<b>Bygg ut</b> en stad eller ett län med knappen, eller ' + KLICKA + ' på den på kartan. Var tionde nivå dubblar.'], [IK.krona, '<b>Nästa steg</b> är historien. Den går vidare när du har råd.']]
-        : varld === 0
-        ? [['Bud', 'Den runda knappen är det du gör just nu. Först skickar du bud till din fars slott. Varje tryck ger mark, och knappen byter namn när historien går vidare.'], [IK.mark, '<b>Mark</b> är rikets pengar. Städerna ger mark hela tiden, och mer varje gång du rider förbi.'], [IK.pil, '<b>Bygg ut</b> en stad med knappen, eller ' + KLICKA + ' på den på kartan. Var tionde nivå dubblar.'], [IK.krona, '<b>Nästa steg</b> är historien. Den går vidare när du har råd.']]
-        : [['Bud', 'Den runda knappen är det du gör just nu. Först skickar du bud till byarna. Varje tryck ger män, och knappen byter namn när historien går vidare.'], [IK.man, '<b>Män</b> är de som följer dig. Byarna ger män hela tiden, och du behöver dem för att slåss.'], [IK.pil, '<b>Bygg ut</b> en by med knappen, eller ' + KLICKA + ' på den på kartan. Var tionde nivå dubblar.'], [IK.krona, '<b>Nästa steg</b> är historien. Den går vidare när du har folk nog.']];
+      // Kort: vem du är, målet, och tre bilder för hur man spelar. Resten visar pekbubblorna i spelet (Johannes 2026-11-27).
+      const M = V.MED || {}, knapp = varld === 2 ? 'Rid' : 'Bud';
+      const hur = [['<span class="knapp">' + knapp + '</span>', 'Tryck', 'den runda knappen'], [M[varld === 1 ? 'man' : 'mark'], varld === 1 ? 'Män' : 'Mark', varld === 1 ? 'samla folk' : 'rikets pengar'], [M[varld === 1 ? 'bygd' : 'stad'], 'Bygg ut', KLICKA + ' på en ' + (varld === 1 ? 'by' : 'stad')], [M.krona, 'Nästa steg', 'när du har råd']];
       const text = varld === 2
-        ? '<h2>Kalmar 1560</h2><p>Du är <b>Erik</b>, 26 år, Gustav Vasas äldste son och hertig över Kalmar, Kronoberg och Öland. Han spelar luta, kan språk och läser i stjärnorna.</p><p>Hans far är gammal och sjuk. Erik ska ärva kronan, men först vill han gifta sig med drottningen av England.</p><p class="mal">Bygg upp ditt län, ta över riket och håll det samman.</p>'
+        ? '<h2>Kalmar 1560</h2><p>Du är <b>Erik</b>, 26 år, Gustav Vasas äldste son och hertig i Kalmar. Han ska ärva kronan, men först vill han gifta sig med drottningen av England.</p><p class="mal">Bygg upp ditt län, ta över riket och håll det samman.</p>'
         : varld === 0
-        ? '<h2>Sverige 1512</h2><p>Du spelar <b>Sten Sture</b>, nitton år och riddare. Han är inte kung. Sverige har ingen: riket hör till en union med Danmark och Norge, men har inte erkänt unionens kung sedan 1501.</p><p>I kungens ställe styr en riksföreståndare. Det var hans far, och nu är han död. Rådet tänker ge hans plats till en man som vill gå Danmarks kung till mötes.</p><p class="mal">Bygg upp dina städer, vinn folket och håll riket.</p>'
-        : '<h2>Dalarna 1521</h2><p>Du är <b>Gustav Eriksson</b>, 24 år. Sveriges kung heter nu Kristian II av Danmark, och han lät halshugga din far i Stockholm.</p><p>Dalkarlarna har valt dig till sin ledare. Resten av riket lyder Kristian.</p><p class="mal">Samla folk, ta Kopparberget och driv ut danskarna.</p>';
-      UI.ruta(text + '<div class="hur">' + hur.map(h => '<div><span class="hur-i">' + h[0] + '</span><span>' + h[1] + '</span></div>').join('') + '</div><button class="stang" id="forklara-knapp">' + (igen ? 'Stäng' : 'Börja') + '</button>', !igen);
+        ? '<h2>Sverige 1512</h2><p>Du är <b>Sten Sture</b>, nitton år. Din far styrde riket i kungens ställe, och nu är han död. Rådet vill ge hans plats åt en vän till Danmark.</p><p class="mal">Bygg upp dina städer, vinn folket och håll riket.</p>'
+        : '<h2>Dalarna 1521</h2><p>Du är <b>Gustav Eriksson</b>, 24 år. Kristian II av Danmark lät halshugga din far i Stockholm. Nu har dalkarlarna valt dig till ledare.</p><p class="mal">Samla folk, ta Kopparberget och driv ut danskarna.</p>';
+      UI.ruta(text + '<div class="ber-lin">✦</div><div class="ber-med start">' + hur.map(h => '<div class="ber-mk"><div class="ber-rund">' + h[0] + '</div><div class="ber-stor">' + h[1] + '</div><div class="ber-liten">' + h[2] + '</div></div>').join('') + '</div><button class="stang" id="forklara-knapp">' + (igen ? 'Stäng' : 'Börja') + '</button>', !igen);
       UI._paus = !igen; if (!igen && V.Musik) V.Musik.spar('titel');
     },
 
@@ -464,13 +489,42 @@
         ['skatt', '#skatt', 'Skicka ut män här. De kommer hem med mark.', G.kanSkatt() && !S.skattN, !!S.skatt || S.skattN > 0],
         ['tak', '#res-man', 'Armén är full. Driv in skatt (det gröna kortet) så blir männen till mark.', S.res.man >= G.tak() * 0.999 && S.nasta >= 2 && !S.aktivt, S.res.man < G.tak() * 0.9]
       ];
+      // Nytt sedan förra rutan (S.nytt): en glödande pekbubbla i taget. Den går bort när man trycker på saken, eller efter en stund.
+      const nyttSteg = UI._nyttSteg(); if (nyttSteg) steg.unshift(nyttSteg);
       if (tips.nu) { const s = steg.find(q => q[0] === tips.nu); if (!s || s[4]) { T[tips.nu] = 1; tips.nu = null; e.innerHTML = ''; } else if (!s[3] || !synlig(s[1])) { tips.nu = null; e.innerHTML = ''; } }
-      if (!tips.nu) { const s = steg.find(q => !T[q[0]] && q[3] && synlig(q[1])); if (s) { tips.nu = s[0]; e.innerHTML = '<div class="tip">' + s[2] + '</div>'; } }
+      if (!tips.nu) { const s = steg.find(q => !T[q[0]] && q[3] && synlig(q[1])); if (s) { tips.nu = s[0]; tips.t0 = performance.now(); e.innerHTML = '<div class="tip' + (s[5] ? ' nytt' : '') + '">' + (s[5] ? '<span class="tip-ny">Nytt</span>' : '') + s[2] + '</div>'; } }
+      if (tips.nu && tips.nu === (nyttSteg && nyttSteg[0])) { const m0 = document.querySelector(nyttSteg[1]); document.querySelectorAll('.glod-ny').forEach(x => { if (x !== m0) x.classList.remove('glod-ny'); }); if (m0) m0.classList.add('glod-ny'); } else document.querySelectorAll('.glod-ny').forEach(x => x.classList.remove('glod-ny'));
       if (tips.nu) {            // håll rutan ovanför det den pekar på
         const s = steg.find(q => q[0] === tips.nu), mal = document.querySelector(s[1]), t = e.firstChild; if (!mal || !t) return; t.style.visibility = mal.offsetParent ? '' : 'hidden';
         const r = mal.getBoundingClientRect(), w = t.offsetWidth; t.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; t.style.top = (r.top - t.offsetHeight - (mal.closest('.sida') ? 50 : 14)) + 'px';
         t.style.setProperty('--pil', Math.max(14, Math.min(w - 14, r.left + r.width / 2 - parseFloat(t.style.left))) + 'px');
       }
+    },
+
+    // Det nya som står först i kön, som ett steg för _tips: [nyckel, väljare, text, visas, klart, nytt].
+    // Ligger kortet under en annan flik pekar bubblan på fliken tills man öppnar den.
+    _nyttSteg() {
+      const S = G.s, k = (S.nytt || [])[0]; if (!k) return null;
+      const synlig = sel => { const m = document.querySelector(sel); return !!(m && m.offsetParent); };
+      let sel, alt, txt;
+      if (k.slice(0, 2) === 'h:') { const h = D.HANDLINGAR.find(q => q.id === k.slice(2)); if (!h) { S.nytt.shift(); return null; } sel = '#hk-' + h.id; txt = '<b>' + UI.handlNamn(h) + '</b> ' + UI.handlKort(h); }
+      else if (k.slice(0, 2) === 'k:') { const kd = D.KONSTER.find(q => q.id === k.slice(2)); if (!kd) { S.nytt.shift(); return null; } sel = '#konst-' + kd.id; alt = '#res-' + (kd.flik0 || 'mark'); txt = '<b>' + UI.konst(kd.id)[0] + '</b> ' + konstInfo(kd.id).kort; }
+      else ({ mark: () => { sel = '#res-mark'; txt = '<b>Mark</b> är rikets pengar'; },
+        man: () => { sel = '#res-man'; txt = '<b>Män</b> är din armé'; },
+        arb: () => { sel = '.bas.arb'; alt = '#res-mark'; txt = '<b>Gruvarbetare</b> män gör gruvan rikare'; },
+        konster: () => { sel = '#baser .bas.konst'; alt = '#res-man'; txt = '<b>Förmågor</b> gör dig starkare'; },
+        sold: () => { sel = '#sold'; alt = '#res-man'; txt = '<b>Värva soldater</b> mark blir män'; },
+        fogde: () => { sel = '.bas.fogdekort'; alt = '#res-mark'; txt = '<b>Fogdar</b> bygger ut åt dig'; },
+        skuld: () => { sel = '#res-skuld'; alt = '#res-mark'; txt = '<b>Skuld</b> till Lübeck'; }
+      }[k] || (() => {}))();
+      if (!sel) { S.nytt.shift(); return null; }
+      const har = synlig(sel), mal = har ? sel : alt && synlig(alt) ? alt : sel;
+      if (!har && !(alt && synlig(alt))) { const nu = performance.now(); if (tips.osyn !== k) { tips.osyn = k; tips.osynT = nu; } else if (nu - tips.osynT > 8000) { S.nytt.shift(); tips.osyn = null; } return null; }          // syns inte alls: släpp den efter en stund, så att kön inte fastnar
+      tips.osyn = null;
+      const klar = () => { S.nytt.shift(); tips.nu = null; if (tips.klick) document.removeEventListener('pointerdown', tips.klick, true); tips.klick = null; };
+      if (tips.nu === 'nytt:' + k && har && performance.now() - tips.t0 > 9000) { klar(); return null; }          // har stått en stund vid saken: nog sett
+      if (!tips.klick) { tips.klick = ev => { const m = document.querySelector(sel); if (m && m.contains(ev.target)) klar(); }; document.addEventListener('pointerdown', tips.klick, true); }
+      return ['nytt:' + k + (mal === sel ? '' : ':alt'), mal, txt, true, false, true];
     },
 
     // ---- rutor --------------------------------------------------------------------------------

@@ -411,3 +411,64 @@ button { font-family: inherit; cursor: pointer; }
 /* Varifrån och vart på stegets kort (Johannes 2026-11-27) */
 #upp-vag { font-size: 12px; line-height: 1.25; margin: -3px 0 6px; color: var(--guld2); letter-spacing: 0.01em; }
 @media (max-width: 720px) { #upp-vag { font-size: 11px; margin: -2px 0 4px; } }
+
+/* ---- berättelserutan (Johannes 2026-11-27: mindre text, mer bild, i spelets egen stil) ----
+   Mörk träram med guldbeslag som konsolens paneler, rött band med plats och år, pergament, en eller två rader och medaljonger. */
+#berattar { width: min(600px, calc(100vw - 30px)); padding: 9px; margin-top: 22px; border: 0; border-radius: 12px; background: linear-gradient(180deg, #5a4330, #3a2a1c 40%, #2b1f14); box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px #140d07, 0 0 0 2px rgba(242, 207, 90, 0.35) inset; overflow: visible !important; }
+#berattar::before { content: ''; position: absolute; inset: 4px; border-radius: 9px; border: 1px solid rgba(242, 207, 90, 0.25); pointer-events: none; }
+.ber-hk { position: absolute; width: 24px; height: 24px; z-index: 1; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Cpath d='M2 2h22l-6 6H8v10l-6 6z' fill='%23f2cf5a' stroke='%236b4a12' stroke-width='1.5' stroke-linejoin='round'/%3E%3Ccircle cx='7' cy='7' r='2' fill='%236b4a12'/%3E%3C/svg%3E") center/contain no-repeat; }
+.ber-hk.a { left: -5px; top: -5px; } .ber-hk.b { right: -5px; top: -5px; transform: scaleX(-1); } .ber-hk.c { left: -5px; bottom: -5px; transform: scaleY(-1); } .ber-hk.d { right: -5px; bottom: -5px; transform: scale(-1); }
+.ber-band { position: absolute; left: 50%; top: -17px; transform: translateX(-50%); z-index: 2; max-width: calc(100% - 40px); filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.45)); }
+.ber-band::before, .ber-band::after { content: ''; position: absolute; top: 6px; width: 20px; height: 26px; background: #8e231c; z-index: -1; }
+.ber-band::before { left: -14px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 35% 50%); } .ber-band::after { right: -14px; clip-path: polygon(0 0, 100% 0, 65% 50%, 100% 100%, 0 100%); }
+.ber-band span { display: block; background: linear-gradient(180deg, #c43a2f, #8e231c); color: #fff3d6; padding: 6px 22px 7px; font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 0 #4a0f0b; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 -2px 0 rgba(0, 0, 0, 0.25); }
+.ber-band em { font-style: normal; color: var(--guld2); letter-spacing: 0.08em; margin-left: 10px; }
+.ber-perg { position: relative; border-radius: 5px; padding: 26px 22px 14px; color: #2b2017; background: radial-gradient(ellipse at 50% 40%, #f4ead0, #e8d8b0 70%, #d9c493); box-shadow: inset 0 0 22px rgba(120, 80, 30, 0.35), inset 0 0 0 1px rgba(90, 60, 30, 0.4); max-height: calc(100vh - 140px); overflow-y: auto; }
+#berattar p.ber-txt { margin: 0 4px; font-size: 19px; line-height: 1.4; text-align: center; text-wrap: balance; }
+.ber-lin { display: flex; align-items: center; gap: 10px; margin: 12px 30px 10px; color: #9a7a45; font-size: 13px; }
+.ber-lin::before, .ber-lin::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #9a7a45, transparent); }
+.ber-med { display: flex; justify-content: center; gap: 22px; }
+.ber-mk { display: flex; flex-direction: column; align-items: center; width: 112px; text-align: center; animation: medin 0.5s backwards; }
+.ber-mk:nth-child(2) { animation-delay: 0.12s; } .ber-mk:nth-child(3) { animation-delay: 0.24s; } .ber-mk:nth-child(4) { animation-delay: 0.36s; }
+@keyframes medin { from { opacity: 0; transform: scale(0.6); } 70% { transform: scale(1.06); } }
+.ber-rund { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 30%, #fdf3d6, #e9cf8e 60%, #c79a4c); box-shadow: 0 0 0 3px #f2cf5a inset, 0 0 0 5px #6b4a12 inset, inset 0 -6px 10px rgba(120, 70, 10, 0.35), 0 4px 8px rgba(60, 30, 0, 0.4), 0 0 0 1px #1a130d; }
+.ber-rund svg { width: 46px; height: 46px; }
+.ber-mk.ny .ber-rund { animation: medglod 1.8s ease-in-out infinite; }
+@keyframes medglod { 50% { box-shadow: 0 0 0 3px #f2cf5a inset, 0 0 0 5px #6b4a12 inset, inset 0 -6px 10px rgba(120, 70, 10, 0.35), 0 0 18px 3px rgba(242, 207, 90, 0.9), 0 0 0 1px #1a130d; } }
+.ber-stor { margin-top: 6px; font-size: 21px; line-height: 1.05; } .ber-stor.lang { font-size: 16px; } .ber-stor small { font-size: 14px; color: #7a6040; }
+.ber-liten { font-size: 12.5px; color: #7a6040; font-style: italic; margin-top: 3px; line-height: 1.2; }
+.ber-med.manga { gap: 8px; } .ber-med.manga .ber-mk { width: 96px; }
+.ber-fot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+#berattar .ber-mer { display: flex; align-items: center; gap: 6px; margin: 0; color: #7a5a30; font-size: 14.5px; font-style: italic; border: 0; text-decoration: none; }
+#berattar .ber-mer svg { width: 20px; height: 20px; } #berattar .ber-mer:hover { color: #4a3018; }
+#berattar button { display: flex; align-items: center; gap: 8px; margin: 0; padding: 6px 20px 6px 24px; font-size: 16px; box-shadow: 0 3px 0 #5d430f, 0 0 0 1px rgba(255, 255, 255, 0.35) inset; }
+#berattar button svg { width: 12px; height: 12px; fill: #2b1c08; }
+/* det som kom in, i världen: större och dröjer kvar */
+.flyt.stor { font-size: 27px; font-weight: bold; color: #fff7df; display: flex; align-items: center; gap: 4px; animation-duration: 2.6s; }
+.flyt.stor svg { width: 28px; height: 28px; }
+/* pekbubblan för det som är nytt, och saken den pekar på glöder */
+.tip.nytt { display: flex; align-items: center; gap: 8px; padding: 7px 13px 7px 8px; background: linear-gradient(180deg, #fbf0cf, #ecd9a6); border: 2px solid #5a4634; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(201, 162, 74, 0.6) inset; }
+.tip.nytt::after { border-top-color: #5a4634; bottom: -10px; }
+.tip-ny { background: #b8312a; color: #fff3d6; font-size: 10.5px; letter-spacing: 0.15em; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; }
+.glod-ny { box-shadow: 0 0 0 2px var(--guld2), 0 0 22px 4px rgba(242, 207, 90, 0.85) !important; border-radius: 9px; }
+.hk.glod-ny { box-shadow: none !important; } .hk.glod-ny .hk-b { box-shadow: 0 0 0 2px var(--guld2) inset, 0 0 24px 5px rgba(242, 207, 90, 0.9); }
+@media (max-width: 720px) {
+  #berattar { width: calc(100vw - 16px); max-height: none; padding: 7px; }
+  .ber-perg { padding: 22px 12px 11px; max-height: 70vh; }
+  #berattar p.ber-txt { font-size: 16.5px; }
+  .ber-med { gap: 6px; } .ber-mk { width: 84px; } .ber-rund { width: 56px; height: 56px; } .ber-rund svg { width: 37px; height: 37px; } .ber-stor { font-size: 17px; } .ber-stor.lang { font-size: 13.5px; } .ber-liten { font-size: 11.5px; }
+  .ber-med.manga .ber-mk { width: 72px; }
+  .ber-band span { font-size: 12px; padding: 5px 14px 6px; letter-spacing: 0.14em; }
+  #berattar button { padding: 9px 22px 9px 26px; font-size: 16.5px; }
+}
+@media (max-height: 520px) and (min-width: 721px) {
+  #berattar { max-height: none; padding: 6px; } .ber-perg { padding: 20px 16px 9px; max-height: 76vh; }
+  #berattar p.ber-txt { font-size: 15.5px; } .ber-lin { margin: 6px 30px 5px; }
+  .ber-rund { width: 48px; height: 48px; } .ber-rund svg { width: 32px; height: 32px; } .ber-stor { font-size: 16px; margin-top: 3px; } .ber-fot { margin-top: 7px; }
+}
+/* rutorna mitt på skärmen får samma ram och pergament */
+.ruta-in { border: 8px solid transparent; border-radius: 12px; background: radial-gradient(ellipse at 50% 35%, #f4ead0, #e8d8b0 70%, #d9c493) padding-box, linear-gradient(180deg, #5a4330, #3a2a1c 40%, #2b1f14) border-box; box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px #140d07, inset 0 0 22px rgba(120, 80, 30, 0.3), inset 0 0 0 1px rgba(90, 60, 30, 0.4); }
+.ruta-in h2 { text-align: center; } .ruta-in > p:not(.svag) { text-align: center; text-wrap: balance; } .ruta-in p.mal { text-align: center; }
+.ber-med.start { gap: 6px; margin-bottom: 6px; } .ber-med.start .ber-mk { width: 120px; } .ber-med.start .ber-stor { font-size: 18px; }
+.ber-rund .knapp { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #fff7df; background: radial-gradient(circle at 50% 35%, #56412d, #2b2017 70%); box-shadow: 0 0 0 2px var(--guld2) inset; }
+@media (max-width: 720px) { .ber-med.start .ber-mk { width: 76px; } .ber-med.start .ber-stor { font-size: 15px; } .ber-rund .knapp { width: 38px; height: 38px; font-size: 13px; } }

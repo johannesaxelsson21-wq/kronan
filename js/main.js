@@ -155,7 +155,7 @@
       if (haller && !UI.pausar() && !(V.Intro && V.Intro.tar) && (hallT += dt) > 0.2) { hallT = 0; tryck(true); }
       if (!UI.pausar()) {                                 // tiden står still medan rutan i början läses
         for (let k = 0; k < snabb; k++) G.steg(dt);
-        if (G.tvinga()) Varld.skicka();                    // förspelet går sin gång vad man än gör
+        // (förspelet startade förr nästa steg av sig själv. Johannes 2026-11-27: "Inget startar förrän man har alla resurser".)
         arstidSteg(dt * snabb);
       }
       if (!q.has('season')) Scene.setSeason(arstid);
