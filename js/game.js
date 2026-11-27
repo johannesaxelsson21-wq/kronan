@@ -24,7 +24,7 @@
     ut: function () {},                 // händelser till gränssnittet: (typ, data)
     ny(arv) { const gammal = S; S = nytt(gammal.varld); if (arv) { S.arv = gammal.arv; S.varv = gammal.varv; S.intro = true; S.ljud = gammal.ljud; S.forspel = gammal.forspel; } return S; },
     // Byt värld. Från förspelet följer städernas storlek med (de står kvar, nu i Kristians händer) och krönikan.
-    nyVarld(v) { const g = S; S = nytt(v); S.ljud = g.ljud; S.arv = g.arv; S.varv = g.varv; if (v === 1 && g.varld === 0 && g.nasta > 0) { S.forspel = Object.assign({}, g.bas); S.kronika = g.kronika.slice(); } if (v === 2 && g.varld === 1) S.forspel = Object.assign({}, g.bas); return S; },          // Gustavs städer står kvar när Erik tar över
+    nyVarld(v) { const g = S; S = nytt(v); S.ljud = g.ljud; S.musik = g.musik; S.arv = g.arv; S.varv = g.varv; if (v === 1 && g.varld === 0 && g.nasta > 0) { S.forspel = Object.assign({}, g.bas); S.kronika = g.kronika.slice(); } if (v === 2 && g.varld === 1) S.forspel = Object.assign({}, g.bas); return S; },          // Gustavs städer står kvar när Erik tar över
     // ---- en ny sak i taget (förspelet, Johannes 2026-11-26): varje ny knapp, byggnad och förmåga kommer för sig, med en lugn rad om vad den är ----
     // nar = när den annars hade funnits. Den första som kan komma kommer, sedan dröjer det minst INFOR_MELLAN sekunder till nästa.
     INFOR_MELLAN: 55,

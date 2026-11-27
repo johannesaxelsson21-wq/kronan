@@ -82,7 +82,7 @@
       $('upp-knapp').addEventListener('click', () => { const a = G.s.aktivt; if (a && a.val) { G.valj(); V.Ljud && V.Ljud.spela('klocka'); } else UI.onSkicka && UI.onSkicka(); });
       $('hitta').addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); UI.onHitta && UI.onHitta(); });
       $('m-bok').addEventListener('click', UI.kronika); $('m-krona').addEventListener('click', UI.regenter); $('m-kugg').addEventListener('click', UI.installningar); $('m-fraga').addEventListener('click', () => UI.forklara(G.s.varld, true));
-      $('m-ljud').addEventListener('click', () => { G.s.ljud = !G.s.ljud; V.Ljud && V.Ljud.pa(G.s.ljud); V.Musik && V.Musik.satt(G.s.ljud && G.s.musik === true); UI.tick(true); });
+      $('m-ljud').addEventListener('click', () => { G.s.ljud = !G.s.ljud; V.Ljud && V.Ljud.pa(G.s.ljud); V.Musik && V.Musik.satt(G.s.ljud && G.s.musik !== false); UI.tick(true); });
       $('ruta').addEventListener('click', e => { if (e.target.id === 'ruta' && !UI._last) UI.stang(); });
       root.addEventListener('pointerdown', e => { if (e.target.closest('button, .bas')) V.Ljud && V.Ljud.vakna(); }, true);
       window.addEventListener('resize', () => { sistaBaser = ''; });
@@ -490,9 +490,9 @@
       UI.ruta(h + '</div><p class="svag">Varje regent blir en egen värld. Det du bygger går i arv till nästa.</p><button class="stang">Stäng</button>');
     },
     installningar() {
-      const musikText = () => 'Musik: ' + (G.s.musik === true ? 'på' : 'av');
+      const musikText = () => 'Musik: ' + (G.s.musik !== false ? 'på' : 'av');
       UI.ruta('<h2>Inställningar</h2><p class="svag">Spelet sparas av sig självt i den här webbläsaren.</p>' + (V.Musik && V.Musik.finns() ? '<button id="musik-knapp">' + musikText() + '</button>' : '') + '<button id="nollstall" class="fara">Börja om från början</button><button class="stang">Stäng</button>');
-      if ($('musik-knapp')) $('musik-knapp').addEventListener('click', () => { G.s.musik = G.s.musik !== true; V.Musik && V.Musik.satt(G.s.ljud && G.s.musik === true); $('musik-knapp').textContent = musikText(); });
+      if ($('musik-knapp')) $('musik-knapp').addEventListener('click', () => { G.s.musik = G.s.musik === false; V.Musik && V.Musik.satt(G.s.ljud && G.s.musik !== false); $('musik-knapp').textContent = musikText(); });
       $('nollstall').addEventListener('click', () => { if (confirm('Börja om från 1512? Allt du byggt försvinner.')) UI.onBorjaOm && UI.onBorjaOm(); });
     },
     borta(b) {

@@ -113,7 +113,7 @@
     if (!hade) G.nyVarld(q.has('varld') ? +q.get('varld') : q.has('fusk') ? 1 : 0);
     V.lugn = true;          // förspelet är lugnt: färre gnistor, lägre ljud, nästan ingen skakning (Johannes 2026-11-26: "det ska vara lugnt och skönt")
     UI.init(); Varld.init(Scene.scene);
-    G.ut = handelse; V.Ljud.init(); V.Ljud.pa(G.s.ljud); if (V.Musik) { V.Musik.satt(G.s.ljud && G.s.musik === true); V.Musik.spar(V.Musik.grund()); }
+    G.ut = handelse; V.Ljud.init(); V.Ljud.pa(G.s.ljud); if (V.Musik) { V.Musik.satt(G.s.ljud && G.s.musik !== false); V.Musik.spar(V.Musik.grund()); }
     if (q.has('fusk')) V.fusk(+q.get('fusk'));
     Varld.sync(true);
     arstid = hade && G.s.arstid >= 0 && !q.has('fusk') ? G.s.arstid % 1 : ((senaste().man - 1) / 12) % 1; Scene.setSeason(q.has('season') ? +q.get('season') : arstid);
