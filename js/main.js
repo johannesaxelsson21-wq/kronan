@@ -93,7 +93,7 @@
   V.fusk = function (n) {
     V.tyst = true; G.s.intro = true;
     for (let guard = 0; guard < 400 && G.s.nasta < n && !G.s.slut; guard++) {
-      const u = D.UPPDRAG[G.s.nasta]; G.s.res.man = G.tak(); G.s.res.mark = Math.max(G.s.res.mark, (G.kostnad(u).mark || 0) * 1.01, 1e3); if (!G.s.aktivt) G.skicka(0.01); G.steg(0.05); if (G.s.aktivt && G.s.aktivt.val) G.valj();
+      const u = D.UPPDRAG[G.s.nasta]; G.s.res.man = G.tak(); G.s.res.mark = Math.max(G.s.res.mark, (G.kostnad(u).mark || 0) * 1.01, 1e3); if (!G.s.aktivt) G.skicka(0.01); if (G.s.aktivt && !G.s.aktivt.val) G.s.aktivt.t = Math.max(G.s.aktivt.t, G.s.aktivt.dur - 0.01); G.steg(0.05); if (G.s.aktivt && G.s.aktivt.val) G.valj();
       for (const id in G.s.bas) for (let k = 0; k < 3; k++) { G.s.res[G.prisRes(id)] = Math.max(G.s.res[G.prisRes(id)], G.pris(id)); G.kop(id); }
     }
     G.s.res.man = G.tak() * 0.7; G.s.tryck = 10; G.s.tips = { ak: 1, full: 1, kop: 1, upp: 1, tak: 1, skatt: 1 }; G.s.handlSagt = 3; if (G.s.varld === 1 && G.s.nasta > 4) G.s.las.sold = true; G.s.skattSagt = 1; V.tyst = false; Varld.sync(true);

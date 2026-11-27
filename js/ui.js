@@ -352,7 +352,7 @@
       // dragkampen högst upp under ett slag i förspelet: dina till vänster, motståndaren till höger
       { const a = S.aktivt, e = $('slag-bar'), u = a && G.uppdrag(), syns = spel && a && a.lage !== undefined && G.skede() === 'strid';
         if (!syns) { if (e.style.display !== 'none') e.style.display = 'none'; }
-        else { if (e.style.display === 'none') { e.style.display = ''; e.querySelector('.sb-egen').textContent = u.belagring ? 'Stockholm' : u.egen || (u.id === 'sUppsala' ? 'Bönderna' : 'Sten Stures män'); e.querySelector('.sb-fiende').textContent = u.belagring ? 'Kristians här' : u.fiende || 'Danskarna'; } e.querySelector('.sb-fyll').style.width = (a.lage * 100).toFixed(1) + '%'; } }
+        else { if (e.style.display === 'none') { e.style.display = ''; e.querySelector('.sb-egen').textContent = u.belagring === 1 ? 'Stockholm' : u.egen || (u.id === 'sUppsala' ? 'Bönderna' : 'Sten Stures män'); e.querySelector('.sb-fiende').textContent = u.belagring === 1 ? 'Kristians här' : u.fiende || 'Danskarna'; } e.querySelector('.sb-fyll').style.width = (a.lage * 100).toFixed(1) + '%'; } }
       if (caption && performance.now() > capT) { caption.classList.add('bort'); const c = caption; caption = null; setTimeout(() => c.remove(), 900); }
     },
     // Vad den runda knappen heter annars: det man gör inför nästa steg i historien (D.GOR). Som kung tar man upp skatt när inget annat står.
