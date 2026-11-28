@@ -454,7 +454,7 @@
       else if (typ === 'skepp') { W.sync(false); const q = W.varvPlats(); Fx.guld(q.x, 0.3, q.z, 40, 1.4); }
       else if (typ === 'stapel') { W.sync(false); const q = W.varvPlats(); Fx.damm(q.x, Geo.groundAt(q.x, q.z) + 0.1, q.z, 10); }
       else if (typ === 'hus') { if (d.niva === 1) W._byggnad(d.id, false); else { const w = W.byggPlats(d.id); if (w) Fx.guld(w.x, Geo.groundAt(w.x, w.z) + 0.3, w.z, 25, 0.8); } }          // stadens hus: byggs första gången, glimmar sedan
-      else if (typ === 'slagTryck' && vis) { const nu = performance.now(); if (nu > (W._slagT || 0)) { W._slagT = nu + (vis.noll || vis.u.slag === 'flotta' ? 60 : 280); W._slagTryck(d.o); } }          // förspelets slag: trycken syns i slaget
+      else if (typ === 'slagTryck' && vis) { const nu = performance.now(); if (nu - (W._klickT || 0) > 120 && nu > (W._slagT || 0)) { W._slagT = nu + (vis.noll || vis.u.slag === 'flotta' ? 60 : 280); W._slagTryck(d.o); } }          // förspelets slag: trycken syns i slaget
       else if (typ === 'hugg' && vis && vis.u.belagring) { if (d.traff) W._belBild(d.o && d.o.bild, true, 'hugg'); }          // belägringen: varje tryck i takt syns på vallen eller i tornen
       else if (typ === 'hugg' && vis && d.traff) { const q = W.malPunkt(); if (q) Fx.damm(q.x, Geo.groundAt(q.x, q.z), q.z, 5); vis.stot = 1; Scene.shake(0.08); V.Ljud && V.Ljud.spela('svard'); const e = vis.enh[Math.floor(Math.random() * Math.min(vis.enh.length, vis.bredd || 6))]; if (e) Fx.damm(e.x, Geo.groundAt(e.x, e.z), e.z, 3); }          // ett hugg i takt: leden trycker på
       else if (typ === 'orderSvar' && vis && vis.u.belagring) W._belBild(d.o.bild, d.bra, 'svar');
@@ -631,11 +631,19 @@
       const u = vis.u, gy = (x, z) => Geo.groundAt(x, z), Lj = V.Ljud, skott = /skjut/i.test(ord) || (u.strid === 'pilar' && !vis.overAlv);
       m.hp = (m.hp || 0) + 1; const sista = m.hp >= 3; if (sista) { m.dod = 1; m.fall = 0; m.vant = 1; }
       const trf = () => { if (!vis || vis.fi.indexOf(m) < 0) return;
-        if (!m._c) { m._c = [m.col, m.col2]; m.col = '#fff1c8'; m.col2 = '#fff1c8'; setTimeout(() => { if (m._c) { m.col = m._c[0]; m.col2 = m._c[1]; m._c = null; } }, 150); }
-        m.lean = sista ? 0 : -0.3; if (!sista) setTimeout(() => { if (!m.gett) m.lean = 0; }, 160);
-        Fx.damm(m.x, gy(m.x, m.z) + 0.05, m.z, sista ? 6 : 2); if (sista) { m.vant = 0; Lj && Lj.spela('fall'); } else if (!skott) Lj && Lj.spela('svard'); };
+        W._blink(m); W._aj(m, sista); Fx.damm(m.x, gy(m.x, m.z) + 0.05, m.z, sista ? 6 : 3); if (V.UI && V.UI.flyt && !V.tyst) V.UI.flyt(m.x, gy(m.x, m.z) + 0.75, m.z, sista ? 'Ooh!' : 'Aj!', 'liten nej');
+        if (Lj) { Lj.spela(sista ? 'ajDo' : 'aj'); if (!skott && !sista) Lj.spela('svard'); if (sista) setTimeout(() => Lj.spela('fall'), 420); } };
       if (skott) { const e = vis.enh[Math.floor(Math.random() * Math.min(vis.enh.length, (vis.bredd || 6) * 2))]; if (e) Fx.pil(e.x, gy(e.x, e.z) + 0.35, e.z, m.x, gy(m.x, m.z) + 0.3, m.z); Lj && Lj.spela('pil'); setTimeout(trf, 750); }
       else { vis.stot = 0.6; trf(); }
+    },
+    // Gubben som blir träffad (Johannes 2026-11-28: "gubben reagera, böja och vrida sig som att man träffar han, och efter 3 tryck så ska han ramla ner och dö"):
+    // han rycker till, vrider sig åt sidan, viker sig bakåt och växer ett ögonblick så att man ser vem som fick det. Vid sista träffen vacklar han först, sedan faller han.
+    _aj(m, sista) { m.aj = sista ? 0.55 : 0.42; m.ajT = m.aj; m.ajR = Math.random() < 0.5 ? -1 : 1; if (m.sc0 === undefined) m.sc0 = m.sc; },
+    _ajSteg(m, dt, kx, kz) {
+      if (!(m.aj > 0)) { if (m.sc0 !== undefined && m.sc !== m.sc0) m.sc = m.sc0; return; }
+      m.aj = Math.max(0, m.aj - dt); const p = 1 - m.aj / m.ajT, s = Math.sin(p * Math.PI), d = m.dod ? 1.6 : 1;
+      m.ang += m.ajR * (0.9 + 0.5 * Math.sin(p * 18)) * s * d; m.lean = -0.55 * s; m.y = 0.09 * Math.sin(Math.min(1, p * 2) * Math.PI); m.x += (kx || 0) * 0.16 * s; m.z += (kz || 0) * 0.16 * s; m.sc = m.sc0 * (1 + 0.3 * s);
+      if (!m.aj) { m.lean = 0; m.y = 0; m.sc = m.sc0; if (m.dod) m.vant = 0; }          // nu faller han
     },
     // Hur många som är kvar på var sida just nu, i de riktiga talen (stapeln högst upp). null utanför ett slag på land.
     slagAntal() {
@@ -677,8 +685,8 @@
     // Slagen 2026-11-28 (Johannes: "fighten vara att man trycker på fienden, spammar på deras arme"): i slag på land och till sjöss finns ingen ring.
     // Man trycker direkt på fienden (eller på de egna där de ska räddas). Svaret är det man träffade, eller null.
     slagTraff(cx, cy) {
-      W._tapMal = null; const a = G.s.aktivt, m = a && a.mom; if (!vis || !m || m.svar || m.typ === 'vanta') return null;
-      const u = vis.u, o = u.order && u.order[m.i]; if (!o) return null; const R0 = Scene.mobil ? 70 : 55, gy = (x, z) => Geo.groundAt(x, z);
+      W._tapMal = null; const a = G.s.aktivt, m = a && a.mom; if (!vis || !a || a.lasa || !vis.u.order) return null;
+      const u = vis.u, o = W._ordNu(); if (!o) return null; const R0 = Scene.mobil ? 70 : 55, gy = (x, z) => Geo.groundAt(x, z);
       let l;
       if (u.slag === 'flotta') l = ((o.mal === 'egen' ? vis.skepp : vis.fiende) || []).filter(q => q.visible !== false).map(q => ({ x: q.position.x, z: q.position.z, y: 0.5, obj: q }));
       else if (vis.noll) {
@@ -690,6 +698,14 @@
       let best = null, bd = 1e9;          // varje tryck räknas: det som står närmast trycket (Johannes 2026-11-28: "det hände inget när jag tryckte")
       for (const q of l) { const p = Scene.screenPoint(q.x, (q.y !== undefined ? q.y : gy(q.x, q.z) + 0.3), q.z); if (p.behind) continue; const d = Math.hypot(p.x - cx, p.y - cy); if (d < bd) { bd = d; best = q; } }
       if (best) W._tapMal = best.obj || best; return 'traff';          // också när alla redan är tagna räknas trycket för ordern
+    },
+    // Den order som gäller just nu, också i pauserna mellan orderna (då den senaste), och före den första (då den första man trycker i)
+    _ordNu() { const a = G.s.aktivt, m = a && a.mom, u = vis && vis.u; if (!u || !u.order) return null; if (m && u.order[m.i]) return u.order[m.i]; return u.order.find(o => !o.vanta) || u.order[0]; },
+    // Ett tryck i slaget (main.js): det man träffar reagerar direkt, också mellan orderna. Svaret som slagTraff.
+    slagKlick(cx, cy) {
+      const tr = W.slagTraff(cx, cy); if (tr !== 'traff') return tr;
+      const nu = performance.now(); if (W._tapMal && nu > (W._klickT || 0) + 70) { W._klickT = nu; W._slagT = nu + 60; W._slagTryck(W._ordNu()); }
+      return tr;
     },
     malSkarm() { if (vis && (vis.noll || vis.u.slag === 'flotta')) return null; const q = W.malPunkt(); if (!q) return null; const p = Scene.screenPoint(q.x, q.y, q.z); return p.behind ? null : { x: p.x, y: p.y, r: Scene.mobil ? 48 : 40 }; },          // r = hur nära man måste trycka
     // En kanonkula som syns flyga i en båge och slår ner (förspelet): så ser man vem som skjuter på vem
@@ -912,11 +928,11 @@
       const ord = String((o && o.ord) || ''), kista = /skatt/i.test(ord) && vis.kista, lediga = vis.enh.filter(e => !e.jakt && !e.vakt && !e.hem && e.vis !== false);
       if (kista) { const k = vis.kista.position, e = lediga.sort((a, b) => Math.hypot(a.x - k.x, a.z - k.z) - Math.hypot(b.x - k.x, b.z - k.z))[0]; if (e) { e.jakt = { kista: 1 }; e.jx = e.x; e.jz = e.z; } V.Ljud && V.Ljud.spela('steg'); return; }
       const kand = vis.fi.filter(q => !q.bunden && !q.mal && (o && o.mal === 'bak' ? q.gard : !q.gard)), m = mal && !mal.bunden && !mal.mal ? mal : kand.sort((a, b) => Math.hypot(a.x - vis.of.x, a.z - vis.of.z) - Math.hypot(b.x - vis.of.x, b.z - vis.of.z))[0]; if (!m) return;          // utan träff (knappen, provet): den närmaste som är kvar
-      m.mal = 1; m.ang = Math.atan2(vis.of.x - m.x, vis.of.z - m.z) + Math.PI; W._blink(m); Fx.damm(m.x, Geo.groundAt(m.x, m.z) + 0.05, m.z, 2);          // den man tryckte på blinkar till
+      m.mal = 1; m.ang = Math.atan2(vis.of.x - m.x, vis.of.z - m.z) + Math.PI; W._blink(m); W._aj(m, false); V.Ljud && V.Ljud.spela('oj');          // han ser dem komma och rycker till Fx.damm(m.x, Geo.groundAt(m.x, m.z) + 0.05, m.z, 2);          // den man tryckte på blinkar till
       lediga.sort((a, b) => Math.hypot(a.x - m.x, a.z - m.z) - Math.hypot(b.x - m.x, b.z - m.z)).slice(0, 2).forEach((e, k) => { e.jakt = { m, k }; e.jx = e.x; e.jz = e.z; });
       V.Ljud && V.Ljud.spela('steg');
     },
-    _blink(m) { if (m._c) return; m._c = [m.col, m.col2]; m.col = '#fff1c8'; m.col2 = '#fff1c8'; setTimeout(() => { if (m._c) { m.col = m._c[0]; m.col2 = m._c[1]; m._c = null; } }, 160); },
+    _blink(m) { if (m._c) return; m._c = [m.col, m.col2]; m.col = '#ffffff'; m.col2 = '#ffe9a8'; setTimeout(() => { if (m._c) { m.col = m._c[0]; m.col2 = m._c[1]; m._c = null; } }, 220); },
     _overfall(dt, t, a, u) {
       const Gu = V.Gustav, f = Math.min(1, a.t / a.dur), K0 = a.k0 || G.KAMP, gf = Math.min(1, f / K0), kamp = f > K0, P = G._plan(u), pt = a.t - a.dur * K0, slut = kamp ? Math.max(0, Math.min(1, (pt - P.slut + 2) / 4)) : 0;
       const DR = 0.4, DK = 0.32, dist = Math.max(0, vis.len - 4.4) * gf, lead = R.along(vis.pts, dist), fx = Math.sin(lead.ang), fz = Math.cos(lead.ang), o = vis.of, gy = (x, z) => Geo.groundAt(x, z);
@@ -931,7 +947,7 @@
         if (e.jakt) { const j = e.jakt; let tx, tz; if (j.kista) { tx = vis.kista.position.x; tz = vis.kista.position.z; } else { const ux = x - j.m.x, uz = z - j.m.z, ud = Math.hypot(ux, uz) || 1; tx = j.m.x + ux / ud * 0.2 + (j.k ? 0.12 : -0.12) * uz / ud; tz = j.m.z + uz / ud * 0.2 - (j.k ? 0.12 : -0.12) * ux / ud; }
           e.gar = true; e.lean = j.kista ? 0 : 0.35; if (flytta(e, tx, tz, j.kista ? 2.0 : 1.5) < 0.05) { e.lean = 0;          // de smyger fram, framåtböjda
             if (j.kista) { vis.kistaN++; const k = vis.kista; Fx.guld(k.position.x, gy(k.position.x, k.position.z) + 0.3, k.position.z, 12, 0.3); V.Ljud && V.Ljud.spela('kop'); k.scale.setScalar(Math.max(0.35, 1.3 - vis.kistaN * 0.08)); e.jakt = null; e.hem = 1; e.bar = 1; }          // han bär skatt tillbaka
-            else { if (!j.m.bunden) { j.m.bunden = 1; V.Ljud && V.Ljud.spela('svard'); Fx.damm(j.m.x, gy(j.m.x, j.m.z) + 0.05, j.m.z, 4); const bk = Math.ceil(vis.enh.length / (vis.bredd || 6)) * 0.4 + 0.9 + (vis.fangar = (vis.fangar || 0) + 1) % 3 * 0.3, sd = ((vis.fangar % 7) - 3) * 0.28; j.m.fange = { x: lead.x - fx * bk + Math.cos(lead.ang) * sd, z: lead.z - fz * bk - Math.sin(lead.ang) * sd }; j.m.px = j.m.x; j.m.pz = j.m.z; }          // tagen: han förs bort bakom dalkarlarna
+            else { if (!j.m.bunden) { j.m.bunden = 1; W._blink(j.m); W._aj(j.m, false); V.Ljud && (V.Ljud.spela('aj'), V.Ljud.spela('svard')); Fx.damm(j.m.x, gy(j.m.x, j.m.z) + 0.05, j.m.z, 4); const bk = Math.ceil(vis.enh.length / (vis.bredd || 6)) * 0.4 + 0.9 + (vis.fangar = (vis.fangar || 0) + 1) % 3 * 0.3, sd = ((vis.fangar % 7) - 3) * 0.28; j.m.fange = { x: lead.x - fx * bk + Math.cos(lead.ang) * sd, z: lead.z - fz * bk - Math.sin(lead.ang) * sd }; j.m.px = j.m.x; j.m.pz = j.m.z; }          // tagen: han förs bort bakom dalkarlarna
               e.jakt = null; e.hem = 1; } }
           x = e.jx; z = e.jz; }
         else if (e.hem) { e.gar = true; if (flytta(e, x, z, 2.0) < 0.06) { e.hem = 0; if (e.bar) { Fx.guld(x, gy(x, z) + 0.35, z, 6, 0.2); e.bar = 0; } } else { x = e.jx; z = e.jz; } }
@@ -940,10 +956,10 @@
       });
       if (vis.fana) { const e0 = vis.enh[0]; vis.fana.position.set(e0.x, gy(e0.x, e0.z) + 0.1, e0.z); }
       vis.fi.forEach((m, i) => {
-        if (m.bunden) { m.strid = false; const f = m.fange; if (f && !m.framme) { const dx = f.x - m.px, dz = f.z - m.pz, d = Math.hypot(dx, dz), st = Math.min(d, 1.2 * dt); if (d < 0.05) m.framme = 1; else { m.px += dx / d * st; m.pz += dz / d * st; m.ang = Math.atan2(dx, dz); } m.x = m.px; m.z = m.pz; m.gar = true; m.lean = 0.15; return; }
-          if (f) { m.x = m.px; m.z = m.pz; } else { m.x = m.bx; m.z = m.bz; } m.gar = false; m.lean = Math.min(0.75, m.lean + dt * 3); return; }          // tagen: han går bort bakom dalkarlarna och sätter sig där
+        if (m.bunden) { m.strid = false; const f = m.fange; if (f && !m.framme) { const dx = f.x - m.px, dz = f.z - m.pz, d = Math.hypot(dx, dz), st = Math.min(d, 1.2 * dt); if (d < 0.05) m.framme = 1; else { m.px += dx / d * st; m.pz += dz / d * st; m.ang = Math.atan2(dx, dz); } m.x = m.px; m.z = m.pz; m.gar = true; m.lean = 0.15; W._ajSteg(m, dt, 0, 0); return; }
+          if (f) { m.x = m.px; m.z = m.pz; } else { m.x = m.bx; m.z = m.bz; } m.gar = false; if (m.aj > 0) W._ajSteg(m, dt, 0, 0); else m.lean = Math.min(0.75, m.lean + dt * 3); return; }          // tagen: han går bort bakom dalkarlarna och sätter sig där
         if (slut > 0) { const ux = m.bx - o.x, uz = m.bz - o.z, ud = Math.hypot(ux, uz) || 1, s = slut * 3; m.x = m.bx + ux / ud * s; m.z = m.bz + uz / ud * s; m.ang = Math.atan2(ux, uz); m.gar = true; return; }          // de som inte togs flyr
-        m.x = m.bx; m.z = m.bz; m.gar = false; m.strid = false; if (!m.mal) m.ang = m.ang0 + Math.sin(t * 0.4 + m.fas) * 0.5;          // vakterna står och ser sig omkring
+        m.x = m.bx; m.z = m.bz; m.gar = false; m.strid = false; if (!m.mal) m.ang = m.ang0 + Math.sin(t * 0.4 + m.fas) * 0.5; else m.ang = Math.atan2(vis.of.x - m.x, vis.of.z - m.z) + Math.PI; W._ajSteg(m, dt, 0, 0);          // vakterna står och ser sig omkring
       });
     },
     _tag0(dt, t, a, u) {
@@ -956,7 +972,7 @@
       let avst = typ === 'samtal' ? 0.3 : 1;
       if (u.strid === 'pilar' && u.order) { const P0 = G._plan(u), ai = u.order.findIndex(o => /anfall/i.test(o.ord || '')), tb0 = a.t - a.dur * K0, s0 = ai >= 0 && P0.mom[ai] ? P0.mom[ai].start : 1e9; vis.overAlv = tb0 >= s0; avst = vis.overAlv ? Math.min(1, (tb0 - s0) / 2.5) * 1.3 : -0.7; }          // Brunnbäck: först pilar över älven, var sin strand. Vid Anfall går dalkarlarna över          // i ett samtal står de kvar en bit ifrån varandra, i ett överfall slåss ingen
       const in0 = Math.min(1, kf / 0.3), A = in0 * avst + (vis.stot > 0 ? 0.12 : 0.35) * (vis.stot || 0), Bf = in0 * 0.85 * avst, ut = kamp ? Geo.smooth(0, 0.22, kf) : 0, P = u.order ? G._plan(u) : null, pt = a.t - a.dur * K0, flykt = forlust ? (P ? (a.kula ? Math.min(1, (vis.kulaT = (vis.kulaT || 0) + dt) / 7) : Math.max(0, Math.min(1, (pt - P.slut) / 5))) : Math.max(0, (kf - 0.45) / 0.55)) : 0, vinst = !forlust ? (P ? Math.max(0, Math.min(1, (pt - P.slut + 3) / 5)) : Math.max(0, (kf - 0.6) / 0.4)) : 0;
-      if (kamp) { vis.kampT = (vis.kampT || 0) + dt; const st = vis.bredd > 14, d = (vinst > 0.3 || flykt > 0.3) ? (st ? 32 : 26) : vis.kampT < 4 ? (st ? 14 : 11) : (st ? 24 : 18);          // nära när leden möts, högt över fältet när det är avgjort
+      if (kamp) { vis.kampT = (vis.kampT || 0) + dt; const st = vis.bredd > 14, d = (vinst > 0.3 || flykt > 0.3) ? (st ? 32 : 26) : vis.kampT < 4 ? (st ? 14 : 11) : (st ? 20 : 14);          // nära när leden möts, högt över fältet när det är avgjort
         W._folj(lead.x + fx * 1.1, lead.z + fz * 1.1 + 0.4, d); if (!vis.iSlag) { vis.iSlag = true; W.foljUppdraget(); } } else W._folj(lead.x, lead.z, 30);
       if (vis.gustav) { const hf = kamp ? A - 0.55 - (a.kula ? 3.2 * Math.max(0, flykt - 0.15) : flykt * 2) : 0; Gu.slass = kamp && !fred && !flykt && !a.kula ? 1 : 0; Gu.stupad = !!a.kula; Gu.place(lead.x + fx * hf, lead.z + fz * hf, lead.ang, gf < 1 ? 0.9 : 0, t, dt, false, !!a.kula); }
       if (u.rader && kamp) { const nr = Math.min(u.rader.length - 1, Math.floor(kf * u.rader.length)); if (vis.radNr !== nr) { vis.radNr = nr; if (!V.tyst) V.UI.text(u.rader[nr], 4.5); } }          // ett slag där du inte är med: raderna säger vad som händer
@@ -980,9 +996,10 @@
       if (W._kampT > 0.09) { W._kampT = 0; const e = vis.enh[Math.floor(Math.random() * Math.min(vis.enh.length, vis.bredd * 2))], m = vis.fi[Math.floor(Math.random() * Math.min(vis.fi.length, vis.bredd * 2))]; if (e && m && e.fall < 0.3 && m.fall < 0.3) { if (Math.random() < 0.3) Fx.pil(e.x, Geo.groundAt(e.x, e.z) + 0.35, e.z, m.x, 0.2, m.z); Fx.damm((e.x + m.x) / 2, Geo.groundAt(e.x, e.z), (e.z + m.z) / 2, 1); } }
       vis.fi.forEach((m, i) => {
         if (m.dod || m.bunden) { if (m.lx === undefined) { m.lx = m.x; m.lz = m.z; } m.x = m.lx; m.z = m.lz; m.gar = false; m.strid = false;          // fälld av ett tryck: han faller och blir liggande. Tagen i ett överfall: han sitter kvar där han togs
-          if (m.dod) { if (!m.vant) m.fall = Math.min(1, m.fall + dt * 3.5); } else m.lean = Math.min(0.75, m.lean + dt * 3); return; }
+          if (m.dod) { W._ajSteg(m, dt, fx, fz); if (!m.vant) m.fall = Math.min(1, m.fall + dt * 3.5); } else m.lean = Math.min(0.75, m.lean + dt * 3); return; }
         const j = Math.sin(t * 11 + m.fas) * (m.br < 2 ? 0.05 : 0.015), fram = Bf + j + flykt * 1.6 - vinst * (2.2 + (i % 5) * 0.5);          // vinner de trycker de på när dina flyr, förlorar de drar de sig undan
         m.x = m.bx - fx * fram; m.z = m.bz - fz * fram; m.gar = m.fall < 0.3; m.strid = !fred && m.br < 3 && m.fall < 0.3 && !vinst; m.ang = vinst > 0.05 && m.fall < 0.3 ? lead.ang : lead.ang + Math.PI;
+        W._ajSteg(m, dt, fx, fz);
         if (m.gett) m.lean += ((vinst > 0.05 ? 0 : 0.3) - m.lean) * Math.min(1, dt * 3);          // i ett samtal: de som har gett sig sänker vapnen, och går när det är avgjort
         if (!forlust && !fred && (u.order ? i % 8 === 0 && vinst > 0.2 : i % 3 === 0 && kf > 0.3 + (i % 9) * 0.05)) m.fall = Math.min(1, m.fall + dt * 3);          // med order fäller trycken dem, bara några faller av sig själva
       });

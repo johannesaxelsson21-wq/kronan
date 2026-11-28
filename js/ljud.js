@@ -30,6 +30,16 @@
       const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + dur * 0.25); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); s.connect(f); f.connect(g); g.connect(master); s.start(t0, Math.random()); s.stop(t0 + dur + 0.05);
     },
     klockton(f, t0, vol, dur) { if (!ac) return; if (t0 === undefined) t0 = ac.currentTime; [[1, 1], [2.0, 0.6], [2.4, 0.45], [3.0, 0.3], [4.2, 0.2], [5.4, 0.12]].forEach(p => L.ton(f * p[0], t0, (dur || 3.2) / Math.sqrt(p[0]), 'sine', vol * p[1])); },
+    // En liten röst (slagen 2026-11-28): en surrande ton genom tre formantfilter, så att det låter som en vokal som glider ("a" till "j", eller "o"). p = tonhöjd.
+    roest(p, sort) {
+      if (!ac || !pa || ac.state !== 'running') return; const t = ac.currentTime, oh = sort === 'oh', oj = sort === 'oj', f0 = p * (oh ? 170 : 260), d = oh ? 0.6 : oj ? 0.16 : 0.24;
+      const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f0 * (oh ? 1.15 : 1.3), t); o.frequency.exponentialRampToValueAtTime(f0 * (oh ? 0.6 : 0.85), t + d);
+      const v = ac.createOscillator(), vg = ac.createGain(); v.frequency.value = oh ? 6 : 11; vg.gain.value = f0 * 0.05; v.connect(vg); vg.connect(o.frequency);
+      const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(oh ? 0.2 : 0.17, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      const F = oh ? [[520, 480], [880, 780], [2500, 2400]] : oj ? [[480, 320], [900, 2000], [2500, 2700]] : [[780, 330], [1250, 2150], [2600, 2900]];
+      F.forEach((f, k) => { const b = ac.createBiquadFilter(); b.type = 'bandpass'; b.Q.value = 7 + k * 2; b.frequency.setValueAtTime(f[0], t); b.frequency.linearRampToValueAtTime(f[1], t + d * 0.8); const bg = ac.createGain(); bg.gain.value = [1, 0.55, 0.2][k] * 3; o.connect(b); b.connect(bg); bg.connect(g); });
+      g.connect(master); o.start(t); v.start(t); o.stop(t + d + 0.05); v.stop(t + d + 0.05);
+    },
     spela(namn) {
       if (!ac || !pa || ac.state !== 'running') return; const t = ac.currentTime;
       if (namn === 'skida') L.sus(t, 0.22, 1800 + Math.random() * 600, 700, 0.09, 0.8);
@@ -46,6 +56,9 @@
       else if (namn === 'trumma') { L.ton(82, t, 0.25, 'sine', 0.3, 48); L.sus(t, 0.12, 900, 300, 0.05, 0.7); }
       else if (namn === 'sorl') L.sus(t, 1.6, 420, 520, 0.1, 0.5);
       else if (namn === 'pil') { L.sus(t, 0.28, 2600, 900, 0.07, 2); L.sus(t + 0.07, 0.25, 2200, 800, 0.05, 2); }
+      else if (namn === 'aj') L.roest(0.85 + Math.random() * 0.45, 'aj');          // en träffad gubbe: ett kort, lite komiskt aj
+      else if (namn === 'ajDo') L.roest(0.7 + Math.random() * 0.25, 'oh');          // den sista träffen: ett längre ooh
+      else if (namn === 'oj') L.roest(1.15 + Math.random() * 0.3, 'oj');          // en vakt som rycker till
       else if (namn === 'fall') { L.ton(110, t, 0.22, 'sine', 0.22, 55); L.sus(t, 0.18, 700, 250, 0.07, 0.8); }          // en fiende faller i slaget: en mjuk duns
       else if (namn === 'svard') { L.ton(1900, t, 0.12, 'triangle', 0.05, 1400); L.sus(t, 0.1, 3200, 1500, 0.06, 1.5); L.ton(95, t, 0.12, 'sine', 0.2, 60); }
       else if (namn === 'vag') L.sus(t, 0.55, 300, 760, 0.08, 0.6);
