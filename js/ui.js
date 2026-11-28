@@ -147,7 +147,7 @@
       satt('res-skuld', e => { e.style.display = S.skuld > 0 ? '' : 'none'; }); satt('skuld-v', e => { e.textContent = tal(S.skuld); });
       if (varvRad) { const tidT = n => !isFinite(n) ? '' : n < 60 ? Math.ceil(n) + ' s' : n < 3600 ? Math.ceil(n / 60) + ' min' : (n / 3600).toFixed(1).replace('.', ',') + ' tim'; const vm = G.varvMan(), st = S.stapel; uppd(varvRad, { namn: 'Varvet', niva: vm ? tal(vm) + ' män' : undefined, v: G.flottanFull() ? 'flottan är full' : vm ? 'skepp om ' + tidT(G.skeppKvar()) : '+' + Math.round(G.TULL * 100 * (1 + 0.1 * G.eg('flotta'))) + ' % mark per skepp', k: G.flottanFull() || G.varvFullt() ? '' : IK.man + tal(G.varvLag()), ok: G.kanSkepp(), bar: st && vm ? Math.min(100, st.t * 100) : 0 }); }
       UI._kassaPlats();
-      { const dt = $('datum'); if (dt) dt.classList.toggle('kan', G.egLista().some(e => G.kanEg(e.id)) || D.KONSTER.some(k => G.kanKonst(k.id))); }          // kungens sida har något att köpa
+      { const kan = G.egLista().some(e => G.kanEg(e.id)) || D.KONSTER.some(k => G.kanKonst(k.id)), dt = $('datum'), fk = $('flik-kung'); if (dt) dt.classList.toggle('kan', kan); if (fk) fk.classList.toggle('kan', kan); }          // kungens sida har något att köpa
       { const k = $('kassa'); if (k) {          // kassan: byggs en gång, sedan skrivs bara siffrorna (så att den kan lysa till när en leverans kommer)
         const sk = G.harVarv() || G.skepp() > 0, nyck = sk ? 3 : 2;
         if (!k._klick) { k._klick = 1; k.addEventListener('click', e => { const ks = e.target.closest('.ks'); if (!ks) return; const f = 'man'; if (!flikar[f]) return;          // skeppen: varvet ligger under Män
@@ -279,6 +279,7 @@
         if (S.varld === 0 && sid === 'stockholm' && S.las.sold) soldKort(s);          // i Gustavs värld ligger soldaterna under männen
         if (false) D.KONSTER.filter(k => { const h = k.bygg0 && D.BYGGNADER.find(q => q.id === k.bygg0); return h && (h.stad || h.plats) === sid && G.harKonst(k.id); }).forEach(k => konstKort(s, k));          // förmågor från förspelets byggnader
       } }
+      { const ki = D.KUNGINFO && D.KUNGINFO[S.varld]; if (ki) { const kb = el('button', 'flik flik-kung', IK.krona + '<b class="fl-n">' + ki.namn + '</b><u class="prick"></u>'); kb.id = 'flik-kung'; kb.title = ki.namn + ': egenskaper och förmågor'; box.firstChild.appendChild(kb); kb.addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); UI.kung(); }); } }          // regentens flik öppnar hans sida (Johannes 2026-11-28 11:44)
       // Ingen egen flik för förmågor: de ligger under männen och marken, hos det de hör till (förspelet 2026-11-26, Gustavs värld 2026-11-27)
       if (!flikar[flik]) flik = flikar[S.flik] ? S.flik : Object.keys(flikar)[0];
       // två rader kort om det får plats på bredden, annars tre
