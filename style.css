@@ -668,3 +668,6 @@ button { font-family: inherit; cursor: pointer; }
 .sl-rad.full .sl-kop { font-style: italic; }
 .sl-rad.stopp .sl-ger { color: #ff9c8c; }
 .sl-kop.skaka { animation: skaka 0.3s; }
+
+/* rutan uppe till vänster lyser lite när något på kungens sida går att köpa */
+#datum.kan::after { content: ''; position: absolute; right: 7px; top: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--guld2); box-shadow: 0 0 8px rgba(242, 207, 90, 0.9); animation: pulse 1.6s ease-in-out infinite; }

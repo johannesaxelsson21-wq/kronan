@@ -36,11 +36,11 @@
       { id: 'garnison', nar: () => G.husFinns0('garnison'), text: 'Vid Åbo slott ligger en garnison. Under Åbos flik kan den växa, så ger Åbo fler män.' },
       { id: 'h:tal', nar: () => G.harHandling0('tal'), text: 'Sten Sture kan tala till folket. Knappen Tala ger män, och sedan behöver han vila en stund.' },
       { id: 'radstuga', nar: () => G.byggnader0().some(b => b.id === 'radstuga'), text: 'I Stockholm kan du bygga rådstugan. Där skrivs och beseglas breven.' },
-      { id: 'k:tal', nar: () => G.harKonst0('tal'), text: 'Sedan bönderna valde Sten Sture lyssnar fler när han kommer. Förmågan Ordets makt ligger under Män.' },
+      { id: 'k:tal', nar: () => G.harKonst0('tal'), text: 'Sedan bönderna valde Sten Sture lyssnar fler när han kommer. Förmågan Ordets makt finns på hans sida: tryck på honom.' },
       { id: 'gardar', nar: () => G.husFinns0('gardar'), text: 'Kring Nyköping kan det bli fler gårdar. Då ger bönderna där fler män.' },
       { id: 'marknad', nar: () => S.t > 60, text: 'Ibland är det marknadsdag i en stad. Då står en gyllene knapp över staden: tryck på den.' },
       { id: 'ladugard', nar: () => G.byggnader0().some(b => b.id === 'ladugard'), text: 'Kronans gård vid Vädla kan byggas ut. Då rymmer armén fler.' },
-      { id: 'k:bud', nar: () => G.harKonst0('bud'), text: 'Efter segern vid Vädla kan Sten Sture skicka fler bud. Förmågan Fler bud ligger under Mark.' },
+      { id: 'k:bud', nar: () => G.harKonst0('bud'), text: 'Efter segern vid Vädla kan Sten Sture skicka fler bud. Förmågan Fler bud finns på hans sida: tryck på honom.' },
       { id: 'disting', nar: () => G.husFinns0('disting'), text: 'Uppsala har en stor marknad i februari, Distingen. Under Uppsalas flik kan den byggas ut.' },
       { id: 'torn', nar: () => G.byggnader0().some(b => b.id === 'torn'), text: 'Stockholms mur kan få nya torn. De ger fler män och skjuter när staden belägras.' },
     ],
@@ -160,7 +160,14 @@
     // ---- kungens förmågor ---------------------------------------------------------------------
     konstPris(id) { const k = KONST[id], p = k.c0 * Math.pow(k.r, S.konst[id]); return p < 1000 ? Math.ceil(p) : p; },
     // I förspelet kommer varje förmåga från en byggnad eller ett steg (KONSTER bygg0 och steg0). I Gustavs värld låses alla upp på en gång.
-    harKonst(id) { return G.harKonst0(id) && (S.varld !== 0 || !KONST[id].steg0 || G.inford('k:' + id)); },
+    harKonst(id) { return G.harKonst0(id) && (S.varld !== 0 ? !!(S.konstNy && S.konstNy[id]) || S.konst[id] > 0 : (!KONST[id].steg0 || G.inford('k:' + id))); },
+    // Förmågorna kommer en i taget även efter förspelet (Johannes 2026-11-28: "de ska introduceras en och en i spelet så man inte blir overwhelmed"): minst 90 sekunder mellan dem.
+    _konstInfor() {
+      if (S.varld === 0 || S.slut || G.skede() || !S.las.konster) return; const ny = S.konstNy || (S.konstNy = {});
+      if (S.t - (S.konstNyT === undefined ? -60 : S.konstNyT) < 90) return; const k = D.KONSTER.find(q => G.harKonst0(q.id) && !ny[q.id] && !(S.konst[q.id] > 0)); if (!k) return;
+      ny[k.id] = 1; S.konstNyT = S.t; const vem = (D.KUNGINFO && D.KUNGINFO[S.varld] || {}).namn || 'kungen';
+      G.ut('infor', { id: 'k:' + k.id, text: 'Ny förmåga på ' + vem + 's sida: ' + k.namn + '. ' + k.vad + ' Tryck på ' + vem + '.' });
+    },
     harKonst0(id) {
       if (id === 'langd' && !G.harSkatt()) return false;          // skattelistor först när det finns skatt att driva in
       if (S.varld !== 0) return !!S.las.konster; const k = KONST[id];
@@ -382,6 +389,7 @@
         if ((S.las.fogdar ? S.fullT > 0 : S.fullT > 4) && !G.kanSkicka() && G.kanSkatt()) G.skatt(0, true);
       }
       G._varv(dt);          // skeppet på stapeln
+      G._konstInfor();          // en förmåga i taget
       G._infor();          // förspelet: en ny sak i taget
       // marknadsdag: då och då är det marknad i en bygd eller stad. Den som trycker där får en klump på en gång.
       if (S.marknad) { S.marknad.t -= dt; if (S.marknad.t <= 0) { S.marknad = null; G.ut('marknadSlut', {}); } }
