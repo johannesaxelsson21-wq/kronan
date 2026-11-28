@@ -60,7 +60,14 @@
       const lg = S.varld === 0 && S.bygg && S.bygg.ladugard ? 1.25 : 1, tk = S.titel === 'Kung' && (D.VARLDAR[S.varld] || {}).takKung || 0, t = Math.max(30, tk, Math.ceil(n * 1.25 * lg / 10) * 10); if (!(S.tak >= t)) S.tak = t; return S.tak;          // kungsladugården föder fler; takKung: som kung har man rikets stående armé (Eriks värld, Johannes 2026-11-28)
     },
     // En bygd kan inte bli större än hären tillåter: kostar nästa nivå fler män än hären rymmer får den vänta tills hären har vuxit.
-    maxad(id) { return G.prisRes(id) === 'man' && !!S.bas[id] && G.pris(id) > G.tak(); },
+    maxad(id) { return G.prisRes(id) === 'man' && !!S.bas[id] && (G.pris(id) > G.tak() || G.manFull()); },
+    // Från Eriks värld (Johannes 2026-11-28: "jag genererar så mycket män så jag kan spamma den och inte förlora en enda"): armén fylls som fortast på MAN_FYLL sekunder.
+    // Det som ger män kan inte ge mer än så, och kan inte byggas ut förbi det. Då kostar det något att skicka iväg män. Förspelet och Gustavs värld är som förut.
+    MAN_FYLL: 40,
+    manRa() { let s = G.soldProd(); for (const id in S.bas) if (BAS[id].ger === 'man') s += G.prod(id); return s; },
+    manTak() { return S.varld >= 2 ? G.tak() / G.MAN_FYLL : Infinity; },
+    manF() { const ra = G.manRa(), t = G.manTak(); return ra > t ? t / ra : 1; },
+    manFull() { return S.varld >= 2 && G.manRa() >= G.manTak(); },
     // ---- baser ------------------------------------------------------------------------------
     niva(id) { return S.bas[id] || 0; },
     stoppad(id) { for (const u in S.uppror) if (S.uppror[u] && D.UPPROR[u].baser.indexOf(id) >= 0) return u; return null; },
@@ -77,7 +84,7 @@
       return p;
     },
     fullX() { return 2 + Math.floor(S.konst.skidor / 10); },                       // så mycket ger full fart
-    takt(res) { let s = res === 'man' ? G.soldProd() : 0; for (const id in S.bas) if (BAS[id].ger === res) s += G.prod(id); return s * (S.full ? G.fullX() : 1); },
+    takt(res) { let s = res === 'man' ? G.soldProd() : 0; for (const id in S.bas) if (BAS[id].ger === res) s += G.prod(id); if (res === 'man') s *= G.manF(); return s * (S.full ? G.fullX() : 1); },
     // ---- sold: knektar som får betalt. Köps för mark och ger män, och var tionde nivå dubblar som allt annat. ----
     // Mynten i Hedemora 1521 slogs för att betala hären, och 1522 kom de första tyska legoknektarna.
     // I förspelet (SOLD0) är det knektar i Sten Stures tjänst, med förspelets små siffror. De låses upp av huset för knektar (D.BYGGNADER).
@@ -99,7 +106,7 @@
     kanHus(id) { const h = D.BYGGNADER.find(q => q.id === id); return G.husFinns(id) && S.res[G.husRes(h)] >= G.husPris(id); },
     kopHus(id) { if (!G.kanHus(id)) return false; const h = D.BYGGNADER.find(q => q.id === id), res = G.husRes(h); S.res[res] -= G.husPris(id); (S.hus || (S.hus = {}))[id] = G.hus(id) + 1; G.ut('hus', { id, h, niva: S.hus[id] }); return true; },
     husX(plats) { if (!S.hus) return 1; let x = 1; for (const h of D.BYGGNADER) if (h.niva && G.iVarld(h) && h.plats === plats && S.hus[h.id]) x *= 1 + h.ger * S.hus[h.id]; return x; },
-    kanSold() { return !!S.las.sold && S.res.mark >= G.soldPris(); },
+    kanSold() { return !!S.las.sold && !G.manFull() && S.res.mark >= G.soldPris(); },
     kopSold() { if (!G.kanSold()) return false; S.res.mark -= G.soldPris(); S.sold = (S.sold || 0) + 1; G.ut('sold', { niva: S.sold, dubbel: S.sold % 10 === 0 }); return true; },
     pris(id, L) { const b = P(id), p = b.c0 * Math.pow(b.r, L === undefined ? (S.bas[id] || 0) : L); return p < 1000 ? Math.ceil(p) : p; },
     // Vad en utbyggnad betalas med: män bygger män, allt annat kostar mark. (Johannes prövade tanken att allt skulle kosta mark
@@ -126,15 +133,16 @@
     // ---- varvet (Eriks värld, Johannes 2026-11-28: "ett tidsenligt korrekt arbete att sätta män i"): män bygger skepp på Björkenäs skeppsgård norr om Kalmar,
     // där Mars kölsträcktes 1561. Lag av män arbetar där och bygger skepp efter skepp, fler män går fortare (Johannes 01:48). Färdiga skepp tar tull av fartygen på Östersjön (Klas Horns flotta 1565–1566):
     // varje skepp ger en tjugofemtedel mer mark. Männen lämnar armén, så armén har plats igen. Grunden och förenklingen står i docs/historia.md.
-    VARV_ARB: 45000, TULL: 0.02, SKEPP_MAX: 25,          // VARV_ARB: mansekunder för första skeppet (hela armén på 750 bygger det på en minut, ett lag på 75 på tio), varje skepp en femtedel mer
+    VARV_ARB: 150000, VARV_LAG: 50, VARV_MAX: 500, TULL: 0.02, SKEPP_MAX: 25,          // 500 män bygger första skeppet på fem minuter, ett lag på 50 min          // VARV_ARB: mansekunder för första skeppet (hela armén på 750 bygger det på en minut, ett lag på 75 på tio), varje skepp en femtedel mer
     harVarv() { return S.varld === 2 && !!S.bas.kalmar && !S.slut; },
     skepp() { return S.skepp || 0; },
     varvMan() { return S.varvMan || 0; },          // män som arbetar på skeppsgården. De stannar där och bygger skepp efter skepp.
-    varvLag() { return Math.max(20, Math.ceil(G.tak() * 0.1 / 5) * 5); },          // ett lag: en tiondel av vad armén rymmer
-    skeppArbete() { return G.VARV_ARB * Math.pow(1.25, G.skepp()); },
+    varvLag() { return G.VARV_LAG; },
+    varvFullt() { return G.varvMan() >= G.VARV_MAX; },          // skeppsgården har plats för några hundra arbetare, inte fler
+    skeppArbete() { return G.VARV_ARB * Math.pow(1.15, G.skepp()); },
     flottanFull() { return G.skepp() >= G.SKEPP_MAX; },          // flottan blir inte större än så (tullen högst +50 %)
     skeppKvar() { const s = S.stapel; return s && G.varvMan() && !G.flottanFull() ? (1 - s.t) * G.skeppArbete() / G.varvMan() : Infinity; },          // sekunder kvar på skeppet som byggs
-    kanSkepp() { return G.harVarv() && !G.flottanFull() && S.res.man >= G.varvLag(); },
+    kanSkepp() { return G.harVarv() && !G.flottanFull() && !G.varvFullt() && S.res.man >= G.varvLag(); },
     kopSkepp() { if (!G.kanSkepp()) return false; const m = G.varvLag(); S.res.man -= m; S.varvMan = G.varvMan() + m; if (!S.stapel) S.stapel = { t: 0 }; G.ut('stapel', { man: m, alla: S.varvMan }); return true; },          // ett lag till på varvet
     tullX() { return S.varld === 2 ? 1 + G.TULL * G.skepp() * (1 + 0.1 * G.eg('flotta')) : 1; },          // flottans egenskap gör varje skepp värt mer
     _varv(dt) { const s = S.stapel; if (s && s.man && !S.varvMan) { S.varvMan = s.man; s.t = Math.min(0.99, s.t / 30); delete s.man; } if (!G.varvMan() || G.flottanFull()) return; const q = S.stapel || (S.stapel = { t: 0 }); q.t += dt * G.varvMan() / G.skeppArbete(); while (q.t >= 1 && !G.flottanFull()) { q.t -= 1; S.skepp = G.skepp() + 1; G.ut('skepp', { n: S.skepp }); } },          // äldre sparfiler: ett skepp på stapeln blir ett lag på varvet
@@ -354,8 +362,8 @@
       if (S.handl) for (const id in S.handl) { const o = S.handl[id]; if (o.t > 0) o.t = Math.max(0, o.t - dt); if (o.v > 0) o.v = Math.max(0, o.v - dt); }
       if (S.full && S.fart < 0.8) { S.full = false; G.ut('slutFull', {}); }
       const fx = S.full ? G.fullX() : 1;
-      for (const id in S.bas) { const p = G.prod(id) * fx * dt; if (p) { const r = BAS[id].ger; S.res[r] += p; S.tot[r] += p; } }
-      if (S.sold) { const p = G.soldProd() * fx * dt; S.res.man += p; S.tot.man += p; }
+      const mf = G.manF(); for (const id in S.bas) { const r = BAS[id].ger, p = G.prod(id) * fx * dt * (r === 'man' ? mf : 1); if (p) { S.res[r] += p; S.tot[r] += p; } }
+      if (S.sold) { const p = G.soldProd() * fx * dt * mf; S.res.man += p; S.tot.man += p; }
       const tak = G.tak(); if (S.res.man > tak) S.res.man = tak;
       if (S.aktivt && S.aktivt.val && S.varld === 0) { S.aktivt.valT = (S.aktivt.valT || 0) + dt; if (S.aktivt.valT > 30) G.valj(); }      // i förspelet väntar historien inte
       if (S.aktivt && !S.aktivt.val) {
@@ -393,8 +401,8 @@
     borta(sek) {
       sek = Math.min(8 * 3600, sek); if (sek < 20) return null; S.handl = {};
       const f = { man: 0, mark: 0 }, var_full = S.full; S.full = false; S.fart = 0;
-      for (const id in S.bas) { const r = BAS[id].ger, p = G.prod(id) * sek; S.res[r] += p; S.tot[r] += p; f[r] += p; }
-      if (S.sold) { const p = G.soldProd() * sek; S.res.man += p; S.tot.man += p; f.man += p; }
+      const mf = G.manF(); for (const id in S.bas) { const r = BAS[id].ger, p = G.prod(id) * sek * (r === 'man' ? mf : 1); S.res[r] += p; S.tot[r] += p; f[r] += p; }
+      if (S.sold) { const p = G.soldProd() * sek * mf; S.res.man += p; S.tot.man += p; f.man += p; }
       if (S.aktivt && !S.aktivt.val) S.aktivt.t += sek;
       G._varv(sek);
       S.res.man = Math.min(S.res.man, G.tak());
