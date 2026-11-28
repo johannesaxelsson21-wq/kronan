@@ -666,3 +666,5 @@ button { font-family: inherit; cursor: pointer; }
 
 /* regentens flik där nere: en krona och namnet, guldprick när något på hans sida går att köpa */
 .flik.flik-kung { align-items: center; color: var(--guld2); } .flik.flik-kung > svg { opacity: 1; width: 18px; height: 18px; } .flik.flik-kung:hover { color: #fff3c0; }
+
+.ruta-in.kung-in .kung-tips { margin: 12px 0 0; font-size: 13.5px; color: #cdbf9f; font-style: italic; text-align: center; }

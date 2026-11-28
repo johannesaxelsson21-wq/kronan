@@ -33,7 +33,7 @@
     gruva: '<svg viewBox="0 0 24 24"><path d="M4 7c5-4 11-4 16 0-5-1.6-11-1.6-16 0z" fill="currentColor"/><path d="M12 5.5V21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>',
     slott: '<svg viewBox="0 0 24 24"><path d="M3 20V6h3v2.5h2.5V6h3v2.5H14V6h3v2.5h1V6h3v14z" fill="currentColor"/></svg>'
   };
-  let root, rows = {}, krows = {}, skattRad = null, varvRad = null, soldRad = null, byggRader = [], fogdeKnappar = [], kortNu = null, hrows = {}, sistaHandl = '?', flikar = {}, flik = '', pilar = {}, ortEl = {}, rows2 = {}, husRader = [], sistaBaser = '', caption = null, capT = 0, tips = { nu: null }, valdBas = null;
+  let root, rows = {}, krows = {}, erows = {}, skattRad = null, varvRad = null, soldRad = null, byggRader = [], fogdeKnappar = [], kortNu = null, hrows = {}, sistaHandl = '?', flikar = {}, flik = '', pilar = {}, ortEl = {}, rows2 = {}, husRader = [], sistaBaser = '', caption = null, capT = 0, tips = { nu: null }, valdBas = null;
   const sek = n => (Math.round(n * 100) / 100).toString().replace('.', ',');
   V.pek = /[?&]mobil=1/.test(location.search) || !!(window.matchMedia && matchMedia('(hover: none)').matches);          // pekskärm: inget mellanslag, ingen muspekare som svävar
   // Testläge (Johannes 2026-11-27): i Regentlängden (kronan uppe till höger) kan man börja vilken byggd värld som helst direkt.
@@ -63,7 +63,7 @@
   // Förmågorna efter förspelet, i siffror på den plats som ger mest (Johannes 2026-11-28: "vet vad man får för varje grej")
   function konstLev(id) {
     const S = G.s, L = S.konst[id], res = id === 'tal' ? 'man' : 'mark'; let b = null; for (const q in S.bas) if (G.BAS[q].ger === (id === 'tal' ? 'man' : 'mark') && (!b || G.prod(q) > G.prod(b))) b = q;
-    if (!b) for (const q in S.bas) if (!b || G.prod(q) > G.prod(b)) b = q; const namn = b ? (G.BAS[b].kort || G.BAS[b].namn) : '';
+    if (!b && id !== 'skidor' && id !== 'bud') return { kort: '+3 % per leverans', nu: 'Ingen plats ger ' + (res === 'man' ? 'män' : 'mark') + ' än.', nasta: '+3 % per leverans.' }; if (!b) for (const q in S.bas) if (!b || G.prod(q) > G.prod(b)) b = q; const namn = b ? (G.BAS[b].kort || G.BAS[b].namn) : '';
     if (id === 'skidor') { const v = l => b ? G.varvTid(b) / G.konstVarv() * Math.max(0.7, 1 - 0.015 * l) : 10; return { kort: 'varv ' + sek(v(L)) + ' → ' + sek(v(L + 1)) + ' s', nu: namn + ' levererar var ' + sek(v(L)) + ' sekund.', nasta: 'var ' + sek(v(L + 1)) + ' sekund.' }; }
     if (id === 'bud') { const k = l => Math.round(Math.min(0.4, (b ? G.kritChans(b) - G.konstKrit() : 0.08) + 0.005 * l) * 100); return { kort: 'dubbelt ' + k(L) + ' → ' + k(L + 1) + ' %', nu: k(L) + ' % av leveranserna blir dubbla.', nasta: k(L + 1) + ' %.' }; }
     const per = l => b ? G.prod(b) / G.konstLev(res) * (1 + 0.03 * l) * G.varvTid(b) : 0, enh = res === 'man' ? ' män' : ' mark';
@@ -97,7 +97,7 @@
       $('ak').addEventListener('pointerdown', e => { e.preventDefault(); UI.onTryck && UI.onTryck(); });
       $('uppdrag').addEventListener('click', e => { if (e.target.closest && e.target.closest('#upp-knapp')) return; const u = G.uppdrag(); if (u && u.mer) UI.merInfo(u); });          // ett tryck på steget: läs mer om varför
       $('upp-knapp').addEventListener('click', () => { const a = G.s.aktivt; if (a && a.val) { G.valj(); V.Ljud && V.Ljud.spela('klocka'); } else UI.onSkicka && UI.onSkicka(); });
-      $('datum').addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); UI.kung(); });
+      $('datum').addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); if (flikar.kung) { flik = 'kung'; G.s.flik = 'kung'; UI.tick(); } else UI.kung(); });
       $('hitta').addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); UI.onHitta && UI.onHitta(); });
       $('m-bok').addEventListener('click', UI.kronika); $('m-krona').addEventListener('click', UI.regenter); $('m-kugg').addEventListener('click', UI.installningar); $('m-fraga').addEventListener('click', () => UI.forklara(G.s.varld, true));
       $('m-ljud').addEventListener('click', () => { G.s.ljud = !G.s.ljud; V.Ljud && V.Ljud.pa(G.s.ljud); V.Musik && V.Musik.satt(G.s.ljud && G.s.musik !== false); UI.tick(true); });
@@ -147,7 +147,7 @@
       satt('res-skuld', e => { e.style.display = S.skuld > 0 ? '' : 'none'; }); satt('skuld-v', e => { e.textContent = tal(S.skuld); });
       if (varvRad) { const tidT = n => !isFinite(n) ? '' : n < 60 ? Math.ceil(n) + ' s' : n < 3600 ? Math.ceil(n / 60) + ' min' : (n / 3600).toFixed(1).replace('.', ',') + ' tim'; const vm = G.varvMan(), st = S.stapel; uppd(varvRad, { namn: 'Varvet', niva: vm ? tal(vm) + ' män' : undefined, v: G.flottanFull() ? 'flottan är full' : vm ? 'skepp om ' + tidT(G.skeppKvar()) : '+' + Math.round(G.TULL * 100 * (1 + 0.1 * G.eg('flotta'))) + ' % mark per skepp', k: G.flottanFull() || G.varvFullt() ? '' : IK.man + tal(G.varvLag()), ok: G.kanSkepp(), bar: st && vm ? Math.min(100, st.t * 100) : 0 }); }
       UI._kassaPlats();
-      { const kan = G.egLista().some(e => G.kanEg(e.id)) || D.KONSTER.some(k => G.kanKonst(k.id)), dt = $('datum'), fk = $('flik-kung'); if (dt) dt.classList.toggle('kan', kan); if (fk) fk.classList.toggle('kan', kan); }          // kungens sida har något att köpa
+      { const kan = G.egLista().some(e => G.kanEg(e.id)) || D.KONSTER.some(k => G.kanKonst(k.id)), dt = $('datum'); if (dt) dt.classList.toggle('kan', kan); }          // kungens sida har något att köpa
       { const k = $('kassa'); if (k) {          // kassan: byggs en gång, sedan skrivs bara siffrorna (så att den kan lysa till när en leverans kommer)
         const sk = G.harVarv() || G.skepp() > 0, nyck = sk ? 3 : 2;
         if (!k._klick) { k._klick = 1; k.addEventListener('click', e => { const ks = e.target.closest('.ks'); if (!ks) return; const f = 'man'; if (!flikar[f]) return;          // skeppen: varvet ligger under Män
@@ -180,6 +180,7 @@
       byggRader.forEach(r => uppd(r, { namn: 'Bygg: ' + r.b.namn, v: r.b.ger, k: IK.mark + tal(r.b.kostar), ok: G.kanBygga(r.b.id), snart: true }));
       husRader.forEach(r => { const h = r.h, L = G.hus(h.id), res = G.husRes(h); uppd(r, { namn: h.namn, niva: L || undefined, v: '+' + Math.round(h.ger * 100) + ' % ' + (res === 'man' ? 'män' : 'mark'), k: IK[res] + tal(G.husPris(h.id)), ok: G.kanHus(h.id), snart: !L }); });
       if (soldRad) { const L = S.sold || 0, dub = (L + 1) % 10 === 0; uppd(soldRad, { namn: S.varld === 0 ? 'Knektar i tjänst' : 'Värva soldater', niva: L, v: G.manFull() ? 'armén fylls redan på ' + G.MAN_FYLL + ' s' : '<b class="k-ps">' + tal(G.soldProd() * fx) + ' män/s</b> <small class="k-mer">' + (dub ? dubKort() : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx)) + '</small>', k: IK.mark + tal(G.soldPris()), ok: G.kanSold(), snart: dub, bar: G.levFas('sold') * 100, mot: (L % 10) / 10 }); }
+      for (const id in erows) { const r = erows[id], e = r.e, L = G.eg(id), max = L >= G.EG_MAX, vad = { man: 'Män', flotta: 'Tull per skepp', skatt: 'Skatt', mark: 'Mark', gruva: 'Gruvorna' }[e.ger] || e.namn; uppd(r, { namn: e.namn, niva: L + '/' + G.EG_MAX, v: max ? 'full' : '<b class="k-ps">' + vad + ' +' + Math.round(e.steg * 100) + ' %</b>' + (L ? ' <small class="k-mer">nu +' + Math.round(e.steg * L * 100) + ' %</small>' : ''), k: max ? '' : IK.mark + tal(G.egPris(id)), ok: G.kanEg(id), bar: L / G.EG_MAX * 100 }); }
       for (const id in krows) { const L = S.konst[id], max = L >= G.KONST_MAX, dub = (L + 1) % 10 === 0; uppd(krows[id], { namn: UI.konst(id)[0], niva: L, v: max ? 'kan inte bli bättre' : konstInfo(id).kort, k: max ? '' : IK.mark + tal(G.konstPris(id)), ok: G.kanKonst(id), snart: dub && !max, bar: 0, mot: (L % 10) / 10 }); }
       // en fogde i taget: kortet sätter en fogde på den plats där det är billigast
       for (const f of fogdeKnappar) { const utan = f.ids().filter(id => !S.fogde[id]); let b = null; for (const id of utan) if (!b || G.fogdePris(id) < G.fogdePris(b)) b = id; f.mal = b; f.r.row.style.display = b ? '' : 'none'; if (b) uppd(f.r, { namn: 'Sätt en fogde', v: 'bygger ut ' + G.BAS[b].namn + ' åt dig', k: IK.mark + tal(G.fogdePris(b)), ok: S.res.mark >= G.fogdePris(b) }); }
@@ -215,7 +216,7 @@
     },
     // Tre flikar: män, mark och egna förmågor. Tillgången står i själva fliken. Under dem ligger den valda flikens kort.
     _byggBaser(ids) {
-      const S = G.s, box = $('baser'); box.innerHTML = '<div id="flikar"></div>'; UI._arows = {}; rows = {}; rows2 = {}; husRader = []; krows = {}; skattRad = null; varvRad = null; soldRad = null; byggRader = []; fogdeKnappar = []; kortNu = null; flikar = {};
+      const S = G.s, box = $('baser'); box.innerHTML = '<div id="flikar"></div>'; UI._arows = {}; rows = {}; rows2 = {}; husRader = []; krows = {}; erows = {}; skattRad = null; varvRad = null; soldRad = null; byggRader = []; fogdeKnappar = []; kortNu = null; flikar = {};
       const nyFlik = (f, id, huvud, titel) => {
         const knapp = el('button', 'flik', huvud + '<u class="prick"></u>'); if (id) knapp.id = id; knapp.setAttribute('aria-label', titel); box.firstChild.appendChild(knapp);          // ingen vit webbläsarruta när man håller över fliken (Johannes 2026-11-28)
         const sida = el('div', 'sida'); box.appendChild(sida); knapp.addEventListener('click', () => { if (f === 'stad' && flik === 'stad') { UI.stadMeny(); return; } flik = f; S.flik = f; if (f === 'stad') S.stadSett = 1; UI.stadMeny(false); UI.tick(); });          // stadens flik: ett tryck till visar alla städerna
@@ -279,7 +280,11 @@
         if (S.varld === 0 && sid === 'stockholm' && S.las.sold) soldKort(s);          // i Gustavs värld ligger soldaterna under männen
         if (false) D.KONSTER.filter(k => { const h = k.bygg0 && D.BYGGNADER.find(q => q.id === k.bygg0); return h && (h.stad || h.plats) === sid && G.harKonst(k.id); }).forEach(k => konstKort(s, k));          // förmågor från förspelets byggnader
       } }
-      { const ki = D.KUNGINFO && D.KUNGINFO[S.varld]; if (ki) { const kb = el('button', 'flik flik-kung', IK.krona + '<b class="fl-n">' + ki.namn + '</b><u class="prick"></u>'); kb.id = 'flik-kung'; kb.title = ki.namn + ': egenskaper och förmågor'; box.firstChild.appendChild(kb); kb.addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); UI.kung(); }); } }          // regentens flik öppnar hans sida (Johannes 2026-11-28 11:44)
+      { const ki = D.KUNGINFO && D.KUNGINFO[S.varld], eg = G.egLista(), ko = D.KONSTER.filter(k => G.harKonst(k.id)); if (ki && (eg.length || ko.length)) {          // regentens flik: hans egenskaper och förmågor som vanliga kort (Johannes 2026-11-28 12:02: "så det blir enhetligt")
+        const s = nyFlik('kung', 'flik-kung', IK.krona + '<b class="fl-n">' + ki.namn + '</b>', ki.namn + ': egenskaper och förmågor'); flikar.kung.knapp.classList.add('flik-kung');
+        eg.forEach(e => { erows[e.id] = kort(s, 'egk', IK[e.ikon] || IK.krona, () => { const L = G.eg(e.id); return '<b>' + e.namn + '</b><span class="kort-n">nivå ' + L + ' av ' + G.EG_MAX + '</span><p>' + e.vad + '</p><p class="kort-g">' + e.nar + (L ? ' Nu: +' + Math.round(e.steg * L * 100) + ' %.' : '') + '</p>' + (L >= G.EG_MAX ? '' : '<p class="kort-p">Kostar ' + IK.mark + tal(G.egPris(e.id)) + ' mark</p>'); }, row => { if (G.kopEg(e.id)) V.Ljud && V.Ljud.spela('dubbel'); else UI._nej(row); }); erows[e.id].e = e; });
+        ko.forEach(k => konstKort(s, k));
+      } }
       // Ingen egen flik för förmågor: de ligger under männen och marken, hos det de hör till (förspelet 2026-11-26, Gustavs värld 2026-11-27)
       if (!flikar[flik]) flik = flikar[S.flik] ? S.flik : Object.keys(flikar)[0];
       // två rader kort om det får plats på bredden, annars tre
@@ -486,7 +491,7 @@
       if (id === 'skatt') return flik('man', '#skatt');
       if (id === 'marknad') return G.s.marknad ? stad(G.s.marknad.bas) : null;
       if (id.slice(0, 2) === 'h:') return () => lys('#hk-' + id.slice(2));
-      if (id.slice(0, 2) === 'k:') return () => UI.kung();          // förmågorna finns på kungens sida
+      if (id.slice(0, 2) === 'k:') return () => { if (flikar.kung) { flik = 'kung'; G.s.flik = 'kung'; UI.tick(); } };          // förmågorna finns på kungens sida
       return null;
     },          // riktig tid: på en skärm med 120 bilder i sekunden försvann raden annars dubbelt så fort
     skylt(t, iSlag) { if (!iSlag && root.classList.contains('slag')) return; const e = el('div', 'skylt', t); $('text').appendChild(e); setTimeout(() => e.classList.add('bort'), 2600); setTimeout(() => e.remove(), 3400); },
@@ -670,8 +675,9 @@
       const S = G.s, ki = D.KUNGINFO && D.KUNGINFO[S.varld], eg = G.egLista(); if (!ki && !eg.length) return false;
       const ar = G.datum().ar, alder = ki ? ar - ki.fodd - (ki.sent ? 1 : 0) : 0;
       let h = '<div class="kung-topp"><div class="kung-fig"><canvas width="260" height="330"></canvas><i class="kung-vrid">dra för att vrida</i></div><div class="kung-om"><div class="kung-krona">' + IK.krona + '</div><h2>' + $('dat-titel').textContent + '</h2>' + (ki ? '<p class="kung-ar">' + ar + ' · ' + alder + ' år</p><ul>' + ki.rader.map(r => '<li>' + r + '</li>').join('') + '</ul>' : '') + '</div></div>';
-      if (eg.length) h += '<div class="kung-eg-rubrik">Egenskaper</div><div class="kung-eg">' + eg.map(e => '<div class="bas eg-kort" data-eg="' + e.id + '"><div class="k-topp"><i class="k-ikon">' + (IK[e.ikon] || IK.krona) + '</i><span class="k-namn">' + e.namn + '</span><b class="k-niva"></b></div><p class="eg-vad">' + e.vad + '</p><div class="k-rad"><span class="k-ger"></span><span class="k-pris"></span></div><i class="bas-bar"><i></i></i></div>').join('') + '</div>';
-      { const ko = D.KONSTER.filter(k => G.harKonst(k.id)); if (ko.length) h += '<div class="kung-eg-rubrik">Förmågor</div><div class="kung-eg">' + ko.map(k => '<div class="bas eg-kort konst-kort" data-k="' + k.id + '"><div class="k-topp"><i class="k-ikon">' + IK.krona + '</i><span class="k-namn">' + UI.konst(k.id)[0] + '</span><b class="k-niva"></b></div><p class="eg-vad">' + UI.konst(k.id)[1] + '</p><div class="k-rad"><span class="k-ger"></span><span class="k-pris"></span></div><i class="bas-bar"><i></i></i></div>').join('') + '</div>'; }          // förmågorna: små uppgraderingar som förut låg bland korten
+      if (false) h += '<div class="kung-eg-rubrik">Egenskaper</div><div class="kung-eg">' + eg.map(e => '<div class="bas eg-kort" data-eg="' + e.id + '"><div class="k-topp"><i class="k-ikon">' + (IK[e.ikon] || IK.krona) + '</i><span class="k-namn">' + e.namn + '</span><b class="k-niva"></b></div><p class="eg-vad">' + e.vad + '</p><div class="k-rad"><span class="k-ger"></span><span class="k-pris"></span></div><i class="bas-bar"><i></i></i></div>').join('') + '</div>';
+      { const ko = []; if (ko.length) h += '<div class="kung-eg-rubrik">Förmågor</div><div class="kung-eg">' + ko.map(k => '<div class="bas eg-kort konst-kort" data-k="' + k.id + '"><div class="k-topp"><i class="k-ikon">' + IK.krona + '</i><span class="k-namn">' + UI.konst(k.id)[0] + '</span><b class="k-niva"></b></div><p class="eg-vad">' + UI.konst(k.id)[1] + '</p><div class="k-rad"><span class="k-ger"></span><span class="k-pris"></span></div><i class="bas-bar"><i></i></i></div>').join('') + '</div>'; }          // förmågorna: små uppgraderingar som förut låg bland korten
+      if (eg.length || D.KONSTER.some(k => G.harKonst(k.id))) h += '<p class="kung-tips">Egenskaper och förmågor finns under fliken ' + (ki ? ki.namn : 'regenten') + ' där nere.</p>';
       h += '<button class="stang kung-stang">Tillbaka</button>';
       const r = UI.ruta(h); r.firstChild.classList.add('kung-in');
       r.querySelectorAll('.konst-kort').forEach(k => k.addEventListener('click', () => { if (G.kopKonst(k.dataset.k)) { V.Ljud && V.Ljud.spela('kop'); UI._kungKort(); UI.tick(); } else UI._nej(k); }));
