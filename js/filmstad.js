@@ -235,6 +235,28 @@
     x.fillStyle = '#2050e0'; Folk.units.forEach(u => { const p = P([u.x, u.z]); if (p[0] > 0 && p[1] > 0 && p[0] < n && p[1] < n) x.fillRect(p[0] - 1.5, p[1] - 1.5, 3, 3); });
     document.documentElement.appendChild(c); return c;
   }
+  // En av spelets egna städer som den står just nu (Varld.tomt[id]): husen i stadsplanen, borgen, domkyrkan och muren blir hinder,
+  // så att en scen där kan använda vag(), vandrare() och ledig() som i en filmstad. bort() tar bara bort scenens folk.
+  function stad(id) {
+    const t = V.Varld.tomt && V.Varld.tomt[id]; if (!t) return null;
+    const K = B.K, b = t.b, p = t.p, hinder = [], W = (x, z) => [p.x + x * K, p.z + z * K];
+    if (t._plan) for (const q of t._plan.hus) if (q.tagen) { const w = W(q.x, q.z); hinder.push({ x: w[0], z: w[1], w: 0.64 * K, d: 0.84 * K, a: q.a }); }
+    // borgen och domkyrkan står där Bygge.steg ställer dem (kanda.js ritar dem större än tomtens cirkel, därför rektanglar)
+    const bx = b.stor ? 2.6 : 2.4, bz = b.stor ? -2.2 : -1.5, dx = b.stor ? -1.6 : -0.9, dz = -1.9, ds = b.stor ? 0.8 : 0.72;
+    const har = (x, z) => t.occ.some((o, i) => i >= t.vag.length && Math.abs(o[0] - x) < 1e-6 && Math.abs(o[1] - z) < 1e-6);
+    if (b.borg && har(bx, bz)) { const w = W(bx, bz - 0.1); hinder.push({ x: w[0], z: w[1], w: 3.8 * K, d: 1.5 * K, a: 0 }); }
+    if (b.dom && har(dx, dz)) { const w = W(dx + 0.25 * ds, dz); hinder.push({ x: w[0], z: w[1], w: 5.0 * ds * K, d: 2.2 * ds * K, a: 0 }); }
+    else if (b.kyrka && har(-0.6, -1.8)) { const w = W(-0.6, -1.8); hinder.push({ x: w[0], z: w[1], w: 2.0 * K, d: 1.0 * K, a: 0 }); }
+    for (let i = t.vag.length; i < t.occ.length; i++) { const o = t.occ[i]; if (o[2] < 0.45 || (b.borg && o[0] === bx && o[1] === bz) || (b.dom && o[0] === dx && o[1] === dz)) continue; const w = W(o[0], o[1]); hinder.push({ x: w[0], z: w[1], r: o[2] * K * 0.9 }); }
+    if (t._plan) { const T = t._plan.torg, alla = [[-0.6, -0.45], [0.6, 0.45], [0.6, -0.45], [-0.6, 0.45]]; alla.slice(0, alla.length - T.stand.length).forEach(q => { const u = q[0] * T.TU, v = q[1] * T.TV, w = W(u * T.ux + v * T.vx, T.z + u * T.uz + v * T.vz); hinder.push({ x: w[0], z: w[1], r: 0.3 * K }); }); }          // marknadsstånden på torget
+    const S = { o: { x: p.x, z: p.z }, t, K, hinder, p, R: t.R, folk: [], borg: b.borg ? W(bx, bz) : null, dom: b.dom ? W(dx, dz) : null, domSkala: ds };
+    natet(S);
+    S.vag = (a, c) => { const v = vag(S, a, c); (S._vagar || (S._vagar = [])).push(v); return v; };
+    S.ledig = (x, z) => ledig(S, x, z); S.narmast = (x, z) => narmast(S, x, z); S.slump = rnd => slumpPunkt(S, rnd || Math.random);
+    S.vandrare = (n, slag, nara) => vandrare(S, n, slag, nara); S.update = dt => uppdatera(S, dt);
+    S.bort = () => { S.folk.forEach(f => Folk.remove(f.u)); S.folk = []; };
+    V.Filmstad.sist = S; return S;
+  }
   // Står punkten (världskoordinater) i ett hus i en av spelets egna städer? t = Varld.tomt[id]. För scener i städer som redan finns.
   function iHus(t, x, z, marg) {
     if (!t || !t._plan) return false; const K = B.K, ux = (x - t.p.x) / K, uz = (z - t.p.z) / K, m = (marg || 0.06) / K;
@@ -242,5 +264,5 @@
     for (let i = t.vag.length; i < t.occ.length; i++) { const o = t.occ[i]; if (o[2] >= 0.6 && Math.hypot(ux - o[0], uz - o[1]) < o[2] * 0.9 + m) return true; }
     return false;
   }
-  V.Filmstad = { iHus, visa, bygg, marienkirche, radhus, stadsport, murbit };
+  V.Filmstad = { stad, iHus, visa, bygg, marienkirche, radhus, stadsport, murbit };
 })();

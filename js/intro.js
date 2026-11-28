@@ -355,21 +355,40 @@
       },
       // 29 juni 1561. Erik går från Uppsala slott till domkyrkan på en röd matta, och man bär själv fram de nya regalierna.
       async kroning() {
-        const p = R.P.uppsala, K = B.K; Scene.setSeason(0.47);
-        const a = [p.x + 2.0 * K, p.z - 0.4 * K], b = [p.x - 0.6 * K, p.z - 1.0 * K], L0 = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / L0, uz = (b[1] - a[1]) / L0;
-        const mb = new V.MB(); mb.snow = 0; mb.box(0, 0, 0, 0.34, 0.02, L0, '#b3262a', { low: '#8a1f24' }); const matta = B.mesh(mb); matta.position.set((a[0] + b[0]) / 2, Geo.groundAt((a[0] + b[0]) / 2, (a[1] + b[1]) / 2) + 0.015, (a[1] + b[1]) / 2); matta.rotation.y = Math.atan2(ux, uz); Scene.scene.add(matta); tempM.push(matta);
-        for (let i = 1; i < 6; i++) for (const s of [-1, 1]) { const x = a[0] + ux * L0 * i / 6 - uz * s * 0.45, z = a[1] + uz * L0 * i / 6 + ux * s * 0.45; temp.push(Folk.add(x, z, 'knekt', { pike: true, ang: Math.atan2(uz * s, -ux * s) })); }          // vakterna med sköldarna
-        const ek = erikE(false), g = { x: a[0], z: a[1], ang: Math.atan2(ux, uz), v: 0 }; hooks.push(dt => ek.place(g.x, g.z, g.ang, g.v, tid, dt, false, true)); skylt('Erik', () => g, 1.8);
-        Scene.jump((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 2, 18); plats('Uppsala, 29 juni 1561');
+        const p = R.P.uppsala, K = B.K, S = V.Filmstad.stad('uppsala'); Scene.setSeason(0.47); if (S) stader.push(S);
+        // från slottets port till domkyrkans västport, längs gatorna och runt husen (Johannes 2026-11-28: han gick genom byggnaderna)
+        const bo = S && S.borg ? S.borg : [p.x + 2.4 * K, p.z - 1.5 * K], dm = S && S.dom ? S.dom : [p.x - 0.9 * K, p.z - 1.9 * K], ds = S ? S.domSkala : 0.72;
+        const a0 = [bo[0], bo[1] + 1.0 * K], b0 = [dm[0] + 0.3 * ds * K, dm[1] + 1.1 * ds * K + 0.75];          // framför kyrkans långsida, så att kyrkan står bakom honom när regalierna bärs fram
+        const a = S ? S.narmast(a0[0], a0[1]) : a0, b = S ? S.narmast(b0[0], b0[1]) : b0, vag = S ? S.vag(a, b) : [a, b], L0 = R.length(vag);
+        // den röda mattan längs vägen, bit för bit
+        { const mb = new V.MB(); mb.snow = 0; for (let i = 1; i < vag.length; i++) { const q = vag[i - 1], r = vag[i], l = Math.hypot(r[0] - q[0], r[1] - q[1]); if (l < 1e-3) continue; mb.push().move((q[0] + r[0]) / 2, Geo.groundAt((q[0] + r[0]) / 2, (q[1] + r[1]) / 2) + 0.015, (q[1] + r[1]) / 2).rotY(Math.atan2(r[0] - q[0], r[1] - q[1])); mb.box(0, 0, 0, 0.34, 0.02, l + 0.06, '#b3262a', { low: '#8a1f24' }); mb.pop(); } const m = B.mesh(mb); Scene.scene.add(m); tempM.push(m); }
+        // vakterna med sköldarna på båda sidor om mattan, bara där det är fri gata
+        for (let d = 0.9; d < L0 - 1.6; d += 1.05) { const q = R.along(vag, d); for (const s of [-1, 1]) { const x = q.x + Math.cos(q.ang) * 0.42 * s, z = q.z - Math.sin(q.ang) * 0.42 * s; if (!S || S.ledig(x, z)) temp.push(Folk.add(x, z, 'knekt', { pike: true, ang: q.ang - s * 1.571 })); } }
+        const ek = erikE(false), g = { x: a[0], z: a[1], ang: R.along(vag, 0).ang, v: 0 }; hooks.push(dt => ek.place(g.x, g.z, g.ang, g.v, tid, dt, false, true)); skylt('Erik', () => g, 1.8);
+        Scene.jump(a[0], a[1] + 1.5, 17); plats('Uppsala, 29 juni 1561');
         await vanta(2); text('Erik går från slottet till domkyrkan på en röd matta, under en himmel av röd sammet.'); await vanta(6);
-        await akFard([a, b], 0, L0 - 0.15, 0.6, 'Gå', 'Tryck för att gå till kyrkan', { kd: 16, ljud: 'steg', satt: (q, v) => { g.x = q.x; g.z = q.z; g.ang = q.ang; g.v = v; } });
-        UI.film.knapp(null); I.tar = null;
+        await akFard(vag, 0, L0 - 0.1, 0.6, 'Gå', 'Tryck för att gå till kyrkan', { kd: 16, ljud: 'steg', satt: (q, v) => { g.x = q.x; g.z = q.z; g.ang = q.ang; g.v = v; } });
+        UI.film.knapp(null); I.tar = null; g.v = 0;
         text('Vakterna bär sköldar med hans valspråk: Gud ger åt vem han vill.'); await vanta(6);
-        const delar = ['Kronan. En sluten krona har ingen kung i Norden haft förut.', 'Spiran.', 'Äpplet.', 'Nyckeln. Den finns inte i något annat land.'];
+        // regalierna: fyra kuddar på en bänk framför kungen, och på varje kudde läggs en sak fram när man trycker
+        let rikt = 0; for (const r of [0, 0.6, -0.6, 1.2, -1.2, 1.571, -1.571]) { const q = [g.x + Math.sin(r) * 0.6, g.z + Math.cos(r) * 0.6]; if (!S || (S.ledig(q[0], q[1]) && S.ledig(q[0] + Math.cos(r) * 0.4, q[1] - Math.sin(r) * 0.4) && S.ledig(q[0] - Math.cos(r) * 0.4, q[1] + Math.sin(r) * 0.4))) { rikt = r; break; } }
+        g.ang = rikt;          // kungen vänder sig mot kameran, och bänken med regalierna står framför honom, där gatan är fri
+        const fx = Math.sin(g.ang), fz = Math.cos(g.ang), sx = Math.cos(g.ang), sz = -Math.sin(g.ang), bankX = g.x + fx * 0.6, bankZ = g.z + fz * 0.6;
+        { const mb = new V.MB(); mb.snow = 0; mb.box(0, 0, 0, 0.9, 0.14, 0.2, '#6b4a2c', { low: '#4f3620' }); for (let i = 0; i < 4; i++) mb.box(-0.33 + i * 0.22, 0.14, 0, 0.18, 0.035, 0.15, '#7a1f2a', { low: '#5a1620' }); const m = B.mesh(mb); m.position.set(bankX, Geo.groundAt(bankX, bankZ), bankZ); m.rotation.y = g.ang; m.scale.setScalar(K * 0.75); Scene.scene.add(m); tempM.push(m); }
+        const GULD = '#e8c040', GULDL = '#a8801e', BLA = '#2f5aa8', regal = [
+          mb => { mb.cyl(0, 0, 0, 0.065, 0.07, 0.04, 10, GULD, { low: GULDL }); for (let k = 0; k < 8; k++) { const v = k / 8 * 6.283; mb.cone(Math.cos(v) * 0.065, 0.04, Math.sin(v) * 0.065, 0.014, 0.03, 4, GULD); } for (const r of [0, 1.571]) { mb.push().rotY(r); for (let k = 0; k <= 6; k++) { const v = k / 6 * 3.1416; mb.box(Math.cos(v) * 0.06, 0.04 + Math.sin(v) * 0.06, 0, 0.012, 0.012, 0.012, GULD); } mb.pop(); } mb.blob(0, 0.035, 0, 0.055, 0.03, 0.055, '#8a1f2a', { snow: 0 }); mb.blob(0, 0.112, 0, 0.016, 0.016, 0.016, BLA, { snow: 0 }); mb.box(0, 0.125, 0, 0.006, 0.03, 0.006, GULD); },          // kronan: sluten, med byglar över
+          mb => { mb.push().rotZ(1.571); mb.cyl(0, -0.11, 0, 0.008, 0.008, 0.22, 6, GULD, { low: GULDL }); mb.blob(0, 0.115, 0, 0.018, 0.018, 0.018, GULD, { snow: 0 }); mb.pop(); },          // spiran
+          mb => { mb.blob(0, 0.035, 0, 0.035, 0.035, 0.035, GULD, { low: GULDL, snow: 0 }); mb.box(0, 0.07, 0, 0.008, 0.035, 0.008, GULD); mb.box(0, 0.085, 0, 0.026, 0.008, 0.008, GULD); },          // äpplet med korset
+          mb => { mb.box(0, 0.006, 0, 0.13, 0.012, 0.012, GULD, { low: GULDL }); mb.cyl(-0.075, 0, 0, 0.022, 0.022, 0.012, 8, GULD); mb.box(0.055, 0.006, 0.014, 0.02, 0.012, 0.03, GULD); }          // nyckeln
+        ], namn = ['Kronan', 'Spiran', 'Äpplet', 'Nyckeln'];
+        const namnSk = [], visa = k => { const mb = new V.MB(); mb.snow = 0; regal[k](mb); const m = B.mesh(mb), x = bankX + sx * (-0.33 + k * 0.22) * K * 0.75, z = bankZ + sz * (-0.33 + k * 0.22) * K * 0.75, y = Geo.groundAt(bankX, bankZ) + 0.18 * K * 0.75; m.position.set(x, y, z); m.rotation.y = g.ang; m.scale.setScalar(K * 1.6); Scene.scene.add(m); tempM.push(m); Fx.guld(x, y + 0.1, z, 18, 0.15); namnSk.push(skylt(namn[k], () => ({ x, z }), 0.45 + (k % 2) * 0.22)); return m; };
+        Scene.cam.lut = 52; Scene.flyTo(bankX, bankZ + 0.3, 7.5, 2.5); await vanta(2.5);
+        const delar = ['Kronan. En sluten krona har ingen kung i Norden haft förut.', 'Spiran.', 'Äpplet.', 'Nyckeln. Den finns inte i något annat land.'], visade = [];
         text('Tryck för att bära fram regalierna');
-        const n = await tryckN('Bär fram', 4, k => { text(delar[k - 1]); L.spela('klocka'); if (k === 1) erikE(true); }, 22);
-        if (n < 1) erikE(true); for (let k = n; k < 4; k++) { text(delar[k]); await vanta(3); }
-        await vanta(3); text('Ärkebiskop Laurentius Petri predikar, och Erik svär sin ed på Bibeln.'); await vanta(7);
+        const n = await tryckN('Bär fram', 4, k => { text(delar[k - 1]); L.spela('klocka'); visade.push(visa(k - 1)); }, 26);
+        for (let k = n; k < 4; k++) { text(delar[k]); visade.push(visa(k)); await vanta(3); }
+        await vanta(3.5); erikE(true); Scene.flyTo(g.x, g.z + 0.6, 10, 2); visade[0].visible = false; namnSk.forEach(q => q.bort()); Fx.guld(g.x, Geo.groundAt(g.x, g.z) + 0.8, g.z, 30, 0.4); L.spela('klart');
+        text('Ärkebiskop Laurentius Petri predikar, och Erik svär sin ed på Bibeln.'); await vanta(7);
       },
       // 24 maj 1567, Uppsala slott. Allvarligt och lugnt: inget blod, bara det som hände. Ingen knapp att trycka på.
       async sturemord() {
