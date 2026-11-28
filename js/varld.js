@@ -360,7 +360,7 @@
     _slutVis() {
       if (!vis) return; V.Gustav.slass = 0; V.Gustav.stupad = false; W._foljVis = null;
       vis.enh.forEach(e => Folk.remove(e)); vis.fi.forEach(e => Folk.remove(e)); vis.skepp.forEach(s => scene.remove(s)); (vis.fiende || []).forEach(s => scene.remove(s)); (vis.lagerM || []).forEach(m => scene.remove(m));
-      if (vis.fana) scene.remove(vis.fana); if (vis.stallning) scene.remove(vis.stallning); vis = null;
+      if (vis.fana) scene.remove(vis.fana); if (vis.fana2) scene.remove(vis.fana2); if (vis.stallning) scene.remove(vis.stallning); vis = null;
     },
     vis() { return vis; },
     // Driv in skatt: en liten trupp går från en bygd till närmaste stad eller gruva. Reglerna ligger i game.js.
@@ -561,9 +561,44 @@
     // Ett tryck i förspelets slag: leden trycker på och det dammar vid fronten, eller (belägringen) tornen skjuter, försvararna jublar, brevet beseglas.
     _slagTryck(o) {
       if (vis.u.belagring) { W._belBild(o && o.bild, true, 'hugg'); return; }
-      if (vis.u.slag === 'flotta') { const s = vis.skepp[Math.floor(Math.random() * vis.skepp.length)], f = (vis.fiende || [])[Math.floor(Math.random() * (vis.fiende || []).length)]; if (s && f) W._kula(s.position.x, 0.7, s.position.z, f.position.x + (Math.random() - 0.5) * 0.8, f.position.z + (Math.random() - 0.5) * 0.8, false); V.Ljud && V.Ljud.spela('kanon'); return; }
+      if (vis.u.slag === 'flotta') { const q = W.malPunkt(), fl = (vis.fiende || []).filter(f => f.visible !== false), s = vis.skepp[Math.floor(Math.random() * vis.skepp.length)];
+        const f = q && o && o.mal !== 'egen' && fl.length ? fl.reduce((b, f) => Math.hypot(f.position.x - q.x, f.position.z - q.z) < Math.hypot(b.position.x - q.x, b.position.z - q.z) ? f : b) : fl[Math.floor(Math.random() * fl.length)];
+        if (s && f) { W._kula(s.position.x, 0.7, s.position.z, f.position.x + (Math.random() - 0.5) * 0.8, f.position.z + (Math.random() - 0.5) * 0.8, false);          // en bredsida mot skeppet vid ringen (slagen 2026-11-28): träffarna syns, det lutar och det ryker ur det
+          if (o && o.mal !== 'egen') { const d = f.userData; d.traff = (d.traff || 0) + 1; setTimeout(() => { if (!f.parent) return; f.rotation.z = Math.min(0.2, d.traff * 0.012) * (d.sida || (d.sida = Math.random() < 0.5 ? 1 : -1)); if (d.traff % 4 === 0) Fx.rok(f.position.x, 0.9, f.position.z, true); }, 1000); } }
+        V.Ljud && V.Ljud.spela('kanon'); return; }
+      if (vis.noll && vis.fi.length) return W._fall(o);
       vis.stot = 1; Scene.shake(0.14); const fi = vis.fi.filter(e => e.br === 0 && e.fall < 0.5), e = fi[Math.floor(Math.random() * fi.length)] || vis.enh[0];
       if (e) Fx.damm(e.x, Geo.groundAt(e.x, e.z), e.z, 3); if (Math.random() < 0.5) V.Ljud && V.Ljud.spela('svard');
+    },
+    // Ett tryck i ett slag på land (Johannes 2026-11-28: "varje klick är att man dödar en motståndare", och varje händelse spelas som det den var):
+    // i ett fältslag faller de fiender som står närmast ringen, i ett överfall tas de till fånga, i ett samtal ger de sig.
+    // Där de egna ska räddas (Retirera, Rädda fanan i ett slag som förlorades) räddar trycket egna män, och de faller inte.
+    // En belägring där man skjuter (u.typ 'storm'): trycket är ett kanonskott mot borgen. Utgången följer ändå historien (dragkampen i game.js).
+    _fall(o) {
+      const u = vis.u, typ = u.typ, forlust = u.strid === 'nederlag' || !!u.forlust, q = W.malPunkt() || vis.fi[0], gy = (x, z) => Geo.groundAt(x, z), Lj = V.Ljud, ord = String((o && o.ord) || '').replace(/<br>/g, ' ');
+      const nara = (l, n) => l.map(e => [e, (e.x - q.x) * (e.x - q.x) + (e.z - q.z) * (e.z - q.z)]).sort((a, b) => a[1] - b[1]).slice(0, n).map(p => p[0]);
+      if (typ === 'storm' && /skjut|ladda|bombard/i.test(ord)) {          // kanonerna skjuter mot borgen från de bakre leden
+        const p = R.P[u.plats], e = vis.enh[vis.enh.length - 1 - Math.floor(Math.random() * Math.min(vis.enh.length, vis.bredd || 6))] || vis.enh[0]; if (!p || !e) return;
+        W._kula(e.x, gy(e.x, e.z) + 0.3, e.z, p.x + (Math.random() - 0.5) * 1.2, p.z + (Math.random() - 0.5) * 1.0, true); Lj && Lj.spela('kanon'); return; }
+      if (o && o.mal === 'egen' && forlust) {          // de egna: trycket räddar dem som står närmast
+        const eo = u.order.filter(q => q.mal === 'egen'), far = Math.ceil(vis.enh.length * 0.55 * (eo.indexOf(o) + 1) / Math.max(1, eo.length));          // högst drygt hälften kan räddas: slaget förlorades ändå
+        if (vis.enh.filter(e => e.sparad).length >= far) { Fx.damm(q.x, gy(q.x, q.z), q.z, 2); return; }
+        const l = nara(vis.enh.filter(e => !e.sparad && e.fall < 0.3), Math.max(1, Math.round(vis.enh.length / 60)));
+        l.forEach((e, k) => { e.sparad = 1; e.y = 0.08; setTimeout(() => { e.y = 0; }, 170 + k * 30); }); if (l[0]) Fx.guld(l[0].x, gy(l[0].x, l[0].z) + 0.3, l[0].z, 4, 0.3); Lj && Lj.spela('steg'); return; }
+      const tak = typ === 'samtal' || typ === 'overfall' ? 1 : forlust ? 0.35 : 0.75, ute = vis.fi.filter(m => m.dod || m.bunden || m.gett).length;
+      const ol = (u.order || []).filter(q => !q.vanta && !(typ === 'storm' && /skjut|ladda|bombard/i.test(q.ord || ''))), oi = Math.max(0, ol.indexOf(o)), far = Math.ceil(vis.fi.length * tak * (oi + 1) / Math.max(1, ol.length));          // fördelat över orderna, så att varje order har några kvar
+      if (ute >= far) { Fx.damm(q.x, gy(q.x, q.z), q.z, 3); return; }          // resten står kvar tills slaget är avgjort
+      const l = nara(vis.fi.filter(m => !m.dod && !m.bunden && !m.gett && m.fall < 0.3), Math.max(1, Math.round(vis.fi.length / 70)));
+      l.forEach(m => { if (typ === 'samtal') m.gett = 1; else if (typ === 'overfall') m.bunden = 1; else { m.dod = 1; Fx.damm(m.x, gy(m.x, m.z), m.z, 3); } });
+      if (typ === 'samtal') { if (l[0]) Fx.guld(l[0].x, gy(l[0].x, l[0].z) + 0.35, l[0].z, 5, 0.3); return; }
+      if (typ === 'overfall') { Lj && Lj.spela('steg'); return; }
+      vis.stot = 1; Scene.shake(0.1); if (Math.random() < 0.6) Lj && Lj.spela('svard');
+    },
+    // Hur många som är kvar på var sida just nu, i de riktiga talen (stapeln högst upp). null utanför ett slag på land.
+    slagAntal() {
+      if (!vis || !vis.noll || !vis.antal || !vis.fi.length || vis.u.typ === 'samtal' || vis.u.typ === 'overfall') return null;          // i samtal och överfall är antalen inte kända
+      const r = (n, d) => Math.max(0, Math.round(n / 10) * 10), eg = vis.enh.filter(e => e.fall < 0.3).length / Math.max(1, vis.enh.length), fi = vis.fi.filter(m => !m.dod && !m.bunden && !m.gett && m.fall < 0.3).length / vis.fi.length;
+      return [r(vis.antal[0] * eg), r(vis.antal[1] * fi)];
     },
     // Var i världen ringen står i förspelets slag (Johannes 2026-11-26: "så man klickar på slagfältet"). null = ingen ring just nu.
     malPunkt() {
@@ -583,7 +618,7 @@
       }
       if (u.slag === 'flotta') { const l = (o.mal === 'egen' ? vis.skepp : vis.fiende) || [], s = l.length ? l[(m.typ === 'hugg' ? j : 0) % l.length] : null; return s ? { x: s.position.x, y: 0.6, z: s.position.z } : null; }          // sjöslaget
       if (!vis.noll) return null;
-      const egen = mitt(vis.enh, e => e.br === 0 && e.fall < 0.5), fi = mitt(vis.fi, e => e.br === 0 && e.fall < 0.5);
+      const egen = mitt(vis.enh, e => e.br === 0 && e.fall < 0.5) || mitt(vis.enh, e => e.fall < 0.5), fi = mitt(vis.fi, e => e.br === 0 && e.fall < 0.5 && !e.dod && !e.bunden && !e.gett) || mitt(vis.fi, e => e.fall < 0.5 && !e.dod && !e.bunden && !e.gett);          // när främsta ledet har fallit står ringen vid dem som är kvar
       if (m.typ === 'hugg') {          // huggen kommer på olika ställen längs fronten, där leden möts
         if (!egen || !fi) { const q = egen || fi; return q ? { x: q.x, y: gy(q.x, q.z) + 0.35, z: q.z } : null; }
         const mon = [0, 0.6, -0.5, 0.25, -0.75, 0.8, -0.2, 0.45, -0.6, 0.1], r = vis.ram || { sx: 1, sz: 0 }, k = mon[j % mon.length] * (vis.bredd || 6) * 0.32 / 2, x = (egen.x + fi.x) / 2 + r.sx * k, z = (egen.z + fi.z) / 2 + r.sz * k;
@@ -592,7 +627,7 @@
       let q = null; const mal = o.mal || 'fiende';
       if (mal === 'egen') q = egen;
       else if (mal === 'flank') { const r0 = vis.fi.filter(e => e.br === 0); if (r0.length) { const a0 = r0[0], a1 = r0[r0.length - 1]; q = a0.z > a1.z ? a0 : a1; } }          // den södra flanken (söder är nedåt på kartan)
-      else if (mal === 'bak') { let mx = 0; vis.fi.forEach(e => { if ((e.br || 0) > mx) mx = e.br; }); q = mitt(vis.fi, e => (e.br || 0) === mx); }
+      else if (mal === 'bak') { let mx = 0; vis.fi.forEach(e => { if ((e.br || 0) > mx && !e.dod && !e.bunden && !e.gett) mx = e.br; }); q = mitt(vis.fi, e => (e.br || 0) === mx && !e.dod && !e.bunden && !e.gett); }
       else q = fi;
       q = q || fi || egen; return q ? { x: q.x, y: gy(q.x, q.z) + 0.35, z: q.z } : null;
     },
@@ -747,35 +782,46 @@
       const f = B.flagga(S.titel === 'Kung' || S.varld === 0 ? 'sverige' : 'vasa'); f.scale.setScalar(0.8); scene.add(f); vis.fana = f;
       if (m) { const e = R.along(pts, vis.len), fx = Math.sin(e.ang), fz = Math.cos(e.ang), sx = Math.cos(e.ang), sz = -Math.sin(e.ang);
         for (let k = 0; k < m; k++) { const r = Math.floor(k / vis.bredd), c = k % vis.bredd - (vis.bredd - 1) / 2, x = e.x + fx * (1.3 + r * 0.4) + sx * c * 0.32, z = e.z + fz * (1.3 + r * 0.4) + sz * c * 0.32, q = Folk.add(x, z, u.fiendeSlag || 'dansk', { pike: k % 2 === 0, ang: e.ang + Math.PI }); q.bx = x; q.bz = z; q.br = r; vis.fi.push(q); } }
+      // Slagen 2026-11-28 (Johannes: "varje klick är att man dödar en motståndare"): de riktiga antalen, en figur för ungefär fyrtio man där inget annat står (u.antal)
+      vis.antal = [(u.antal && u.antal[0]) || ((u.folk && u.folk[0]) || n) * 40, (u.antal && u.antal[1]) || ((u.folk && u.folk[1]) || m) * 40];
+      if (m && !u.typ && /dansk|rantzau/i.test(u.fiende || 'Danskarna')) { const ff = B.flagga('danmark'); ff.scale.setScalar(0.8); scene.add(ff); vis.fana2 = ff; }          // fiendens fana, som faller när slaget är vunnet
     },
     _tag0(dt, t, a, u) {
       const Gu = V.Gustav, f = Math.min(1, a.t / a.dur), strid = !!u.strid, K0 = a.k0 || G.KAMP, gf = strid ? Math.min(1, f / K0) : f, kamp = strid && f > K0, kf = strid ? Math.max(0, (f - K0) / (1 - K0)) : 0, forlust = u.strid === 'nederlag';
       const DR = 0.4, DK = 0.32, stopp = strid ? 0.9 : 1.8, dist = Math.max(0, vis.len - stopp) * gf, lead = R.along(vis.pts, dist), fx = Math.sin(lead.ang), fz = Math.cos(lead.ang), sx = Math.cos(lead.ang), sz = -Math.sin(lead.ang);
       vis.ram = { sx, sz };          // åt vilket håll leden står (för ringen på slagfältet)
       // leden går varandra till mötes tills det är en knapp armlängd emellan (2,2 mellan dem från början, 1,85 går de)
-      const in0 = Math.min(1, kf / 0.3), A = in0 * 1.0 + (vis.stot > 0 ? 0.12 : 0.35) * (vis.stot || 0), Bf = in0 * 0.85, ut = kamp ? Geo.smooth(0, 0.22, kf) : 0, P = u.order ? G._plan(u) : null, pt = a.t - a.dur * K0, flykt = forlust ? (P ? (a.kula ? Math.min(1, (vis.kulaT = (vis.kulaT || 0) + dt) / 7) : Math.max(0, Math.min(1, (pt - P.slut) / 5))) : Math.max(0, (kf - 0.45) / 0.55)) : 0, vinst = !forlust ? (P ? Math.max(0, Math.min(1, (pt - P.slut + 3) / 5)) : Math.max(0, (kf - 0.6) / 0.4)) : 0;
-      if (kamp) { W._folj(lead.x + fx * 1.1, lead.z + fz * 1.1 + 0.4, vis.bredd > 14 ? 24 : 18); if (!vis.iSlag) { vis.iSlag = true; W.foljUppdraget(); } } else W._folj(lead.x, lead.z, 30);
-      if (vis.gustav) { const hf = kamp ? A - 0.55 - (a.kula ? 3.2 * Math.max(0, flykt - 0.15) : flykt * 2) : 0; Gu.slass = kamp && !flykt && !a.kula ? 1 : 0; Gu.stupad = !!a.kula; Gu.place(lead.x + fx * hf, lead.z + fz * hf, lead.ang, gf < 1 ? 0.9 : 0, t, dt, false, !!a.kula); }
+      const typ = u.typ, fred = typ === 'samtal' || typ === 'overfall', avst = typ === 'samtal' ? 0.3 : 1;          // i ett samtal står de kvar en bit ifrån varandra, i ett överfall slåss ingen
+      const in0 = Math.min(1, kf / 0.3), A = in0 * avst + (vis.stot > 0 ? 0.12 : 0.35) * (vis.stot || 0), Bf = in0 * 0.85 * avst, ut = kamp ? Geo.smooth(0, 0.22, kf) : 0, P = u.order ? G._plan(u) : null, pt = a.t - a.dur * K0, flykt = forlust ? (P ? (a.kula ? Math.min(1, (vis.kulaT = (vis.kulaT || 0) + dt) / 7) : Math.max(0, Math.min(1, (pt - P.slut) / 5))) : Math.max(0, (kf - 0.45) / 0.55)) : 0, vinst = !forlust ? (P ? Math.max(0, Math.min(1, (pt - P.slut + 3) / 5)) : Math.max(0, (kf - 0.6) / 0.4)) : 0;
+      if (kamp) { vis.kampT = (vis.kampT || 0) + dt; const st = vis.bredd > 14, d = (vinst > 0.3 || flykt > 0.3) ? (st ? 32 : 26) : vis.kampT < 4 ? (st ? 14 : 11) : (st ? 24 : 18);          // nära när leden möts, högt över fältet när det är avgjort
+        W._folj(lead.x + fx * 1.1, lead.z + fz * 1.1 + 0.4, d); if (!vis.iSlag) { vis.iSlag = true; W.foljUppdraget(); } } else W._folj(lead.x, lead.z, 30);
+      if (vis.gustav) { const hf = kamp ? A - 0.55 - (a.kula ? 3.2 * Math.max(0, flykt - 0.15) : flykt * 2) : 0; Gu.slass = kamp && !fred && !flykt && !a.kula ? 1 : 0; Gu.stupad = !!a.kula; Gu.place(lead.x + fx * hf, lead.z + fz * hf, lead.ang, gf < 1 ? 0.9 : 0, t, dt, false, !!a.kula); }
       if (u.rader && kamp) { const nr = Math.min(u.rader.length - 1, Math.floor(kf * u.rader.length)); if (vis.radNr !== nr) { vis.radNr = nr; if (!V.tyst) V.UI.text(u.rader[nr], 4.5); } }          // ett slag där du inte är med: raderna säger vad som händer
       const bak0 = vis.gustav ? 0.95 : 0;
       vis.enh.forEach((e, i) => {
         const d0 = dist - e.rad * DR - bak0, back = R.along(vis.pts, Math.max(0, d0)); let x = back.x + Math.cos(back.ang) * e.kol * DK, z = back.z - Math.sin(back.ang) * e.kol * DK, ang = back.ang;
         e.vis = d0 > -0.25 || kamp;          // de kommer fram led för led, inte i en hög
         if (kamp) {
-          const j = Math.sin(t * 11 + e.fas) * (e.br < 2 ? 0.05 : 0.015), fl = flykt * (2.5 + (i % 5) * 0.5), fram = A + j - e.br * DR - fl, bx = lead.x + fx * fram + sx * e.bk * DK, bz = lead.z + fz * fram + sz * e.bk * DK;
+          const j = Math.sin(t * 11 + e.fas) * (e.br < 2 ? 0.05 : 0.015), fl = flykt * (2.5 + (i % 5) * 0.5 + (e.sparad ? 1.5 : 0)), fram = A + j - e.br * DR - fl, bx = lead.x + fx * fram + sx * e.bk * DK, bz = lead.z + fz * fram + sz * e.bk * DK;
           x += (bx - x) * ut; z += (bz - z) * ut; ang = flykt > 0.05 && e.fall < 0.3 ? lead.ang + Math.PI : lead.ang;
-          if (forlust && i % 3 === 0 && kf > 0.3 + (i % 9) * 0.05) e.fall = Math.min(1, e.fall + dt * 3);
+          if (forlust && !e.sparad && i % 3 === 0 && kf > 0.3 + (i % 9) * 0.05) e.fall = Math.min(1, e.fall + dt * 3);          // de som räddas (tryck på ringen vid de egna) faller inte
+          if (e.fall > 0.3) { if (e.lx === undefined) { e.lx = e.x; e.lz = e.z; } x = e.lx; z = e.lz; }          // den som har fallit blir liggande där han föll
         }
-        e.x = x; e.z = z; e.ang = ang; e.gar = e.fall < 0.3 && (gf < 1 || (kamp && (ut < 1 || flykt > 0))); e.strid = kamp && ut > 0.8 && e.br < 3 && e.fall < 0.3 && !flykt;
+        e.x = x; e.z = z; e.ang = ang; e.gar = e.fall < 0.3 && (gf < 1 || (kamp && (ut < 1 || flykt > 0))); e.strid = kamp && !fred && ut > 0.8 && e.br < 3 && e.fall < 0.3 && !flykt;
       });
       if (vis.fana) { const e0 = vis.enh[0]; vis.fana.position.set(e0.x, Geo.groundAt(e0.x, e0.z) + 0.1, e0.z); }
+      if (vis.fana2) { const m0 = vis.fi.find(q => !q.dod) || vis.fi[0]; if (!(vinst > 0.05)) vis.fana2.position.set(m0.x, Geo.groundAt(m0.x, m0.z) + 0.1, m0.z); vis.fana2.rotation.z = -Math.min(1.45, vinst * 2.5); }          // fiendens fana faller när slaget är vunnet
       if (!kamp) return;
+      if (!fred && a.mom && !a.mom.svar && a.mom.typ !== 'vanta') { vis.trT = (vis.trT || 0) - dt; if (vis.trT <= 0) { vis.trT = 1.5; V.Ljud && V.Ljud.spela('trumma'); } }          // en lugn trumma medan en order pågår
       W._kampT = (W._kampT || 0) + dt;
       if (W._kampT > 0.09) { W._kampT = 0; const e = vis.enh[Math.floor(Math.random() * Math.min(vis.enh.length, vis.bredd * 2))], m = vis.fi[Math.floor(Math.random() * Math.min(vis.fi.length, vis.bredd * 2))]; if (e && m && e.fall < 0.3 && m.fall < 0.3) { if (Math.random() < 0.3) Fx.pil(e.x, Geo.groundAt(e.x, e.z) + 0.35, e.z, m.x, 0.2, m.z); Fx.damm((e.x + m.x) / 2, Geo.groundAt(e.x, e.z), (e.z + m.z) / 2, 1); } }
       vis.fi.forEach((m, i) => {
+        if (m.dod || m.bunden) { if (m.lx === undefined) { m.lx = m.x; m.lz = m.z; } m.x = m.lx; m.z = m.lz; m.gar = false; m.strid = false;          // fälld av ett tryck: han faller och blir liggande. Tagen i ett överfall: han sitter kvar där han togs
+          if (m.dod) m.fall = Math.min(1, m.fall + dt * 3.5); else m.lean = Math.min(0.75, m.lean + dt * 3); return; }
         const j = Math.sin(t * 11 + m.fas) * (m.br < 2 ? 0.05 : 0.015), fram = Bf + j + flykt * 1.6 - vinst * (2.2 + (i % 5) * 0.5);          // vinner de trycker de på när dina flyr, förlorar de drar de sig undan
-        m.x = m.bx - fx * fram; m.z = m.bz - fz * fram; m.gar = m.fall < 0.3; m.strid = m.br < 3 && m.fall < 0.3 && !vinst; m.ang = vinst > 0.05 && m.fall < 0.3 ? lead.ang : lead.ang + Math.PI;
-        if (!forlust && i % 3 === 0 && kf > 0.3 + (i % 9) * 0.05) m.fall = Math.min(1, m.fall + dt * 3);
+        m.x = m.bx - fx * fram; m.z = m.bz - fz * fram; m.gar = m.fall < 0.3; m.strid = !fred && m.br < 3 && m.fall < 0.3 && !vinst; m.ang = vinst > 0.05 && m.fall < 0.3 ? lead.ang : lead.ang + Math.PI;
+        if (m.gett) m.lean += ((vinst > 0.05 ? 0 : 0.3) - m.lean) * Math.min(1, dt * 3);          // i ett samtal: de som har gett sig sänker vapnen, och går när det är avgjort
+        if (!forlust && !fred && (u.order ? i % 8 === 0 && vinst > 0.2 : i % 3 === 0 && kf > 0.3 + (i % 9) * 0.05)) m.fall = Math.min(1, m.fall + dt * 3);          // med order fäller trycken dem, bara några faller av sig själva
       });
     },
     _uppdrag(dt, t) {
