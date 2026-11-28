@@ -360,4 +360,37 @@
       try { return dekorFore.call(this, key, on, make); } finally { K.plats = null; }
     };
   }
+  // De kända byggnaderna står kvar på kartan i alla världar och år där de fanns, också där orten bara är en skylt
+  // (Johannes 2026-11-28: "Örebro slott nämns i introt men det finns inget slott där?"). När orten blir en egen bas med tomt
+  // tar basen över (den ritar samma borg och kyrka), och en ort som Varld._orter redan ritar hoppas över.
+  const INTE = { staket: 1 };          // Stäket ritas av förspelet och rivs 1518
+  function finnsBas(b, S) { return !(b.varld && b.varld.indexOf(S.varld) < 0) && (S.varld >= 2 || !(b.slag === 'slott' || b.ny || b.id === 'sala')); }
+  function stallning(id, Y) {
+    const borg = id !== 'vadstena' && BORG[id], kyrka = DOM[id] || KYRKA[id] || (!borg && ORT[id]);
+    if (!borg && !kyrka) return null;
+    const mb = new MB(); K.plats = id;
+    try {
+      if (borg && kyrka) { mb.push().move(1.25, 0, -0.45); borg(mb, Y, 0); mb.pop(); mb.push().move(-1.45, 0, 0.35); kyrka(mb, Y, 0.7); mb.pop(); }
+      else if (borg) borg(mb, Y, 0);
+      else kyrka(mb, Y, DOM[id] ? 0.8 : 1);
+    } finally { K.plats = null; K._flagga = null; }
+    return mb;
+  }
+  K.stall = function () {
+    const W = V.Varld, G = V.Game, D = V.DATA, R = V.Rike; if (!W || !G || !G.s || !R || !R.P) return;
+    const S = G.s, Y = ar(), ort = {}; (W._ortLista || []).forEach(o => { ort[o.id] = 1; });
+    const ids = {}; [BORG, DOM, KYRKA, ORT].forEach(t => Object.keys(t).forEach(id => { ids[id] = 1; }));
+    for (const id in ids) {
+      if (INTE[id]) continue; const p = R.P[id]; if (!p || V.Geo.sdAt(p.x, p.z) < 0.3) continue;
+      const b = D.BASER.find(q => q.id === id), egen = b && finnsBas(b, S) && S.bas && S.bas[id];
+      const pa = !egen && !ort['ort' + id];
+      if (pa && K._stallAr[id] !== undefined && K._stallAr[id] !== Y) W._dekor('kanda' + id, false);          // ett annat år: rita om
+      W._dekor('kanda' + id, pa, () => { K._stallAr[id] = Y; const mb = stallning(id, Y), m = B.mesh(mb); m.position.set(p.x, V.Geo.groundAt(p.x, p.z), p.z); m.scale.setScalar(B.K * 0.8); return m; });
+    }
+  };
+  K._stallAr = {};
+  if (V.Varld && V.Varld.sync) {
+    const syncFore = V.Varld.sync;
+    V.Varld.sync = function () { const r = syncFore.apply(this, arguments); try { K.stall(); } catch (e) { console.warn('kanda', e); } return r; };
+  }
 })();
