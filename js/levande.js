@@ -169,6 +169,25 @@
   // Härar och flottor, per värld: syns från steget som nämner dem (steg) och rör sig som de gjorde i verkligheten.
   // har = soldater till fots (slag = klädfärg), skepp = antal skepp till sjöss, flotta = bara skepp. flagga på skeppen och fanan.
   const HAR = {
+    5: [
+      { id: 'hKarl5', namn: 'Karls här', steg: 'kReval', har: { n: 10, slag: 'knekt' }, skepp: 4, flagga: 'sverige', alias: ['Karls här', 'svenskarna', 'Svenskarna'], kalla: 'sv. Wikipedia, Karl IX och Slaget vid Kirkholm', stopp: [
+        [1600, 8, 'reval', { sjo: 'sverige', mer: 'Karl har gått i land i Reval med sin här.' }],
+        [1600, 10, 'wenden', { mer: 'Hären går in i Livland. Först går det bra mot de oförberedda polackerna.' }],
+        [1602, 6, 'reval', { mer: 'De följande åren går det sämre. Hären håller Estland.' }],
+        [1605, 8.5, 'riga', { sjo: 'sverige', mer: 'Karl har kommit med 40 skepp. Hären belägrar Riga.' }],
+        [1605, 9.5, 'kirkholm', { mer: 'Hären har gått tre mil i regn för att möta polackerna vid Kirkholm.' }],
+        [1605, 10.5, 'reval', { mer: 'Det som är kvar av hären har tagit sig till Reval.' }],
+        [1605, 12, null, {}]] },
+      { id: 'hPolsk5', namn: 'Polska hären', steg: 'kLivland', har: { n: 8, slag: 'knekt' }, flagga: 'polen', alias: ['polackerna', 'Polackerna', 'Chodkiewicz ryttare'], kalla: 'sv. Wikipedia, Karl IX och Slaget vid Kirkholm', stopp: [
+        [1600, 9, 'wenden', { mer: 'Polen har inte väntat sig krig. I Livland finns bara små styrkor.' }],
+        [1605, 9, 'kirkholm', { mer: 'Jan Karol Chodkiewicz har slagit läger vid Kirkholm med omkring 3 600 ryttare, de bevingade husarerna.' }],
+        [1605, 11, null, {}]] },
+      { id: 'hDansk5', namn: 'Danska hären', steg: 'kOrebro', har: { n: 10, slag: 'dansk' }, skepp: 5, flagga: 'danmark', alias: ['danskarna', 'Danskarna', 'danska hären', 'danska lägret'], kalla: 'sv. Wikipedia, Kalmarkriget och Slaget vid Ryssby', stopp: [
+        [1611, 4, 'kopenhamn', { mer: 'Kristian IV samlar sin här för att anfalla Sverige.' }],
+        [1611, 5.1, 'kalmar', { sjo: 'danmark', mer: 'Kristian IV belägrar Kalmar själv. Den 27 maj tar danskarna staden med storm.' }],
+        [1611, 8.7, 'ryssby', { mer: 'Kristian IV anfaller det svenska lägret vid Ryssby.' }],
+        [1611, 9.2, 'kalmar', { mer: 'Danskarna håller Kalmar och Öland.' }]] }
+    ],
     0: [
       { id: 'hDansk0', namn: 'Danska hären', steg: 'sVadla', har: { n: 9, slag: 'dansk' }, skepp: 4, flagga: 'danmark', alias: ['danska hären', 'danskarna', 'Kristians här'], kalla: 'sv. Wikipedia, Slaget vid Vädla, Slaget vid Brännkyrka och Slaget på Åsundens is', stopp: [
         [1517, 5, 'kopenhamn', { mer: 'Kristian II rustar en här och en flotta i Köpenhamn. De ska hjälpa ärkebiskopen Gustav Trolle.' }],
