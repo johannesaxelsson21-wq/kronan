@@ -45,7 +45,7 @@
   function johanE() { if (!JE) { JE = Object.create(V.Gustav); JE.init(Scene.scene, 'johan'); } JE.klad('Kung'); JE.g.visible = true; JE.utanRing = false; return JE; }
   // Hertig Karl i scenerna (samma dräkt som på kartan)
   let KE = null;
-  function karlE() { if (!KE) { KE = Object.create(V.Gustav); KE.init(Scene.scene, 'karl'); } KE.klad('Hertig'); KE.g.visible = true; KE.utanRing = false; return KE; }
+  function karlE(kung) { if (!KE) { KE = Object.create(V.Gustav); KE.init(Scene.scene, 'karl'); } KE.klad(kung ? 'Kung' : 'Hertig'); KE.g.visible = true; KE.utanRing = false; return KE; }
   // Sigismund i sina scener, krönt
   let SE = null;
   function sigE() { if (!SE) { SE = Object.create(V.Gustav); SE.init(Scene.scene, 'sigismund'); } SE.klad('Kung'); SE.g.visible = true; SE.utanRing = false; return SE; }
@@ -270,6 +270,45 @@
         text('Tryck för att övertala honom');
         await tryckN('Övertala', 3, k => { L.spela('sorl'); sig.y = 0.06; setTimeout(() => { sig.y = 0; }, 160); if (k === 1) text(''); }, 15);
         L.spela('nej'); text('Råden i båda länderna sätter stopp. Sigismund stannar i Polen.'); await vanta(6.5);
+      },
+      // 1604. De första nio stugorna i den nya staden på Hisingen, mitt emot Älvsborg.
+      async goteborg() {
+        const p0 = R.P.goteborg, K = B.K; Scene.setSeason(0.35); let p = null;
+        for (let k = 0; k < 24 && !p; k++) { const an = k * 0.785, r = 3 + (k >> 3) * 0.8, x = p0.x + Math.cos(an) * r, z = p0.z + Math.sin(an) * r; if (Geo.sdAt(x, z) > 1.6) p = { x, z }; }          // en tom plats på land en bit från staden
+        p = p || p0;
+        const platser = []; for (let i = 0; i < 9; i++) platser.push({ x: p.x + (i % 3 - 1) * 1.0, z: p.z + (Math.floor(i / 3) - 1) * 0.9, a: 0 });          // tre rader med tre stugor
+        while (platser.length < 9) platser.push({ x: p.x + (platser.length - 4) * 0.5, z: p.z + 1.6, a: 0 });
+        for (let i = 0; i < 6; i++) temp.push(Folk.add(p.x - 1 + i * 0.4, p.z + 2.1 + (i % 2) * 0.2, 'borgare'));
+        Scene.cam.lut = 58; Scene.jump(p.x, p.z + 1.4, 15); plats('Hisingen, 1604');
+        await vanta(2); text('Holländska köpmän ska bo i den nya staden vid Göta älv, mitt emot Älvsborg.'); await vanta(6.5);
+        text('Tryck för att bygga');
+        const n = await tryckN('Bygg', 9, k => { const q = platser[k - 1], mb = new V.MB(); B.stuga(mb, 0.9 + (k % 3) * 0.1, 0.6, 0.34, k % 2 ? 'span' : 'torv', { skorsten: k % 3 === 0 ? 1 : 0 }); const m = B.mesh(mb); m.position.set(q.x, Geo.groundAt(q.x, q.z), q.z); m.rotation.y = -q.a; m.scale.setScalar(K * 0.45); Scene.scene.add(m); tempM.push(m); Fx.damm(q.x, Geo.groundAt(q.x, q.z), q.z, 12); L.spela('hammare'); if (k === 1) text(''); }, 25);
+        L.spela('klart'); text('Nio stugor står på Hisingen. Staden ska heta Göteborg.'); await vanta(6);
+      },
+      // Mars 1607. Karl IX kröns i Uppsala domkyrka, tre år efter att han blev kung.
+      async karlkroning() {
+        const p = R.P.uppsala, K = B.K, st = V.Varld.tomt.uppsala, T = st && st.plan ? st.plan().torg : { x: 0, z: 0.2 }, cx = p.x + T.x * K, cz = p.z + T.z * K; Scene.setSeason(0.2);
+        const ka = karlE(false), g = { x: cx, z: cz - 0.4 }; hooks.push(dt => ka.place(g.x, g.z, 0, 0, tid, dt, false, true)); skylt('Karl', () => g, 1.8);
+        for (let i = 0; i < 10; i++) temp.push(Folk.add(cx + (i - 4.5) * 0.34, cz + 0.7 + (i % 2) * 0.25, i % 3 ? 'borgare' : 'bonde', { ang: Math.PI }));
+        Scene.cam.lut = 60; Scene.jump(cx, cz + 1.1, 13); plats('Uppsala, mars 1607');
+        await vanta(2); text('Karl har varit kung i tre år. Nu ska han krönas i Uppsala domkyrka.'); await vanta(6.5);
+        text('Tryck för att bära fram kronan');
+        await tryckN('Bär fram', 3, k => { L.spela('sorl'); if (k === 1) text(''); }, 15);
+        karlE(true); Fx.guld(g.x, Geo.groundAt(g.x, g.z) + 0.6, g.z, 30, 0.5); L.spela('klocka'); text('Karl IX är krönt. Klockorna ringer i Uppsala.'); await vanta(6);
+      },
+      // 1611. Karl hos bergsfolket i Bergslagen, där Filipstad grundas.
+      async bergsfolket() {
+        const p = R.P.filipstad, K = B.K, cx = p.x - 0.6, cz = p.z + 1.6; Scene.setSeason(0.3);
+        const mb = new V.MB(); B.stuga(mb, 1.1, 0.7, 0.38, 'torv', { skorsten: 1, ljus: 1 }); const hus = B.mesh(mb); hus.position.set(cx, Geo.groundAt(cx, cz), cz - 0.5); hus.scale.setScalar(K); Scene.scene.add(hus); tempM.push(hus);
+        const ka = karlE(true), g = { x: cx - 0.7, z: cz + 0.3 }; hooks.push(dt => ka.place(g.x, g.z, 1.2, 0, tid, dt, false, true)); skylt('Kung Karl', () => g, 1.8);
+        const folk = []; for (let i = 0; i < 4; i++) { const u = Folk.add(cx + 0.1 + i * 0.3, cz - 0.1, i === 3 ? 'kvinna' : 'bonde', { ang: Math.PI * 1.3, vis: false }); folk.push(u); temp.push(u); }
+        Scene.cam.lut = 58; Scene.jump(cx, cz + 1.1, 12); plats('Bergslagen, 1611');
+        await vanta(2); text('Karl tycker om bergsfolket, och de tycker om honom.'); await vanta(6);
+        text('Tryck för att hälsa på');
+        await tryckN('Hälsa på', 4, k => { const u = folk[k - 1]; if (u) { u.vis = true; u.z = cz + 0.2; } L.spela('sorl'); if (k === 1) text(''); }, 16);
+        folk.forEach(u => { u.vis = true; });
+        text('Han äter av deras mat och sover i deras sängar, och talar med dem som deras like.'); await vanta(7);
+        L.spela('klart'); text('Den nya staden här får heta Filipstad, efter prins Karl Filip.'); await vanta(6);
       },
       // 30 september 1593. Sigismund kommer till Stockholm med drottning Anna.
       async ankomst() {

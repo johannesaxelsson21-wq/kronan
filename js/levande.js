@@ -22,7 +22,7 @@
     halmstad: 'Halmstad', varberg: 'Varberg', axtorna: 'Axtorna', mared: 'Mared', visby: 'Visby', getaryggen: 'Getaryggen', wenden: 'Wenden', wesenberg: 'Wesenberg', kexholm: 'Kexholm',
     orbyhus: 'Örbyhus', borgholm: 'Borgholm', drottningholm: 'Drottningholm', staket: 'Stäket', brunkeberg: 'Brunkeberg', brunnback: 'Brunnbäck', kronoberg: 'Kronoberg', bornholm: 'Bornholm',
     smaland: 'Småland', halsingland: 'Hälsingland', lima: 'Lima', salen: 'Sälen', kivinebb: 'Kivinebb', olandsudde: 'Ölands norra udde', narva: 'Narva', reval: 'Reval', nykoping: 'Nyköping',
-    linkoping: 'Linköping', teusina: 'Teusina', nokia: 'Nokia' };
+    linkoping: 'Linköping', teusina: 'Teusina', nokia: 'Nokia', norrkoping: 'Norrköping', riga: 'Riga', kirkholm: 'Kirkholm', skultuna: 'Skultuna', novgorod: 'Novgorod', filipstad: 'Filipstad', ryssby: 'Ryssby', kristianopel: 'Kristianopel' };
   const KALLA = 'sv. Wikipedia';
 
   // Personerna, per värld. stopp: [år, månad, plats, { sjo: flagga på skeppet, via: [platser på vägen], mer: vad personen gör där }].
@@ -104,6 +104,17 @@
         [1565, 1, 'stockholm', { mer: 'Karin Månsdotter, dotter till en knekt, lever vid Eriks hov.' }],
         [1567, 5, 'uppsala', { mer: 'Karin Månsdotter är med kungen i Uppsala.' }],
         [1567, 9, 'stockholm', { mer: 'Karin Månsdotter är i Stockholm.' }]] }
+    ],
+    5: [
+      { id: 'delagardie', namn: 'Jakob De la Gardie', sort: 'delagardie', sok: 'De la Gardie', kalla: 'sv. Wikipedia, De la Gardieska fälttåget', stopp: [
+        [1609, 2.9, 'viborg', { mer: 'Jakob De la Gardie samlar 5 000 man i Viborg.' }],
+        [1609, 5, 'novgorod', { mer: 'Jakob De la Gardie går från Novgorod mot Moskva.' }],
+        [1609, 6, null, {}]] },
+      { id: 'gustavadolf', namn: 'Gustav Adolf', sort: 'gustavadolf', sok: 'Gustav Adolf', kalla: 'sv. Wikipedia, Karl IX och Kalmarkriget', stopp: [
+        [1599, 11, 'stockholm', { mer: 'Prins Gustav Adolf, Karls son, föddes på Tre Kronor i december 1594.' }],
+        [1611, 6.8, 'kristianopel', { mer: 'Gustav Adolf, 16 år, tar den danska staden Kristianopel med en överraskning.' }],
+        [1611, 8, 'ryssby', { mer: 'Gustav Adolf är med sin far i lägret vid Ryssby.' }],
+        [1611, 10.2, 'borgholm', { sjo: 'sverige', mer: 'Gustav Adolf tar tillbaka Borgholm på Öland.' }]] }
     ],
     4: [
       { id: 'karl', namn: 'Hertig Karl', sort: 'karl', sok: 'Karl', kalla: 'sv. Wikipedia, Avsättningskriget mot Sigismund och Uppsala möte', stopp: [

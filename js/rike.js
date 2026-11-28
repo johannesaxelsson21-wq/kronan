@@ -9,8 +9,8 @@
     ['brunnback', 'sala'], ['sala', 'vasteras'], ['sala', 'uppsala'], ['gavle', 'uppsala'], ['uppsala', 'brunkeberg'], ['brunkeberg', 'stockholm'], ['vasteras', 'orebro'], ['vasteras', 'strangnas'],
     ['strangnas', 'gripsholm'], ['gripsholm', 'rafsnas'], ['rafsnas', 'nykoping'], ['gripsholm', 'stockholm'], ['nykoping', 'soderkoping'], ['soderkoping', 'stegeborg'], ['soderkoping', 'vadstena'], ['orebro', 'vadstena'],
     ['soderkoping', 'kisa'], ['kisa', 'virserum'], ['virserum', 'smaland'], ['smaland', 'kalmar'], ['vadstena', 'skara'], ['skara', 'alvsborg'], ['mora', 'oxberg'], ['oxberg', 'evertsberg'], ['evertsberg', 'salen'],
-    ['salen', 'lima'], ['gavle', 'halsingland'], ['staket', 'stockholm'], ['vadla', 'stockholm'], ['brannkyrka', 'stockholm'], ['brannkyrka', 'nykoping'], ['vasteras', 'uppsala'], ['kalmar', 'kronoberg'], ['kronoberg', 'halmstad'], ['halmstad', 'mared'], ['mared', 'getaryggen'], ['getaryggen', 'vadstena'], ['halmstad', 'axtorna'], ['axtorna', 'varberg'], ['varberg', 'alvsborg'], ['arboga', 'vasteras'], ['arboga', 'orebro'], ['reval', 'wesenberg'], ['wesenberg', 'narva'], ['reval', 'wenden'], ['viborg', 'kexholm'], ['uppsala', 'orbyhus'], ['soderkoping', 'linkoping'], ['linkoping', 'vadstena'], ['skara', 'bogesund'], ['abo', 'helsingfors'], ['helsingfors', 'viborg'], ['viborg', 'kivinebb'], ['lubeck', 'lubeck']];
-  const HAMN = { danzig: 1, narva: 1, reval: 1, visby: 1, varberg: 1, halmstad: 1, nykoping: 1, stockholm: 1, kalmar: 1, abo: 1, helsingfors: 1, viborg: 1, soderkoping: 1, lubeck: 1, malmo: 1, kopenhamn: 1, gavle: 1, alvsborg: 1, stegeborg: 1, vasteras: 0 };
+    ['salen', 'lima'], ['gavle', 'halsingland'], ['staket', 'stockholm'], ['vadla', 'stockholm'], ['brannkyrka', 'stockholm'], ['brannkyrka', 'nykoping'], ['vasteras', 'uppsala'], ['kalmar', 'kronoberg'], ['kronoberg', 'halmstad'], ['halmstad', 'mared'], ['mared', 'getaryggen'], ['getaryggen', 'vadstena'], ['halmstad', 'axtorna'], ['axtorna', 'varberg'], ['varberg', 'alvsborg'], ['arboga', 'vasteras'], ['arboga', 'orebro'], ['reval', 'wesenberg'], ['wesenberg', 'narva'], ['reval', 'wenden'], ['viborg', 'kexholm'], ['uppsala', 'orbyhus'], ['soderkoping', 'linkoping'], ['linkoping', 'vadstena'], ['riga', 'kirkholm'], ['vasteras', 'skultuna'], ['orebro', 'filipstad'], ['kalmar', 'ryssby'], ['norrkoping', 'soderkoping'], ['norrkoping', 'nykoping'], ['viborg', 'novgorod'], ['skara', 'bogesund'], ['abo', 'helsingfors'], ['helsingfors', 'viborg'], ['viborg', 'kivinebb'], ['lubeck', 'lubeck']];
+  const HAMN = { riga: 1, goteborg: 1, danzig: 1, narva: 1, reval: 1, visby: 1, varberg: 1, halmstad: 1, nykoping: 1, stockholm: 1, kalmar: 1, abo: 1, helsingfors: 1, viborg: 1, soderkoping: 1, lubeck: 1, malmo: 1, kopenhamn: 1, gavle: 1, alvsborg: 1, stegeborg: 1, vasteras: 0 };
   const TILL_SJOSS = { bornholm: 1, ostersjon: 1, finskaviken: 1, olandsudde: 1 };
   const RADIE = { bygd: 5.2, gruva: 5.6, stad: 6.4, slott: 5.6 };
 
@@ -148,7 +148,7 @@
     },
     // Gustavs rundtur: närmaste granne genom de baser han äger på fastlandet.
     tour(ids) {
-      const land = ids.filter(id => ['abo', 'helsingfors', 'viborg', 'reval', 'narva', 'danzig'].indexOf(id) < 0); if (!land.length) return [];
+      const land = ids.filter(id => ['abo', 'helsingfors', 'viborg', 'reval', 'narva', 'danzig', 'riga', 'kirkholm', 'novgorod'].indexOf(id) < 0); if (!land.length) return [];
       const left = land.slice(), order = [left.shift()];
       while (left.length) { let best = 0, bd = 1e9; const c = P[order[order.length - 1]]; left.forEach((id, i) => { const d = Math.hypot(P[id].x - c.x, P[id].z - c.z); if (d < bd) { bd = d; best = i; } }); order.push(left.splice(best, 1)[0]); }
       return order;

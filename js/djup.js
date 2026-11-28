@@ -149,6 +149,29 @@
     siLinkoping: 'I Linköping lovade Sigismund att skicka hem sin här och regera enligt lag. Han och Karl åt middag tillsammans, som om allt var gott igen.',
     siAvfard: 'Sigismund bröt fördraget och seglade tillbaka till Polen. Han lämnade Kalmar med en besättning. Det var sista gången han var i Sverige.',
     siKalmarSlott: 'Kalmar slott gav upp 1599. Nu hade Sigismund inga fästen kvar i Sverige.',
-    siSlut: 'Riksdagen avsatte Sigismund 1599 och erbjöd tronen till hans son, om han skulle uppfostras i Sverige som lutheran. Sigismund vägrade. Hertig Karl styrde riket, och några år senare blev han kung som Karl IX.'
+    siSlut: 'Riksdagen avsatte Sigismund 1599 och erbjöd tronen till hans son, om han skulle uppfostras i Sverige som lutheran. Sigismund vägrade. Hertig Karl styrde riket, och några år senare blev han kung som Karl IX.',
+    // ---- Karl IX ----
+    kLinkoping: 'Karl hade vunnit kriget mot Sigismund, men många adelsmän hade stått på kungens sida. På riksdagen i Linköping ville Karl visa att ingen kunde gå emot honom. En domstol med 153 män dömde, och fem rådsherrar avrättades. Det kallas Linköpings blodbad, och det skrämde adeln i många år.',
+    kReval: 'Estland hade varit svenskt sedan Erik XIV:s tid. Sigismund hade lovat bort det till Polen, och Karl ville hålla det. Därför började han kriget själv, med en här som gick i land i Reval. Kriget mot Polen skulle sedan pågå i nästan trettio år, med uppehåll.',
+    kLivland: 'Livland, söder om Estland, hörde till Polen. Polackerna hade inte väntat sig ett anfall, och svenskarna vann land i början. De följande åren gick det sämre.',
+    kRadet: 'Efter Linköpings blodbad fanns nästan inget gammalt riksråd kvar. Karl lät landslagen bestämma hur många som skulle sitta där och vad de skulle göra. Även det nya rådet ville ofta något annat än kungen: det ville hellre försvara riket mot Danmark än kriga i öster.',
+    kGoteborg: 'Sveriges enda väg ut mot Västerhavet var den smala kusten vid Göta älv. All annan handel västerut måste gå genom Öresund, där Danmark tog tull. Karl ville ha en riktig handelsstad där. Karl IX:s Göteborg låg på Hisingen, inte där staden ligger i dag.',
+    kNorrkoping: 'Johan III:s yngre son hertig Johan hade också rätt till kronan. När han avstod kunde riksdagen bestämma att kronan skulle ärvas av Karls söner. Det betydde att Gustav Adolf skulle bli kung efter sin far.',
+    kArmen: 'Sverige hade inte tillräckligt många yrkessoldater. Kungen lät skriva ut män från bygderna, så att Sverige fick en egen här. Det var tungt för bönderna, som miste sina söner och drängar.',
+    kRiga: 'Riga var den största staden i Livland, vid floden Dünas mynning. Den som hade Riga styrde handeln från Polen och Ryssland ut till Östersjön. Karl ville ta staden och tvinga Sigismund till fred.',
+    kKirkholm: 'De polska husarerna var tunga ryttare med långa lansar. De låtsades dra sig undan, och när svenskarna hade lämnat sina höjder vände de och red rakt in i leden. Svenskarna lärde sig av nederlaget: senare red också de svenska ryttarna till anfall med blanka vapen.',
+    kHem: 'Kirkholm var ett av de värsta nederlagen i Sveriges historia. Men i Polen var adeln missnöjd med Sigismund, och han behövde sina soldater hemma. Därför kunde Polen inte följa upp segern.',
+    kSkultuna: 'Sverige hade mycket koppar, men det mesta såldes som det var. I Skultuna gjordes mässing av kopparn. Bruket grundades på Karl IX:s order och finns kvar i dag, som ett av världens äldsta företag.',
+    kKroning: 'Karl hade tagit makten från en krönt kung och ville visa att han nu var den rätte. Kröningen i Uppsala domkyrka, där Sveriges kungar kröntes, gjorde det tydligt. I sin titel kallade han sig också lapparnas kung i Nordlanden, för att visa att samerna i norr betalade skatt till Sverige.',
+    kGoteborg2: 'Holländarna var Europas skickligaste köpmän och sjöfarare. Med tjugo år utan skatt skulle de bygga upp staden och dess handel. Danmark såg Göteborg som en fara för sin tull i Öresund.',
+    kVaveri: 'Sverige köpte det mesta av sitt kläde utomlands. Karl ville att landet skulle göra sitt eget: han hämtade får och herdar från Tyskland och lät väva vid Nyköping och Eskilstuna. Den svenska textilindustrin börjar med honom.',
+    kFralse: 'Frälse betydde att man slapp skatt till kronan, och det var adelns förmån. Den som ställde upp en ryttare eller en knekt fick nu samma förmån. Så fick kungen fler soldater utan att betala allt själv.',
+    kViborg: 'I Ryssland hade den gamla tsarsläkten dött ut, och många stred om tronen. Polen ville sätta sin egen kandidat där. Karl stödde Vasilij Sjujskij, och i gengäld lovade Ryssland Sverige Kexholms län.',
+    kMoskva: 'Jakob De la Gardie var ung men skicklig. Han tog sig hela vägen till Moskva och togs emot med jubel. Efter nederlaget vid Klusjino kunde Polen sätta Sigismunds son Vladislav som tsar, och Ryssland lämnade aldrig över Kexholm. Då började ett nytt krig.',
+    kOrebro: 'Kristian IV av Danmark tyckte att Göteborg tog hans tullar, och han och Karl tvistade om vem som fick ta skatt av samerna i norr. Nu blev det krig, medan Sverige redan krigade mot Polen och Ryssland.',
+    kFilipstad: 'Bergslagen var Sveriges rikaste trakt, med järn och koppar. Karl lät bygga järnbruk där, och de första vallonerna kom för att arbeta. Berättelserna säger att bergsfolket älskade honom.',
+    kKalmar: 'Kalmar var Sveriges port mot Danmark i söder. Danskarna tog staden med storm, och slottets hövitsman gav upp slottet utan strid. Det var ett hårt slag för Sverige.',
+    kRyssby: 'Kristian IV ville gå vidare in i Sverige, men Karl höll lägret vid Ryssby. Samtidigt visade sonen Gustav Adolf att han var en djärv ung ledare, när han tog Kristianopel och Borgholm.',
+    kSlut: 'Karl IX dog i Nyköping hösten 1611 och begravdes i Strängnäs domkyrka. Han lämnade ett land i krig på tre håll. Gustav Adolf var bara 16 år, men det var han som skulle avsluta krigen.'
   };
 })();

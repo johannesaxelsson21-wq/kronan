@@ -4,6 +4,29 @@
   'use strict';
   const V = window.VASA = window.VASA || {};
   V.KORT = {
+    // ---- Karl IX ----
+    kLinkoping: 'Riksdagen hyllar Karl. Fem rådsherrar avrättas i Linköping.',
+    kReval: 'Karl går i land i Reval. Kriget mot Polen börjar.',
+    kLivland: 'Svenskarna har framgång i Livland.',
+    kRadet: 'Sverige får ett nytt riksråd.',
+    kGoteborg: 'Göteborg grundas på Hisingen.',
+    kNorrkoping: 'Karl blir kung Karl IX.',
+    kArmen: 'Utskrivningar till en ny här börjar.',
+    kRiga: 'Karl tar Dünamünde och belägrar Riga.',
+    kKirkholm: 'Nederlag vid Kirkholm. Henrik Wrede räddar kungen.',
+    kHem: 'Karl kommer hem med resten av hären.',
+    kSkultuna: 'Skultuna mässingsbruk grundas. Det finns kvar än i dag.',
+    kKroning: 'Karl IX kröns i Uppsala domkyrka.',
+    kGoteborg2: 'Göteborg får sina privilegier. Holländarna flyttar dit.',
+    kVaveri: 'Väverier i Nyköping och Eskilstuna. Kungen provar vävarna själv.',
+    kFralse: 'Den som ställer upp en ryttare får frälse.',
+    kViborg: 'Förbund med Ryssland i Viborg.',
+    kMoskva: 'De la Gardie tar sig till Moskva, men förlorar vid Klusjino.',
+    kOrebro: 'Danmark förklarar krig.',
+    kFilipstad: 'Filipstad grundas, med namn efter prins Karl Filip.',
+    kKalmar: 'Karl måste dra sig undan. Kalmar slott ges upp.',
+    kRyssby: 'Karl slår tillbaka danskarna vid Ryssby.',
+    kSlut: 'Karl IX dör i Nyköping.',
     // ---- Sigismund ----
     siSejm: 'Sejmen låter kungen resa till Sverige, men bara för en tid.',
     siUppsala: 'Uppsala möte: Sverige blir lutherskt, och Röda boken avskaffas.',
