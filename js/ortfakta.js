@@ -29,9 +29,10 @@
       [1569, 1587, 'Kung Johan bygger om slottet i renässansstil, med påkostade gavlar, och kärntornet höjs med två våningar.'],
       [1588, 1588, 'År 1588 sätts tre förgyllda kronor på kärntornets spira, och slottet får namnet Tre Kronor.'],
       [1589, 1599.56, 'Slottet heter Tre Kronor efter de tre förgyllda kronorna på kärntornets spira.'],
-      [1599.57, 1604.22, 'Hertig Karl är riksföreståndare, och kung Sigismund är avsatt.'],
-      [1604.23, 1611.82, 'Karl är kung sedan den 22 mars 1604.'],
-      [1611.83, 1611, 'Kung Karl dog den 30 oktober 1611, och hans son Gustav Adolf är kung.']
+      [1599.57, 1603.66, 'Hertig Karl är riksföreståndare, och kung Sigismund är avsatt.'],
+      [1603.67, 1604.22, 'Karl styr riket, och kung Sigismund är avsatt.'],
+      [1604.23, 1611.82, 'Karl är kung av Sverige.'],
+      [1611.83, 1611, 'Kung Karl dog den 30 oktober 1611, och hans son Gustav Adolf är arvinge till kronan.']
     ],
     'Uppsala': [
       [0, 1520.26, 'Ärkebiskopens stad, kyrkligt centrum i Sverige sedan 1164. Domkyrkan är Nordens största gotiska kyrkobyggnad, och universitetet grundades 1477 för att utbilda präster.'],
@@ -41,9 +42,11 @@
       [1528, 1528.03, 'Kyrkans ekonomiska och militära makt bröts vid riksdagen i Västerås 1527, och kyrkans gods går till kronan.'],
       [1528.04, 1548, 'Gustav Vasa kröntes i Uppsala den 12 januari 1528. Kyrkans makt bröts vid riksdagen i Västerås 1527, och kyrkans gods går till kronan.'],
       [1549, 1549, 'År 1549 börjar man bygga ett slott på Kasåsen, högt över staden.'],
-      [1550, 1566, 'På Kasåsen högt över staden byggs ett slott.'],
+      [1550, 1561.49, 'På Kasåsen högt över staden byggs ett slott.'],
+      [1561.50, 1566, 'Kung Erik kröntes i domkyrkan den 29 juni 1561. På Kasåsen högt över staden byggs ett slott.'],
       [1567, 1567.39, 'År 1567 blir de första boningsdelarna på slottet klara.'],
-      [1567.40, 1572.30, 'Den 24 maj 1567 mördades Svante Sture och två av hans söner på slottet, på kung Eriks order.'],
+      [1567.40, 1569.52, 'Den 24 maj 1567 mördades Svante Sture och två av hans söner på slottet, på kung Eriks order.'],
+      [1569.53, 1572.30, 'Kung Johan kröntes i Uppsala den 10 juli 1569.'],
       [1572.31, 1592, 'Slottet brann den 23 april 1572, och kung Johan bygger om det till ett renässanspalats.'],
       [1593, 1593.16, 'Slottet på Kasåsen är ett renässanspalats, utbyggt av kung Johan.'],
       [1593.17, 1593.21, 'Prästerna är samlade till Uppsala möte, som öppnades den 1 mars 1593.'],
@@ -96,8 +99,7 @@
       [1541, 1567, 'Örebro slott ligger på en holme i Svartån i Närke.'],
       [1568, 1568, 'År 1568 står de sista striderna vid Örebro slott, när hertigarna Johan och Karl gör uppror mot kung Erik.'],
       [1569, 1572, 'Örebro slott ligger på en holme i Svartån i Närke.'],
-      [1573, 1604.22, 'Hertig Karl har fått slottet i arv och bygger om det till ett vitlimmat renässansslott med fyra längor kring en borggård.'],
-      [1604.23, 1611, 'Kung Karl bygger om slottet till ett renässansslott med fyra längor kring en borggård.']
+      [1573, 1611, 'Karl, Gustav Vasas yngste son, har fått slottet i arv och bygger om det till ett vitlimmat renässansslott med fyra längor kring en borggård.']
     ],
     'Strängnäs': [
       [0, 1523.43, 'Biskopssäte sedan början av 1100-talet, med en domkyrka av tegel.'],
@@ -124,15 +126,14 @@
     ],
     'Nyköping': [
       [0, 1599, 'Nyköpingshus är en medeltida borg.'],
-      [1600, 1604.22, 'Hertig Karl har byggt om Nyköpingshus till ett renässansslott.'],
-      [1604.23, 1611, 'Kung Karl har byggt om Nyköpingshus till ett renässansslott.']
+      [1600, 1611, 'Karl, Gustav Vasas yngste son, har byggt om Nyköpingshus till ett renässansslott.']
     ],
     'Gripsholm': [
       [1537, 1537, 'År 1537 börjar kung Gustav bygga ett slott av tegel vid Mälaren.'],
       [1538, 1545, 'Kung Gustav bygger ett slott av tegel vid Mälaren.'],
       [1546, 1563.66, 'Slottets kärna med fyra torn och en sluten borggård står i stort sett färdig sedan 1545.'],
-      [1563.67, 1567.83, 'Hertig Johan och hans hustru Katarina Jagellonica sitter fångna på slottet.'],
-      [1567.84, 1570, 'Hertig Johan och Katarina Jagellonica satt fångna här från 1563 tills Johan släpptes i oktober 1567.'],
+      [1563.67, 1567.91, 'Hertig Johan och hans hustru Katarina Jagellonica sitter fångna på slottet.'],
+      [1567.92, 1570, 'Hertig Johan och Katarina Jagellonica satt fångna här från 1563 tills Johan släpptes hösten 1567.'],
       [1571, 1571, 'År 1571 låter kung Johan fängsla sin bror Erik och hans familj på slottet.'],
       [1572, 1572, 'Den avsatte kungen Erik och hans familj sitter fångna på slottet.'],
       [1573, 1573, 'År 1573 förs den avsatte kungen Erik vidare från slottet.'],
