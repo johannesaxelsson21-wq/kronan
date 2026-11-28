@@ -85,7 +85,7 @@
   }
 
   // ---- folk: alla gubbar av samma sort ritas i ett svep ------------------------------------------
-  const MAX = { bonde: 320, bage: 260, knekt: 220, dansk: 140, borgare: 90, kvinna: 90, bergsman: 70, rysk: 70 }, units = [], mesh = {};
+  const MAX = { bonde: 320, bage: 260, knekt: 220, dansk: 140, borgare: 180, kvinna: 200, bergsman: 110, rysk: 70 }, units = [], mesh = {};
   let pike, ski, sistT = 0;
   const Folk = V.Folk = {
     units, FARG,

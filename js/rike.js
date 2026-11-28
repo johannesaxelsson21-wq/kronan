@@ -95,7 +95,8 @@
     // Röjda ytor och vägar som skogen ska hålla sig borta från.
     clearings() {
       const c = [], bas = {}; D.BASER.forEach(b => bas[b.id] = b);
-      for (const id in P) if (!TILL_SJOSS[id]) c.push({ x: P[id].x, z: P[id].z, r: bas[id] ? RADIE[bas[id].slag] * (bas[id].stor ? 1.35 : 1) + 0.6 : 2.4 });
+      // städerna får plats för förstäderna när de växer (Johannes 2026-11-28)
+      for (const id in P) if (!TILL_SJOSS[id]) c.push({ x: P[id].x, z: P[id].z, r: bas[id] ? RADIE[bas[id].slag] * (bas[id].stor ? 1.35 : 1) * (bas[id].slag === 'stad' ? 1.42 : 1) + 0.6 : 2.4 });
       return c;
     },
     roads() { const out = []; for (const [a, b] of VAGAR) if (a !== b) out.push(edges[a + '|' + b]); return out; },

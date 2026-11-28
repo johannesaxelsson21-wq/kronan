@@ -8,11 +8,11 @@
   // de sista 'max' enheterna av en väg (skattetruppen går inte genom halva riket)
   function svans(pts, max) { let d = 0; for (let k = pts.length - 1; k > 0; k--) { d += Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]); if (d >= max) return pts.slice(k - 1); } return pts; }
   const idx = id => { const i = D.UPPDRAG.findIndex(u => u.id === id); return i < 0 ? 1e9 : i; };          // uppdrag från en annan värld räknas som aldrig gjorda
-  const stegAv = L => Math.min(MAXSTEG, Math.floor((L || 0) / 10));
+  const stegAv = L => Math.min(MAXSTEG, Math.floor((L || 0) / 5));          // ett nytt kvarter var femte nivå (Johannes 2026-11-28: städerna ska synligt växa när man bygger ut dem)
   function lager(p, n) { const mb = new V.MB(); for (let k = 0; k < (n || 9); k++) { const a = k * 2.4, d = 0.5 + (k % 3) * 0.6; mb.push().move(Math.cos(a) * d, 0, Math.sin(a) * d * 0.8).rotY(a); B.talt(mb); mb.pop(); } B.eld(mb); const m = B.mesh(mb); m.position.set(p.x, Geo.groundAt(p.x, p.z), p.z); m.scale.setScalar(B.K); B.smoke.push({ x: p.x, y: Geo.groundAt(p.x, p.z) + 0.3, z: p.z, slag: 'eld', bas: 'stockholm' }); return m; }
   const finns = b => !(b.varld && b.varld.indexOf(G.s.varld) < 0) && (G.s.varld >= 2 || !(b.slag === 'slott' || b.ny || b.id === 'sala'));          // fanns platsen redan (1520, eller 1560 i Eriks värld)? En plats med varld finns bara i de världarna
   const JAMN = 0.6;          // förspelet: så stor del av toppfarten håller den som rider rundan, hela tiden
-  const MAXSTEG = 7, SATE = ['kopparberget', 'hedemora', 'vasteras', 'uppsala', 'brunkeberg'];
+  const MAXSTEG = 16, SATE = ['kopparberget', 'hedemora', 'vasteras', 'uppsala', 'brunkeberg'];
 
   const W = V.Varld = {
     tomt, P: R.P,
@@ -408,7 +408,7 @@
       else if (typ === 'skattUt') W._skattUt(d.nr);
       else if (typ === 'skatt') { const v = W._skattSlut(d.nr); if (v) { const p = R.P[v.till]; Fx.guld(p.x, p.y + 0.3, p.z, 36, 1.3); } }
       else if (typ === 'niva') {
-        const p = R.P[d.bas], s = Math.min(MAXSTEG, Math.floor(d.niva / 10));
+        const p = R.P[d.bas], s = stegAv(d.niva);
         if (d.dubbel) { Fx.guld(p.x, p.y + 0.3, p.z, 70, tomt[d.bas].R * 0.8); Scene.shake(0.25); }
         else { Fx.guld(p.x, p.y + 0.3, p.z, 7, 1.2); Fx.damm(p.x, p.y + 0.1, p.z, 3); const m = steg[d.bas][steg[d.bas].length - 1]; if (m && !pops.some(o => o.m === m)) W._pop(m, d.bas, 0.95); }          // varje köp syns: husen ger till ett litet hopp
         while (steg[d.bas].length <= s) W.byggSteg(d.bas, false);
@@ -517,7 +517,7 @@
     _folk(dt, t) {
       const S = G.s;
       for (const b of D.BASER) {
-        const L = S.bas[b.id] || 0, want = L ? Math.min(9, 3 + Math.floor(L / 8)) + (b.slag === 'gruva' ? Math.min(8, G.arb(b.id)) : 0) : (steg[b.id].length ? 2 : 0), list = vandrare[b.id] || (vandrare[b.id] = []), p = R.P[b.id], tm = tomt[b.id];
+        const L = S.bas[b.id] || 0, want = L ? Math.min(b.slag === 'stad' ? 26 : 16, 3 + Math.floor(L / 3)) + (b.slag === 'gruva' ? Math.min(8, G.arb(b.id)) : 0) : (steg[b.id].length ? 2 : 0), list = vandrare[b.id] || (vandrare[b.id] = []), p = R.P[b.id], tm = tomt[b.id];
         while (list.length < want) { const q = W._ledig(tm), u = Folk.add(p.x + q[0], p.z + q[1], b.slag === 'bygd' ? 'by' : b.slag === 'gruva' ? 'bergsman' : 'borgare'); list.push({ u, tx: u.x, tz: u.z, vanta: Math.random() * 3, hopp: 0 }); }
         for (const v of list) {
           const u = v.u, dx = v.tx - u.x, dz = v.tz - u.z, d = Math.hypot(dx, dz);
