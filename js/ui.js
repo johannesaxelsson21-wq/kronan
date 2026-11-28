@@ -274,7 +274,7 @@
     // När ska rutan om en knapp visas? Med mus: när pekaren är över knappen. På pekskärm: bara när fingret hålls kvar en stund,
     // och då räknas trycket inte som ett köp. Ett vanligt tryck på telefon köper utan att någon ruta kommer upp.
     _svava(e, visa, dolj) {
-      if (!V.pek) { e.addEventListener('mouseenter', visa); e.addEventListener('mouseleave', dolj); return; }
+      if (!V.pek) { let mt = null, uppe = false; e.addEventListener('mouseenter', () => { clearTimeout(mt); mt = setTimeout(() => { uppe = true; visa(); }, 650); }); e.addEventListener('mousemove', () => { if (!uppe) { clearTimeout(mt); mt = setTimeout(() => { uppe = true; visa(); }, 650); } }); e.addEventListener('mouseleave', () => { clearTimeout(mt); mt = null; if (uppe) { uppe = false; dolj(); } }); return; }          // med mus: rutan kommer först när pekaren har stått still över kortet en stund (Johannes 2026-11-28: "den poppar upp för mycket")
       let tm = null; const slut = () => { clearTimeout(tm); tm = null; if (e._visar) { e._visar = false; dolj(); } };
       e.addEventListener('pointerdown', () => { e._hallen = false; clearTimeout(tm); tm = setTimeout(() => { e._hallen = true; e._visar = true; visa(); }, 450); });
       ['pointerup', 'pointerleave', 'pointercancel'].forEach(n => e.addEventListener(n, slut));
