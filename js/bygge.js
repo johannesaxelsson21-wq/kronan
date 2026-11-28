@@ -66,6 +66,7 @@
   function lada(mb) { mb.box(0, 0, 0, 1.15, 0.42, 0.7, '#6f5c49', { low: '#473829', noTop: true }); mb.gable(0, 0.42, 0, 1.15, 0.5, 0.7, TAK.halm.c, { over: 0.12, gable: '#5f4d3c', ridge: TAK.halm.r }); mb.quad([-0.2, 0.02, 0.356], [0.2, 0.02, 0.356], [0.2, 0.36, 0.356], [-0.2, 0.36, 0.356], '#2c1f16', '#3a2a1e', 0); }
   // Sockenkyrka i vitkalkad sten med brant spåntak, kor i öster och vapenhus i söder.
   function kyrka(mb) {
+    if (V.Kanda && V.Kanda.kyrka(mb)) return;          // ortens egen kyrka (kanda.js)
     mb.box(0, 0, 0, 1.5, 0.78, 0.8, '#e6dfce', { low: '#bfb7a5', noTop: true }); mb.gable(0, 0.78, 0, 1.5, 0.78, 0.8, TAK.span.c, { over: 0.08, gable: '#e6dfce', ridge: TAK.span.r });
     mb.box(0.98, 0, 0, 0.56, 0.6, 0.58, '#e2dbc9', { low: '#bfb7a5', noTop: true }); mb.gable(0.98, 0.6, 0, 0.56, 0.55, 0.58, TAK.span.c, { over: 0.06, gable: '#e2dbc9', ridge: TAK.span.r });
     mb.push().move(-0.28, 0, 0.58).rotY(Math.PI / 2); mb.box(0, 0, 0, 0.36, 0.42, 0.36, '#e2dbc9', { low: '#bfb7a5', noTop: true }); mb.gable(0, 0.42, 0, 0.36, 0.34, 0.36, TAK.span.c, { over: 0.05, gable: '#e2dbc9' }); mb.pop();
@@ -81,6 +82,7 @@
   }
   // Domkyrka i tegel. torn: antal västtorn.
   function domkyrka(mb, torn, s) {
+    if (V.Kanda && V.Kanda.dom(mb, torn, s)) return;          // ortens egen domkyrka (kanda.js)
     s = s || 1; mb.push().scale(s);
     mb.box(0, 0, 0, 2.4, 1.15, 0.9, '#9c4c38', { low: '#733526', noTop: true }); mb.gable(0, 1.15, 0, 2.4, 0.8, 0.9, '#52635f', { over: 0.05, gable: '#9c4c38', ridge: '#687a76' });
     for (const sz of [-0.62, 0.62]) { mb.box(0, 0, sz, 2.2, 0.62, 0.36, '#964733', { low: '#6e3223', noTop: true }); mb.quad([-1.1, 0.62, sz + (sz > 0 ? 0.18 : -0.18)], [1.1, 0.62, sz + (sz > 0 ? 0.18 : -0.18)], [1.1, 0.95, sz - (sz > 0 ? 0.18 : -0.18)], [-1.1, 0.95, sz - (sz > 0 ? 0.18 : -0.18)], '#52635f', '#687a76', 1); }
@@ -113,6 +115,7 @@
 
   // Borgar. Varje sort har en tydlig siluett.
   function borg(mb, sort, steg) {
+    if (V.Kanda && V.Kanda.borg(mb, sort, steg)) return;          // ortens egen borg, så som den såg ut det året (kanda.js)
     if (sort === 'liten') {
       mur(mb, -1, 0.8, 1, 0.8, 0.5); mur(mb, -1, -0.8, 1, -0.8, 0.5); mur(mb, -1, -0.8, -1, 0.8, 0.5); mur(mb, 1, -0.8, 1, 0.8, 0.5);
       port(mb, -0.45, 0.885, 0.3, 0.34); fyrtorn(mb, -0.1, -0.2, 0.8, 1.25, '#a39c90', '#4a3e34'); rundtorn(mb, 1, 0.8, 0.3, 0.8); rundtorn(mb, -1, 0.8, 0.26, 0.7); mb.box(0.5, 0, -0.35, 0.6, 0.5, 0.5, '#a39c90', { low: '#6a655d', noTop: true }); mb.gable(0.5, 0.5, -0.35, 0.6, 0.3, 0.5, '#4a3e34', { gable: '#a39c90' });
