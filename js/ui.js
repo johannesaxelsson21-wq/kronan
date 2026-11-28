@@ -168,7 +168,7 @@
       if (UI._kungOppen) { if ($('ruta').style.display === 'none') UI._kungOppen = false; else UI._kungKort(); }
       if (S.t > 25 && !S.aktivt && !G.skede() && root.classList.contains('spel') && !UI.notisUppe()) {          // en ny sak i taget, som en notis som står kvar tills man har sett den
         if ((D.VARLDAR[S.varld] || {}).takKung && S.titel === 'Kung' && !S.takSagt) { S.takSagt = 1; UI.notis('Som kung har ' + ((D.KUNGINFO[S.varld] || {}).namn || 'kungen') + ' rikets stående armé av svenskt fotfolk. Armén rymmer nu ' + tal(G.tak()) + ' män.'); }
-        else if (G.harVarv() && !S.varvSagt) { S.varvSagt = 1; UI.notis('På skeppsgården vid Björkenäs kan män bygga skepp. Kortet ligger under Män.', 'varv'); }
+        else if (G.harVarv() && !S.varvSagt) { S.varvSagt = 1; S.nytt = (S.nytt || []).concat('varv'); }          // en ny sak: Tryck här och bildrutan (Johannes 2026-11-28)
         else if (G.egLista().length && S.varvSagt && !S.kungSagt && S.t > 70) { S.kungSagt = 1; UI.notis('Tryck på ' + ((D.KUNGINFO[S.varld] || {}).namn || 'kungen') + ', så ser du vem han är och vad han kan bli bättre på.', 'kung'); }
       }
       if (skattRad) {            // driv in skatt: män ut, mark hem
@@ -684,7 +684,23 @@
         ? '<div class="lar-pil"><svg viewBox="0 0 44 14"><path d="M2 7h34M30 2l7 5-7 5"/></svg><span>' + b.pil + '</span></div>'
         : '<div class="lar-mk"><div class="lar-rund">' + (M[b.ik] || M.krona || '') + '</div><b>' + b.stor + '</b><span>' + (b.liten || '') + '</span></div>').join('') + '</div>' + (text ? '<p>' + text + '</p>' : '');
     },
-    _skattLar() { return UI._lar('Driv in skatt', [{ ik: 'man', stor: tal(G.skattPris()) + ' män', liten: 'går ut' }, { pil: '12 s' }, { ik: 'mark', stor: '+' + tal(G.skattGer()) + ' mark', liten: 'kommer hem' }], 'Tryck på det gröna kortet. Laget kommer hem med skatten efter tolv sekunder, och tre lag kan vara ute på en gång.'); },
+    _skattBild() { return [{ ik: 'man', stor: tal(G.skattPris()) + ' män', liten: 'går ut' }, { pil: '12 s' }, { ik: 'mark', stor: '+' + tal(G.skattGer()) + ' mark', liten: 'kommer hem' }]; },
+    _skattLar() { return UI._lar('Driv in skatt', UI._skattBild(), UI._skattRad); },
+    _skattRad: 'Tryck på det gröna kortet. Laget kommer hem med skatten efter tolv sekunder, och tre lag kan vara ute på en gång.',
+    // Kan något komma som en ny sak med Tryck här och bildruta (i stället för en notisrad)?
+    nyttHar(k) { return !!k && !!UI._nyttDef(k); },
+    // Notisens text utan raderna om var kortet ligger: det visar Tryck här redan
+    _nyttRad(k) { const t = (G.s.nyttText || {})[k]; if (!t) return ''; return t.split(/(?<=\.)\s+/).filter(m => !/^(Under |Kortet ligger)/.test(m)).join(' '); },
+    // Var man trycker för att komma till en stads kort: i listan Dina orter, i stadsmenyn eller på stadens flik
+    _tillStad(p) {
+      if (!$('flik-stad')) return null; const sm = $('stadmeny');
+      if (sm && sm.style.display !== 'none' && sm.querySelector('button[data-id="' + p + '"]')) return '#stadmeny button[data-id="' + p + '"]';
+      if (flik === 'stad' && UI.stadNu() === p) return null;
+      const sl = document.querySelector('#stadlista .sl-rad[data-id="' + p + '"]'); if (sl && sl.offsetParent) return '#stadlista .sl-rad[data-id="' + p + '"]';
+      return '#flik-stad';
+    },
+    // Den nya saken är sedd: nästa nya sak i förspelet dröjer räknat från nu (game.js _infor)
+    _nyttBort() { const S = G.s, k = (S.nytt || [])[0]; if (!k) return; S.nytt.shift(); S.infordT = S.t; if (k === 'skatt') { S.tips.skatt = 1; S.tips.skattFlik = 1; } },
     // Varje ny sak (S.nytt): rubrik, bilder, en rad, kortet den gäller (sel) och fliken kortet ligger under (flik).
     _nyttDef(k) {
       const S = G.s, mark = $('res-mark') ? '#res-mark' : '#res-man', kung = $('flik-kung') ? '#flik-kung' : null, typ = k.slice(0, 2), id = k.slice(2);
@@ -698,7 +714,13 @@
         return { namn, sel: '#konst-' + kd.id, flik: kung, rubrik: 'Ny förmåga', bild: [{ ik: 'krona', stor: namn, liten: 'förmåga' }, { pil: 'en nivå' }, { ik: v[0], stor: v[1], liten: v[2] }], text: mer }; }
       if (typ === 'e:') { const e = G.egAlla().find(q => q.id === id); if (!e) return null; const pa = { man: ['man', 'allt som ger män'], mark: ['mark', 'all mark'], skatt: ['mark', 'Driv in skatt'], gruva: ['gruva', 'gruvorna'], flotta: ['kogg', 'tullen'] }[e.ger] || ['upp', e.nar];
         return { namn: e.namn, sel: '#eg-' + e.id, flik: kung, rubrik: 'Ny egenskap', bild: [{ ik: 'krona', stor: e.namn, liten: 'egenskap' }, { pil: 'en nivå' }, { ik: pa[0], stor: '+' + Math.round(e.steg * 100) + ' %', liten: pa[1] }], text: mer }; }
+      { const b = D.BYGGNADER.find(q => q.id === k); if (b) { const p = b.stad || b.plats, ort = G.BAS[p] ? G.BAS[p].namn : '', rad = UI._nyttRad(k) || b.vad;          // stadens hus (förspelet): bilden visar vad det ger, raden är notisens
+        if (b.niva) return { namn: b.namn, sel: '#hus-' + b.id, flik: UI._tillStad(p), tvinga: true, rubrik: b.namn, bild: [{ ik: 'stad', stor: b.namn, liten: 'i ' + ort }, { pil: 'en nivå' }, G.husRes(b) === 'man' ? { ik: 'man', stor: 'Fler män', liten: 'från ' + ort } : { ik: 'mark', stor: 'Mer mark', liten: 'från ' + ort }], text: rad };
+        const ger = { knektar: { ik: 'man', stor: 'Knektar', liten: 'mark blir män' }, radstuga: { ik: 'krona', stor: 'Brev', liten: 'och Sigillet' }, ladugard: { ik: 'man', stor: 'Större armé', liten: 'en fjärdedel fler' }, torn: { ik: 'slott', stor: 'Fler män', liten: 'och starkare försvar' } }[b.id] || { ik: 'upp', stor: b.namn, liten: typeof b.ger === 'string' ? b.ger : '' };          // samma som korten och husens text i data.js säger
+        return { namn: b.namn, sel: '#bygg-' + b.id, flik: UI._tillStad(p), tvinga: true, rubrik: b.namn, bild: [{ ik: 'mark', stor: tal(b.kostar) + ' mark', liten: 'att bygga' }, { pil: '' }, ger], text: rad }; } }
       return ({
+        skatt: () => ({ namn: 'Driv in skatt', sel: '#skatt', flik: '#res-man', rubrik: 'Driv in skatt', bild: UI._skattBild(), text: UI._skattRad }),
+        varv: () => ({ namn: 'Varvet', sel: '#varv', flik: '#res-man', rubrik: 'Varvet', bild: [{ ik: 'man', stor: tal(G.varvLag()) + ' män', liten: 'för varje tryck' }, { pil: '' }, { ik: 'kogg', stor: 'Skepp', liten: 'byggs på varvet' }], text: 'På skeppsgården vid Björkenäs kan män bygga skepp.' }),
         mark: () => ({ namn: 'Mark', sel: $('res-mark') ? '#res-mark' : '#kassa .ks-mark', rubrik: 'Mark', bild: [{ ik: 'stad', stor: 'Orterna', liten: 'på kartan' }, { pil: '' }, { ik: 'mark', stor: 'Mark', liten: 'rikets pengar' }], text: 'Med mark bygger du ut och betalar nästa steg.' }),
         man: () => ({ namn: 'Män', sel: '#res-man', rubrik: 'Män', bild: [{ ik: 'stad', stor: 'Orterna', liten: 'på kartan' }, { pil: '' }, { ik: 'man', stor: 'Män', liten: 'din armé' }], text: 'Män behövs i striderna, när du bygger ut och när du driver in skatt.' }),
         arb: () => ({ namn: 'Gruvarbetare', sel: '.bas.arb', flik: mark, rubrik: 'Gruvarbetare', bild: [{ ik: 'man', stor: 'Ett lag', liten: 'män' }, { pil: '' }, { ik: 'gruva', stor: '+10 %', liten: 'från gruvan' }], text: 'Männen lämnar armén och bryter malm i stället.' }),
@@ -735,21 +757,29 @@
       const nyttSteg = UI._nyttSteg(); if (nyttSteg) steg.unshift(nyttSteg);
       if (UI._pek) { const p = UI._pek; if (!synlig(p.sel) && performance.now() - p.t0 > 1200) UI._pek = null; else steg.unshift(['pek', p.sel, UI._pekText(), true, false, false, 'peka', '']); }
       if (tips.nu) { const s = steg.find(q => q[0] === tips.nu); if (!s || s[4]) { if (tips.nu.slice(0, 5) !== 'nytt:' && tips.nu !== 'pek') T[tips.nu] = 1; tips.nu = null; e.innerHTML = ''; } else if (!s[3] || !synlig(s[1]) || (tips.malSel && s[1] !== tips.malSel)) { tips.nu = null; tips.malSel = null; e.innerHTML = ''; } }
+      if (tips.nu && nyttSteg && tips.nu.slice(0, 5) !== 'nytt:' && tips.nu !== 'pek') { tips.nu = null; tips.malSel = null; e.innerHTML = ''; }          // en ny sak går före ett vanligt tips, som kommer tillbaka efteråt (annars kan förspelets nya saker fastna bakom det)
       if (tips.nu === 'stadByt' && performance.now() - tips.t0 > 6000) { tips.nu = null; e.innerHTML = ''; }          // flik-tipset visas en gång, en kort stund (Johannes 2026-11-28: "nu blir man bara irriterad")
       if (!tips.nu) { const s = steg.find(q => !T[q[0]] && q[3] && synlig(q[1])); if (s) { tips.nu = s[0]; tips.t0 = performance.now(); if (s[0] === 'stadByt') T.stadByt = 1; e.innerHTML = '<div class="tip' + (s[5] ? ' nytt' : '') + (s[6] ? ' ' + s[6] : '') + '">' + (s[5] ? '<span class="tip-ny">Nytt</span>' : '') + s[2] + '</div>'; UI._logga(s[7] !== undefined ? s[7] : s[2]);
-        const x = e.querySelector('.lar-x'); if (x) x.addEventListener('pointerdown', ev => { ev.stopPropagation(); if (s[0].slice(0, 5) === 'nytt:') { if (G.s.nytt) G.s.nytt.shift(); } else T[s[0]] = 1; tips.nu = null; tips.malSel = null; e.innerHTML = ''; document.querySelectorAll('.peka-mal').forEach(m => m.classList.remove('peka-mal')); }); } }          // rutan som förklarar stängs med krysset, eller när man trycker på kortet
+        const x = e.querySelector('.lar-x'); if (x) x.addEventListener('pointerdown', ev => { ev.stopPropagation(); if (s[0].slice(0, 5) === 'nytt:') UI._nyttBort(); else T[s[0]] = 1; tips.nu = null; tips.malSel = null; e.innerHTML = ''; document.querySelectorAll('.peka-mal').forEach(m => m.classList.remove('peka-mal')); }); } }          // rutan som förklarar stängs med krysset, eller när man trycker på kortet
       { const s = tips.nu && steg.find(q => q[0] === tips.nu), pm = s && s[6] ? document.querySelector(s[1]) : null; document.querySelectorAll('.peka-mal').forEach(x => { if (x !== pm) x.classList.remove('peka-mal'); }); if (pm && !pm.classList.contains('peka-mal')) pm.classList.add('peka-mal'); }          // det man ska trycka på lyser lugnt
       if (tips.nu && nyttSteg && !nyttSteg[6] && tips.nu === nyttSteg[0]) { const m0 = document.querySelector(nyttSteg[1]); document.querySelectorAll('.glod-ny').forEach(x => { if (x !== m0) x.classList.remove('glod-ny'); }); if (m0) m0.classList.add('glod-ny'); } else document.querySelectorAll('.glod-ny').forEach(x => x.classList.remove('glod-ny'));
       if (tips.nu) {            // håll rutan ovanför det den pekar på
         const s = steg.find(q => q[0] === tips.nu), mal = document.querySelector(s[1]), t = e.firstChild; tips.malSel = s[1]; if (!mal || !t) return;
         // ett tryck på det bubblan pekar på tar bort den direkt (Johannes 2026-11-28: "rutorna ska försvinna när man trycker på knappen den visar till direkt")
-        if (!tips.allm) { tips.allm = ev => { const k = tips.nu; if (!k || !tips.malSel) return; const m = document.querySelector(tips.malSel); if (!m || !m.contains(ev.target)) return; if (k.slice(0, 5) === 'nytt:') { if (k.slice(-5) !== ':flik' && G.s.nytt) G.s.nytt.shift(); } else if (k === 'pek') UI._pek = null; else G.s.tips[k] = 1; tips.nu = null; tips.malSel = null; $('tips').innerHTML = ''; document.querySelectorAll('.glod-ny').forEach(x => x.classList.remove('glod-ny')); }; document.addEventListener('pointerdown', tips.allm, true); } t.style.visibility = mal.offsetParent ? '' : 'hidden';
+        if (!tips.allm) { tips.allm = ev => { const k = tips.nu; if (!k || !tips.malSel) return; const m = document.querySelector(tips.malSel); if (!m || !m.contains(ev.target)) return; if (k.slice(0, 5) === 'nytt:') { if (k.slice(-5) !== ':flik') UI._nyttBort(); } else if (k === 'pek') UI._pek = null; else G.s.tips[k] = 1; tips.nu = null; tips.malSel = null; $('tips').innerHTML = ''; document.querySelectorAll('.glod-ny').forEach(x => x.classList.remove('glod-ny')); }; document.addEventListener('pointerdown', tips.allm, true); } t.style.visibility = mal.offsetParent ? '' : 'hidden';
         const r = mal.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight, pan = mal.closest('#baser'), pr = pan && pan.getBoundingClientRect();
-        if (pr && pr.left - w - 16 >= 8 && !mal.classList.contains('flik') && !t.classList.contains('lar') && !t.classList.contains('peka')) {          // pekar den på något i panelen står rutan bredvid panelen, inte över korten (Johannes 2026-11-28). Tryck här och rutan som förklarar står i stället ovanför, med pilen rakt ner
-          t.classList.add('vid'); t.style.left = (pr.left - w - 14) + 'px'; t.style.top = Math.max(8, Math.min(innerHeight - h - 8, r.top + r.height / 2 - h / 2)) + 'px';
+        // Tryck här på ett kort står på själva kortet, aldrig ovanför ett annat kort (Johannes 2026-11-28 17:35: "jag trodde man skulle trycka på Åbo"). I listan med orter står den bredvid listan, med pilen mot raden.
+        const pk = t.classList.contains('peka'), lista = pk && mal.closest('#stadlista, #stadmeny'), lr = lista && lista.getBoundingClientRect(), paKort = pk && !lista && !!mal.closest('#baser .bas');
+        if (lista && lr.left - w - 16 >= 8) {
+          t.classList.remove('pa'); t.classList.add('vid'); t.style.left = (lr.left - w - 14) + 'px'; t.style.top = Math.max(8, Math.min(innerHeight - h - 8, r.top + r.height / 2 - h / 2)) + 'px';
+          t.style.setProperty('--pilY', Math.max(10, Math.min(h - 10, r.top + r.height / 2 - parseFloat(t.style.top))) + 'px');
+        } else if (lista || paKort) {
+          t.classList.remove('vid'); t.classList.add('pa'); t.style.left = Math.max(8, Math.min(innerWidth - w - 8, lista ? r.right - w - 6 : r.left + r.width / 2 - w / 2)) + 'px'; t.style.top = (r.top + r.height / 2 - h / 2) + 'px';
+        } else if (pr && pr.left - w - 16 >= 8 && !mal.classList.contains('flik') && !t.classList.contains('lar') && !t.classList.contains('peka')) {          // pekar den på något i panelen står rutan bredvid panelen, inte över korten (Johannes 2026-11-28). Tryck här och rutan som förklarar står i stället ovanför, med pilen rakt ner
+          t.classList.remove('pa'); t.classList.add('vid'); t.style.left = (pr.left - w - 14) + 'px'; t.style.top = Math.max(8, Math.min(innerHeight - h - 8, r.top + r.height / 2 - h / 2)) + 'px';
           t.style.setProperty('--pilY', Math.max(10, Math.min(h - 10, r.top + r.height / 2 - parseFloat(t.style.top))) + 'px');
         } else {
-          t.classList.remove('vid'); t.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; { const pk = t.classList.contains('peka'); t.style.top = ((!pk && mal.closest('.sida') && $('flikar') ? $('flikar').getBoundingClientRect().top - 4 : r.top) - h - (pk ? 10 : 14)) + 'px'; }          // ett kort: rutan står ovanför flikarna, så att den inte täcker dem. Tryck här står rakt ovanför det den gäller, så att det inte går att ta miste på
+          t.classList.remove('vid'); t.classList.remove('pa'); t.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; { t.style.top = ((!pk && mal.closest('.sida') && $('flikar') ? $('flikar').getBoundingClientRect().top - 4 : r.top) - h - (pk ? 10 : 14)) + 'px'; }          // ett kort: rutan står ovanför flikarna, så att den inte täcker dem. Tryck här står rakt ovanför det den gäller, så att det inte går att ta miste på
           t.style.setProperty('--pil', Math.max(14, Math.min(w - 14, r.left + r.width / 2 - parseFloat(t.style.left))) + 'px');
         }
       }
@@ -762,10 +792,10 @@
     _nyttSteg() {
       const S = G.s, k = (S.nytt || [])[0]; if (!k) return null;
       const synlig = sel => { const m = document.querySelector(sel); return !!(m && m.offsetParent); };
-      const d = UI._nyttDef(k); if (!d || !d.sel) { S.nytt.shift(); return null; }
-      const fl = d.flik && document.querySelector(d.flik); if (!synlig(d.sel) && !(fl && fl.offsetParent && !fl.classList.contains('vald'))) { const nu = performance.now(); if (tips.osyn !== k) { tips.osyn = k; tips.osynT = nu; } else if (nu - tips.osynT > 8000) { S.nytt.shift(); tips.osyn = null; } return null; }          // syns inte alls: släpp den efter en stund, så att kön inte fastnar
+      const d = UI._nyttDef(k); if (!d || !d.sel || (k === 'skatt' && (S.tips.skatt || S.skattN))) { UI._nyttBort(); return null; }
+      const fl = d.flik && document.querySelector(d.flik); if (!synlig(d.sel) && !(fl && fl.offsetParent && (d.tvinga || !fl.classList.contains('vald')))) { const nu = performance.now(); if (tips.osyn !== k) { tips.osyn = k; tips.osynT = nu; } else if (nu - tips.osynT > 8000) { UI._nyttBort(); tips.osyn = null; } return null; }          // syns inte alls: släpp den efter en stund, så att kön inte fastnar
       tips.osyn = null;
-      if (synlig(d.sel)) return ['nytt:' + k, d.sel, UI._lar(d.rubrik, d.bild, d.text), true, false, false, 'lar', d.rubrik + ': ' + d.text];
+      if (synlig(d.sel)) return ['nytt:' + k, d.sel, UI._lar(d.rubrik, d.bild, d.text), true, false, false, 'lar', (S.nyttText || {})[k] || d.rubrik + ': ' + d.text];
       return ['nytt:' + k + ':flik', d.flik, UI._pekText('Nytt: ' + d.namn), true, false, false, 'peka', ''];
     },
 

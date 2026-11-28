@@ -741,6 +741,11 @@ button { font-family: inherit; cursor: pointer; }
 @keyframes pekgupp { 50% { transform: translateY(-3px); } }
 .tip.vid.peka { animation: tipIn 0.45s ease-out both, pekgupp-s 2.4s ease-in-out 0.6s infinite; }
 @keyframes pekgupp-s { 50% { transform: translateX(-3px); } }
+/* Tryck här som står på själva kortet: ingen pil, den pulserar lugnt (Johannes 2026-11-28 17:35) */
+.tip.peka { z-index: 9; }
+.tip.pa { animation: tipIn 0.45s ease-out both, pekpuls 2.4s ease-in-out 0.6s infinite; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 0 2px #f2cf5a, 0 0 14px 3px rgba(242, 207, 90, 0.55); }
+.tip.pa::after { display: none; }
+@keyframes pekpuls { 50% { transform: scale(1.06); } }
 .tip-tryck { font-size: 17px; font-weight: bold; letter-spacing: 0.03em; color: #3a2408; white-space: nowrap; }
 .tip.peka small { display: block; margin-top: 1px; font-size: 12.5px; line-height: 1.3; color: #6b5233; }
 .peka-mal { animation: pekglod 2.4s ease-in-out infinite !important; }

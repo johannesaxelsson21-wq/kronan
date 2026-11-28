@@ -30,7 +30,7 @@
     else if (typ === 'marknadKlar') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.2, p.z, 'Marknad +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark'), d.res); V.Ljud.spela('dubbel');
     }
     else if (typ === 'sold' && d.dubbel) UI.skylt((G.s.varld === 0 ? 'Knektarna' : 'Soldaterna') + ': ' + (G.dub() === 2 ? 'dubbelt så många män' : Math.round((G.dub() - 1) * 100) + ' % fler män'), false, true);
-    else if (typ === 'infor') { if (/^[ke]:/.test(d.id)) G.s.nytt = (G.s.nytt || []).concat(d.id); UI.notis(d.text, d.id); UI.tick(true); }          // en ny sak i taget, som en notis som står kvar tills man har tryckt på den eller stängt den (Johannes 2026-11-28)
+    else if (typ === 'infor') { if (UI.nyttHar(d.id)) { G.s.nyttText = Object.assign(G.s.nyttText || {}, { [d.id]: d.text }); if ((G.s.nytt || []).indexOf(d.id) < 0) G.s.nytt = (G.s.nytt || []).concat(d.id); } else UI.notis(d.text, d.id); UI.tick(true); }          // en ny sak i taget, som en notis som står kvar tills man har tryckt på den eller stängt den (Johannes 2026-11-28)
     else if (typ === 'slagTryck') UI._studs = performance.now();
     else if (typ === 'malVald' && !fritt()) { UI._studs = performance.now(); UI.svar('Tryck nu på knappen', true); V.Ljud.spela('kop'); }
     else if (typ === 'malForst') { if (performance.now() > (UI._forstT || 0)) { UI._forstT = performance.now() + (fritt() ? 4000 : 1800); if (fritt()) UI.text(slagHur(G.uppdrag()), 3); else UI.svar('Tryck på ringen i slaget', false); } }          // ringen i slaget studsar till
