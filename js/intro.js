@@ -423,7 +423,7 @@
         const ek = johanE(), g = { x: cx - 0.9, z: cz - 0.5 }; hooks.push(dt => ek.place(g.x, g.z, 0.6, 0, tid, dt, false, true)); skylt('Kung Johan', () => g, 1.8);
         const kon = []; for (let i = 0; i < 6; i++) { const u = Folk.add(cx + 0.2 + i * 0.4, cz + 1.4 + (i % 2) * 0.2, 'bonde', { ang: Math.PI }); kon.push(u); temp.push(u); }
         Scene.cam.lut = 60; Scene.jump(cx, cz + 1.2, 13); plats('Stockholm, 1571');
-        await vanta(2); text('Älvsborg ska lösas ut. Varje bonde ger en tiondel av sitt silver.'); await vanta(6);
+        await vanta(2); text('Älvsborg ska lösas ut. I varje socken skrivs det upp vad gårdarna äger, och på det tas en skatt.'); await vanta(6);
         text('Tryck för att ta emot silvret');
         let fyllt = 0; const n = await tryckN('Ta emot', 6, k => { const u = kon[k - 1]; if (u) { u.x = cx + 0.2; u.z = cz - 0.05; u.y = 0.08; setTimeout(() => { u.y = 0; }, 180); } fyllt = k / 6; silver.scale.setScalar(K * (0.3 + fyllt * 0.9)); Fx.guld(cx, Geo.groundAt(cx, cz) + 0.5, cz - 0.3, 14, 0.4); L.spela('kop'); if (k === 2) text(''); }, 20);
         if (n < 6) silver.scale.setScalar(K * 1.2);
@@ -473,7 +473,7 @@
         const ka = karlE(false), g = { x: cx, z: cz - 0.4 }; hooks.push(dt => ka.place(g.x, g.z, 0, 0, tid, dt, false, true)); skylt('Karl', () => g, 1.8);
         for (let i = 0; i < 10; i++) temp.push(Folk.add(cx + (i - 4.5) * 0.34, cz + 0.7 + (i % 2) * 0.25, i % 3 ? 'borgare' : 'bonde', { ang: Math.PI }));
         Scene.cam.lut = 60; Scene.jump(cx, cz + 1.1, 13); plats('Uppsala, mars 1607');
-        await vanta(2); text('Karl har varit kung i tre år. Nu ska han krönas i Uppsala domkyrka.'); await vanta(6.5);
+        await vanta(2); text('Karl har kallat sig kung i flera år. Nu ska han krönas i Uppsala domkyrka.'); await vanta(6.5);
         text('Tryck för att bära fram kronan');
         await tryckN('Bär fram', 3, k => { L.spela('sorl'); if (k === 1) text(''); }, 15);
         karlE(true); Fx.guld(g.x, Geo.groundAt(g.x, g.z) + 0.6, g.z, 30, 0.5); L.spela('klocka'); text('Karl IX är krönt. Klockorna ringer i Uppsala.'); await vanta(6);

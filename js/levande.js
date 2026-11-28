@@ -269,9 +269,9 @@
         [1577, 3.3, 'narva', { via: ['wesenberg'], mer: 'Efter sju veckor drar sig ryssarna tillbaka.' }],
         [1578, 9.5, 'wenden', { mer: 'Den ryska hären belägrar Wenden i Livland.' }],
         [1578, 11, null, {}],
-        [1590, 12, 'novgorod', { mer: 'Ryssland vill ha tillbaka städerna vid Finska viken.' }],
-        [1591, 1.8, 'narva', { via: ['jamburg'], mer: 'Ryssarna anfaller Narva.' }],
-        [1591, 4, null, {}]] },
+        [1589, 12, 'novgorod', { mer: 'Ryssland vill ha tillbaka städerna vid Finska viken.' }],
+        [1590, 1.4, 'narva', { via: ['jamburg'], mer: 'Ryssarna belägrar Narva.' }],
+        [1590, 4, null, {}]] },
       { id: 'hPolsk3', namn: 'Polska hären', steg: 'jWenden', har: { n: 8, slag: 'knekt' }, alias: ['polackerna', 'polacker'], kalla: 'sv. Wikipedia, Slaget vid Wenden', stopp: [
         [1578, 8, 'vilnius', { mer: 'Kung Stefan Batory av Polen och Litauen skickar en här till Livland.' }],
         [1578, 10.3, 'wenden', { mer: 'Polacker och svenskar går mot ryssarna vid Wenden tillsammans.' }],
