@@ -418,6 +418,7 @@
     // Var det stod på andra orter vet vi inte säkert, så där hissas ingen flagga hellre än en gissning (Johannes 2026-11-28: "hade danskarna jönköping 1521?").
     if (Y >= 1520.1 && Y < 1523.5) {
       if (S && S.varld === 1 && S.bas && R) { const w = V.Geo.toWorld(lon, lat); for (const b in S.bas) if (S.bas[b] && R.P[b] && Math.hypot(R.P[b].x - w[0], R.P[b].z - w[1]) < 18) return ['sverige', false]; }
+      if (S && S.varld === 1 && Y >= 1521.3 && lat > 60.5 && lon > 14.5 && lon < 19.5) return ['sverige', false];          // Gästrikland, Hälsingland och Norrland går med Gustav våren 1521
       return [null, false];
     }
     return ['sverige', false];
