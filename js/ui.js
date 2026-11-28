@@ -138,7 +138,7 @@
       { const k = $('kassa'); if (k) {          // kassan: byggs en gång, sedan skrivs bara siffrorna (så att den kan lysa till när en leverans kommer)
         const sk = G.harVarv() || G.skepp() > 0, nyck = sk ? 3 : 2;
         if (!k._klick) { k._klick = 1; k.addEventListener('click', e => { const ks = e.target.closest('.ks'); if (!ks) return; const f = ks.classList.contains('ks-mark') ? 'mark' : 'man'; if (!flikar[f]) return; flik = f; G.s.flik = f; V.Ljud && V.Ljud.vakna(); UI.tick(); if (ks.classList.contains('ks-skepp')) { const v = $('varv'); if (v) { v.classList.remove('glod-ny'); void v.offsetWidth; v.classList.add('glod-ny'); setTimeout(() => v.classList.remove('glod-ny'), 2500); } } }); }          // ett tryck på män eller mark öppnar dess flik, skeppen visar varvet
-        if (k._n !== nyck) { k._n = nyck; k.innerHTML = '<div class="ks ks-man" title="Män: din armé. Stapeln visar hur full den är.">' + IK.man + '<b></b><span></span><i></i><u><u></u></u></div><div class="ks ks-mark" title="Mark: rikets pengar. Stapeln visar hur långt du har kvar till nästa steg.">' + IK.mark + '<b></b><span>mark</span><i></i><u><u></u></u></div>' + (sk ? '<div class="ks ks-skepp" title="Skepp byggs av männen du sätter på varvet vid Björkenäs (kortet Varvet under Män). Flottan tar tull av fartygen på Östersjön.">' + IK.skepp + '<b></b><span>skepp</span><i></i></div>' : ''); }
+        if (k._n !== nyck) { k._n = nyck; k.innerHTML = '<div class="ks ks-man">' + IK.man + '<b></b><span></span><i></i><u><u></u></u></div><div class="ks ks-mark">' + IK.mark + '<b></b><span>mark</span><i></i><u><u></u></u></div>' + (sk ? '<div class="ks ks-skepp" title="Skepp byggs av männen du sätter på varvet vid Björkenäs (kortet Varvet under Män). Flottan tar tull av fartygen på Östersjön.">' + IK.skepp + '<b></b><span>skepp</span><i></i></div>' : ''); }
         const sv = (sel, txt) => { const e = k.querySelector(sel); if (e && e._t !== txt) { e._t = txt; e.textContent = txt; } }, bv = (sel, p) => { const e = k.querySelector(sel); if (e) e.style.width = p.toFixed(1) + '%'; };
         sv('.ks-man b', tal(Math.floor(S.res.man))); sv('.ks-man span', 'av ' + tal(tak) + ' män'); sv('.ks-man i', '+' + tal(G.takt('man')) + ' i sekunden'); bv('.ks-man u u', Math.min(100, S.res.man / tak * 100)); k.querySelector('.ks-man').classList.toggle('fullt', S.res.man >= tak * 0.999);
         const nu = D.UPPDRAG[S.nasta], km = nu && !S.aktivt ? (G.kostnad(nu).mark || 0) : 0;
@@ -204,7 +204,7 @@
     _byggBaser(ids) {
       const S = G.s, box = $('baser'); box.innerHTML = '<div id="flikar"></div>'; UI._arows = {}; rows = {}; rows2 = {}; husRader = []; krows = {}; skattRad = null; varvRad = null; soldRad = null; byggRader = []; fogdeKnappar = []; kortNu = null; flikar = {};
       const nyFlik = (f, id, huvud, titel) => {
-        const knapp = el('button', 'flik', huvud + '<u class="prick"></u>'); if (id) knapp.id = id; knapp.title = titel; box.firstChild.appendChild(knapp);
+        const knapp = el('button', 'flik', huvud + '<u class="prick"></u>'); if (id) knapp.id = id; knapp.setAttribute('aria-label', titel); box.firstChild.appendChild(knapp);          // ingen vit webbläsarruta när man håller över fliken (Johannes 2026-11-28)
         const sida = el('div', 'sida'); box.appendChild(sida); knapp.addEventListener('click', () => { if (f === 'stad' && flik === 'stad') { UI.stadMeny(); return; } flik = f; S.flik = f; if (f === 'stad') S.stadSett = 1; UI.stadMeny(false); UI.tick(); });          // stadens flik: ett tryck till visar alla städerna
         flikar[f] = { knapp, sida }; return sida;
       };
@@ -345,7 +345,7 @@
         if (!can) { if (p) p.style.display = 'none'; continue; }
         if (!p) { p = pilar[id] = el('button', 'pil', IK.pil); p.title = 'Bygg ut ' + b.namn; box.appendChild(p); p.addEventListener('click', e => { e.stopPropagation(); UI.kop(id); }); }
         const w = V.Varld.pos(id), sp = V.Scene.screenPoint(w.x, w.y + 3.6, w.z), dold = sp.behind || sp.x < 20 || sp.x > innerWidth - 40 || sp.y < 60 || sp.y > golv || UI._skymd(sp);
-        p.style.display = dold ? 'none' : ''; p.style.transform = 'translate(' + (sp.x - 17) + 'px,' + (sp.y - 34) + 'px)'; p.classList.toggle('dubbel', G.rad(id));
+        p.style.display = dold ? 'none' : ''; p.style.transform = 'translate(' + (sp.x - 13) + 'px,' + (sp.y - 26) + 'px)'; p.classList.toggle('dubbel', G.rad(id));
       }
       // ortnamnen vid varje ort (förspelet, Johannes 2026-11-26: "deras namn ska synas på nåt sätt så man ser vid orten vilken det är")
       { const lista = spel ? V.Varld.ortnamn() : [], sett = {}; if (spel && V.Levande) { const upp = {}; for (const o of lista) { upp[o.id] = 1; upp['_' + Math.round(o.x / 2.2) + ',' + Math.round(o.z / 2.2)] = 1; } lista.push(...V.Levande.orter(upp)); } const rekt = [];          // och de orter som texterna nämner (levande.js)          // i ett slag: vem som är vem

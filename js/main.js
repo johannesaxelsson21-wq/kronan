@@ -143,7 +143,7 @@
     const ak = document.getElementById('ak'); ak.addEventListener('pointerdown', () => { haller = true; }); ['pointerup', 'pointerleave', 'pointercancel'].forEach(n => ak.addEventListener(n, () => { haller = false; }));
     window.addEventListener('beforeunload', spara); document.addEventListener('visibilitychange', () => { if (document.hidden) spara(); });
     const S = G.s, film = q.get('intro') !== '0' && V.Intro;
-    if (film && S.varld === 0 && S.t === 0) V.Intro.titel(() => { start(true); UI.forklara(0); });                                      // helt nytt spel: titeln, sedan Sten Stures tid
+    if (film && S.varld === 0 && S.t === 0) V.Intro.titel(() => { start(true); if (V.Startprat) V.Startprat.kor(0); else UI.forklara(0); });          // Sten Sture säger sina meningar i pratbubblor (startprat.js)                                      // helt nytt spel: titeln, sedan Sten Stures tid
     else if (film && S.varld === 1 && !S.intro) V.Intro.kor(() => { G.s.intro = true; arstid = 0.04; start(true); spara(); UI.forklara(1); });      // Gustavs värld börjar med blodbadet
     else if (film && S.varld >= 2 && !S.intro) { G.s.intro = true; start(true); spara(); UI.forklara(S.varld); }          // Eriks värld börjar med rutan om vem man är
     else {
