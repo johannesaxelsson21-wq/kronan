@@ -164,13 +164,17 @@
     helsingfors: { f: 'a', k: 'tra', x: ['hamn'] }, viborg: { f: 'o', k: 'sten', x: ['borg', 'mur', 'hamn'] }, reval: { f: 'backe', k: 'tegel', x: ['borg', 'mur', 'hamn', 'tvakyrkor'] }, narva: { f: 'a', k: 'sten', x: ['borg', 'mur'] }
   };
   const SKALA = 0.72;
+  // Var en känd byggnad (kanda.js) står i en stad från den här listan: i stadens mitt, eller närmast torr mark intill
+  function kandaPlats(q) { const G = V.Geo; if (G.sdAt(q.x, q.z) > 0.6) return { x: q.x, z: q.z }; for (let r = 0.4; r < 3; r += 0.4) for (let a = 0; a < 6.283; a += 0.5) { const x = q.x + Math.cos(a) * r, z = q.z + Math.sin(a) * r; if (G.sdAt(x, z) > 0.6) return { x, z }; } return { x: q.x, z: q.z }; }
+  // orter där kanda.js ritar ortens kända kyrka (i stället för stadens egen)
+  const KANDA_KYRKA = { strangnas: 1, linkoping: 1, lund: 1, skara: 1, mariestad: 1, sigtuna: 1, nadendal: 1, uppsala: 1, vasteras: 1, stockholm: 1, abo: 1, visby: 1 };
   // en egen slump per stad, så att också två städer med samma form ser olika ut
   function slump(id) { let h = 7; for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 2654435761) >>> 0; return V.Geo.rng(h); }
   function stadsplan(id, n, planerad) {
-    const d = STAD[id] || {}, rnd = slump(id), ut = [], L0 = (n === 3 ? 3.4 : n === 2 ? 2.3 : 1.0) * (d.l || 1);
+    const d = STAD[id] || {}, rnd = slump(id), ut = [], L0 = (n === 3 ? 2.7 : n === 2 ? 1.9 : 1.0) * Math.min(1, d.l || 1);
     let f = d.f || (planerad ? 'rutnat' : 'lang'); if (n === 1) f = f === 'rutnat' ? 'kors' : f;
     const h = (x, z, rot, stor) => ut.push({ x: x + (rnd() - 0.5) * 0.07, z: z + (rnd() - 0.5) * 0.07, rot: rot + (rnd() - 0.5) * 0.1, typ: 'hus', stor });
-    const tat = 0.66 + rnd() * 0.16, bojd = d.rak ? 0 : (rnd() - 0.5) * 0.5;          // hur tätt husen står och hur mycket gatan böjer sig
+    const tat = 0.92 + rnd() * 0.14, bojd = d.rak ? 0 : (rnd() - 0.5) * 0.5;          // hur tätt husen står och hur mycket gatan böjer sig
     const gata = (x0, x1, z0, sid, steg) => { for (let x = x0; x <= x1 + 1e-6; x += steg || tat) { const t = x / Math.max(1, L0), z = z0 + bojd * t * t * L0, a = Math.atan(2 * bojd * t); for (const s of sid) if (rnd() > 0.08) h(x, z + s * (d.smal ? 0.45 : 0.55), (s > 0 ? Math.PI : 0) - a * s); } };
     let kyrka = [0, 1.7], torg = [0, 0.75];
     if (f === 'rutnat') {
@@ -180,7 +184,7 @@
         if (i === tx && j === tz) { torg = [cx, cz]; continue; }
         if (i === tx && j === tz + 1 || (nz === 2 && i === tx && j !== tz)) { kyrka = [cx, cz]; continue; }
         const per = rnd() < 0.5 ? 2 : 3;          // två eller tre gårdar mot varje gata
-        for (let q = 0; q < per; q++) { const o = (q - (per - 1) / 2) * 0.62; h(cx + o, cz - 0.3, 0); h(cx + o, cz + 0.3, Math.PI); }
+        for (let q = 0; q < per; q++) { const o = (q - (per - 1) / 2) * 0.78; h(cx + o, cz - 0.3, 0); h(cx + o, cz + 0.3, Math.PI); }
       }
       if ((d.x || []).indexOf('kanal') >= 0) ut.push({ typ: 'kanal', x: 0, z: (torg[1] + 0.4) / 2 - 0.25, w: nx * B * 1.35 });
     } else if (f === 'kors') {
@@ -221,7 +225,7 @@
       else if (e === 'hamn') ut.push({ typ: 'hamn', x: (rnd() - 0.5) * L0, z: -1.25 });
       else ut.push({ typ: e, x, z, rot: rnd() * 6.283 });
     });
-    if (n >= 2 && (d.x || []).indexOf('tvakyrkor') >= 0) ut.push({ typ: 'kyrka', x: -kyrka[0] - 1.2, z: kyrka[1] + 0.3, rot: Math.PI, sort: 'sten' });
+    if (n >= 2 && (d.x || []).indexOf('tvakyrkor') >= 0) ut.push({ typ: 'kyrka', x: -kyrka[0] - 1.2, z: kyrka[1] + 0.3, rot: Math.PI, sort: 'sten', extra: 1 });
     return { ut: ut.filter(u => u.typ !== 'bort'), f };
   }
   // åt vilket håll vattnet ligger (stranden): stadens gata går längs den. Långt från vatten: efter fröet.
@@ -250,17 +254,25 @@
     else { mb.box(-0.8, 0, 0, 0.42, 1.15, 0.42, vagg, { low: lag, noTop: true }); mb.gable(-0.8, 1.15, 0, 0.42, 0.35, 0.42, tak, { gable: vagg }); }          // tegelkyrkans torn med sadeltak
     mb.pop();
   }
-  function hus(p, n, seed) {
-    const B = V.Bygge, G = V.Geo, mb = new V.MB(), sk = B.K * SKALA, id = p.st[0], start = p.st[3][0][0] === ST ? ST : (p.st[3].find(f => f[1] >= 2) || [0])[0];
+  function hus(p, n, seed, maxR) {
+    const B = V.Bygge, G = V.Geo, mb = new V.MB();
+    let sk = B.K * SKALA; const id = p.st[0], start = p.st[3][0][0] === ST ? ST : (p.st[3].find(f => f[1] >= 2) || [0])[0];
     const planerad = !p.egen && start >= 1580, dansk = (p.lat < 56.95 && p.lon < 16.3) || (p.lon < 12.5 && p.lat < 57.55);          // Skåne, Blekinge, Halland och Danmark
     const plan = stadsplan(id, n, planerad), d = STAD[id] || {}, rnd = slump(id + 'h');
+    { let ext = 0.5; for (const it of plan.ut) ext = Math.max(ext, it.typ === 'mur' ? Math.max(it.rx, it.rz) : Math.hypot(it.x || 0, it.z || 0) + 0.5); if (maxR && ext * sk > maxR) sk = maxR / ext; }          // ingen stad flyter ihop med grannen
     let u = landRiktning(p.x, p.z, seed);
     if (plan.f === 'a' || (d.x || []).indexOf('a') >= 0) { const ar = aRiktning(p.x, p.z); if (ar) u = plan.f === 'a' ? [-ar[1], ar[0]] : u; }          // ån: gatorna längs ån
     const rot = Math.atan2(u[0], u[1]), c = Math.cos(rot), s = Math.sin(rot), y0 = G.groundAt(p.x, p.z);
     const varld = (x, z) => [p.x + (x * c + z * s) * sk, p.z + (-x * s + z * c) * sk], torr = (x, z, m) => { const w = varld(x, z); return G.sdAt(w[0], w[1]) > (m || 0.35) && G.riverAt(w[0], w[1]) > 0.25; };
     const Y = (x, z) => { const w = varld(x, z); return (G.groundAt(w[0], w[1]) - y0) / sk; };
     const roof = () => dansk ? 'tegel' : rnd() < 0.3 ? 'torv' : 'span';
+    // en känd byggnad från kanda.js (Lunds domkyrka, Kärnan, Malmöhus ...) står strax norr om staden: då ritas inte stadens egen kyrka eller borg, och platsen hålls fri
+    const kl = V.Kanda && V.Kanda.lista ? V.Kanda.lista() : null, kandaHar = kl && ['borg', 'dom', 'kyrka', 'ort'].some(k => kl[k].indexOf(id) >= 0);
+    const kandaKyrka = kl && (kl.dom.indexOf(id) >= 0 || kl.kyrka.indexOf(id) >= 0 || KANDA_KYRKA[id]);
+    let kp = null; if (kandaHar) { const k = kandaPlats(p); kp = [k.x, k.z]; }
     for (const it of plan.ut) {
+      if (kandaHar && (it.typ === 'borg' || (it.typ === 'kyrka' && kandaKyrka && !it.extra))) continue;
+      if (kp && it.typ !== 'mur') { const w = varld(it.x || 0, it.z || 0); if (Math.hypot(w[0] - kp[0], w[1] - kp[1]) < 1.35) continue; }
       if (it.typ === 'mur') { for (let k = 0; k < 28; k++) { if (k % 7 === 3) continue; const a0 = k / 28 * 6.283, a1 = (k + 1) / 28 * 6.283, x0 = Math.cos(a0) * it.rx, z0 = Math.sin(a0) * it.rz, x1 = Math.cos(a1) * it.rx, z1 = Math.sin(a1) * it.rz; if (!torr((x0 + x1) / 2, (z0 + z1) / 2, 0.2)) continue; const L = Math.hypot(x1 - x0, z1 - z0); mb.push().move((x0 + x1) / 2, Y((x0 + x1) / 2, (z0 + z1) / 2), (z0 + z1) / 2).rotY(Math.atan2(-(z1 - z0), x1 - x0)); mb.box(0, 0, 0, L + 0.05, 0.3, 0.12, dansk ? '#7a8a55' : '#a49c8c', { low: dansk ? '#5c6a3e' : '#7d776a' }); mb.pop(); } continue; }
       if (it.typ === 'kanal') { mb.box(it.x, Y(it.x, it.z) + 0.005, it.z, it.w, 0.02, 0.28, '#4f7f9a', { low: '#3c6178' }); continue; }
       if (it.typ === 'hamn') { for (let k = -1; k <= 1; k++) { const x = it.x + k * 0.9; if (torr(x, it.z + 0.5) && !torr(x, it.z - 0.4)) { mb.box(x, 0, it.z - 0.15, 0.14, 0.05, 0.9, '#7b6650'); mb.push().move(x + 0.3, Y(x + 0.3, it.z + 0.45), it.z + 0.45); B.stuga(mb, 0.42, 0.34, 0.24, 'span', { vagg: '#8a3b2a', vaggLag: '#5e2a1f', gavel: '#8a3b2a' }); mb.pop(); } } continue; }
@@ -277,7 +289,7 @@
       else if (it.typ === 'kvarnar') for (let k = 0; k < 3; k++) { mb.push().move(k * 0.6, 0, 0); B.stuga(mb, 0.45, 0.4, 0.3, 'span', {}); mb.pop(); }
       else { const sz = 0.8 + rnd() * 0.3, hog = !dansk && n >= 2 && rnd() < 0.18, opt = { skorsten: rnd() < 0.6 ? 1 : 0, ljus: rnd() < 0.4 };
         if (dansk) { opt.vagg = rnd() < 0.5 ? '#d6ccb4' : '#cbbfa2'; opt.vaggLag = '#9c907a'; opt.gavel = opt.vagg; }
-        B.stuga(mb, 0.72 * sz, 0.5 * (0.9 + rnd() * 0.25), (hog ? 0.56 : 0.34) * (0.9 + rnd() * 0.2), roof(), opt); }
+        B.stuga(mb, 0.58 * sz, 0.5 * (0.9 + rnd() * 0.25), (hog ? 0.56 : 0.34) * (0.9 + rnd() * 0.2), roof(), opt); }
       mb.pop();
     }
     const m = B.mesh(mb); m.scale.setScalar(sk); m.rotation.y = rot; return m;
@@ -295,7 +307,18 @@
     const ar = arNu(), nyckel = ar + ':' + Object.keys(V.Game.s.bas).length + ':' + V.Game.s.varld; if (nyckel === husNyckel && grupp) return; husNyckel = nyckel; ritatAr = ar;
     if (grupp) scene.remove(grupp); grupp = new THREE.Group(); grupp.name = 'orter';
     const ritas = spelRitar();
-    lagg().forEach((p, i) => { const l = lage(p.st, ar); if (!l.n || (p.egen && ritas[p.st[0]])) return; const m = hus(p, l.n, i + 1); m.position.set(p.x, V.Geo.groundAt(p.x, p.z), p.z); grupp.add(m); });
+    // grannarna: mina städer och spelets egna (som är stora, ungefär 5 enheter i radie)
+    const mina = lagg().filter(p => { const l = lage(p.st, ar); return l.n && !(p.egen && ritas[p.st[0]]); }), spelets = [];
+    for (const id in ritas) if (V.Rike.P[id]) spelets.push({ x: V.Rike.P[id].x, z: V.Rike.P[id].z, r: V.Game.s.bas[id] ? 5.2 : 2.7 });
+    // de kända byggnaderna (kanda.js) står strax norr om sin stad: de får inte heller hamna i grannstaden
+    const kl = V.Kanda && V.Kanda.lista ? V.Kanda.lista() : null;
+    if (kl) for (const q of lagg()) if (['borg', 'dom', 'kyrka', 'ort'].some(k => kl[k].indexOf(q.st[0]) >= 0)) { const k = kandaPlats(q); spelets.push({ x: k.x, z: k.z, r: 1.5, agare: q }); }
+    mina.forEach((p, i) => {
+      const l = lage(p.st, ar); let maxR = 9;
+      for (const q of mina) if (q !== p) maxR = Math.min(maxR, Math.hypot(q.x - p.x, q.z - p.z) * 0.42);
+      for (const q of spelets) { if (q.agare === p) continue; const dd = Math.hypot(q.x - p.x, q.z - p.z); if (dd > 0.5) maxR = Math.min(maxR, dd - q.r); }
+      if (maxR < 0.6) maxR = 0.6;
+      const m = hus(p, l.n, lagg().indexOf(p) + 1, maxR); m.position.set(p.x, V.Geo.groundAt(p.x, p.z), p.z); grupp.add(m); });
     scene.add(grupp);
   }
 
@@ -328,5 +351,5 @@
     if (d.f === 'a' || (d.x || []).indexOf('a') >= 0) { const r = aRiktning(p.x, p.z); if (r) ut.u = r; }
     return ut;
   };
-  V.Orter = { STADER, lage, lagg: () => lagg(), rita };
+  V.Orter = { kandaPlats, STADER, lage, lagg: () => lagg(), rita };
 })();

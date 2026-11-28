@@ -487,7 +487,7 @@
     const R = V.Rike, L = V.Levande; let p = null;
     // en stad i orter.js (också spelets egna platser, som ritas där som små städer tills spelet tar över): byggnaden norr om husen
     const q = V.Orter && V.Orter.lagg ? V.Orter.lagg().find(o => o.st[0] === id) : null;
-    if (q) { const x = q.x + 0.4, z = q.z - 2.0; p = V.Geo.sdAt(x, z) > 0.5 ? { x, z, stad: 1 } : { x: q.x + 1.9, z: q.z - 0.6, stad: 1 }; }
+    if (q) p = V.Orter.kandaPlats ? Object.assign({ stad: 1 }, V.Orter.kandaPlats(q)) : { x: q.x + 0.4, z: q.z - 2.0, stad: 1 };          // mitt i staden, där orter.js håller platsen fri (Johannes 2026-11-28: städerna fick inte krocka)
     else if (R.P[id]) p = R.P[id];
     else if (L && L.ORT && L.ORT[id]) { const w = V.Geo.toWorld(L.ORT[id][0], L.ORT[id][1]); p = { x: w[0], z: w[1] }; }
     if (p) platsCache[id] = p; return p;
