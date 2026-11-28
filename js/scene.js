@@ -58,8 +58,7 @@
       } else {
         const m = 22 + cam.td * 0.25;
         if (!cam.fri) { cam.tx = Math.max(-Geo.W / 2 + m, Math.min(Geo.W / 2 - m, cam.tx)); cam.tz = Math.max(-Geo.H / 2 + m * 0.6, Math.min(Geo.H / 2 - m * 0.3, cam.tz)); }          // i en scen får kameran gå ända ut till kartans kant
-        if (!cam.fri && cam.ram) { const q = cam.ram; cam.tx = Math.max(q[0], Math.min(q[2], cam.tx)); cam.tz = Math.max(q[1], Math.min(q[3], cam.tz)); }          // regentens del av kartan (orter.js satRam)
-        cam.td = Math.max(cam.minD, Math.min(!cam.fri && cam.ram ? Math.min(cam.maxD, cam.ram[4]) : cam.maxD, cam.td));
+        cam.td = Math.max(cam.minD, Math.min(cam.maxD, cam.td));
         const a = 1 - Math.exp(-dt * 7);
         cam.x += (cam.tx - cam.x) * a; cam.z += (cam.tz - cam.z) * a; cam.d += (cam.td - cam.d) * a;
       }
