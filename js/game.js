@@ -149,15 +149,16 @@
     skeppKvar() { const s = S.stapel; return s && G.varvMan() && !G.flottanFull() ? (1 - s.t) * G.skeppArbete() / G.varvMan() : Infinity; },          // sekunder kvar på skeppet som byggs
     kanSkepp() { return G.harVarv() && !G.flottanFull() && !G.varvFullt() && S.res.man >= G.varvLag(); },
     kopSkepp() { if (!G.kanSkepp()) return false; const m = G.varvLag(); S.res.man -= m; S.varvMan = G.varvMan() + m; if (!S.stapel) S.stapel = { t: 0 }; G.ut('stapel', { man: m, alla: S.varvMan }); return true; },          // ett lag till på varvet
-    tullX() { return S.varld === 2 && G.efter('eHorn') ? 1 + G.TULL * G.skepp() * (1 + 0.1 * G.eg('flotta')) : 1; },          // flottans egenskap gör varje skepp värt mer
+    tullX() { return S.varld === 2 && G.efter('eHorn') ? 1 + G.TULL * G.skepp() * (1 + G.egSteg('flotta') * G.eg('flotta')) : 1; },          // flottans egenskap gör varje skepp värt mer
     _varv(dt) { const s = S.stapel; if (s && s.man && !S.varvMan) { S.varvMan = s.man; s.t = Math.min(0.99, s.t / 30); delete s.man; } if (!G.varvMan() || G.flottanFull()) return; const q = S.stapel || (S.stapel = { t: 0 }); q.t += dt * G.varvMan() / G.skeppArbete(); while (q.t >= 1 && !G.flottanFull()) { q.t -= 1; S.skepp = G.skepp() + 1; G.ut('skepp', { n: S.skepp }); } },          // äldre sparfiler: ett skepp på stapeln blir ett lag på varvet
     // ---- kungens egenskaper (Johannes 2026-11-28): tryck på kungen, så öppnas hans sida. Dyra nivåer som gör en sak mer givande, aldrig en resa kortare.
     // Varje värld har sina egna (D.EGENSKAPER[varld]), med grund i det källorna säger om regenten (docs/historia.md).
     egAlla() { return ((D.EGENSKAPER && D.EGENSKAPER[S.varld]) || []).filter(e => !e.bort); },
+    egSteg(id) { const e = G.egAlla().find(q => q.id === id); return e ? e.steg : 0; },
     egOpen(e) { if (!e.fran) return true; const i = D.UPPDRAG.findIndex(u => u.id === e.fran); return i >= 0 && S.nasta > i; },          // fran: först efter det steget
     egLista() { return G.egAlla().filter(e => G.eg(e.id) > 0 || (G.egOpen(e) && S.egNy && S.egNy[e.id])); },          // de som finns och har kommit fram
     eg(id) { return (S.eg && S.eg[id]) || 0; },
-    EG_MAX: 10,
+    EG_MAX: 5,          // fem nivåer med kännbar effekt (Johannes 2026-11-28 15:21)
     egPris(id) { const e = G.egLista().find(q => q.id === id); return e ? e.c0 * Math.pow(e.r, G.eg(id)) : Infinity; },
     kanEg(id) { const e = G.egLista().find(q => q.id === id); return !!e && !S.slut && G.eg(id) < G.EG_MAX && S.res.mark >= G.egPris(id); },
     kopEg(id) { if (!G.kanEg(id)) return false; S.res.mark -= G.egPris(id); if (!S.eg) S.eg = {}; S.eg[id] = G.eg(id) + 1; G.ut('egenskap', { id, niva: S.eg[id] }); return true; },
