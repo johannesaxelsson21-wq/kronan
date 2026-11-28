@@ -745,13 +745,14 @@ button { font-family: inherit; cursor: pointer; }
 @keyframes pekglod { 0%, 100% { box-shadow: 0 0 0 2px rgba(242, 207, 90, 0.75), 0 0 6px 1px rgba(242, 207, 90, 0.3); } 50% { box-shadow: 0 0 0 2px #f2cf5a, 0 0 18px 4px rgba(242, 207, 90, 0.65); } }
 .tip.lar { width: 292px; max-width: calc(100vw - 16px); box-sizing: border-box; padding: 11px 16px 12px; text-align: center; pointer-events: auto; background: radial-gradient(ellipse at 50% 35%, #f8efd6, #ecdcb4 70%, #dfcb9a); border: 2px solid #5a4634; border-radius: 9px; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(201, 162, 74, 0.6) inset; }
 .tip.lar::after { bottom: -9px; margin-left: -9px; border-width: 9px; border-bottom: 0; }
-.lar-rubrik { margin: 0 18px 9px; font-size: 12.5px; letter-spacing: 0.2em; text-transform: uppercase; color: #8a6a45; }
+.lar-rubrik { display: flex; align-items: center; gap: 8px; margin: 0 22px 10px; font-size: 12.5px; letter-spacing: 0.2em; text-transform: uppercase; color: #8a6a45; }
+.lar-rubrik::before, .lar-rubrik::after { content: '✦'; flex: 1; font-size: 9px; letter-spacing: 0; color: #b08a4a; background: linear-gradient(90deg, transparent, #b08a4a 60%, transparent) center / 100% 1px no-repeat; }          /* som i händelserutan: en tunn linje med en stjärna */
 .lar-bild { display: flex; align-items: flex-start; justify-content: center; gap: 2px; }
-.lar-mk { display: flex; flex-direction: column; align-items: center; width: 96px; }
-.lar-rund { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 30%, #fdf3d6, #e9cf8e 60%, #c79a4c); box-shadow: 0 0 0 2px #f2cf5a inset, 0 0 0 4px #6b4a12 inset, 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 0 1px #1a130d; }
+.lar-mk { display: flex; flex-direction: column; align-items: center; width: 104px; text-align: center; }
+.lar-rund { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 30%, #fdf3d6, #e9cf8e 60%, #c79a4c); box-shadow: 0 0 0 2px #f2cf5a inset, 0 0 0 4px #6b4a12 inset, 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 0 1px #1a130d, 0 0 12px 2px rgba(242, 207, 90, 0.45); }
 .lar-rund svg { width: 36px; height: 36px; }
-.lar-mk b { margin-top: 6px; font-size: 16px; font-weight: normal; line-height: 1.1; color: #2b1c08; white-space: nowrap; }
-.lar-mk span { font-size: 12.5px; color: #7a6040; }
+.lar-mk b { margin-top: 7px; font-size: 16px; font-weight: normal; line-height: 1.12; color: #2b1c08; text-wrap: balance; }
+.lar-mk span { margin-top: 1px; font-size: 12.5px; line-height: 1.2; font-style: italic; color: #7a6040; }
 .lar-pil { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 15px; font-size: 13px; color: #6b5233; }
 .lar-pil svg { width: 44px; height: 14px; fill: none; stroke: #8a6a45; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .tip.lar p { margin: 10px 0 0; font-size: 14px; line-height: 1.38; color: #3a2a14; text-wrap: balance; }
