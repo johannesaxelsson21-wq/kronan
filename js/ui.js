@@ -169,8 +169,7 @@
       for (const id in (UI._arows || {})) { const n = G.arb(id), full = G.arbMax(id); uppd(UI._arows[id], { namn: 'Gruvarbetare', niva: n, v: full ? 'armén är för liten än' : '+10 % i ' + (G.BAS[id].kort || G.BAS[id].namn), k: full ? '' : IK.man + tal(G.arbPris(id)), ok: G.kanArb(id), bar: 0 }); }
       byggRader.forEach(r => uppd(r, { namn: 'Bygg: ' + r.b.namn, v: r.b.ger, k: IK.mark + tal(r.b.kostar), ok: G.kanBygga(r.b.id), snart: true }));
       husRader.forEach(r => { const h = r.h, L = G.hus(h.id), res = G.husRes(h); uppd(r, { namn: h.namn, niva: L || undefined, v: '+' + Math.round(h.ger * 100) + ' % ' + (res === 'man' ? 'män' : 'mark'), k: IK[res] + tal(G.husPris(h.id)), ok: G.kanHus(h.id), snart: !L }); });
-      if (soldRad && S.sold) { const fas = (S.t / 9) % 1; if (soldRad._fas !== undefined && fas < soldRad._fas - 0.5) UI._klump(null, soldRad.row, G.soldProd() * fx * 9, 'man'); soldRad._fas = fas; }
-      if (soldRad) { const L = S.sold || 0, dub = (L + 1) % 10 === 0; uppd(soldRad, { namn: S.varld === 0 ? 'Knektar i tjänst' : 'Värva soldater', niva: L, v: G.manFull() ? 'armén fylls redan på ' + G.MAN_FYLL + ' s' : '<b class="k-ps">' + tal(G.soldProd() * fx) + ' män/s</b> <small class="k-mer">' + (dub ? dubKort() : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx)) + '</small>', k: IK.mark + tal(G.soldPris()), ok: G.kanSold(), snart: dub, bar: 0, mot: (L % 10) / 10 }); }
+      if (soldRad) { const L = S.sold || 0, dub = (L + 1) % 10 === 0; uppd(soldRad, { namn: S.varld === 0 ? 'Knektar i tjänst' : 'Värva soldater', niva: L, v: G.manFull() ? 'armén fylls redan på ' + G.MAN_FYLL + ' s' : '<b class="k-ps">' + tal(G.soldProd() * fx) + ' män/s</b> <small class="k-mer">' + (dub ? dubKort() : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx)) + '</small>', k: IK.mark + tal(G.soldPris()), ok: G.kanSold(), snart: dub, bar: G.levFas('sold') * 100, mot: (L % 10) / 10 }); }
       for (const id in krows) { const L = S.konst[id], max = L >= G.KONST_MAX, dub = (L + 1) % 10 === 0; uppd(krows[id], { namn: UI.konst(id)[0], niva: L, v: max ? 'kan inte bli bättre' : konstInfo(id).kort, k: max ? '' : IK.mark + tal(G.konstPris(id)), ok: G.kanKonst(id), snart: dub && !max, bar: 0, mot: (L % 10) / 10 }); }
       // en fogde i taget: kortet sätter en fogde på den plats där det är billigast
       for (const f of fogdeKnappar) { const utan = f.ids().filter(id => !S.fogde[id]); let b = null; for (const id of utan) if (!b || G.fogdePris(id) < G.fogdePris(b)) b = id; f.mal = b; f.r.row.style.display = b ? '' : 'none'; if (b) uppd(f.r, { namn: 'Sätt en fogde', v: 'bygger ut ' + G.BAS[b].namn + ' åt dig', k: IK.mark + tal(G.fogdePris(b)), ok: S.res.mark >= G.fogdePris(b) }); }
@@ -444,7 +443,7 @@
       a.classList.remove('puls'); void a.offsetWidth; a.classList.add('puls');
     },
     // En plats levererar sin klump: den flyger från kortet upp till fliken, och en dubbel leverans får sitt namn (Johannes 2026-11-28).
-    leverans(d) { const r = rows[d.bas]; if (r) UI._klump(d.bas, r.row, d.n, d.res); else UI._klump(d.bas, { offsetParent: null }, d.n, d.res);
+    leverans(d) { const r = d.bas === 'sold' ? soldRad : rows[d.bas]; if (d.bas === 'sold') { if (r) UI._klump(null, r.row, d.n, 'man'); return; } if (r) UI._klump(d.bas, r.row, d.n, d.res); else UI._klump(d.bas, { offsetParent: null }, d.n, d.res);
       if (d.krit && !V.tyst) { const b = G.BAS[d.bas], namn = { bygd: 'God skörd', gruva: 'Rik malmåder', stad: 'Rik handel', slott: 'Full skattkista' }[b.slag] || 'Dubbel leverans', w = V.Varld.pos(d.bas); if (w) UI.flyt(w.x, w.y + 3.4, w.z, namn + '! ×2', d.res); } },
     _klump(id, row, n, res) {
       if (!root.classList.contains('spel') || n < 0.05) return;
