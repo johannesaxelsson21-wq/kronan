@@ -118,10 +118,10 @@
   // Kungens egna förmågor. Var tionde nivå dubblar.
   // vad0 = texten i förspelet, där man rider själv (i Gustavs värld är det än så länge ett bud som far)
   const KONSTER = [
-    { id: 'sigill', bygg0: 'radstuga', flik0: 'mark', fran0: 'Rådstugan', namn: 'Sigillet', vad1: 'Brev med ditt sigill får skatten att komma in: varje leverans av mark blir större.', vad: 'Ditt eget sigill under brevet, så att alla ser att budet kommer från dig. Varje tryck ger mer.', c0: 30, r: 2.4 },
-    { id: 'skidor', bygg0: 'ladugard', flik0: 'mark', fran0: 'Kungsladugården', namn: 'Skidor och hästar', vad1: 'Ryttare och skidlöpare bär leveranserna: alla platser levererar oftare.', sture: 'Hästar', vad: 'Budet far fortare mellan platserna. Var tionde nivå ger full mätare en gång till.', vad0: 'Du rider fortare mellan platserna. Var tionde nivå ger full mätare en gång till.', c0: 40, r: 2.4 },
-    { id: 'tal', steg0: 'sAllmoge', flik0: 'man', fran0: 'sedan du vann bönderna 1512', namn: 'Ordets makt', vad1: 'Fler lyssnar när du talar: varje leverans av män blir större.', vad: 'Fler lyssnar när budet kommer fram: varje besök ger mer.', vad0: 'Fler lyssnar när du kommer fram: varje besök ger mer.', c0: 60, r: 2.4 },
-    { id: 'bud', steg0: 'sVadla', flik0: 'mark', fran0: 'sedan segern vid Vädla 1517', namn: 'Fler bud', vad1: 'Fler bud ute i landet: leveranserna blir oftare dubbla.', vad: 'Löpare som far runt åt dig, också när du inte trycker. Med tre löpare står mätaren full av sig själv.', c0: 250, r: 2.4 },
+    { id: 'sigill', bygg0: 'radstuga', flik0: 'mark', fran0: 'Rådstugan', namn: 'Sigillet', vad1: 'Varje leverans av mark blir större.', vad: 'Ditt eget sigill under brevet, så att alla ser att budet kommer från dig. Varje tryck ger mer.', c0: 30, r: 2.4 },
+    { id: 'skidor', bygg0: 'ladugard', flik0: 'mark', fran0: 'Kungsladugården', namn: 'Skidor och hästar', vad1: 'Alla platser levererar oftare.', sture: 'Hästar', vad: 'Budet far fortare mellan platserna. Var tionde nivå ger full mätare en gång till.', vad0: 'Du rider fortare mellan platserna. Var tionde nivå ger full mätare en gång till.', c0: 40, r: 2.4 },
+    { id: 'tal', steg0: 'sAllmoge', flik0: 'man', fran0: 'sedan du vann bönderna 1512', namn: 'Ordets makt', vad1: 'Varje leverans av män blir större.', vad: 'Fler lyssnar när budet kommer fram: varje besök ger mer.', vad0: 'Fler lyssnar när du kommer fram: varje besök ger mer.', c0: 60, r: 2.4 },
+    { id: 'bud', steg0: 'sVadla', flik0: 'mark', fran0: 'sedan segern vid Vädla 1517', namn: 'Fler bud', vad1: 'Fler leveranser blir dubbla.', vad: 'Löpare som far runt åt dig, också när du inte trycker. Med tre löpare står mätaren full av sig själv.', c0: 250, r: 2.4 },
     { id: 'langd', bygg0: 'radstuga', flik0: 'man', fran0: 'Rådstugan', namn: 'Skattelistor', vad: 'Listor över vem som ska betala skatt. Driv in skatt ger mer.', c0: 150, r: 2.4 }
   ];
 
@@ -165,16 +165,16 @@
     2: [
       { id: 'krig', fran: 'eResan', namn: 'Krigskonst', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Erik läser och tänker mycket om krigskonsten och vill ha ett modernare fotfolk.', nar: 'Allt som ger män ger 5 % mer.' },
       { id: 'flotta', fran: 'eMars', namn: 'Flottan', ikon: 'skepp', ger: 'flotta', steg: 0.1, c0: 500000, r: 10, vad: 'Erik vill ha större krigsskepp än någon har haft förut.', nar: 'Varje skepp tar en tiondel mer tull.' },
-      { id: 'lardom', namn: 'Lärdom', ikon: 'mark', ger: 'skatt', steg: 0.08, c0: 500000, r: 10, vad: 'Erik kan främmande språk, matematik och historia, och han vet hur ett rike räknas.', nar: 'Driv in skatt ger 8 % mer.' }
+      { id: 'lardom', namn: 'Lärdom', ikon: 'mark', ger: 'skatt', steg: 0.08, c0: 500000, r: 10, vad: 'Erik har goda kunskaper i främmande språk och matematik, och är bevandrad i historia och astrologi.', nar: 'Driv in skatt ger 8 % mer.' }
     ],
     3: [
       { id: 'krigsfolk', fran: 'jPontus', namn: 'Krigsfolket', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Johan sätter Pontus De la Gardie att leda kriget i öster.', nar: 'Allt som ger män ger 5 % mer.' },
-      { id: 'lardom', namn: 'Lärdom', ikon: 'mark', ger: 'skatt', steg: 0.08, c0: 500000, r: 10, vad: 'Johan är bokligt lagd och läser teologi och historia.', nar: 'Driv in skatt ger 8 % mer.' },
+      { id: 'lardom', namn: 'Lärdom', ikon: 'mark', ger: 'skatt', steg: 0.08, c0: 500000, r: 10, vad: 'Johan är bokligt lagd: i fångenskapen på Gripsholm läste han teologi.', nar: 'Driv in skatt ger 8 % mer.' },
       { id: 'slott', fran: 'jDrottningholm', namn: 'Byggnadskonsten', ikon: 'mark', ger: 'mark', steg: 0.05, c0: 500000, r: 10, vad: 'Johan låter bygga slott, som Drottningholm åt drottningen.', nar: 'All mark 5 % mer.' }
     ],
     4: [
-      { id: 'polen', namn: 'Polens krigsfolk', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Som kung i Polen har Sigismund ett stort rike och dess krigsfolk bakom sig.', nar: 'Allt som ger män ger 5 % mer.' },
-      { id: 'handel', namn: 'Östersjöhandeln', ikon: 'mark', ger: 'mark', steg: 0.05, c0: 500000, r: 10, vad: 'Danzig är Östersjöns rikaste hamn, och den ligger i hans rike.', nar: 'All mark 5 % mer.' }
+      { id: 'polen', fran: 'siLaski', namn: 'Hären från Danzig', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'I Danzig samlas omkring hundra skepp och en här på omkring 5 000 man åt Sigismund.', nar: 'Allt som ger män ger 5 % mer.' },
+      { id: 'handel', bort: 1, namn: 'Östersjöhandeln', ikon: 'mark', ger: 'mark', steg: 0.05, c0: 500000, r: 10, vad: 'Danzig är Östersjöns rikaste hamn, och den ligger i hans rike.', nar: 'All mark 5 % mer.' }
     ],
     5: [
       { id: 'bergsfolk', fran: 'kFilipstad', namn: 'Bergsfolket', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Karl besöker bergsfolket, äter av deras mat och talar med dem som deras like.', nar: 'Allt som ger män ger 5 % mer.' },
@@ -186,7 +186,7 @@
     1: { namn: 'Gustav', fodd: 1496, rader: ['Född troligen den 12 maj 1496 på Lindholmen i Uppland, son till Erik Johansson (Vasa) och Cecilia Månsdotter.', 'Togs som gisslan till Kalø 1518 och flydde till Lübeck 1519.'] },
     3: { namn: 'Johan', fodd: 1537, sent: 1, rader: ['Född den 20 december 1537 på Stegeborg, Gustav Vasas andre son.', 'Bokligt lagd: han läste teologi i fångenskapen på Gripsholm.', 'Valspråk: Deus protector noster, Gud vårt beskydd.'] },
     4: { namn: 'Sigismund', fodd: 1566, rader: ['Född den 20 juni 1566 på Gripsholm, son till Johan III och Katarina Jagellonica.', 'Uppfostrad katolsk, kung i Polen sedan 1587.'] },
-    5: { namn: 'Karl', fodd: 1550, sent: 1, rader: ['Född den 4 oktober 1550 på slottet i Stockholm, Gustav Vasas yngste son.', 'Hertig över Södermanland, Närke och Värmland från 1560.', 'Gav Karlstad stadsprivilegier 1584.'] },
+    5: { namn: 'Karl', fodd: 1550, sent: 1, rader: ['Född den 4 oktober 1550 på slottet i Stockholm, Gustav Vasas yngste son.', 'Hertig från 1560 över större delen av Södermanland och Närke, och hela Värmland.', 'Gav Karlstad stadsprivilegier 1584.'] },
     2: { namn: 'Erik', fodd: 1533, sent: 1, rader: ['Född den 13 december 1533 på slottet i Stockholm, Gustav Vasas äldste son.', 'Kan främmande språk och matematik, och läser historia och astrologi.', 'Sjunger och spelar luta, tecknar skickligt och är en mästare i ridderliga idrotter.'] }
   };
 
