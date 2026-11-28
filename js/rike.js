@@ -19,11 +19,13 @@
   const graph = {};      // a → [b, ...]
 
   // Närmaste ruta som duger: land en bit från vatten, eller öppet vatten.
-  function snap(x, z, ok) {
+  function snap(x, z, ok, maxR) {
     if (ok(x, z)) return [x, z];
-    for (let r = 0.6; r < 14; r += 0.6) for (let a = 0; a < 6.283; a += 0.5 / r) { const px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; if (ok(px, pz)) return [px, pz]; }
-    return [x, z];
+    for (let r = 0.6; r < (maxR || 14); r += 0.6) for (let a = 0; a < 6.283; a += 0.5 / r) { const px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; if (ok(px, pz)) return [px, pz]; }
+    return maxR ? null : [x, z];
   }
+  // Riktiga kusten är smal på sina ställen (Öland vid Borgholm, Lovön, Stegeborg): ta hellre en plats nära stranden än en på fel ö eller fastlandet.
+  function naraLand(x, z, krav) { for (const t of krav) { const p = snap(x, z, (a, b) => Geo.sdAt(a, b) > t[0] && Geo.sdAt(a, b) < t[1] && (t[1] > 50 || Geo.freshAt(a, b) < 0.5), 1.9); if (p) return p; } return snap(x, z, (a, b) => Geo.sdAt(a, b) > krav[0][0]); }
 
   // ---- kortaste vägen över rutnätet (A*) ------------------------------------------------------
   function astar(x0, z0, x1, z1, sea) {
@@ -66,8 +68,8 @@
       for (const id in D.PLATSER) {
         const w = Geo.toWorld(D.PLATSER[id][0], D.PLATSER[id][1]); let p;
         if (TILL_SJOSS[id]) p = snap(w[0], w[1], (x, z) => Geo.sdAt(x, z) < -3);
-        else if (HAMN[id]) p = snap(w[0], w[1], (x, z) => { const s = Geo.sdAt(x, z); return s > 1.5 && s < 3.6 && Geo.freshAt(x, z) < 0.5; });
-        else p = snap(w[0], w[1], (x, z) => Geo.sdAt(x, z) > 2.2);
+        else if (HAMN[id]) p = naraLand(w[0], w[1], [[1.5, 3.6], [0.7, 3.6]]);
+        else p = naraLand(w[0], w[1], [[2.2, 99], [1.3, 99], [0.7, 99]]);
         P[id] = { id, x: p[0], z: p[1] };
         if (HAMN[id]) { const h = snap(p[0], p[1], (x, z) => Geo.sdAt(x, z) < -1.2 && Geo.freshAt(x, z) < 0.3); P[id].hav = { x: h[0], z: h[1] }; }
       }
@@ -79,7 +81,7 @@
         const i0 = Math.max(0, Math.floor((p.x - r + Geo.W / 2) / Geo.CELL)), i1 = Math.min(Geo.NX - 1, Math.ceil((p.x + r + Geo.W / 2) / Geo.CELL)), j0 = Math.max(0, Math.floor((p.z - r + Geo.H / 2) / Geo.CELL)), j1 = Math.min(Geo.NZ - 1, Math.ceil((p.z + r + Geo.H / 2) / Geo.CELL));
         for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
           const k = j * Geo.NX + i, d = Math.hypot(-Geo.W / 2 + i * Geo.CELL - p.x, -Geo.H / 2 + j * Geo.CELL - p.z);
-          if (G.sd[k] <= 0.15 && d < 2.4 && G.sd[k] > -1.6) { G.sd[k] = 0.5; G.land[k] = 1; G.fresh[k] = 0; G.height[k] = hc * 0.7; }          // inga pölar mitt på torget
+          if (G.sd[k] <= 0.15 && d < 1.1 && G.sd[k] > -1.6) { G.sd[k] = 0.5; G.land[k] = 1; G.fresh[k] = 0; G.height[k] = hc * 0.7; }          // inga pölar mitt på torget
           if (G.sd[k] <= 0.15) continue;
           const f = Geo.smooth(r, r * 0.5, d) * Geo.smooth(0.15, 1.2, G.sd[k]);
           G.height[k] += (hc - G.height[k]) * f; G.forest[k] *= 1 - f * 0.9; G.rock[k] *= 1 - f;
