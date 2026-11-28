@@ -86,8 +86,24 @@
         const p = R.P.kalmar, K = B.K, st = V.Varld.tomt.kalmar, S = V.Filmstad.stad('kalmar'), T0 = st && st.plan ? st.plan().torg : { x: 0, z: 0.2 }, cx = p.x + T0.x * K, cz = p.z + T0.z * K;
         const mal = S && S.dom ? S.dom : (S && S.t && S.t.b && S.t.b.kyrka ? [p.x - 0.6 * K, p.z - 1.8 * K] : [cx, cz - 1.2]);
         const slag = ['borgare', 'kvinna', 'bonde', 'borgare', 'kvinna'];
-        for (let i = 0; i < 10; i++) { const a = i * 2.39996, r = 0.45 + Math.sqrt(i) * 0.36, q0 = torr(cx + Math.cos(a) * r, cz + Math.sin(a) * r * 0.8, st); folk(q0[0], q0[1], slag[i % 5], { ang: vant(q0[0], q0[1], mal[0], mal[1]) }); }
-        return { kam(f) { return { x: mix(cx, mal[0], 0.2), z: mix(cz, mal[1], 0.2), d: mix(15, 11, mjuk(f)), p: mix(34, 28, f), y: mix(168, 138, f), h: 0.3 }; } };
+        // bara platser där ingen står bakom ett hus sett från kameran (husfigur-tråden 2026-11-28: en del stod bakom husen och syntes inte)
+        const syns = (x, z) => [168, 153, 138].every(y => { for (let d = 0.2; d <= 2.6; d += 0.2) if (st && V.Filmstad.iHus(st, x + Math.sin(y * RAD) * d, z + Math.cos(y * RAD) * d, 0.06)) return false; return true; });
+        const fritt = (x, z) => Geo.sdAt(x, z) > 0.4 && !(st && V.Filmstad.iHus(st, x, z, 0.16)) && syns(x, z);
+        // en öppen plats där tio får stå samlade, gärna en bit framför kyrkan och nära torget
+        const spir = (k, r0, dr) => { const a = k * 2.39996, r = r0 + Math.sqrt(k) * dr; return [Math.cos(a) * r, Math.sin(a) * r]; };
+        let bx = cx, bz = cz, bs = 1e9;
+        for (let gx = -3.2; gx <= 3.2; gx += 0.4) for (let gz = -3.2; gz <= 3.2; gz += 0.4) {
+          const x0 = cx + gx, z0 = cz + gz; if (!fritt(x0, z0)) continue;
+          let n = 0; for (let k = 0; k < 24; k++) { const o = spir(k, 0.15, 0.17); if (fritt(x0 + o[0], z0 + o[1])) n++; }
+          if (n < 20) continue;
+          const sc = Math.abs(Math.hypot(x0 - mal[0], z0 - mal[1]) - 1.8) + 0.35 * Math.hypot(gx, gz);
+          if (sc < bs) { bs = sc; bx = x0; bz = z0; }
+        }
+        const ss = [];
+        for (let k = 0; k < 200 && ss.length < 10; k++) { const o = spir(k, 0, 0.16), x = bx + o[0], z = bz + o[1]; if (fritt(x, z) && ss.every(q => Math.hypot(q[0] - x, q[1] - z) > 0.36)) ss.push([x, z]); }
+        ss.forEach((q0, i) => folk(q0[0], q0[1], slag[i % 5], { ang: vant(q0[0], q0[1], mal[0], mal[1]) }));
+        const gx = ss.length ? ss.reduce((a, q) => a + q[0], 0) / ss.length : cx, gz = ss.length ? ss.reduce((a, q) => a + q[1], 0) / ss.length : cz;
+        return { kam(f) { return { x: mix(gx, mal[0], 0.2), z: mix(gz, mal[1], 0.2), d: mix(15, 11, mjuk(f)), p: mix(34, 28, f), y: mix(168, 138, f), h: 0.3 }; } };
       } },
     { ort: 'Dalarna', tid: 'sommaren 1434', sasong: 0.53, el: 22, varm: 0.3, utanFlagg: true, glanta: 1,
       rader: ['Unionens kung styr från Danmark. Hans danska fogdar är hårda mot folket, och skatterna är tunga.', 'I Dalarna och Bergslagen reser sig folket, med Engelbrekt Engelbrektsson i spetsen.'],
@@ -107,7 +123,7 @@
         // egen sida, så att ingen sedan står i en kropp), och när raden säger att Sten Sture vinner drar sig danskarna undan österut, mot
         // vattnet där Käpplingen ligger, medan svenskarna står kvar. Få och tydliga figurer, ingen går igenom någon (Johannes 2026-11-28:
         // "här springer de igenom varandra utan att slåss, de ska slåss"). Ingen krutrök: på avstånd blev den en vit klump.
-        const p = R.P.stockholm, st = V.Varld.tomt.stockholm, mx = p.x + 2.8, mz = p.z - 11.4, N = 5, D = [], Sv = [], LED = 0.8, OST = Math.PI / 2;
+        const p = R.P.stockholm, st = V.Varld.tomt.stockholm, mx = p.x + 2.8, mz = p.z - 11.4, N = 5, D = [], Sv = [], LED = 1.0, OST = Math.PI / 2;          // LED: plats mellan leden för en som faller bakåt
         const fri = (x, z) => !(st && V.Filmstad.iHus(st, x, z, 0.12)) && Geo.sdAt(x, z) > 0.4;
         for (let r = 0; r < 2; r++) for (let i = 0; i < N; i++) {
           const z = mz + (i - (N - 1) / 2) * 0.6, a = torr(mx + 0.35 + r * LED, z, st), b = torr(mx - 2.6 - r * LED, z + 0.1, st);
@@ -134,7 +150,7 @@
               if (u.fal >= 0) { u.fal = Math.min(1, u.fal + dt * 2.6); const e = mjuk(u.fal); u.lean = -1.5 * e; u.y = 0.05 * e; u.gar = false; return; }          // faller bakåt
               if (sid > 0 && bryt >= 0) {          // danskarna vänder och drar sig österut mot vattnet, de bakre först
                 const b = bryt - (1 - u.rad) * 0.5 - u.kol * 0.15;
-                if (b > 0) { u.ang = OST + Math.sin(u.fas) * 0.15; u.gar = true; u.lean = 0.18; const ny = (u._fly || 0) + dt * 0.8; if (fri(x0 + ny, u.bz)) u._fly = ny; }
+                if (b > 0) { u.ang = OST + Math.sin(u.fas) * 0.15; const ny = (u._fly || 0) + dt * 0.8, kan = ny < 6 && fri(x0 + ny + 0.2, u.bz); if (kan) u._fly = ny; u.gar = kan; u.lean = kan ? 0.18 : 0; }          // når han hus eller vatten står han still i stället för att trampa på stället
                 else { u.lean = 0; u.gar = false; }
                 u.x = x0 + (u._fly || 0); u.z = u.bz; return;
               }
