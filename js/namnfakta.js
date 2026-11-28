@@ -285,12 +285,12 @@
       const r = fore.apply(this, arguments);
       try {
         const t = text(f.d.id), ruta = document.getElementById('ruta'), stang = ruta && ruta.querySelector('.stang'); if (!t || !stang) return r;
-        // knappen: en liten pill med boken, som Läs mer i steget (Johannes 2026-11-28: "knappen mer info ... var inge bra, gör den bättre")
         const knapp = document.createElement('button'); const bok = (V.UI && V.UI.IK && V.UI.IK.bok) || '';
-        knapp.innerHTML = bok + '<span></span>'; knapp.querySelector('span').textContent = 'Mer om ' + f.d.namn;
-        knapp.style.cssText = 'display:inline-flex;align-items:center;gap:6px;width:auto;margin:4px auto 2px;padding:5px 14px 5px 9px;font-size:14.5px;font-weight:600;letter-spacing:.03em;color:#2b1c08;background:linear-gradient(180deg,#fbf0cf,#e3cc8e);border:1px solid #8a6a1f;border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.25);cursor:pointer';
-        const svg = knapp.querySelector('svg'); if (svg) { svg.style.width = '18px'; svg.style.height = '18px'; }
-        const rad = document.createElement('div'); rad.style.textAlign = 'center'; rad.appendChild(knapp);
+        // Samma knapp som Läs mer i stegrutan, uppe till höger i rutan (Johannes 2026-11-28: "gör den som de andra mer info ser ut så det blir enhetligt genom spelet")
+        knapp.innerHTML = bok + 'Läs mer'; knapp.title = 'Mer om ' + f.d.namn;
+        knapp.style.cssText = 'position:absolute;right:10px;top:10px;display:inline-flex;align-items:center;gap:4px;width:auto;margin:0;padding:2px 8px 2px 5px;font-size:11.5px;font-weight:600;letter-spacing:.03em;color:#2b1c08;background:linear-gradient(180deg,#fbf0cf,#e3cc8e);border:1px solid #8a6a1f;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.45);cursor:pointer;text-shadow:none';
+        const svg = knapp.querySelector('svg'); if (svg) { svg.style.width = '15px'; svg.style.height = '15px'; }
+        const inre = ruta.querySelector('.ruta-in'); if (inre) inre.style.position = 'relative';
         knapp.addEventListener('click', ev => {
           ev.stopPropagation();
           // samma ordning och samma centrerade text för alla: vem det är, vad det betyder, vad som sker just nu (Johannes: "texten är olika? endel längs sidan och endel i mitten")
@@ -298,9 +298,9 @@
           const del = document.createElement('div'); del.style.textAlign = 'center';
           del.innerHTML = '<h3>Vem</h3><p></p><h3>Betydelse</h3><p></p>' + (nu ? '<h3>Just nu</h3><p class="nu"></p>' : '');
           const ps = del.querySelectorAll('p'); ps[0].textContent = t[0]; ps[1].textContent = t[1]; if (nu) del.querySelector('.nu').innerHTML = nu;
-          if (nuEl) nuEl.remove(); rad.replaceWith(del); if (L.lanka) try { L.lanka(ps[0]); L.lanka(ps[1]); } catch (e) { /* inget */ }
+          if (nuEl) nuEl.remove(); stang.before(del); knapp.remove(); if (L.lanka) try { L.lanka(ps[0]); L.lanka(ps[1]); } catch (e) { /* inget */ }
         });
-        stang.before(rad);
+        (inre || ruta).appendChild(knapp);
       } catch (e) { /* rutan står som förut */ }
       return r;
     };
