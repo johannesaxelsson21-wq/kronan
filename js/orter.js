@@ -34,7 +34,7 @@
     ['soderhamn', 17.06, 61.30, [[1620, 2, 'Söderhamn']]],
     ['hudiksvall', 17.10, 61.73, [[1582, 2, 'Hudiksvall']]],
     // Götaland
-    ['norrkoping', 16.19, 58.59, [[ST, 2, 'Norrköping'], [1620, 3]]],
+    ['norrkoping', 16.19, 58.59, [[ST, 2, 'Norrköping']]],
     ['skanninge', 15.09, 58.39, [[ST, 2, 'Skänninge']]],
     ['vastervik', 16.64, 57.76, [[ST, 2, 'Västervik']]],
     ['vimmerby', 15.86, 57.67, [[ST, 2, 'Vimmerby'], [1532, 1], [1604, 2]]],
@@ -50,7 +50,7 @@
     ['boras', 12.94, 57.72, [[1621, 2, 'Borås']]],
     ['lodose', 12.16, 58.03, [[ST, 2, 'Lödöse'], [1526, 1], [1586, 2], [1646, 1]]],
     ['nyalodose', 12.00, 57.73, [[1473, 2, 'Nya Lödöse'], [1624, 0]]],
-    ['goteborg', 11.97, 57.71, [[1621, 2, 'Göteborg'], [1640, 3]]],
+    ['goteborg', 11.97, 57.71, [[1621, 2, 'Göteborg']]],
     ['bratte', 12.33, 58.36, [[1585, 2, 'Brätte'], [1644, 0]]],
     ['vanersborg', 12.32, 58.38, [[1644, 2, 'Vänersborg']]],
     // Halland, Bohuslän, Skåne och Blekinge (danska och norska till 1645 och 1658)
@@ -61,7 +61,7 @@
     ['stromstad', 11.17, 58.94, [[1672, 2, 'Strömstad']]],
     ['helsingborg', 12.70, 56.05, [[ST, 2, 'Helsingborg']]],
     ['landskrona', 12.83, 55.87, [[ST, 2, 'Landskrona']]],
-    ['lund', 13.19, 55.70, [[ST, 3, 'Lund'], [1537, 2]]],
+    ['lund', 13.19, 55.70, [[ST, 2, 'Lund']]],
     ['ystad', 13.82, 55.43, [[ST, 2, 'Ystad']]],
     ['trelleborg', 13.16, 55.37, [[ST, 2, 'Trelleborg'], [1619, 1]]],
     ['skanor', 12.85, 55.42, [[ST, 2, 'Skanör']]],
@@ -78,7 +78,7 @@
     ['lycka', 15.63, 56.21, [[ST, 2, 'Lyckå'], [1600, 1]]],
     ['kristianopel', 16.04, 56.25, [[1600, 2, 'Kristianopel'], [1677, 1]]],
     ['karlshamn', 14.86, 56.17, [[1664, 2, 'Karlshamn']]],
-    ['karlskrona', 15.59, 56.16, [[1680, 2, 'Karlskrona'], [1690, 3]]],
+    ['karlskrona', 15.59, 56.16, [[1680, 2, 'Karlskrona']]],
     // Finland
     ['nadendal', 22.03, 60.47, [[ST, 2, 'Nådendal']]],
     ['bjorneborg', 21.80, 61.48, [[1558, 2, 'Björneborg']]],
@@ -98,7 +98,7 @@
     ['malmo', null, null, [[ST, 3, 'Malmö']]], ['kopenhamn', null, null, [[ST, 3, 'Köpenhamn']]], ['abo', null, null, [[ST, 2, 'Åbo']]],
     ['borga', null, null, [[ST, 2, 'Borgå']]], ['raumo', null, null, [[ST, 2, 'Raumo']]], ['ulvsby', null, null, [[ST, 2, 'Ulvsby'], [1558, 1]]],
     ['ekenas', null, null, [[1546, 2, 'Ekenäs']]], ['helsingfors', null, null, [[1550, 2, 'Helsingfors']]], ['viborg', null, null, [[ST, 2, 'Viborg']]],
-    ['reval', null, null, [[ST, 3, 'Reval']]], ['narva', null, null, [[ST, 2, 'Narva']]], ['goteborg', null, null, [[1621, 2, 'Göteborg'], [1640, 3]]]
+    ['reval', null, null, [[ST, 3, 'Reval']]], ['narva', null, null, [[ST, 2, 'Narva']]], ['goteborg', null, null, [[1621, 2, 'Göteborg']]]
   ];
 
   // Läget för året: storlek och namn
@@ -132,37 +132,24 @@
   // kors = två gator som korsas på slätten, rutnat = planlagda raka kvarter (städer grundade från 1580), o = tätt på en ö eller udde.
   // Kyrkor: sten (vitkalkad gråsten), tegel, tra (träkyrka med klockstapel), dom (stor kyrka med två torn), ingen.
   // Tillägg: borg (liten borg), ruin, hytta (kopparhytta), kloster, mur (stadsmur eller vall), kanal, hamn (bryggor och sjöbodar), tvakyrkor.
+  // Bara det som källorna säger om orten (docs/orter.md): å eller ö när texten nämner den, borg, kloster, hamn, hytta, kvarnar, murar och kanaler som texten nämner.
+  // Allt annat ritas på det vanliga sättet (en gata, eller rutnät för städer som grundas från 1580), utan egna byggnader (Johannes 2026-11-28: "Du får ALDRIG gissa något i detta spelet").
+  // f = form (a = vid ån, o = på en ö, kors = där vägar möts), k = kyrka (dom = biskopssäte, tegel), x = det som står vid orten.
   const STAD = {
-    sigtuna: { f: 'lang', k: 'tegel', x: ['ruin', 'ruin', 'hamn'], l: 1.3 }, sodertalje: { f: 'kors', k: 'sten', x: ['hamn'] }, torshalla: { f: 'a', k: 'sten', kp: 'hojd' },
-    koping: { f: 'a', k: 'sten', x: ['hamn'] }, trosa: { f: 'a', k: 'sten', l: 0.8 }, osthammar: { f: 'lang', k: 'sten', l: 0.8 }, oregrund: { f: 'lang', k: 'tra', x: ['hamn'], l: 0.8 },
-    norrtalje: { f: 'rutnat', k: 'sten', x: ['a'] }, vaxholm: { f: 'o', k: 'tra', x: ['borg'] }, eskilstuna: { f: 'rutnat', k: 'sten', x: ['a', 'hytta'] }, avesta: { f: 'a', k: 'tra', x: ['hytta', 'hytta'] },
-    sater: { f: 'lang', k: 'tra', l: 0.9, smal: 1 }, nora: { f: 'rutnat', k: 'tra', x: ['hytta'] }, lindesberg: { f: 'rutnat', k: 'sten' }, askersund: { f: 'rutnat', k: 'sten', x: ['hamn'] },
-    karlstad: { f: 'rutnat', k: 'sten', x: ['a', 'hamn'] }, kristinehamn: { f: 'rutnat', k: 'tra', x: ['a', 'hamn'] }, filipstad: { f: 'rutnat', k: 'tra', x: ['hytta'] }, amal: { f: 'rutnat', k: 'tra', x: ['a', 'hamn'] },
-    soderhamn: { f: 'rutnat', k: 'sten', x: ['a'] }, hudiksvall: { f: 'lang', k: 'sten', x: ['hamn'] },
-    norrkoping: { f: 'a', k: 'sten', x: ['kvarnar'], l: 1.2 }, skanninge: { f: 'kors', k: 'tegel', x: ['ruin'] }, vastervik: { f: 'lang', k: 'sten', x: ['ruin', 'hamn'] }, vimmerby: { f: 'lang', k: 'sten', l: 0.8 },
-    eksjo: { f: 'kors', k: 'sten' }, granna: { f: 'lang', k: 'sten', x: ['ruin'], rak: 1, l: 1.2 }, monsteras: { f: 'lang', k: 'tra', l: 0.7 }, hjo: { f: 'lang', k: 'sten', x: ['hamn'], l: 0.8 },
-    skovde: { f: 'kors', k: 'sten' }, falkoping: { f: 'kors', k: 'sten', kp: 'hojd' }, lidkoping: { f: 'a', k: 'sten', x: ['hamn'] }, mariestad: { f: 'rutnat', k: 'sten', x: ['a', 'hamn'] },
-    alingsas: { f: 'rutnat', k: 'tra', x: ['a'] }, boras: { f: 'rutnat', k: 'tra', x: ['a'] }, lodose: { f: 'lang', k: 'sten', l: 0.9 }, nyalodose: { f: 'a', k: 'sten', l: 0.8 },
-    goteborg: { f: 'rutnat', k: 'sten', x: ['kanal', 'mur', 'hamn'] }, bratte: { f: 'lang', k: 'tra', l: 0.7 }, vanersborg: { f: 'rutnat', k: 'tra', x: ['hamn'] },
-    kungsbacka: { f: 'a', k: 'tra', l: 0.8 }, laholm: { f: 'backe', k: 'sten', x: ['borg', 'a'] }, uddevalla: { f: 'a', k: 'sten', x: ['hamn'] }, marstrand: { f: 'o', k: 'sten', x: ['hamn', 'kloster'] },
-    stromstad: { f: 'lang', k: 'tra', x: ['hamn'] }, helsingborg: { f: 'backe', k: 'tegel', x: ['borg', 'hamn', 'kloster'], l: 1.2 }, landskrona: { f: 'lang', k: 'tegel', x: ['borg', 'hamn'] },
-    lund: { f: 'kors', k: 'dom', x: ['mur', 'kloster', 'tvakyrkor'] }, ystad: { f: 'lang', k: 'tegel', x: ['kloster', 'hamn'] }, trelleborg: { f: 'lang', k: 'tegel', x: ['hamn'], l: 0.8 },
-    skanor: { f: 'lang', k: 'tegel', x: ['ruin'], l: 0.8 }, falsterbo: { f: 'o', k: 'tegel', x: ['ruin'] }, simrishamn: { f: 'lang', k: 'sten', x: ['hamn'] }, ahus: { f: 'lang', k: 'tegel', x: ['ruin', 'mur'] },
-    va: { f: 'kors', k: 'sten', x: ['mur'] }, kristianstad: { f: 'rutnat', k: 'tegel', x: ['mur', 'a'] }, angelholm: { f: 'a', k: 'tegel', l: 0.8 }, bastad: { f: 'lang', k: 'sten', l: 0.8 },
-    solvesborg: { f: 'lang', k: 'tegel', x: ['borg'], kp: 'ande' }, elleholm: { f: 'o', k: 'sten', l: 0.6 }, ronneby: { f: 'backe', k: 'sten', x: ['a'] }, lycka: { f: 'a', k: 'tra', x: ['borg'], l: 0.7 },
-    kristianopel: { f: 'rutnat', k: 'sten', x: ['mur', 'hamn'], l: 0.7 }, karlshamn: { f: 'rutnat', k: 'sten', x: ['hamn'] }, karlskrona: { f: 'rutnat', k: 'sten', x: ['hamn', 'tvakyrkor'] },
-    nadendal: { f: 'lang', k: 'sten', x: ['kloster'], kp: 'ande' }, bjorneborg: { f: 'rutnat', k: 'tra', x: ['a'] }, nystad: { f: 'rutnat', k: 'tra', x: ['hamn'] }, tavastehus: { f: 'rutnat', k: 'tra', x: ['borg'] },
-    nyslott: { f: 'o', k: 'tra', x: ['borg'] }, villmanstrand: { f: 'rutnat', k: 'tra', x: ['mur'] }, fredrikshamn: { f: 'rutnat', k: 'tra', x: ['mur', 'hamn'] },
+    sigtuna: { k: 'tegel' }, torshalla: { f: 'a' }, koping: { f: 'a' }, oregrund: { x: ['hamn'] }, norrtalje: { x: ['a'] }, vaxholm: { f: 'o', x: ['borg'] },
+    eskilstuna: { x: ['a', ['kloster', 1527]] }, avesta: { f: 'a', x: ['hytta'] }, askersund: { x: ['hamn'] }, karlstad: { x: ['a'] }, kristinehamn: { x: ['hamn'] },
+    soderhamn: { x: ['hamn'] }, hudiksvall: { x: ['hamn'] }, norrkoping: { f: 'a', x: ['kvarnar'] }, skanninge: { x: [['kloster', 1544]] }, vastervik: { x: [['borg', 1517], ['borg', 1677, 1521]] },
+    eksjo: { f: 'kors' }, lidkoping: { f: 'a', x: ['hamn'] }, alingsas: { x: ['a'] }, nyalodose: { f: 'a' }, goteborg: { x: [['kanal', 9999, 1621], ['mur', 9999, 1621]] },
+    laholm: { x: [['borg', 1675], 'a'] }, uddevalla: { f: 'a' }, marstrand: { f: 'o' }, ystad: { x: [['kloster', 1532], 'hamn'] }, falsterbo: { x: [['borg', 1596]] }, simrishamn: { x: ['hamn'] },
+    kristianstad: { x: ['mur'] }, angelholm: { f: 'a' }, solvesborg: { x: [['borg', 1565]] }, elleholm: { f: 'o' }, ronneby: { x: ['a'] }, lycka: { f: 'a' },
+    kristianopel: { x: ['mur'] }, karlshamn: { x: ['hamn'] }, bjorneborg: { x: ['a'] },
     // spelets egna platser, som de ser ut innan spelet bygger dem
-    stockholm: { f: 'o', k: 'tegel', x: ['borg', 'hamn', 'kloster'] }, uppsala: { f: 'a', k: 'dom', x: ['borg'] }, vasteras: { f: 'a', k: 'dom', x: ['borg', 'hamn'] }, orebro: { f: 'a', k: 'sten', x: ['borg'] },
-    arboga: { f: 'a', k: 'sten', x: ['kloster'] }, strangnas: { f: 'backe', k: 'dom', x: ['hamn'] }, nykoping: { f: 'a', k: 'sten', x: ['borg', 'hamn'] }, soderkoping: { f: 'lang', k: 'tegel', x: ['kloster'] },
-    linkoping: { f: 'kors', k: 'dom', x: ['borg'] }, vadstena: { f: 'lang', k: 'sten', x: ['kloster', 'borg'] }, skara: { f: 'kors', k: 'dom', x: ['kloster'] }, jonkoping: { f: 'lang', k: 'sten', x: ['borg', 'kloster'] },
-    enkoping: { f: 'kors', k: 'sten', x: ['ruin'] }, hedemora: { f: 'kors', k: 'sten' }, gavle: { f: 'a', k: 'sten', x: ['hamn'] }, sala: { f: 'kors', k: 'sten', x: ['hytta'] }, kalmar: { f: 'o', k: 'sten', x: ['borg', 'mur', 'hamn'] },
-    visby: { f: 'backe', k: 'dom', x: ['mur', 'ruin', 'ruin', 'hamn'] }, halmstad: { f: 'a', k: 'tegel', x: ['mur', 'hamn'] }, varberg: { f: 'lang', k: 'tegel', x: ['borg', 'hamn'] }, falkenberg: { f: 'a', k: 'tra' },
-    malmo: { f: 'lang', k: 'tegel', x: ['borg', 'mur', 'hamn'], l: 1.3 }, kopenhamn: { f: 'lang', k: 'tegel', x: ['borg', 'mur', 'hamn'], l: 1.4 }, abo: { f: 'a', k: 'dom', x: ['borg', 'hamn'] },
-    borga: { f: 'backe', k: 'sten', x: ['a'] }, raumo: { f: 'lang', k: 'sten', x: ['kloster', 'hamn'] }, ulvsby: { f: 'a', k: 'sten' }, ekenas: { f: 'o', k: 'sten', x: ['hamn'] },
-    helsingfors: { f: 'a', k: 'tra', x: ['hamn'] }, viborg: { f: 'o', k: 'sten', x: ['borg', 'mur', 'hamn'] }, reval: { f: 'backe', k: 'tegel', x: ['borg', 'mur', 'hamn', 'tvakyrkor'] }, narva: { f: 'a', k: 'sten', x: ['borg', 'mur'] }
+    stockholm: { f: 'o', x: ['borg'] }, uppsala: { k: 'dom' }, vasteras: { k: 'dom', x: ['borg'] }, orebro: { x: ['borg'] }, strangnas: { k: 'dom' }, linkoping: { k: 'dom' }, skara: { k: 'dom' },
+    kalmar: { x: ['borg'] }, halmstad: { f: 'a', x: ['hamn'] }, varberg: { x: ['borg'] }, falkenberg: { f: 'a' }, lund: { k: 'dom' }, abo: { k: 'dom', x: ['borg'] },
+    borga: { f: 'a' }, raumo: { x: [['kloster', 1538], 'hamn'] }, ulvsby: { f: 'a' }
   };
+  // det som står vid orten just det året: ['kloster', 1527] = till 1527, ['borg', 1677, 1521] = från 1521 till 1677
+  function xNu(d) { const Y = arNu(); return (d.x || []).filter(e => typeof e === 'string' || (Y < e[1] && Y >= (e[2] || 0))).map(e => typeof e === 'string' ? e : e[0]); }
   const SKALA = 0.72;
   // Var en känd byggnad (kanda.js) står i en stad från den här listan: i stadens mitt, eller närmast torr mark intill
   function kandaPlats(q) { const G = V.Geo; if (G.sdAt(q.x, q.z) > 0.6) return { x: q.x, z: q.z }; for (let r = 0.4; r < 3; r += 0.4) for (let a = 0; a < 6.283; a += 0.5) { const x = q.x + Math.cos(a) * r, z = q.z + Math.sin(a) * r; if (G.sdAt(x, z) > 0.6) return { x, z }; } return { x: q.x, z: q.z }; }
@@ -186,7 +173,7 @@
         const per = rnd() < 0.5 ? 2 : 3;          // två eller tre gårdar mot varje gata
         for (let q = 0; q < per; q++) { const o = (q - (per - 1) / 2) * 0.78; h(cx + o, cz - 0.3, 0); h(cx + o, cz + 0.3, Math.PI); }
       }
-      if ((d.x || []).indexOf('kanal') >= 0) ut.push({ typ: 'kanal', x: 0, z: (torg[1] + 0.4) / 2 - 0.25, w: nx * B * 1.35 });
+      if (xNu(d).indexOf('kanal') >= 0) ut.push({ typ: 'kanal', x: 0, z: (torg[1] + 0.4) / 2 - 0.25, w: nx * B * 1.35 });
     } else if (f === 'kors') {
       const vrid = (rnd() - 0.5) * 0.5, c = Math.cos(vrid), s = Math.sin(vrid);
       gata(-L0, L0, 0, [-1, 1]); const tmp = []; ut.splice(0).forEach(u => tmp.push(u));
@@ -218,14 +205,14 @@
     if (n >= 2 && d.k !== 'ingen') ut.push({ typ: 'kyrka', x: kyrka[0], z: kyrka[1], rot: Math.PI + (rnd() - 0.5) * 0.3, sort: n === 1 ? 'tra' : d.k || 'sten' });
     if (n >= 2) ut.push({ typ: 'torg', x: torg[0], z: torg[1] });
     // tilläggen: på egna platser runt staden
-    const ext = (d.x || []).filter(e => e !== 'a' && e !== 'kanal'), R = (n === 3 ? 3.6 : 2.6) * (d.l || 1);
+    const ext = xNu(d).filter(e => e !== 'a' && e !== 'kanal'), R = (n === 3 ? 3.6 : 2.6) * (d.l || 1);
     ext.forEach((e, i) => {
       const sida = i % 2 ? 1 : -1, x = sida * (R * 0.75 + rnd() * 0.4), z = e === 'hamn' ? -1.15 : 0.6 + rnd() * 1.2;
       if (e === 'mur') ut.push({ typ: 'mur', rx: R * 1.05, rz: R * 0.75 + 0.6 });
       else if (e === 'hamn') ut.push({ typ: 'hamn', x: (rnd() - 0.5) * L0, z: -1.25 });
       else ut.push({ typ: e, x, z, rot: rnd() * 6.283 });
     });
-    if (n >= 2 && (d.x || []).indexOf('tvakyrkor') >= 0) ut.push({ typ: 'kyrka', x: -kyrka[0] - 1.2, z: kyrka[1] + 0.3, rot: Math.PI, sort: 'sten', extra: 1 });
+    if (n >= 2 && xNu(d).indexOf('tvakyrkor') >= 0) ut.push({ typ: 'kyrka', x: -kyrka[0] - 1.2, z: kyrka[1] + 0.3, rot: Math.PI, sort: 'sten', extra: 1 });
     return { ut: ut.filter(u => u.typ !== 'bort'), f };
   }
   // åt vilket håll vattnet ligger (stranden): stadens gata går längs den. Långt från vatten: efter fröet.
@@ -261,7 +248,7 @@
     const plan = stadsplan(id, n, planerad), d = STAD[id] || {}, rnd = slump(id + 'h');
     { let ext = 0.5; for (const it of plan.ut) ext = Math.max(ext, it.typ === 'mur' ? Math.max(it.rx, it.rz) : Math.hypot(it.x || 0, it.z || 0) + 0.5); if (maxR && ext * sk > maxR) sk = maxR / ext; }          // ingen stad flyter ihop med grannen
     let u = landRiktning(p.x, p.z, seed);
-    if (plan.f === 'a' || (d.x || []).indexOf('a') >= 0) { const ar = aRiktning(p.x, p.z); if (ar) u = plan.f === 'a' ? [-ar[1], ar[0]] : u; }          // ån: gatorna längs ån
+    if (plan.f === 'a' || xNu(d).indexOf('a') >= 0) { const ar = aRiktning(p.x, p.z); if (ar) u = plan.f === 'a' ? [-ar[1], ar[0]] : u; }          // ån: gatorna längs ån
     const rot = Math.atan2(u[0], u[1]), c = Math.cos(rot), s = Math.sin(rot), y0 = G.groundAt(p.x, p.z);
     const varld = (x, z) => [p.x + (x * c + z * s) * sk, p.z + (-x * s + z * c) * sk], torr = (x, z, m) => { const w = varld(x, z); return G.sdAt(w[0], w[1]) > (m || 0.35) && G.riverAt(w[0], w[1]) > 0.25; };
     const Y = (x, z) => { const w = varld(x, z); return (G.groundAt(w[0], w[1]) - y0) / sk; };
@@ -358,7 +345,7 @@
   V.Stadsplan = function (id, p) {
     const d = STAD[id]; if (!d) return null;
     const ut = { oregelbunden: d.f !== 'rutnat' }, lg = LAGE[id]; if (lg) { ut.borg = lg.borg; ut.dom = lg.dom; }
-    if (d.f === 'a' || (d.x || []).indexOf('a') >= 0) { const r = aRiktning(p.x, p.z); if (r) ut.u = r; }
+    if (d.f === 'a' || xNu(d).indexOf('a') >= 0) { const r = aRiktning(p.x, p.z); if (r) ut.u = r; }
     return ut;
   };
   // Träden krymper bort kring personerna i historien (levande.js) som står nära där kameran tittar
@@ -377,21 +364,65 @@
     };
   }
   // ---- vem håller orten: flaggan (Johannes 2026-11-28: "Danska flaggor på alla orter som är danskt territorium, och samma med alla andra länder så man ser") ----
-  // Först spelets steg: en fiende i ett steg vid orten som inte är gjort än håller den, och en egen bas är din. Annars landet orten ligger i det året.
-  // Inga gränser ritas på kartan; flaggorna visar vem som har vad. Svar: [flagga, ockuperad] (ockuperad = en främmande makt håller en svensk ort).
+  // Bara det som källorna säger (Johannes 2026-11-28: "Du får ALDRIG gissa något i detta spelet"). Varje regel och dess källa står i docs/orter.md, avsnittet Flaggorna.
+  // Där det inte är säkert vem som höll orten hissas ingen flagga. Inga gränser ritas på kartan. Svar: [flagga, ockuperad] (ockuperad = en främmande makt håller en svensk ort).
   function tidNu() { try { const d = V.Game.datum(); return d.ar + (d.man - 1) / 12; } catch (e) { return arNu(); } }
-  const KOLLADE_AGARE = [];          // [{ galler(lon, lat, år, id), flagga, ockuperad, kalla }], fylls när en regel är belagd
+  const DAG = (ar, man, dag) => ar + (man - 1 + ((dag || 1) - 1) / 30) / 12;          // samma räkning som kalendern; dagen efter en händelse
+  const DK = ['danmark', false], DKO = ['danmark', true], SV = ['sverige', false], NO = ['norge', false], RY = ['ryssland', false], RYO = ['ryssland', true], PL = ['polen', false], ORD = ['orden', false], LB = ['lubeck', false], INGEN = [null, false];
   function agare(id, lon, lat) {
-    const Y = tidNu(), G = V.Game, S = G && G.s, D = V.DATA, R = V.Rike;
-    // 1. spelets steg: en egen bas är din, och en fiende i ett steg vid orten som inte är gjort än håller den
-    if (S && S.bas && S.bas[id]) return ['sverige', false];
-    if (S && D.UPPDRAG) for (let i = S.nasta; i < D.UPPDRAG.length; i++) { const u = D.UPPDRAG[i]; if (u.plats !== id || !u.fiende) continue; if (/[Dd]ansk|Rantzau/.test(u.fiende) || (S.varld === 1 && Y < 1523.6 && !/Dalkarl|Dacke|bönder/.test(u.fiende))) return ['danmark', true]; /* 1521–1523 är slottens knektar och fogdar kung Kristians */ if (/Ryss/.test(u.fiende)) return ['ryssland', true]; break; }
-    // samma regel som borgarnas flaggor i varld.js: i Gustavs värld håller kung Kristians folk slotten tills de tas (Åbo och Viborg till steget finland, de andra till intag)
-    if (S && S.varld === 1 && D.UPPDRAG) { const b = D.BASER.find(q => q.id === id); if (b && b.borg) { const fi = D.UPPDRAG.findIndex(u => u.id === (id === 'abo' || id === 'viborg' ? 'finland' : 'intag')); if (fi >= 0 && S.nasta <= fi) return ['danmark', true]; } }
-    // Allt annat: ingen flagga tills ägaren är kontrollerad mot en källa (Johannes 2026-11-28: "Du får ALDRIG gissa något i detta spelet").
-    // De kontrollerade reglerna står i KOLLADE_AGARE med källa (docs/orter.md).
-    for (const r of KOLLADE_AGARE) if (r.galler(lon, lat, Y, id)) return [r.flagga, !!r.ockuperad];
-    return [null, false];
+    const Y = tidNu(), S = V.Game && V.Game.s;
+    if (S && S.bas && S.bas[id]) return SV;          // en egen bas är din (spelets steg följer historien)
+    const vid = (x, y, r) => Math.abs(lon - x) < r * 2 && Math.abs(lat - y) < r;
+    const mellan = (a, b) => Y >= a && Y < b;
+    // ---- enskilda orter med kända byten ----
+    if (vid(18.075, 59.335, 0.04)) return Y < 1520 ? SV : Y < DAG(1520, 9, 8) ? SV : Y < DAG(1523, 6, 18) ? DKO : SV;          // Stockholm: Kristina håller staden till september 1520, danskarna till 17 juni 1523
+    if (vid(16.34, 56.66, 0.03)) return Y < 1520 ? SV : Y < 1521 ? INGEN : Y < DAG(1523, 5, 28) ? DKO : Y < DAG(1611, 5, 28) ? SV : Y < DAG(1613, 1, 21) ? DKO : INGEN;          // Kalmar: danskt till 27 maj 1523; staden stormas 27 maj 1611, freden i Knäred 20 januari 1613
+    if (vid(16.6, 58.43, 0.03)) return Y < 1520 ? SV : Y < 1521 ? INGEN : Y < DAG(1521, 12, 1) ? DKO : Y < 1522 ? INGEN : SV;          // Stegeborg: faller strax före julen 1521
+    if (vid(16.55, 59.625, 0.03)) return Y < 1520 ? SV : Y < 1521 ? INGEN : Y < DAG(1521, 5, 21) ? DKO : Y < DAG(1522, 1, 31) ? INGEN : SV;          // Västerås: staden 20 maj 1521, slottet 30 januari 1522
+    if (vid(15.21, 59.275, 0.03)) return Y < 1520 ? SV : Y < DAG(1522, 5, 1) ? INGEN : SV;          // Örebro: slottet tas i början av 1522
+    if (vid(11.93, 57.69, 0.02)) return Y < 1520 ? SV : Y < 1523.47 ? INGEN : Y < DAG(1563, 9, 5) ? SV : Y < DAG(1570, 12, 14) ? DKO : Y < DAG(1612, 5, 25) ? INGEN : Y < DAG(1619, 2, 1) ? DKO : SV;          // Älvsborg: danskt 4 september 1563 till lösen (återlämnandet står inte i källan), igen maj 1612 till januari 1619
+    if (vid(12.25, 57.11, 0.04)) return Y < DAG(1565, 8, 29) ? DK : Y < DAG(1569, 11, 14) ? SV : Y < DAG(1645, 8, 14) ? DK : SV;          // Varberg: svenskt 28 augusti 1565 till 13 november 1569
+    if (lon > 16.5 && lon < 17.2 && lat > 56.2 && lat < 57.4) return mellan(1611, DAG(1611, 10, 8)) ? INGEN : Y < 1520 || Y >= 1523.47 ? SV : INGEN;          // Öland: Borgholm danskt 1611 till 7 oktober
+    if (vid(16.04, 56.25, 0.03) && mellan(1611, 1612)) return INGEN;          // Kristianopel 1611
+    if (id === 'ivangorod' || vid(28.6, 59.38, 0.04) || vid(29.03, 59.71, 0.04)) return mellan(1582, 1590) ? SV : Y < 1478 ? INGEN : Y < 1581 ? RY : Y < 1596 ? INGEN : Y < 1611 ? RY : INGEN;          // Ivangorod, Jama, Koporje: svenska från hösten 1581; 1590–1595 står inte säkert i källan
+    if (vid(28.19, 59.38, 0.04)) return Y < 1559 ? INGEN : Y < DAG(1581, 9, 7) ? RYO : SV;          // Narva: ryskt från 1558, svenskt 6 september 1581
+    if (vid(24.75, 59.44, 0.06)) return Y < 1562 ? INGEN : SV;          // Reval: svenskt från 1561
+    if (vid(26.36, 59.35, 0.04)) return mellan(1581, 1602) ? SV : INGEN;          // Wesenberg: svenskt 1580–1602
+    if (vid(23.54, 58.94, 0.04)) return mellan(1560, 1581) ? DK : mellan(1582, 1612) ? SV : INGEN;          // Hapsal: danskt 1559, svenskt från 1581
+    if (vid(30.12, 61.03, 0.06)) return Y < DAG(1580, 12, 1) ? RY : Y < DAG(1595, 5, 19) ? SV : Y < 1598 ? INGEN : Y < DAG(1611, 4, 1) ? RY : SV;          // Kexholm: svenskt november 1580, lämnas tillbaka efter Teusina (länet 1597), stormas mars 1611
+    if (vid(24.1, 56.95, 0.08)) return Y < 1583 ? INGEN : Y < 1621 ? PL : INGEN;          // Riga: fri stad till 1581, polsk från 1582
+    if (vid(31.27, 58.52, 0.08)) return Y < DAG(1611, 7, 17) ? RY : Y < 1612 ? SV : INGEN;          // Novgorod: De la Gardie intar staden 16 juli 1611
+    if (vid(28.45, 59.27, 0.04)) return Y < 1590 ? RY : Y < 1596 ? INGEN : Y < 1611 ? RY : INGEN;          // Teusina
+    // ---- landet orten ligger i ----
+    if (lat < 54.6 && lat > 53.7 && lon > 10.4 && lon < 11.2) return LB;          // Lübeck
+    if ((lon < 10.95 && lat > 54.5) || (lat > 54.5 && lat < 56.15 && lon < 12.68)) return DK;          // Jylland och de danska öarna (Själland slutar vid Öresund)
+    if (lat < 55.5 && lat > 54.9 && lon > 14.6 && lon < 15.6) return Y < 1525 ? DK : Y < 1526 ? INGEN : Y < 1575 ? LB : Y < 1576 ? INGEN : DK;          // Bornholm: pantsatt till Lübeck 1525 på femtio år
+    if (lat < 56.45 && lat >= 55.3 && lon >= 12.4 && lon < 14.5) return Y < DAG(1658, 2, 27) ? DK : SV;          // Skåne: danskt till freden i Roskilde 26 februari 1658
+    if (lat < 56.45 && lat >= 55.9 && lon >= 14.5 && lon < 16.1) return Y < 1523 ? DK : Y < DAG(1524, 9, 2) ? INGEN : Y < DAG(1658, 2, 27) ? DK : SV;          // Blekinge: erövrat 1523, danskt igen efter Malmö recess 1 september 1524
+    if (lat < 56.0) return INGEN;          // de tyska länderna, Preussen, Polen och Litauen: ingen flagga
+    if (lat >= 56.45 && lat < 57.56 && lon > 11.85 && lon < 13.2) return Y < DAG(1645, 8, 14) ? DK : SV;          // Halland: till Sverige i freden i Brömsebro 13 augusti 1645
+    if (lon > 18 && lon < 19.4 && lat > 56.85 && lat < 58.1) return Y < 1517 ? INGEN : Y < 1523 ? DK : Y < 1526 ? INGEN : Y < DAG(1645, 8, 14) ? DK : SV;          // Gotland: Norby håller ön för Kristian II, danskt från 1525, svenskt 1645
+    if (lon < 12.0 && lat >= 57.75 && lat < 59.1) return mellan(1523, DAG(1524, 9, 2)) ? INGEN : Y < DAG(1658, 2, 27) ? NO : SV;          // Bohuslän: norskt till 1658, delar erövrade 1523–1524
+    if (lat >= 59.1 && lon < 12.15) return NO;          // Norge
+    if (lat >= 57.9 && lat < 59.7 && lon >= 21 && lon < 28.22) { if (lon < 23.4 && lat < 58.7) return mellan(1560, 1611) ? DK : INGEN; return INGEN; }          // Estland: Ösel danskt från 1559; resten bara där orten har en egen regel ovan
+    if (lat < 57.9 && lat >= 56.0 && lon >= 21 && lon < 28.22) return Y < 1558 ? ORD : Y < 1583 ? INGEN : Y < DAG(1600, 8, 1) ? PL : INGEN;          // Livland: orden, sedan Polen
+    if (lat < 60.1 && lon >= 28.22) return Y < 1611 ? RY : INGEN;          // Ingermanland och Ryssland
+    if (lon >= 29.6 && lat >= 60.1) return INGEN;          // Karelen öster om gränsen
+    // ---- riket: Sverige och Finland ----
+    if (Y < 1520) return SV;
+    const finland = lat >= 59.7 && lon >= 19.3;
+    if (finland) return Y < 1524 ? INGEN : SV;          // de sista fästena i Finland ger sig sommaren och hösten 1523
+    if (Y < 1523.47) {          // befrielsekriget: bara det som källan säger
+      if (lat >= 60.3 && lat < 61.0 && lon >= 16.3 && lon < 17.4) return Y >= DAG(1521, 5, 1) ? SV : INGEN;          // Gästrikland
+      if (lat >= 61.0 && lat < 62.3 && lon >= 15.4 && lon < 17.6) return Y >= DAG(1521, 5, 21) ? SV : INGEN;          // Hälsingland: under belägringen av Västerås
+      const dalarna = (lat >= 59.95 && lat < 61.1 && lon >= 13.0 && lon < 16.5) || (lat >= 61.1 && lat < 62.3 && lon >= 12.2 && lon < 15.4);
+      const vastmanland = (lat >= 59.3 && lat < 59.5 && lon >= 15.0 && lon < 16.3) || (lat >= 59.5 && lat < 60.2 && lon >= 15.0 && lon < 17.0);
+      const narke = lat >= 58.8 && lat < 59.4 && lon >= 14.6 && lon < 15.6;
+      if (dalarna || vastmanland || narke) return Y >= DAG(1521, 5, 1) ? SV : INGEN;          // i slutet av april 1521: Dalarna, Västmanland och Närke utom slotten
+      return INGEN;
+    }
+    if (mellan(1542, DAG(1543, 9, 1)) && lat >= 56.45 && lat < 58.1 && lon >= 13.4 && (lon < 16.5 || lat > 57.4) && lon < 16.8 && !vid(14.16, 57.78, 0.05)) return INGEN;          // Dackefejden: Småland utom Kalmar och Jönköping
+    return SV;
   }
   function flaggaVid(id, lon, lat, x, z, sk) {
     const a = agare(id, lon, lat)[0]; if (!a || !V.Bygge || !V.Bygge.flagga) return;
