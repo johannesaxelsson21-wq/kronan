@@ -51,6 +51,9 @@
   // Förspelet har egna, små siffror för de baser som finns med.
   // 2026-11-26: Stockholm och Västerås ger drygt en tredjedel mer än förut, Åbo hälften mer, Nyköping en tredjedel mer och Uppsala en femtedel mer (Johannes: "Det är lite för segt, öka tempot på produktion lite"). Priserna på stegen är desamma.
   // Erik XIV:s värld har egna, små siffror, som förspelet. Fylls på när stegen finns.
+  // Gustavs värld med historiska summor (Johannes 2026-11-28: samma tempo, men siffror som passar verkligheten). Fasta inkomster i mark per sekund,
+  // ordnade efter hur mycket platserna gav kronan (Sala och Stockholm mest). r = prisökning per nivå. Stegens priser sätts av balansboten.
+  const VASA_BAS = { kopparberget: { p0: 1.5, c0: 40, r: 1.6 }, hedemora: { p0: 3, c0: 250, r: 1.6 }, vasteras: { p0: 6, c0: 800, r: 1.6 }, uppsala: { p0: 8, c0: 1300, r: 1.6 }, kalmar: { p0: 14, c0: 3000, r: 1.6 }, stockholm: { p0: 30, c0: 6000, r: 1.6 }, sala: { p0: 45, c0: 12000, r: 1.6 }, gripsholm: { p0: 60, c0: 16000, r: 1.6 }, helsingfors: { p0: 50, c0: 14000, r: 1.6 }, viborg: { p0: 70, c0: 22000, r: 1.6 } };
   const ERIK_BAS = { kalmar: { p0: 1, c0: 5 }, kronoberg: { p0: 0.3, c0: 6 }, stockholm: { p0: 8, c0: 80 }, vasteras: { p0: 4, c0: 60 }, reval: { p0: 30, c0: 600 }, uppsala: { p0: 60, c0: 900 }, abo: { p0: 6, c0: 300 }, gripsholm: { p0: 2000, c0: 40000 } };
   // Johan III:s värld: egna, små siffror.
   const JOHAN_BAS = { stockholm: { p0: 1, c0: 5 }, abo: { p0: 0.3, c0: 6 }, mora: { p0: 0.6, c0: 20 }, uppsala: { p0: 6, c0: 80 }, reval: { p0: 12, c0: 150 }, kalmar: { p0: 40, c0: 600 }, narva: { p0: 900, c0: 12000 }, vasteras: { p0: 3000, c0: 40000 } };
@@ -506,7 +509,7 @@
   // Världarna i tur och ordning: listan med steg, var man börjar, hjälten, titeln och det som är upplåst från början.
   const VARLDAR = [
     { lista: 'STURE', start: { stockholm: 1 }, hem: 'stockholm', hjalte: 'sten', titel: 'Riddare', ar0: 1512, las: { mark: true } },
-    { lista: 'VASA', start: { mora: 1 }, hem: 'mora', hjalte: 'gustav', titel: 'Hövitsman', ar0: 1521, las: {} },
+    { lista: 'VASA', start: { mora: 1 }, hem: 'mora', hjalte: 'gustav', titel: 'Hövitsman', ar0: 1521, las: {}, basVarden: 'VASA_BAS', dubbel: 1.25, xExp: 0.15 },
     { lista: 'ERIK', start: { kalmar: 1, kronoberg: 1 }, hem: 'kalmar', hjalte: 'erik', titel: 'Hertig', ar0: 1560, man0: 8, takKung: 2500, las: { mark: true, sold: true }, basVarden: 'ERIK_BAS', arvTest: 40,
       namn: 'Erik', kung: 'Erik XIV', titlar: { Hertig: 'Erik, hertig av Kalmar', Kung: 'Erik XIV, Sveriges kung' }, tron: 'Kung: Gustav Vasa, hans far', sate: ['kalmar', 'stockholm'], utanFlagga: ['reval'],
       startText: '<h2>Kalmar 1560</h2><p>Du är <b>Erik</b>, 26 år, Gustav Vasas äldste son och hertig i Kalmar. Han ska ärva kronan, men först vill han gifta sig med drottningen av England.</p><p class="mal">Bygg upp ditt län, ta över riket och håll det samman.</p>',
@@ -582,6 +585,6 @@
   }
 
   // UPPDRAG pekar på den värld som spelas just nu (game.js byter): VASA eller STURE.
-  V.DATA = { PLATSER, BASER, BYGGNADER, KONSTER, EGENSKAPER, KUNGINFO, HANDLINGAR, GOR, UPPDRAG, VASA: UPPDRAG, STURE, STURE_BAS, ERIK, ERIK_BAS, JOHAN, JOHAN_BAS, SIGISMUND, SIGISMUND_BAS, KARL, KARL_BAS, VARLDAR, UPPROR, AKTER, REGENTER };
+  V.DATA = { PLATSER, BASER, BYGGNADER, KONSTER, EGENSKAPER, KUNGINFO, HANDLINGAR, GOR, UPPDRAG, VASA: UPPDRAG, STURE, STURE_BAS, VASA_BAS, ERIK, ERIK_BAS, JOHAN, JOHAN_BAS, SIGISMUND, SIGISMUND_BAS, KARL, KARL_BAS, VARLDAR, UPPROR, AKTER, REGENTER };
   if (typeof module !== 'undefined' && module.exports) module.exports = V.DATA;
 })(typeof window !== 'undefined' ? window : globalThis);

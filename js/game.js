@@ -71,12 +71,14 @@
     // ---- baser ------------------------------------------------------------------------------
     niva(id) { return S.bas[id] || 0; },
     stoppad(id) { for (const u in S.uppror) if (S.uppror[u] && D.UPPROR[u].baser.indexOf(id) >= 0) return u; return null; },
+    // Hur mycket var tionde nivå ger (Johannes 2026-11-28: summorna ska passa verkligheten, samma tempo). 2 = dubbelt, som förut. Världen sätter sin egen i D.VARLDAR (dubbel).
+    dub() { return (D.VARLDAR[S.varld] || {}).dubbel || 2; },
     arvX() { return 1 + S.arv * 0.25; },
     // produktion per sekund för en bas, utan fartbonus
     prod(id, niva) {
       const b = P(id), L = niva === undefined ? (S.bas[id] || 0) : niva; if (!L) return 0;
       if (niva === undefined && G.stoppad(id)) return 0;
-      let p = b.p0 * L * Math.pow(2, Math.floor(L / 10)) * S.x[b.ger] * G.arvX() * G.gang(b.ger);
+      let p = b.p0 * L * Math.pow(G.dub(), Math.floor(L / 10)) * S.x[b.ger] * G.arvX() * G.gang(b.ger);
       p *= G.husX(id);          // stadens hus
       if (b.slag === 'stad' && S.las.privilegier) p *= 0.5;                         // Lübeck tar handeln
       if (b.slag === 'gruva') p *= 1 + 0.1 * G.arb(id);                             // gruvarbetare: en tiondel mer för varje lag
@@ -88,7 +90,7 @@
     // ---- sold: knektar som får betalt. Köps för mark och ger män, och var tionde nivå dubblar som allt annat. ----
     // Mynten i Hedemora 1521 slogs för att betala hären, och 1522 kom de första tyska legoknektarna.
     // I förspelet (SOLD0) är det knektar i Sten Stures tjänst, med förspelets små siffror. De låses upp av huset för knektar (D.BYGGNADER).
-    soldProd(L) { const So = S.varld === 0 ? SOLD0 : SOLD; L = L === undefined ? (S.sold || 0) : L; return L ? So.p0 * L * Math.pow(2, Math.floor(L / 10)) * S.x.man * G.arvX() * G.gang('man') * G.egX('man') : 0; },
+    soldProd(L) { const So = S.varld === 0 ? SOLD0 : SOLD; L = L === undefined ? (S.sold || 0) : L; return L ? So.p0 * L * Math.pow(G.dub(), Math.floor(L / 10)) * S.x.man * G.arvX() * G.gang('man') * G.egX('man') : 0; },
     soldPris() { const So = S.varld === 0 ? SOLD0 : SOLD, p = So.c0 * Math.pow(So.r, S.sold || 0); return p < 1000 ? Math.ceil(p) : p; },
     // ---- byggnader (förspelet): köps för mark, byggs vid platsen och låser upp något ----
     byggnader() { return G.byggnader0().filter(b => G.inford(b.id)); },
@@ -169,10 +171,10 @@
     skattSek() { return 12 * (1 + 0.05 * S.konst.langd); },                    // och så många ger en skatteindrivning
     kopKonst(id) { if (!G.kanKonst(id)) return false; S.res.mark -= G.konstPris(id); S.konst[id]++; G.ut('konst', { id, niva: S.konst[id], dubbel: S.konst[id] % 10 === 0 }); return true; },
     hastighet() { return 2.3 * (1 + Math.min(40, S.konst.skidor) * 0.045); },                                    // Gustavs toppfart i världsenheter per sekund
-    samling() { return (6 + S.konst.tal * 0.8) * Math.pow(2, Math.floor(S.konst.tal / 10)); },     // sekunders produktion per besök
+    samling() { return (6 + S.konst.tal * 0.8) * Math.pow(G.dub(), Math.floor(S.konst.tal / 10)); },     // sekunders produktion per besök
     lopare() { return S.las.konster && S.konst.bud > 0 ? Math.min(6, 1 + Math.floor(S.konst.bud / 5)) : 0; },
     lopFart() { return 1.5 * (1 + S.konst.bud * 0.03); },
-    lopSamling() { return G.samling() * 0.15 * Math.pow(2, Math.floor(S.konst.bud / 10)); },
+    lopSamling() { return G.samling() * 0.15 * Math.pow(G.dub(), Math.floor(S.konst.bud / 10)); },
 
     // ---- farten: mätaren fylls av tryck, sjunker sakta och ger dubbel produktion när den är full ----
     // ---- egna handlingar: sådant hjälten gör själv, med vila emellan ------------------------------
@@ -320,7 +322,7 @@
       S.fick = { mark: 0, man: g.man || 0 };          // det som kom in på en gång, för medaljongerna i rutan
       S.hem = null; if (u.order && akt.man && !u.belagring) { const n = u.order.filter(o => o.ord && !o.alltid && !o.vanta).length || 1, p = Math.min(1, (akt.poang || 0) / n), hem = Math.round(akt.man * (0.2 + 0.45 * p)); S.res.man = Math.min(G.tak(), S.res.man + hem); S.hem = { id: u.id, hem, av: akt.man, p }; }
       if (g.bas) g.bas.forEach(id => { if (!S.bas[id]) S.bas[id] = 1; });
-      if (g.x) for (const r in g.x) S.x[r] *= g.x[r];
+      if (g.x) for (const r in g.x) S.x[r] *= r === 'mark' ? Math.pow(g.x[r], (D.VARLDAR[S.varld] || {}).xExp || 1) : g.x[r];          // xExp < 1: stegens lyft blir mindre (historiska belopp, Johannes 2026-11-28)
       if (g.las) g.las.forEach(l => S.las[l] = true);
       if (g.mark) { const m = g.mark * S.x.mark; S.res.mark += m; S.tot.mark += m; S.fick.mark += m; }
       if (g.man) { S.res.man = Math.min(G.tak(), S.res.man + g.man); S.tot.man += g.man; }

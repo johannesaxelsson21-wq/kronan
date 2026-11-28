@@ -26,7 +26,7 @@
     else if (typ === 'marknad') { if (!V.lugn) { UI.skylt('Marknadsdag i ' + G.BAS[d.bas].namn); V.Ljud.spela('klocka'); } }
     else if (typ === 'marknadKlar') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.2, p.z, 'Marknad +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark'), d.res); V.Ljud.spela('dubbel');
     }
-    else if (typ === 'sold' && d.dubbel) UI.skylt((G.s.varld === 0 ? 'Knektarna' : 'Soldaterna') + ': dubbelt så många män');
+    else if (typ === 'sold' && d.dubbel) UI.skylt((G.s.varld === 0 ? 'Knektarna' : 'Soldaterna') + ': ' + (G.dub() === 2 ? 'dubbelt så många män' : Math.round((G.dub() - 1) * 100) + ' % fler män'));
     else if (typ === 'infor') { if (!V.tyst) { UI.text(d.text, 12, false, UI.gaTill(d.id)); V.Ljud.spela('klart'); } UI.tick(true); }          // en ny sak i taget, med en lugn rad
     else if (typ === 'slagTryck') UI._studs = performance.now();
     else if (typ === 'malVald') { UI._studs = performance.now(); UI.svar('Tryck nu på knappen', true); V.Ljud.spela('kop'); }
