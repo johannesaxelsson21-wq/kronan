@@ -163,8 +163,7 @@
       for (const id of ids) for (const r of [rows[id], rows2[id]]) { if (!r) continue;          // staden står både under männen eller marken och i sin egen flik
         const L = S.bas[id], res = G.prisRes(id), pris = G.pris(id), max = G.maxad(id), stopp = G.stoppad(id), dub = G.rad(id), dv = G.dagsverke(id), mk = !!S.marknad && S.marknad.bas === id;
         uppd(r, { namn: G.BAS[id].kort || G.BAS[id].namn, niva: L, v: mk ? 'Marknad! Tryck här' : stopp ? D.UPPROR[stopp].namn : '<b class="k-ps">' + tal(G.prod(id) * fx) + ' ' + ger(id) + '/s</b>' + (max ? ' <small class="k-mer">full</small>' : ' <small class="k-mer">' + (dub ? dubKort() : '+' + tal((G.prod(id, L + 1) - G.prod(id, L)) * fx)) + '</small>'),
-          k: mk || max || stopp ? '' : IK[res] + tal(pris) + (dv ? ' ' + IK.man + tal(dv) : ''), ok: mk || (S.res[res] >= pris && S.res.man >= dv && !max && !stopp), snart: dub && !max && !stopp && !mk, bar: 0, mot: (L % 10) / 10 });
-        const fas = stopp ? 0 : (S.t / varv(id)) % 1; if (r === rows[id] && r._fas !== undefined && fas < r._fas - 0.5 && !stopp) UI._klump(id, r.row, G.prod(id) * fx * varv(id), ger(id) === 'män' ? 'man' : 'mark'); r._fas = fas;
+          k: mk || max || stopp ? '' : IK[res] + tal(pris) + (dv ? ' ' + IK.man + tal(dv) : ''), ok: mk || (S.res[res] >= pris && S.res.man >= dv && !max && !stopp), snart: dub && !max && !stopp && !mk, bar: stopp ? 0 : G.levFas(id) * 100, mot: (L % 10) / 10 });
         r.row.classList.toggle('dags', dv > 0 && !mk && !stopp); r.row.classList.toggle('stopp', !!stopp); r.row.classList.toggle('vald', valdBas === id); r.row.classList.toggle('marknad', mk); r.row.classList.toggle('fogde', !!S.fogde[id]); r.row.classList.toggle('last', max && !mk);
       }
       for (const id in (UI._arows || {})) { const n = G.arb(id), full = G.arbMax(id); uppd(UI._arows[id], { namn: 'Gruvarbetare', niva: n, v: full ? 'armén är för liten än' : '+10 % i ' + (G.BAS[id].kort || G.BAS[id].namn), k: full ? '' : IK.man + tal(G.arbPris(id)), ok: G.kanArb(id), bar: 0 }); }
@@ -444,6 +443,9 @@
       for (const r of ['mark', 'man']) if (f[r] >= 0.05) { const e = el('div', 'flyt tr ' + r, '+' + tal(f[r]) + IK[r]); e.style.left = (b.left + b.width / 2 + (Math.random() - 0.5) * 80 + (k++ ? 30 : -6)) + 'px'; e.style.top = (b.top - 4 - Math.random() * 16) + 'px'; $('flyt').appendChild(e); setTimeout(() => e.remove(), 950); }
       a.classList.remove('puls'); void a.offsetWidth; a.classList.add('puls');
     },
+    // En plats levererar sin klump: den flyger från kortet upp till fliken, och en dubbel leverans får sitt namn (Johannes 2026-11-28).
+    leverans(d) { const r = rows[d.bas]; if (r) UI._klump(d.bas, r.row, d.n, d.res); else UI._klump(d.bas, { offsetParent: null }, d.n, d.res);
+      if (d.krit && !V.tyst) { const b = G.BAS[d.bas], namn = { bygd: 'God skörd', gruva: 'Rik malmåder', stad: 'Rik handel', slott: 'Full skattkista' }[b.slag] || 'Dubbel leverans', w = V.Varld.pos(d.bas); if (w) UI.flyt(w.x, w.y + 3.4, w.z, namn + '! ×2', d.res); } },
     _klump(id, row, n, res) {
       if (!root.classList.contains('spel') || n < 0.05) return;
       if (row.offsetParent) {          // leveransen flyger från kortet upp till kassan, som lyser till (Johannes 2026-11-28: man ska se vad man får)
@@ -639,7 +641,7 @@
         if (kvar) requestAnimationFrame(steg); else UI._rullar = false; };
       requestAnimationFrame(steg);
     },
-    _strom(res, takt, pa) {
+    _strom(res, takt, pa) { if (G.s.lev) return;          // platserna levererar i klumpar som flyger från korten, så inga påhittade +siffror (2026-11-28)
       const k = document.querySelector('.ks-' + res); if (!k || !pa || !(takt > 0) || V.tyst) return; const nu = performance.now(); if (nu - (k._strom || 0) < 1600) return; k._strom = nu;
       const e = document.createElement('span'); e.className = 'ks-plus'; e.textContent = '+' + tal(takt * 1.6); k.appendChild(e); setTimeout(() => e.remove(), 1500);
     },

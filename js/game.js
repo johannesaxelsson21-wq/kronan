@@ -73,6 +73,9 @@
     stoppad(id) { for (const u in S.uppror) if (S.uppror[u] && D.UPPROR[u].baser.indexOf(id) >= 0) return u; return null; },
     // Hur mycket var tionde nivå ger (Johannes 2026-11-28: summorna ska passa verkligheten, samma tempo). 2 = dubbelt, som förut. Världen sätter sin egen i D.VARLDAR (dubbel).
     dub() { return (D.VARLDAR[S.varld] || {}).dubbel || 2; },
+    varvTid(id) { return Math.max(4, 10 * Math.pow(0.9, Math.floor((S.bas[id] || 0) / 10))); },          // sekunder mellan leveranserna: 10 i början, en tiondel kortare var tionde nivå
+    kritChans(id) { return Math.min(0.25, 0.08 + 0.02 * Math.floor((S.bas[id] || 0) / 10)); },          // chansen att en leverans blir dubbel
+    levFas(id) { const q = S.lev && S.lev[id]; return q ? Math.min(1, q.t / G.varvTid(id)) : 0; },
     arvX() { return 1 + S.arv * (S.varld >= 2 ? 0.05 : 0.25); },          // från Eriks värld väger arvet mindre, så att summorna förblir historiska (Johannes 2026-11-28)
     // produktion per sekund för en bas, utan fartbonus
     prod(id, niva) {
@@ -371,7 +374,11 @@
       if (S.handl) for (const id in S.handl) { const o = S.handl[id]; if (o.t > 0) o.t = Math.max(0, o.t - dt); if (o.v > 0) o.v = Math.max(0, o.v - dt); }
       if (S.full && S.fart < 0.8) { S.full = false; G.ut('slutFull', {}); }
       const fx = S.full ? G.fullX() : 1;
-      const mf = G.manF(); for (const id in S.bas) { const r = BAS[id].ger, p = G.prod(id) * fx * dt * (r === 'man' ? mf : 1); if (p) { S.res[r] += p; S.tot[r] += p; } }
+      // Varje plats fyller en mätare och levererar det den har samlat när mätaren är full (Johannes 2026-11-28: "få resources i en klump ... med den mätaren för varje grej").
+      // I medeltal ger den lika mycket som förut. Ibland blir leveransen dubbel (god skörd, rik malmåder ...), och var tionde nivå går varvet fortare.
+      const mf = G.manF(), lv = S.lev || (S.lev = {});
+      for (const id in S.bas) { const r = BAS[id].ger, p = G.prod(id) * fx * dt * (r === 'man' ? mf : 1); if (!p) continue; const q = lv[id] || (lv[id] = { t: 0, n: 0 }); q.n += p; q.t += dt;
+        const v = G.varvTid(id); if (q.t >= v) { const kc = G.kritChans(id), krit = Math.random() < kc, n = q.n * (krit ? 2 : 1) / (1 + kc); S.res[r] += n; S.tot[r] += n; q.t = q.t - v > v ? 0 : q.t - v; q.n = 0; G.ut('leverans', { bas: id, n, res: r, krit }); } }
       if (S.sold) { const p = G.soldProd() * fx * dt * mf; S.res.man += p; S.tot.man += p; }
       const tak = G.tak(); if (S.res.man > tak) S.res.man = tak;
       if (S.aktivt && S.aktivt.val && S.varld === 0) { S.aktivt.valT = (S.aktivt.valT || 0) + dt; if (S.aktivt.valT > 30) G.valj(); }      // i förspelet väntar historien inte

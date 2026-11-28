@@ -52,6 +52,7 @@
     else if (typ === 'stapel') { const q = Varld.varvPlats(); UI.flyt(q.x, 2.2, q.z, '+' + d.man + ' män på varvet (' + V.tal(d.alla) + ')', 'man'); }
     else if (typ === 'skepp') { const q = Varld.varvPlats(); UI.flyt(q.x, 2.2, q.z, 'Skeppet sjösätts vid Björkenäs', 'mark'); UI.skylt(d.n === 1 ? 'Ditt första skepp är sjösatt vid Björkenäs' : 'Ett skepp till är sjösatt: ' + d.n + ' i flottan'); V.Ljud.spela('dubbel'); }
     else if (typ === 'egenskap') { const e = G.egLista().find(q => q.id === d.id); if (e) UI.skylt(e.namn + ', nivå ' + d.niva); }
+    else if (typ === 'leverans') UI.leverans(d);
     else if (typ === 'arbetare') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.4, p.z, d.antal + ' lag i gruvan', 'mark'); V.Fx.damm(p.x, p.y + 0.2, p.z, 10); }
     else if (typ === 'konst' && d.dubbel) UI.skylt(UI.konst(d.id)[0] + ': dubbelt upp');
     else if (typ === 'full') V.Ljud.spela('full');
