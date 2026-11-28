@@ -121,7 +121,11 @@
         rutor(S, h.x, h.z, ext, (x, z) => { const dx = x - h.x, dz = z - h.z, lx = dx * ca - dz * sa, lz = dx * sa + dz * ca; return Math.abs(lx) < h.w / 2 + marg && Math.abs(lz) < h.d / 2 + marg; });
       } else disk(S, h.x, h.z, h.r + marg);
     }
-    // avstånd till närmaste hinder (i rutor), så att vägen håller sig mitt i gatan
+    avstand(S);
+  }
+  // avstånd till närmaste hinder (i rutor), så att vägen håller sig mitt i gatan
+  function avstand(S) {
+    const { n, bl } = S.g;
     const dist = new Uint8Array(n * n), q = []; for (let k = 0; k < n * n; k++) { if (bl[k]) { dist[k] = 0; q.push(k); } else dist[k] = 255; }
     for (let h = 0; h < q.length; h++) { const k = q[h], i = k % n, j = (k / n) | 0, d = dist[k] + 1; if (d > 12) continue; for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= n || jj >= n) continue; const kk = jj * n + ii; if (dist[kk] > d) { dist[kk] = d; q.push(kk); } } }
     S.g.dist = dist;
@@ -264,5 +268,5 @@
     for (let i = t.vag.length; i < t.occ.length; i++) { const o = t.occ[i]; if (o[2] >= 0.6 && Math.hypot(ux - o[0], uz - o[1]) < o[2] * 0.9 + m) return true; }
     return false;
   }
-  V.Filmstad = { stad, iHus, visa, bygg, marienkirche, radhus, stadsport, murbit };
+  V.Filmstad = { sok: { vag, narmast, ledig, avstand, C }, stad, iHus, visa, bygg, marienkirche, radhus, stadsport, murbit };
 })();
