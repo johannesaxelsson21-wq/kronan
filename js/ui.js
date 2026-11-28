@@ -309,6 +309,8 @@
     kop(id) { if (G.kop(id)) { V.Ljud && V.Ljud.spela(G.s.bas[id] % 10 === 0 ? 'dubbel' : 'kop'); UI.tick(); return true; } return false; },
     valj(id) { valdBas = id; },
     // Läs mer om ett steg: varför det händer. Spelet står still medan rutan är uppe.
+    // händelserutans Läs mer: vad som hände, varför och vad det betydde (js/djup.js)
+    djupInfo(u) { UI.ruta('<h2>' + u.titel + '</h2><p class="mal">' + (UI.vagText(u) || UI.platsnamn(u.plats)) + ', ' + u.ar + '</p><p>' + V.DJUP[u.id] + '</p>' + (u.merKalla ? '<p class="svag">Källa: ' + u.merKalla + '.</p>' : '') + '<button class="stang">Stäng</button>', false); UI._paus = true; },
     merInfo(u) { UI.ruta('<h2>' + u.titel + '</h2><p class="mal">' + (UI.vagText(u) || UI.platsnamn(u.plats)) + ', ' + u.ar + '</p><p>' + u.mer + '</p>' + (u.merKalla ? '<p class="svag">Källa: ' + u.merKalla + '.</p>' : '') + '<button class="stang">Stäng</button>', false); UI._paus = true; },
     // Ligger punkten på skärmen under en av knapparna? Då ska ingen skylt stå där.
     _skymd(sp) { for (const id of ['handl', 'hitta', 'akwrap']) { const e = $(id); if (!e || !e.offsetParent) continue; const r = e.getBoundingClientRect(); if (sp.x > r.left - 12 && sp.x < r.right + 12 && sp.y > r.top - 14 && sp.y < r.bottom + 8) return true; } return false; },
@@ -495,7 +497,7 @@
       hn.filter(h => !S.handlSedda[h.id]).forEach(h => { S.handlSedda[h.id] = 1; ny.push('h:' + h.id); });
       S.nytt = (S.nytt || []).concat(ny);
       const plats = UI.platsnamn(u.plats);
-      UI.berattar(plats, u.ar, text, med.slice(0, 4), u.mer ? () => UI.merInfo(u) : null);
+      UI.berattar(plats, u.ar, text, med.slice(0, 4), (V.DJUP && V.DJUP[u.id]) ? () => UI.djupInfo(u) : (u.mer ? () => UI.merInfo(u) : null));
       // när rutan trycks bort stiger det man fick upp ur platsen på kartan
       const fore = UI.efter; UI.efter = () => {
         if (fore) fore(); const w = V.Varld && V.Varld.pos && (V.Varld.pos(u.plats) || ((g.bas || [])[0] && V.Varld.pos(g.bas[0])));
