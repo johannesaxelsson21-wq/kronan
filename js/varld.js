@@ -508,6 +508,17 @@
       } else {
         if (W._kring) W._kring.visible = false; Bu.g.visible = false;
         if (vis && vis.gustav) { W._borta = true; return; }          // du leder ett tåg eller rider till ett möte (se _uppdrag). Rundan väntar på dig.
+        // Ett slag, ett tåg eller en händelse där du inte är med: du står still där du är och rider inte förbi eller in i den (Johannes 2026-11-28: "Fixa så regenterna
+        // inte råkar rida runt när det är ett event så det ser ut som att de ska joina, och sen rider de vidare"). Står du för nära platsen backar du undan först.
+        if (vis && !vis.gustav && vis.u && (vis.u.strid || vis.u.order || vis.u.belagring || vis.u.typ)) {
+          if (!W._fryst) {
+            const u = vis.u, p = u && R.P[u.plats]; let x = Gu.x, z = Gu.z;
+            if (p) { const d = Math.hypot(x - p.x, z - p.z); if (d < 7) { const ux = d > 0.1 ? (x - p.x) / d : 1, uz = d > 0.1 ? (z - p.z) / d : 0; for (let r = 7; r < 14; r += 0.5) { const qx = p.x + ux * r, qz = p.z + uz * r; if (Geo.sdAt(qx, qz) > 0.6) { x = qx; z = qz; break; } } } }
+            W._fryst = { x, z, ang: p ? Math.atan2(p.x - x, p.z - z) : Gu.ang || 0 };
+          }
+          Gu.place(W._fryst.x, W._fryst.z, W._fryst.ang, 0, t, dt, false, true); W._borta = true; W._plats = null; return;
+        }
+        W._fryst = null;
         if (W._kvar) {          // du stannar en stund där du kom fram
           if ((W._kvar.t -= dt) > 0) { Gu.place(W._kvar.x, W._kvar.z, W._kvar.ang, 0, t, dt, false, true); W._borta = true; return; }
           W._borta = true; W._plats = W._kvar.plats; W._kvar = null;
