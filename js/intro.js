@@ -1,4 +1,4 @@
-﻿// Introt: Stockholms blodbad, flykten till Dalarna och skidfärden mot Norge.
+﻿// Introt: flykten från Räfsnäs till Dalarna och skidfärden mot Norge.
 // En kort film som inte går att hoppa över. Spelaren får trycka, men kan inte stoppa det som sker.
 // Varje rad bygger på docs/historia.md.
 (function () {
@@ -65,44 +65,23 @@
       UI.film.text('<span class="titel">Kronan</span><span class="under">Sveriges regenter, en värld i taget</span>'); document.getElementById('film-text').classList.add('mitt');
       UI.film.knapp('Börja', () => { UI.film.knapp(null); document.getElementById('film-text').classList.remove('mitt'); text(''); UI.film.svart(0, 2.5); Scene.cam.locked = false; klar(); });
     },
-    // Gustavs värld börjar med filmen om blodbadet.
+    // Gustavs värld börjar med flykten från Räfsnäs (blodbadet sägs med en rad där).
     kor(klar) {
       UI = V.UI; L = V.Ljud; Scene.cam.locked = true; UI.visa(false); UI.film.svart(1, 0);
       const sth = R.P.stockholm; Scene.setSeason(0.835); Scene.jump(sth.x - 8, sth.z + 9, 120); Fx.sno = false;
-      UI.film.text('<span class="under">Två månader efter att portarna öppnades</span>'); document.getElementById('film-text').classList.add('mitt');
+      UI.film.text('<span class="under">November 1520</span>'); document.getElementById('film-text').classList.add('mitt');
       UI.film.knapp('Fortsätt', () => { UI.film.knapp(null); document.getElementById('film-text').classList.remove('mitt'); text(''); I.film(klar).catch(e => { console.error(e); I.slut(klar); }); });
     },
     async film(klar) {
-      const sth = R.P.stockholm, K = B.K, slott = { x: sth.x + 2.6 * K, z: sth.z - 2.2 * K };
-      UI.film.pa(true); gubbar(12, sth.x, sth.z + 0.5, 'borgare', 3); if (V.Musik) V.Musik.spar('blodbadet');
-      await vanta(0.6);
-      // ---- Stockholm, november 1520 ----
-      UI.film.svart(0.32, 3); plats('Stockholm, november 1520'); Scene.flyTo(sth.x + 1, sth.z + 2, 46, 15); regn = true;
-      await vanta(2.5); text('Den 4 november kröns Kristian II till Sveriges kung. Kronan sätts på hans huvud av ärkebiskop Gustav Trolle.'); for (let k = 0; k < 6; k++) setTimeout(() => L.klockton(k % 2 ? 294 : 392, undefined, 0.16), k * 700);
-      await vanta(8); text('I tre dagar firar kungen med rikets främsta på slottet. Han har lovat att ingen ska straffas.');
-      await vanta(7.5); plats('Slottet, 7 november'); Scene.flyTo(slott.x, slott.z + 2.5, 22, 5); text('Mitt på dagen stängs portarna.');
-      await vanta(2.6); L.spela('port'); Scene.shake(0.5); UI.film.svart(0.46, 1.5);
-      await vanta(4); text('Ärkebiskopen anklagar dem som avsatte honom och rev hans borg. Han kallar dem kättare: fiender till kyrkan.');
-      await vanta(8); text('Kungens löfte gäller inte den som kyrkan dömer. Nästa dag dömer fjorton kyrkomän dem alla.');
-      await vanta(8.5); plats('Stortorget, 8 november'); Scene.flyTo(sth.x - 0.5, sth.z + 2, 17, 5); text('');
-      await vanta(3);
-      // räkningen går av sig själv. Trycker man händer ingenting, bara ett dovt slag.
-      I.tar = () => L.spela('trumma');
-      const namn = { 1: 'Biskop Mattias av Strängnäs', 2: 'Biskop Vincent av Skara', 7: 'Erik Johansson, Gustavs far', 12: 'Joakim Brahe, hans svåger', 20: 'Rikets herrar', 36: 'Stockholms borgmästare och råd', 56: 'Tjänare och drängar' };
-      for (let n = 1; n <= 82; n++) {
-        UI.film.tal(n); if (namn[n]) text(namn[n]); if (n <= 12 || n % 4 === 0) L.spela('klocka');
-        await vanta(n <= 2 ? 2.2 : n <= 12 ? 0.75 : n <= 40 ? 0.24 : 0.14);
-      }
-      text('Åttiotvå, räknar bödeln.'); await vanta(5.5);
-      UI.film.tal(null); I.tar = null; plats('Södermalm, 10 november'); Scene.flyTo(sth.x - 1, sth.z + 7, 30, 5); text('Kropparna bränns på Södermalm.');
-      const bal = { x: sth.x - 1.5, z: sth.z + 8.5 }; hooks.push(dt => { if (Math.random() < dt * 26) Fx.spawn({ x: bal.x + (Math.random() - 0.5) * 0.8, y: Geo.groundAt(bal.x, bal.z) + 0.2, z: bal.z + (Math.random() - 0.5) * 0.6, vx: 0.5 + Math.random() * 0.3, vy: 1.1 + Math.random() * 0.7, vz: 0.1, size: 0.35, grow: 0.7, r: 0.1, gr: 0.09, b: 0.09, a: 0.6, max: 4.5 }); if (Math.random() < dt * 14) Fx.gnista(bal.x, Geo.groundAt(bal.x, bal.z) + 0.15, bal.z); });
-      await vanta(7); UI.film.svart(1, 2); text(''); plats(''); await vanta(2.3);
+      const K = B.K;
+      // Johannes 2026-11-28: världen börjar med flykten från Räfsnäs, så att man inte ser hela blodbadet igen. Budet om det kommer på Räfsnäs.
+      UI.film.pa(true); if (V.Musik) V.Musik.spar('blodbadet');
       // ---- Räfsnäs ----
       hooks = []; rensa(); regn = false; const raf = R.P.rafsnas; Scene.setSeason(0.87); Scene.jump(raf.x, raf.z + 1.5, 20);
       V.Gustav.place(raf.x, raf.z, 2.2, 0, 0, 1, false); V.Gustav.g.visible = true; Scene.flyTo(raf.x, raf.z + 1, 13, 14);
       // Filmen fortsätter där förspelet slutade: han kom hem över havet i maj. Den berättar inte om gisslan och Lübeck en gång till.
       UI.film.svart(0.2, 2.5); plats('Räfsnäs vid Mälaren, november 1520'); await vanta(2.2); text('Gustav Eriksson kom hem över havet i maj. Nu är han på sin fars gård Räfsnäs.');
-      await vanta(7); text('Hit når budet om blodbadet. Hans far är en av de döda, och kungens män letar efter honom.');
+      await vanta(7); text('Hit når budet från Stockholm: kungen har låtit avrätta åttiotvå människor. Hans far är en av de döda, och kungens män letar efter honom.');
       await vanta(7.5);
       // Flykten är det första spelaren gör själv i Gustavs värld: till häst från Räfsnäs, sedan på skidor genom Dalarna till Sälen.
       // Två stopp på vägen där något händer (Rankhyttan och Isala), talet i Mora, och skidlöparna vid Sälen (Johannes 2026-11-26).
