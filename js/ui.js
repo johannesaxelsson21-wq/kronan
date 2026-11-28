@@ -336,7 +336,7 @@
       setTimeout(() => document.addEventListener('pointerdown', function st(ev) { if (e.contains(ev.target) || (ev.target.closest && ev.target.closest('#flik-stad'))) return; e.style.display = 'none'; document.removeEventListener('pointerdown', st); }), 0);          // ett tryck någon annanstans stänger den
     },
     // Stadslistan till höger (Johannes 2026-11-28: "man ser denna listan hela tiden ... så man lättare ser vilka städer man har och kan uppgradera").
-    // Bara på dator; på telefon finns menyn bakom stadens flik. Ett tryck på raden visar staden, ett tryck på priset bygger ut den.
+    // Bara på dator; på telefon finns menyn bakom stadens flik. Ett tryck på raden tar en till staden. Här byggs inget ut (Johannes 2026-11-28: man ska gå in i staden).
     _stadLista(ids) {
       const e = $('stadlista'), S = G.s; if (!e) return;
       const syns = !V.pek && innerWidth >= 1200 && innerHeight >= 640 && root.classList.contains('spel') && !S.slut && ids.length > 0;
@@ -347,12 +347,10 @@
         e.innerHTML = '<div class="sl-rubrik"><span>Dina orter</span><i class="sl-antal"></i></div><div class="sl-rader"></div>';
         const box = e.querySelector('.sl-rader');
         for (const id of ids) {
-          const b = G.BAS[id], r = el('div', 'sl-rad', '<i class="sl-ikon">' + SLAG[b.slag] + '</i><div class="sl-in"><div class="sl-r1"><span class="sl-namn">' + (b.kort || b.namn) + '</span><b class="sl-niva"></b></div><div class="sl-r2"><span class="sl-ger"></span><button class="sl-kop"></button></div></div>');
+          const b = G.BAS[id], r = el('div', 'sl-rad', '<i class="sl-ikon">' + SLAG[b.slag] + '</i><div class="sl-in"><div class="sl-r1"><span class="sl-namn">' + (b.kort || b.namn) + '</span><b class="sl-niva"></b></div><div class="sl-r2"><span class="sl-ger"></span><span class="sl-kop"></span></div></div>');
           r.dataset.id = id; box.appendChild(r);
           r.addEventListener('click', ev => { ev.stopPropagation(); V.Ljud && V.Ljud.vakna(); UI.visaStad(id); if (UI.onVisaBas) UI.onVisaBas(id); });
-          const k = r.querySelector('.sl-kop');
-          k.addEventListener('click', ev => { ev.stopPropagation(); V.Ljud && V.Ljud.vakna(); if (G.s.marknad && G.s.marknad.bas === id) { G.marknadTa(); UI.tick(); return; } if (!UI.kop(id)) UI._nej(k); });
-          e._r[id] = { r, niva: r.querySelector('.sl-niva'), ger: r.querySelector('.sl-ger'), kop: k };
+          e._r[id] = { r, niva: r.querySelector('.sl-niva'), ger: r.querySelector('.sl-ger'), kop: r.querySelector('.sl-kop') };
         }
       }
       const fx = S.full ? G.fullX() : 1; let kan = 0;
