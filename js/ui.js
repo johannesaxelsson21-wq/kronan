@@ -139,11 +139,11 @@
       UI._kassaPlats();
       { const k = $('kassa'); if (k) {          // kassan: byggs en gång, sedan skrivs bara siffrorna (så att den kan lysa till när en leverans kommer)
         const sk = G.harVarv() || G.skepp() > 0, nyck = sk ? 3 : 2;
-        if (!k._klick) { k._klick = 1; k.addEventListener('click', e => { const ks = e.target.closest('.ks'); if (!ks) return; const f = flikar.man ? 'man' : 'mark'; if (!flikar[f]) return;          // män och mark är samma flik (Johannes 2026-11-28 03:43)
+        if (!k._klick) { k._klick = 1; k.addEventListener('click', e => { const ks = e.target.closest('.ks'); if (!ks) return; const f = 'man'; if (!flikar[f]) return;          // skeppen: varvet ligger under Män
  flik = f; G.s.flik = f; V.Ljud && V.Ljud.vakna(); UI.tick(); if (ks.classList.contains('ks-skepp')) { const v = $('varv'); if (v) { v.classList.remove('glod-ny'); void v.offsetWidth; v.classList.add('glod-ny'); setTimeout(() => v.classList.remove('glod-ny'), 2500); } } }); }          // ett tryck på män eller mark öppnar dess flik, skeppen visar varvet
-        if (k._n !== nyck) { k._n = nyck; k.innerHTML = '<div class="ks ks-man">' + IK.man + '<b></b><span></span><i></i><u><u></u></u></div><div class="ks ks-mark">' + IK.mark + '<b></b><span>mark</span><i></i><u><u></u></u></div>' + (sk ? '<div class="ks ks-skepp" title="Skepp byggs av männen du sätter på varvet vid Björkenäs (kortet Varvet under Män). Flottan tar tull av fartygen på Östersjön.">' + IK.skepp + '<b></b><span>skepp</span><i></i></div>' : ''); }
-        const sv = (sel, txt) => { const e = k.querySelector(sel); if (e && e._t !== txt) { e._t = txt; e.textContent = txt; } }, bv = (sel, p) => { const e = k.querySelector(sel); if (e) e.style.width = p.toFixed(1) + '%'; };
-        UI._rulla('.ks-man b', S.res.man); sv('.ks-man span', 'av ' + tal(tak) + ' män'); sv('.ks-man i', '+' + tal(G.takt('man')) + ' /s'); UI._strom('man', G.takt('man'), S.res.man < tak * 0.999); bv('.ks-man u u', Math.min(100, S.res.man / tak * 100)); k.querySelector('.ks-man').classList.toggle('fullt', S.res.man >= tak * 0.999);
+        if (k._n !== nyck) { k._n = nyck; k.innerHTML = (sk ? '<div class="ks ks-skepp" title="Skepp byggs av männen du sätter på varvet vid Björkenäs (kortet Varvet under Män). Flottan tar tull av fartygen på Östersjön.">' + IK.skepp + '<b></b><span>skepp</span><i></i></div>' : ''); }
+        const sv = (sel, txt) => { const e = document.querySelector(sel); if (e && e._t !== txt) { e._t = txt; e.textContent = txt; } }, bv = (sel, p) => { const e = document.querySelector(sel); if (e) e.style.width = p.toFixed(1) + '%'; };
+        UI._rulla('.ks-man b', S.res.man); sv('.ks-man span', 'av ' + tal(tak) + ' män'); sv('.ks-man i', '+' + tal(G.takt('man')) + ' /s'); UI._strom('man', G.takt('man'), S.res.man < tak * 0.999); bv('.ks-man u u', Math.min(100, S.res.man / tak * 100)); { const km0 = document.querySelector('.ks-man'); if (km0) km0.classList.toggle('fullt', S.res.man >= tak * 0.999); }
         const nu = D.UPPDRAG[S.nasta], km = nu && !S.aktivt ? (G.kostnad(nu).mark || 0) : 0;
         UI._rulla('.ks-mark b', S.res.mark); sv('.ks-mark i', '+' + tal(G.takt('mark')) + ' /s'); UI._strom('mark', G.takt('mark'), true); bv('.ks-mark u u', km > 1 ? Math.min(100, S.res.mark / km * 100) : 0);
         if (sk) { const kv = G.skeppKvar(); sv('.ks-skepp b', String(G.skepp())); sv('.ks-skepp i', isFinite(kv) ? 'nästa om ' + (kv < 60 ? Math.ceil(kv) + ' s' : Math.ceil(kv / 60) + ' min') : '+' + Math.round((G.tullX() - 1) * 100) + ' % mark'); }
@@ -240,7 +240,8 @@
       const husKort = (s, h) => { const r = kort(s, 'hus', IK.pil, () => { const L = G.hus(h.id), res = G.husRes(h), enh = res === 'man' ? 'män' : 'mark'; return '<b>' + h.namn + '</b><span class="kort-n">nivå ' + L + '</span><p>' + h.vad + '</p><p class="kort-g">Nu: ' + (L ? G.BAS[h.plats].namn + ' ger ' + Math.round(h.ger * L * 100) + ' % mer ' + enh : 'inte byggt än') + '.</p><p class="kort-x">Nästa nivå: ' + Math.round(h.ger * 100) + ' % mer ' + enh + ' till.</p><p class="kort-p">Kostar ' + IK[res] + tal(G.husPris(h.id)) + ' ' + enh + '</p>'; }, row => { if (G.kopHus(h.id)) V.Ljud && V.Ljud.spela(G.hus(h.id) === 1 ? 'hammare' : 'kop'); else UI._nej(row); }); r.h = h; r.row.id = 'hus-' + h.id; husRader.push(r); };
       const man = () => {
         const m = ids.filter(id => G.BAS[id].ger === 'man'); if (!m.length) return;
-        const s = nyFlik('man', 'res-man', IK.man + IK.mark + '<b class="fl-n">Män och mark</b><em id="res-skuld" title="Det du är skyldig Lübeck för skeppen och soldaterna.">skuld <b id="skuld-v"></b></em>', RES.man.rad + ' ' + RES.mark.rad);          // en flik för män och mark (Johannes 2026-11-28 03:43: "slå ihop ... som förut, men tydliga som nu")
+        const ksMan = '<div class="ks ks-man">' + IK.man + '<b></b><span></span><i></i><u><u></u></u></div>', ksMark = '<div class="ks ks-mark">' + IK.mark + '<b></b><span>mark</span><i></i><u><u></u></u></div>';          // flikarna Män och Mark är själva tillgångsrutorna (Johannes 2026-11-28 03:48)
+        const s = nyFlik('man', 'res-man', ksMan, RES.man.rad + ' Stapeln visar hur full armén är.'); flikar.man.knapp.classList.add('flik-res');          // en flik för män och mark (Johannes 2026-11-28 03:43: "slå ihop ... som förut, men tydliga som nu")
         if (G.harSkatt()) { skattRad = kort(s, 'skatt', IK.mark, () => '<b>Driv in skatt</b><p>Skicka ut män för att samla in skatten. Efter tolv sekunder kommer de hem med mark. Upp till tre lag kan vara ute samtidigt, så en full armé behöver aldrig stå stilla.</p><p class="kort-g">Ger ' + IK.mark + tal(G.skattGer()) + ' mark</p><p class="kort-p">Kostar ' + IK.man + tal(G.skattPris()) + ' män</p>', row => { if (!(UI.onSkatt && UI.onSkatt())) UI._nej(row); }); skattRad.row.id = 'skatt'; }
         if (G.harVarv()) { varvRad = kort(s, 'varv', IK.skepp, () => { const per = Math.round(G.TULL * 100 * (1 + 0.1 * G.eg('flotta'))), vm = G.varvMan(); return '<b>Varvet vid Björkenäs</b><span class="kort-n">' + G.skepp() + ' skepp</span><p>Skeppsgården norr om Kalmar, där kungens örlogsskepp byggs. Varje tryck sätter 50 män i arbete där, och det finns plats för högst 500. De lämnar armén och stannar på varvet, och bygger skepp efter skepp. Ju fler män, desto fortare går det.</p><p class="kort-g">Flottan tar tull av fartygen på Östersjön. Varje skepp ger ' + per + ' % mer mark. Nu: +' + Math.round((G.tullX() - 1) * 100) + ' %.</p>' + (vm ? '<p class="kort-x">' + tal(vm) + ' män arbetar på varvet. Nästa skepp är klart om ' + (G.skeppKvar() < 60 ? Math.ceil(G.skeppKvar()) + ' sekunder' : Math.ceil(G.skeppKvar() / 60) + ' minuter') + '.</p>' : '') + (G.varvFullt() ? '<p class="kort-x">Varvet är fullt.</p>' : '<p class="kort-p">Ett lag till: ' + IK.man + tal(G.varvLag()) + ' män</p>'); }, row => { if (G.kopSkepp()) V.Ljud && V.Ljud.spela('hammare'); else UI._nej(row); }); varvRad.row.id = 'varv'; }
         m.forEach(id => bas(s, id));
@@ -249,7 +250,7 @@
       };
       const mark = () => {
         const m = ids.filter(id => G.BAS[id].ger !== 'man'); if (!m.length) return;
-        const s = flikar.man ? flikar.man.sida : nyFlik('mark', 'res-mark', IK.mark + '<b class="fl-n">Mark</b><em id="res-skuld" title="Det du är skyldig Lübeck för skeppen och soldaterna.">skuld <b id="skuld-v"></b></em>', RES.mark.rad);          // marken läggs i samma flik som männen när den finns
+        const s = nyFlik('mark', 'res-mark', '<div class="ks ks-mark">' + IK.mark + '<b></b><span>mark</span><i></i><u><u></u></u></div><em id="res-skuld" title="Det du är skyldig Lübeck för skeppen och soldaterna.">skuld <b id="skuld-v"></b></em>', RES.mark.rad + ' Stapeln visar hur långt du har kvar till nästa steg.'); flikar.mark.knapp.classList.add('flik-res');
         m.forEach(id => {
           bas(s, id); if (G.BAS[id].slag !== 'gruva') return;          // en gruva har också ett kort för att sätta män i arbete där
           UI._arows[id] = kort(s, 'arb', IK.man, () => '<b>Gruvarbetare i ' + G.BAS[id].namn + '</b><span class="kort-n">' + G.arb(id) + ' lag</span><p>Du sätter män i arbete i gruvan. De lämnar armén och bryter malm i stället.</p><p class="kort-g">Varje lag ger gruvan en tiondel mer. Nu: +' + G.arb(id) * 10 + ' %.</p>' + (G.arbMax(id) ? '<p class="kort-x">Nästa lag är större än armén rymmer.</p>' : '<p class="kort-p">Nästa lag: ' + IK.man + tal(G.arbPris(id)) + ' män</p>'),
@@ -595,15 +596,15 @@
     // Kassan står nere till höger, i raden med flikarna över korten (Johannes 2026-11-28: "lägga den här"). Får den inte plats bredvid flikarna står den ovanför dem.
     // Kassans siffror rullar mjukt mot det man har (Johannes 2026-11-28: "det ska bli tydligare"), och det som kommer in syns som lugna +siffror.
     _rulla(sel, mal) {
-      const e = document.querySelector('#kassa ' + sel); if (!e) return; e._mal = mal; if (e._visa === undefined || Math.abs(mal - e._visa) > Math.max(mal, e._visa) * 0.5) e._visa = mal;
+      const e = document.querySelector(sel); if (!e) return; e._mal = mal; if (e._visa === undefined || Math.abs(mal - e._visa) > Math.max(mal, e._visa) * 0.5) e._visa = mal;
       if (UI._rullar) return; UI._rullar = true; let sist = performance.now();
       const steg = nu => { const dt = Math.min(0.1, (nu - sist) / 1000); sist = nu; let kvar = false;
-        document.querySelectorAll('#kassa .ks > b').forEach(b => { if (b._mal === undefined) return; const d = b._mal - b._visa; if (Math.abs(d) < 0.5) b._visa = b._mal; else { b._visa += d * Math.min(1, dt * 6); kvar = true; } const t = tal(Math.floor(b._visa)); if (b._t !== t) { b._t = t; b.textContent = t; } });
+        document.querySelectorAll('.ks > b').forEach(b => { if (b._mal === undefined) return; const d = b._mal - b._visa; if (Math.abs(d) < 0.5) b._visa = b._mal; else { b._visa += d * Math.min(1, dt * 6); kvar = true; } const t = tal(Math.floor(b._visa)); if (b._t !== t) { b._t = t; b.textContent = t; } });
         if (kvar) requestAnimationFrame(steg); else UI._rullar = false; };
       requestAnimationFrame(steg);
     },
     _strom(res, takt, pa) {
-      const k = document.querySelector('#kassa .ks-' + res); if (!k || !pa || !(takt > 0) || V.tyst) return; const nu = performance.now(); if (nu - (k._strom || 0) < 1600) return; k._strom = nu;
+      const k = document.querySelector('.ks-' + res); if (!k || !pa || !(takt > 0) || V.tyst) return; const nu = performance.now(); if (nu - (k._strom || 0) < 1600) return; k._strom = nu;
       const e = document.createElement('span'); e.className = 'ks-plus'; e.textContent = '+' + tal(takt * 1.6); k.appendChild(e); setTimeout(() => e.remove(), 1500);
     },
     _kassaPlats() {
