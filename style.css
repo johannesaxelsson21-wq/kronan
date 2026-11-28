@@ -668,3 +668,7 @@ button { font-family: inherit; cursor: pointer; }
 .flik.flik-kung { align-items: center; color: var(--guld2); } .flik.flik-kung > svg { opacity: 1; width: 18px; height: 18px; } .flik.flik-kung:hover { color: #fff3c0; }
 
 .ruta-in.kung-in .kung-tips { margin: 12px 0 0; font-size: 13.5px; color: #cdbf9f; font-style: italic; text-align: center; }
+
+/* Slagen 2026-11-28 (Johannes: "Inga ringar i eventen, man ska bara trycka på motståndaren"): ingen rund knapp och ingen ring medan striden pågår */
+#ui.slag #akwrap { opacity: 0; pointer-events: none !important; }
+#ui.slag #slag-mal { display: none !important; }
