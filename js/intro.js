@@ -635,17 +635,17 @@
           hooks.push(h); };
         // stadens eget folk kliver undan medan scenen går
         const undan = Folk.units.filter(u => u.vis && herrar.indexOf(u) < 0 && Math.hypot(u.x - tx, u.z - tz) < 3.5); undan.forEach(u => { u.vis = false; }); hooks.push(() => undan.forEach(u => { u.vis = false; }));
-        Scene.cam.lut = 52; Scene.jump(tx, tz + 0.15, 8); plats('Stockholm, november 1517');
+        Scene.cam.lut = 52; Scene.jump(tx, tz + 0.15, 12); plats('Stockholm, november 1517');          // längre ut, så att hela mötet syns (Johannes 2026-11-28: "väldigt inzoomad")
         await vanta(2); text('Mötet har bestämt: ärkebiskopen avsätts och hans borg ska rivas. Nu sätter alla sitt sigill under brevet.'); await vanta(8);
         text('Tryck för att sätta sigillen');
         const n = await tryckN('Sigill', 6, k => { fram(k - 1, () => { sigill(k - 1); L.spela('trumma'); }); if (k === 2) text(''); }, 20);
         for (let k = n; k < 6; k++) sigill(k);
         await vanta(1.6);
         // Brask: lappen syns en kort stund innan sigillet läggs över den
-        const brask = skylt('Biskop Brask', () => herrar[6], 1.25); Scene.flyTo(tx + 0.35, tz + 0.15, 6.5, 1.6);
+        const brask = skylt('Biskop Brask', () => herrar[6], 1.25); Scene.flyTo(tx + 0.35, tz + 0.15, 9.5, 1.6);
         let lapp = null; fram(6, () => { const mb = new V.MB(); mb.snow = 0; mb.box(0.27, 0.314, 0.08, 0.09, 0.004, 0.06, '#fffbe8'); lapp = B.mesh(mb); lapp.position.copy(bm.position); lapp.scale.setScalar(K); Scene.scene.add(lapp); tempM.push(lapp); setTimeout(() => { sigill(6); L.spela('trumma'); }, 900); });
         text('Det berättas att biskop Brask gömmer en lapp under sitt sigill: "Härtill är jag nödd och tvungen."'); await vanta(8); brask.bort();
-        Scene.flyTo(tx, tz + 0.15, 8, 1.5);
+        Scene.flyTo(tx, tz + 0.15, 12, 1.5);
         text('Den som har sitt sigill under brevet har varit med om att avsätta en ärkebiskop.'); await vanta(7);
         undan.forEach(u => { u.vis = true; });
       },
