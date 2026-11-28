@@ -128,6 +128,7 @@ button { font-family: inherit; cursor: pointer; }
 .bas.stopp .k-ger { color: #e9b9ad; }
 .bas.dubbel { animation: glod 1.3s ease-in-out infinite; }
 .bas.vald { outline: 1px solid #a8976f; outline-offset: -1px; }
+.bas.puls:not(.skaka) { animation: glod 0.9s ease-in-out 2; }          /* ett hus man tryckt på i världen: kortet lyser upp två gånger */
 .bas.marknad { background: linear-gradient(180deg, #7a6026, #614b1c) !important; color: #fff7df !important; outline: 2px solid var(--guld2); outline-offset: -2px; animation: glod 0.8s ease-in-out infinite; }
 .bas.marknad .k-ger { color: #fff3b8 !important; }
 .pil.marknad { width: 46px; height: 46px; animation: guppa 0.6s ease-in-out infinite; filter: drop-shadow(0 0 8px #ffe680) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }

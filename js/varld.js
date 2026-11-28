@@ -179,6 +179,32 @@
     // Vilken bas ligger under den här punkten på marken?
     // En byggnad utanför staden (Kungsladugården vid Vädla): vilken stads flik den hör till
     byggVid(g) { if (!g) return null; for (const id in W._byggda) { const b = D.BYGGNADER.find(q => q.id === id); if (!b || !b.vid) continue; const w = W.byggPlats(id); if (w && Math.hypot(w.x - g.x, w.z - g.z) < 2.2) return b.stad || null; } return null; },
+    // Vilket av husen man byggt ligger under fingret? (Johannes 2026-11-28: "Man ska kunna trycka direkt på rådstugan för att uppgradera den, det gäller alla byggnader som hamnar osv")
+    // En stråle från kameran: det första den träffar räknas, så står ett av stadens andra hus framför tar det trycket. Hamnens skepp hör till hamnen, skeppet på stapeln till varvet ('varv').
+    husVid(sx, sy) {
+      const agare = new Map(), mal = new Set();
+      for (const id in W._byggda) {
+        const o = W._byggda[id], b = D.BYGGNADER.find(q => q.id === id); if (!o || !o.m || !o.m.parent || !b) continue;
+        agare.set(o.m, id); mal.add(b.vid || !grp[b.plats] ? o.m : grp[b.plats]);          // ett hus i en stad prövas ihop med stadens egna hus
+        const sk = dekor['skepp' + id]; if (sk && sk.userData.skepp) sk.userData.skepp.forEach(s => { agare.set(s, id); mal.add(s); });
+      }
+      if (dekor.stapelSkepp) { agare.set(dekor.stapelSkepp, 'varv'); mal.add(dekor.stapelSkepp); }
+      if (!mal.size) return null;
+      const r = Scene.renderer.domElement.getBoundingClientRect(), rc = W._rc || (W._rc = new THREE.Raycaster());
+      rc.setFromCamera({ x: (sx - r.left) / r.width * 2 - 1, y: -((sy - r.top) / r.height) * 2 + 1 }, Scene.camera);
+      const t = rc.intersectObjects([...mal], true)[0]; if (!t) return null;
+      for (let o = t.object; o; o = o.parent) if (agare.has(o)) return agare.get(o);
+      return null;
+    },
+    husPos(id) { const w = id === 'varv' ? (dekor.stapelSkepp ? W.varvPlats() : null) : W._byggda[id] ? W.byggPlats(id) : null; return w ? { x: w.x, y: Geo.groundAt(w.x, w.z), z: w.z } : null; },
+    foljHus(id) { const w = W.husPos(id); if (!V.tyst && w) W._foljer = { t: performance.now(), pos: () => w }; },          // kameran står vid huset tills man drar eller väljer något annat
+    // Ett köp syns på huset: det ger till ett litet hopp och glimmar, som städerna gör
+    husHopp(id) {
+      const o = id === 'varv' ? { m: dekor.stapelSkepp } : W._byggda[id], w = W.husPos(id); if (!o || !o.m || !w) return;
+      const b = D.BYGGNADER.find(q => q.id === id), till = id === 'varv' ? 1.8 : b && b.vid ? B.K : 1;
+      if (!pops.some(p => p.m === o.m)) pops.push({ m: o.m, t: 0, fran: till * 0.86, till });
+      Fx.guld(w.x, w.y + 0.3, w.z, 22, 0.8);
+    },
     // Var ett av stadens hus står (förspelet): en ledig plats på land i utkanten av staden. Bryggorna står vid stranden. Platsen sparas.
     _husPlats(b) {
       const S = G.s, P = S.husPos || (S.husPos = {}); if (P[b.id]) return P[b.id]; const tm = tomt[b.plats]; if (!tm) return null; const K = B.K, p = tm.p;
@@ -456,7 +482,7 @@
       else if (typ === 'byggnad') W._byggnad(d.id, false);
       else if (typ === 'skepp') { W.sync(false); const q = W.varvPlats(); Fx.guld(q.x, 0.3, q.z, 40, 1.4); }
       else if (typ === 'stapel') { W.sync(false); const q = W.varvPlats(); Fx.damm(q.x, Geo.groundAt(q.x, q.z) + 0.1, q.z, 10); }
-      else if (typ === 'hus') { if (d.niva === 1) W._byggnad(d.id, false); else { const w = W.byggPlats(d.id); if (w) Fx.guld(w.x, Geo.groundAt(w.x, w.z) + 0.3, w.z, 25, 0.8); } }          // stadens hus: byggs första gången, glimmar sedan
+      else if (typ === 'hus') { if (d.niva === 1) W._byggnad(d.id, false); else W.husHopp(d.id); }          // stadens hus: byggs första gången, ger sedan till ett hopp och glimmar
       else if (typ === 'slagTryck' && vis) { const nu = performance.now(); if (nu - (W._klickT || 0) > 120 && nu > (W._slagT || 0)) { W._slagT = nu + (vis.noll || vis.u.slag === 'flotta' ? 60 : 280); W._slagTryck(d.o); } }          // förspelets slag: trycken syns i slaget
       else if (typ === 'hugg' && vis && vis.u.belagring) { if (d.traff) W._belBild(d.o && d.o.bild, true, 'hugg'); }          // belägringen: varje tryck i takt syns på vallen eller i tornen
       else if (typ === 'hugg' && vis && d.traff) { const q = W.malPunkt(); if (q) Fx.damm(q.x, Geo.groundAt(q.x, q.z), q.z, 5); vis.stot = 1; Scene.shake(0.08); V.Ljud && V.Ljud.spela('svard'); const e = vis.enh[Math.floor(Math.random() * Math.min(vis.enh.length, vis.bredd || 6))]; if (e) Fx.damm(e.x, Geo.groundAt(e.x, e.z), e.z, 3); }          // ett hugg i takt: leden trycker på

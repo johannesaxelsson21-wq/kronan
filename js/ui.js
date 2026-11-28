@@ -33,7 +33,7 @@
     gruva: '<svg viewBox="0 0 24 24"><path d="M4 7c5-4 11-4 16 0-5-1.6-11-1.6-16 0z" fill="currentColor"/><path d="M12 5.5V21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>',
     slott: '<svg viewBox="0 0 24 24"><path d="M3 20V6h3v2.5h2.5V6h3v2.5H14V6h3v2.5h1V6h3v14z" fill="currentColor"/></svg>'
   };
-  let root, rows = {}, krows = {}, erows = {}, skattRad = null, varvRad = null, soldRad = null, byggRader = [], fogdeKnappar = [], kortNu = null, hrows = {}, sistaHandl = '?', flikar = {}, flik = '', pilar = {}, ortEl = {}, rows2 = {}, husRader = [], sistaBaser = '', caption = null, capT = 0, tips = { nu: null }, valdBas = null;
+  let root, rows = {}, krows = {}, erows = {}, skattRad = null, varvRad = null, soldRad = null, byggRader = [], fogdeKnappar = [], kortNu = null, hrows = {}, sistaHandl = '?', flikar = {}, flik = '', pilar = {}, ortEl = {}, rows2 = {}, husRader = [], sistaBaser = '', caption = null, capT = 0, tips = { nu: null }, valdBas = null, valtHus = null;          // valtHus: huset man senast tryckt på i världen (se UI.husMal)
   const sek = n => (Math.round(n * 100) / 100).toString().replace('.', ',');
   V.pek = /[?&]mobil=1/.test(location.search) || !!(window.matchMedia && matchMedia('(hover: none)').matches);          // pekskärm: inget mellanslag, ingen muspekare som svävar
   // Testläge (Johannes 2026-11-27): i Regentlängden (kronan uppe till höger) kan man börja vilken byggd värld som helst direkt.
@@ -187,6 +187,7 @@
       if (soldRad) { const L = S.sold || 0, dub = (L + 1) % 10 === 0; uppd(soldRad, { namn: S.varld === 0 ? 'Knektar i tjänst' : 'Värva soldater', niva: L, v: G.manFull() ? 'armén fylls redan på ' + G.MAN_FYLL + ' s' : '<b class="k-ps">' + tal(G.soldProd() * fx) + ' män/s</b> <small class="k-mer">' + (dub ? dubKort() : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx)) + '</small>', k: IK.mark + tal(G.soldPris()), ok: G.kanSold(), snart: dub, bar: G.levFas('sold') * 100, mot: (L % 10) / 10 }); }
       for (const id in erows) { const r = erows[id], e = r.e, L = G.eg(id), max = L >= G.EG_MAX, vad = { man: 'Män', flotta: 'Tull per skepp', skatt: 'Skatt', mark: 'Mark', gruva: 'Gruvorna' }[e.ger] || e.namn; uppd(r, { namn: e.namn, niva: L + '/' + G.EG_MAX, v: max ? 'full' : '<b class="k-ps">' + vad + ' +' + Math.round(e.steg * 100) + ' %</b>' + (L ? ' <small class="k-mer">nu +' + Math.round(e.steg * L * 100) + ' %</small>' : ''), k: max ? '' : IK.mark + tal(G.egPris(id)), ok: G.kanEg(id), bar: L / G.EG_MAX * 100 }); }
       for (const id in krows) { const L = S.konst[id], max = L >= G.KONST_MAX, dub = (L + 1) % 10 === 0; uppd(krows[id], { namn: UI.konst(id)[0], niva: L, v: max ? 'kan inte bli bättre' : konstInfo(id).kort, k: max ? '' : IK.mark + tal(G.konstPris(id)), ok: G.kanKonst(id), snart: dub && !max, bar: 0, mot: (L % 10) / 10 }); }
+      { const vh = valtHus && UI.husVald(valtHus) ? UI._husRad(valtHus) : null; [...husRader, soldRad, varvRad, ...Object.values(krows)].forEach(r => { if (r) r.row.classList.toggle('vald', r.row === vh); }); }          // huset man tryckt på i världen: dess kort är valt
       // en fogde i taget: kortet sätter en fogde på den plats där det är billigast
       for (const f of fogdeKnappar) { const utan = f.ids().filter(id => !S.fogde[id]); let b = null; for (const id of utan) if (!b || G.fogdePris(id) < G.fogdePris(b)) b = id; f.mal = b; f.r.row.style.display = b ? '' : 'none'; if (b) uppd(f.r, { namn: 'Sätt en fogde', v: 'bygger ut ' + G.BAS[b].namn + ' åt dig', k: IK.mark + tal(G.fogdePris(b)), ok: S.res.mark >= G.fogdePris(b) }); }
       // en prick på fliken när något där går att köpa
@@ -229,7 +230,7 @@
       };
       const kort = (sida, cls, ikon, text, klick, hoger) => {
         const row = el('div', 'bas ' + cls, '<div class="k-topp"><i class="k-ikon">' + ikon + '</i><span class="k-namn"></span><b class="k-niva"></b></div><div class="k-rad"><span class="k-ger"></span><span class="k-pris"></span></div><i class="bas-bar"><i></i></i>'); sida.appendChild(row);
-        row.addEventListener('click', () => { if (row._hallen) { row._hallen = false; return; } klick(row); UI.tick(); }); if (hoger) row.addEventListener('contextmenu', e => { e.preventDefault(); hoger(); });
+        row.addEventListener('click', () => { if (row._hallen) { row._hallen = false; return; } if (valtHus && UI._husRad(valtHus) !== row) valtHus = null; klick(row); UI.tick(); });          // ett annat kort väljer bort huset if (hoger) row.addEventListener('contextmenu', e => { e.preventDefault(); hoger(); });
         UI._svava(row, () => { kortNu = { row, kort: text, t: performance.now() }; UI._kort(); }, () => { if (kortNu && kortNu.row === row) { kortNu = null; UI._kort(); } });
         return { row, n: row.querySelector('.k-namn'), l: row.querySelector('.k-niva'), v: row.querySelector('.k-ger'), k: row.querySelector('.k-pris'), bar: row.querySelector('.bas-bar i') };
       };
@@ -338,7 +339,7 @@
       for (const r of ['man', 'mark']) if (k[r] > 0) { a.push(tal(k[r]) + (r === 'man' ? (u.slag === 'bygg' ? ' dagsverken' : ' män') : ' mark')); b.push(r === 'man' ? (u.slag === 'bygg' ? 'Män som gör dagsverken på bygget.' : 'Män som skickas iväg.') : 'Mark som det kostar.'); }
       return a.length ? '<b>' + a.join(' och ') + '</b><p>' + b.join(' ') + '</p>' : ''; },
     kop(id) { if (G.kop(id)) { V.Ljud && V.Ljud.spela(G.s.bas[id] % 10 === 0 ? 'dubbel' : 'kop'); UI.tick(); return true; } return false; },
-    valj(id) { valdBas = id; },
+    valj(id) { valdBas = id; valtHus = null; },
     // Läs mer om ett steg: varför det händer. Spelet står still medan rutan är uppe.
     // händelserutans Läs mer: vad som hände, varför och vad det betydde (js/djup.js)
     djupInfo(u) { UI.ruta('<h2>' + u.titel + '</h2><p class="mal">' + (UI.vagText(u) || UI.platsnamn(u.plats)) + ', ' + u.ar + '</p><p>' + V.DJUP[u.id] + '</p>' + '<button class="stang">Stäng</button>', false); UI._paus = true; },
@@ -348,7 +349,31 @@
     // Stadens flik (förspelet): vilken stad den visar, och att byta
     stadNu(ids) { const S = G.s; ids = ids || Object.keys(S.bas).filter(id => S.bas[id] && G.BAS[id]); return S.stad && S.bas[S.stad] ? S.stad : ids.indexOf('stockholm') >= 0 ? 'stockholm' : ids[0]; },
     stadVald(id) { return flik === 'stad' && UI.stadNu() === id; },
-    visaStad(id) { const S = G.s; if (!S.bas[id]) return; S.stad = id; flik = 'stad'; S.flik = 'stad'; S.stadSett = 1; valdBas = id; sistaBaser = ''; UI.tick(true); },
+    // Husen i världen (Johannes 2026-11-28: "Man ska kunna trycka direkt på rådstugan för att uppgradera den, det gäller alla byggnader som hamnar osv ... som man gör med städerna nu").
+    // Som med städerna: första trycket väljer huset, dess kort lyser i sin flik och kameran går dit. Nästa tryck bygger ut det, precis som ett tryck på kortet.
+    // Stadens hus bygger ut sig själva, huset för knektar knektarna i tjänst, rådstugan Sigillet (där breven beseglas), Kungsladugården Hästar och skeppet på stapeln varvet.
+    husMal(id) {
+      const S = G.s, h = D.BYGGNADER.find(q => q.id === id), fattas = (pris, res) => { const f = pris - S.res[res]; return f > 0 ? 'Fattas ' + tal(Math.ceil(f)) + (res === 'man' ? ' män' : ' mark') : null; };
+      if (id === 'varv') return G.harVarv() ? { flik: 'man', rad: () => varvRad, niva: () => G.varvMan(), nej: () => G.flottanFull() ? 'Flottan är full' : G.varvFullt() ? 'Varvet är fullt' : fattas(G.varvLag(), 'man') } : null;
+      if (!h) return null;
+      if (h.niva) return G.husFinns(id) ? { flik: 'stad', stad: h.plats, rad: () => husRader.find(r => r.h.id === id), niva: () => G.hus(id), nej: () => fattas(G.husPris(id), G.husRes(h)) } : null;
+      if (id === 'knektar') return S.varld === 0 && S.las.sold ? { flik: 'stad', stad: 'stockholm', rad: () => soldRad, niva: () => S.sold || 0, nej: () => G.manFull() ? 'Armén fylls redan på' : fattas(G.soldPris(), 'mark') } : null;
+      const k = D.KONSTER.find(q => q.bygg0 === id && G.harKonst(q.id));
+      return k ? { flik: 'kung', rad: () => krows[k.id], niva: () => S.konst[k.id], nej: () => S.konst[k.id] >= G.KONST_MAX ? UI.konst(k.id)[0] + ' kan inte bli bättre' : fattas(G.konstPris(k.id), 'mark') } : null;
+    },
+    _husRad(id) { const m = UI.husMal(id), r = m && m.rad(); return r ? r.row : null; },
+    husVald(id) { const m = valtHus === id && UI.husMal(id); return !!m && flik === m.flik && (m.flik !== 'stad' || UI.stadNu() === m.stad); },
+    husValt() { return !!valtHus && UI.husVald(valtHus); },
+    visaHus(id) {
+      const m = UI.husMal(id), S = G.s; if (!m) return false;
+      if (m.flik === 'stad') UI.visaStad(m.stad); else if (flikar[m.flik]) { flik = m.flik; S.flik = m.flik; }
+      valtHus = id; valdBas = null; UI.tick(true);
+      const e = UI._husRad(id); if (e) { e.classList.remove('puls'); void e.offsetWidth; e.classList.add('puls'); clearTimeout(e._pt); e._pt = setTimeout(() => e.classList.remove('puls'), 1900); if (e.scrollIntoView) e.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+      return true;
+    },
+    // Nästa tryck på huset: samma som ett tryck på dess kort (ljudet, och kortet skakar om det inte går). Svar: true, eller vad som fattas.
+    husKop(id) { const m = UI.husMal(id), e = m && UI._husRad(id); if (!e) return null; const fore = m.niva(); e.click(); return m.niva() !== fore ? true : m.nej(); },
+    visaStad(id) { const S = G.s; if (!S.bas[id]) return; S.stad = id; flik = 'stad'; S.flik = 'stad'; S.stadSett = 1; valdBas = id; valtHus = null; sistaBaser = ''; UI.tick(true); },
     // Menyn med alla städerna, ovanför stadens flik: namn, nivå och vad de ger. on = true visar, false stänger, inget = växlar.
     stadMeny(on) {
       const e = $('stadmeny'), S = G.s; if (!e) return; if (on === undefined) on = e.style.display === 'none'; if (!on || !$('flik-stad')) { e.style.display = 'none'; return; }
