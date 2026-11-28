@@ -613,22 +613,40 @@
       },
       // November 1517. Riksmötet har avsatt ärkebiskopen, och alla sätter sitt sigill under brevet. Biskop Brask ska ha lagt en lapp under sitt.
       async sigill() {
-        const K = B.K, h = V.Varld.sate(), tx = h.x, tz = h.z + 0.68, gy = Geo.groundAt(tx, tz); Scene.setSeason(0.87);          // bordet står framför Sten Sture, herrarna på rad bredvid honom
-        const bord = new V.MB(); bord.snow = 0; bord.box(0, 0, 0, 0.95, 0.3, 0.46, '#6b4a2c', { low: '#4f3620' }); bord.box(0, 0.3, 0, 0.66, 0.012, 0.32, '#efe3c6');
+        // På en öppen plats nära torget (Johannes 2026-11-28: "de står i husen och det är otydligt"): bordet med brevet i mitten, Sten Sture bakom det,
+        // herrarna i en båge framför. Var och en går fram till bordet när man trycker, sätter sitt röda sigill och går tillbaka.
+        const K = B.K, T = torgVid('stockholm'), tx = T.x, tz = T.z, gy = Geo.groundAt(tx, tz); Scene.setSeason(0.87);
+        const bord = new V.MB(); bord.snow = 0; bord.box(0, 0, 0, 0.95, 0.3, 0.46, '#6b4a2c', { low: '#4f3620' }); bord.box(0, 0.3, 0, 0.7, 0.012, 0.36, '#efe3c6');
         const bm = B.mesh(bord); bm.position.set(tx, gy, tz); bm.scale.setScalar(K); Scene.scene.add(bm); tempM.push(bm);
-        const herrar = [], pos = [[-0.62, 0], [-1.12, 0.14], [-1.62, 0], [-2.12, 0.14], [-0.9, -0.5], [0.62, 0], [1.12, 0.12]]; for (let i = 0; i < 7; i++) { const x = h.x + pos[i][0], z = h.z - 0.05 + pos[i][1], o = { ang: pos[i][0] < 0 ? 0.25 : -0.25 }; if (i === 6) Object.assign(o, { col: '#6a2a7a', col2: '#f2eee2', sc: 1.12 }); const u = Folk.add(x, z, 'borgare', o); herrar.push(u); temp.push(u); }
-        const sigill = k => { const mb = new V.MB(); mb.snow = 0; mb.cyl(-0.26 + k * 0.087, 0.312, 0.1, 0.036, 0.036, 0.016, 8, '#b8312a', { cap: '#b8312a' }); const m = B.mesh(mb); m.position.copy(bm.position); m.scale.setScalar(K); Scene.scene.add(m); tempM.push(m); };
-        const hopp = u => { u.y = 0.1; setTimeout(() => { u.y = 0; }, 180); };
-        hooks.push(dt => V.Gustav.place(h.x, h.z, 0, 0, tid, dt, false, true));          // Sten Sture står vid bordet, vänd mot oss (annars är han ute på sin runda)
-        Scene.cam.lut = 60; Scene.jump(tx, tz + 0.35, 14); plats('Stockholm, november 1517');
+        const st = { x: tx, z: tz - 0.62 }; hooks.push(dt => V.Gustav.place(st.x, st.z, 0, 0, tid, dt, false, true)); skylt('Sten Sture', () => st, 1.7);          // bakom bordet, vänd mot oss
+        // sju herrar i en båge framför bordet, Brask sist (i biskopens violett)
+        const herrar = [], hem = [];
+        for (let i = 0; i < 7; i++) {
+          const sid = i < 4 ? -1 : 1, rad = i < 4 ? i : i - 4; let x = tx + sid * (0.95 + (rad % 2) * 0.05), z = tz - 0.15 + rad * 0.36;          // på båda sidor om bordet, så att bordet syns
+          if (!fritt(T, x, z)) { const q = T.S ? V.Filmstad.sok.narmast(T.S, x, z) : [x, z]; x = q[0]; z = q[1]; }
+          const o = { ang: Math.atan2(tx - x, tz - z) }; if (i === 6) Object.assign(o, { col: '#6a2a7a', col2: '#f2eee2', sc: 1.12 });
+          const u = Folk.add(x, z, 'borgare', o); herrar.push(u); hem.push([x, z, o.ang]); temp.push(u);
+        }
+        const sigill = k => { const mb = new V.MB(); mb.snow = 0; mb.cyl(-0.27 + k * 0.09, 0.312, 0.08, 0.04, 0.04, 0.018, 10, '#b8312a', { cap: '#c8423a' }); const m = B.mesh(mb); m.position.copy(bm.position); m.scale.setScalar(K); Scene.scene.add(m); tempM.push(m); Fx.guld(tx + (-0.27 + k * 0.09) * K, gy + 0.45, tz + 0.1, 10, 0.12); return m; };
+        // en herre går fram, sätter sigillet och går tillbaka
+        const fram = (i, klar) => { const u = herrar[i], [hx, hz, ha] = hem[i], mx = tx + (-0.27 + i * 0.09) * K, mz = tz + 0.55; let t = 0;
+          const h = dt => { t += dt; const f = t < 0.5 ? t / 0.5 : t < 0.9 ? 1 : Math.max(0, 1 - (t - 0.9) / 0.5); u.x = hx + (mx - hx) * f; u.z = hz + (mz - hz) * f; u.gar = t < 0.5 || (t > 0.9 && t < 1.4); u.ang = t < 0.9 ? Math.atan2(mx - hx, mz - hz) : Math.atan2(hx - mx, hz - mz); if (t >= 0.5 && !h.satt) { h.satt = 1; klar(); } if (t >= 1.4) { u.x = hx; u.z = hz; u.ang = ha; u.gar = false; hooks = hooks.filter(q => q !== h); } };
+          hooks.push(h); };
+        // stadens eget folk kliver undan medan scenen går
+        const undan = Folk.units.filter(u => u.vis && herrar.indexOf(u) < 0 && Math.hypot(u.x - tx, u.z - tz) < 3.5); undan.forEach(u => { u.vis = false; }); hooks.push(() => undan.forEach(u => { u.vis = false; }));
+        Scene.cam.lut = 52; Scene.jump(tx, tz + 0.15, 8); plats('Stockholm, november 1517');
         await vanta(2); text('Mötet har bestämt: ärkebiskopen avsätts och hans borg ska rivas. Nu sätter alla sitt sigill under brevet.'); await vanta(8);
         text('Tryck för att sätta sigillen');
-        const n = await tryckN('Sigill', 6, k => { sigill(k - 1); hopp(herrar[k - 1]); L.spela('trumma'); L.spela('kop'); if (k === 2) text(''); }, 18);
+        const n = await tryckN('Sigill', 6, k => { fram(k - 1, () => { sigill(k - 1); L.spela('trumma'); }); if (k === 2) text(''); }, 20);
         for (let k = n; k < 6; k++) sigill(k);
-        await vanta(0.8); sigill(6); hopp(herrar[6]); L.spela('trumma');
-        const brask = skylt('Biskop Brask', () => herrar[6], 1.75);
+        await vanta(1.6);
+        // Brask: lappen syns en kort stund innan sigillet läggs över den
+        const brask = skylt('Biskop Brask', () => herrar[6], 1.25); Scene.flyTo(tx + 0.35, tz + 0.15, 6.5, 1.6);
+        let lapp = null; fram(6, () => { const mb = new V.MB(); mb.snow = 0; mb.box(0.27, 0.314, 0.08, 0.09, 0.004, 0.06, '#fffbe8'); lapp = B.mesh(mb); lapp.position.copy(bm.position); lapp.scale.setScalar(K); Scene.scene.add(lapp); tempM.push(lapp); setTimeout(() => { sigill(6); L.spela('trumma'); }, 900); });
         text('Det berättas att biskop Brask gömmer en lapp under sitt sigill: "Härtill är jag nödd och tvungen."'); await vanta(8); brask.bort();
+        Scene.flyTo(tx, tz + 0.15, 8, 1.5);
         text('Den som har sitt sigill under brevet har varit med om att avsätta en ärkebiskop.'); await vanta(7);
+        undan.forEach(u => { u.vis = true; });
       },
       // 1519: flykten från Kalø till Lübeck (dit kommer han i september). Båda orterna är byggda som spelets egna städer (filmstad.js): torg, gator, mur och hamn,
       // och den som går följer gatorna runt husen (Johannes 2026-11-28: han gick genom husen).
