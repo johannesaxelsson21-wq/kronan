@@ -13,6 +13,7 @@
   const finns = b => !(b.varld && b.varld.indexOf(G.s.varld) < 0) && (G.s.varld >= 2 || !(b.slag === 'slott' || b.ny || b.id === 'sala'));          // fanns platsen redan (1520, eller 1560 i Eriks värld)? En plats med varld finns bara i de världarna
   const JAMN = 0.6;          // förspelet: så stor del av toppfarten håller den som rider rundan, hela tiden
   const MAXSTEG = 16, SATE = ['kopparberget', 'hedemora', 'vasteras', 'uppsala', 'brunkeberg'];
+  const TRAKT = 32;          // så långt från platsen där regenten är rider han runt mellan sina orter (Mora–Hedemora ryms, Mora–Gävle inte)
 
   const W = V.Varld = {
     tomt, P: R.P,
@@ -188,7 +189,8 @@
 
     // ---- Gustavs rundtur ---------------------------------------------------------------------
     rutt() {
-      const S = G.s, ids = Object.keys(S.bas), tour = R.tour(ids), key = tour.join(','); if (key === W._ruttKey) return; W._ruttKey = key;
+      // bara orterna i trakten där regenten var vid den här tiden (Johannes 2026-11-28: "han ska röra sig där han var i verkligheten under den tiden ... men inte rida runt över hela landet")
+      const S = G.s, ank = W._ankare(), ap = R.P[ank], ids = Object.keys(S.bas).filter(id => S.bas[id] && R.P[id] && (!ap || id === ank || Math.hypot(R.P[id].x - ap.x, R.P[id].z - ap.z) < TRAKT)), tour = R.tour(ids), key = ank + ':' + tour.join(','); if (key === W._ruttKey) return; W._ruttKey = key;
       const fr = W._ruttKlar && W._placerad ? W._framTill() : null;          // vägen han är på just nu, i den gamla rundan
       route = [];
       if (tour.length === 1) { /* en enda plats och ingen runda: hjälten står vid sin plats (se _gustav) */ }
@@ -203,6 +205,18 @@
       if (fr) { const vidare = route.findIndex(s => s.from === fr.id); if (vidare >= 0) { pre = { pts: fr.pts, len: R.length(fr.pts), to: fr.id }; gseg = vidare; gd = 0; } }
       W._ruttKlar = true;
       lopare.forEach((l, i) => { l.seg = Math.floor(i * route.length / Math.max(1, lopare.length)) % route.length; l.d = 0; });
+    },
+    // Var regenten är vid den här tiden: hans säte (sate), eller platsen för ett av de senaste stegen där han själv var med (med: 1 i data.js).
+    _ankare() {
+      const S = G.s; W.sate(); let id = W._sateId;
+      for (let k = Math.max(0, S.nasta - 3); k < S.nasta && k < D.UPPDRAG.length; k++) { const u = D.UPPDRAG[k]; if (u.med && R.P[u.plats] && S.bas[u.plats]) id = u.plats; }
+      return id;
+    },
+    // Där han står när det inte finns någon runda i trakten: vid sätet, eller vid platsen där han nyss var med
+    _staPlats() {
+      const q = W.sate(), ank = W._ankare(); if (ank === W._sateId || !R.P[ank]) return q;
+      const p = R.P[ank], b = G.BAS[ank], K = B.K;
+      return b && (b.slag === 'stad' || b.slag === 'slott') ? { x: p.x + 0.15, z: p.z + 0.2 * K + 0.25, ang: 0 } : { x: p.x + 0.75, z: p.z + 0.5 * K + 0.55, ang: -0.5 };
     },
     // Var spelarens egen figur är just nu (Kristina efter Sten Stures död)
     gustavVid() { const k = G.s.hjalte === 'kristina' && W._kristina; return k ? { x: k.x, z: k.z } : { x: V.Gustav.x, z: V.Gustav.z }; },
@@ -526,7 +540,7 @@
         if (W._borta) { W._borta = false; W._tillRundan(Gu.x, Gu.z, W._plats); W._plats = null; }
       }
       const ry = kristina ? Bu : Gu;
-      if (!route.length) { if (kristina) Bu.g.visible = false; else { const q = W.sate(); Gu.place(q.x, q.z, q.ang, 0, t, dt, false, true); W._placerad = true; W._stodStilla = true; } return; }          // han står still vid slottet, och kameran står still
+      if (!route.length) { if (kristina) Bu.g.visible = false; else { const q = W._staPlats(); Gu.place(q.x, q.z, q.ang, 0, t, dt, false, true); W._placerad = true; W._stodStilla = true; } return; }          // han står still vid slottet, och kameran står still
       if (W._stodStilla && !kristina) { W._stodStilla = false; if (Scene.cam.user <= (W._foljMig || 0) || Scene.cam.user < 1) W._foljMig = performance.now(); }          // nu rider han iväg: först nu följer kameran honom (om man inte själv har flyttat kartan)
       // jämn takt: trycken gör ingen resa snabbare (Johannes 2026-11-26: "Det får inte snabba upp något typ av resande"). Förmågan Hästar gör den snabbare för gott.
       const v = G.hastighet() * JAMN * dt; let seg = pre || route[gseg]; gd += v;
