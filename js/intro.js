@@ -40,6 +40,9 @@
   // Erik XIV i sina scener: först i hertigens dräkt, sedan krönt
   let EE = null;
   function erikE(kung) { if (!EE) { EE = Object.create(V.Gustav); EE.init(Scene.scene, 'erik'); } EE.klad(kung ? 'Kung' : 'Hertig'); EE.g.visible = true; EE.utanRing = false; return EE; }
+  // Johan III i sina scener, krönt
+  let JE = null;
+  function johanE() { if (!JE) { JE = Object.create(V.Gustav); JE.init(Scene.scene, 'johan'); } JE.klad('Kung'); JE.g.visible = true; JE.utanRing = false; return JE; }
   function gustavE() { if (!GE) { GE = Object.create(V.Gustav); GE.init(Scene.scene, 'gustav'); } GE.g.visible = true; GE.utanRing = false; return GE; }
   // Spelaren trycker n gånger på knappen (eller väntar ut tiden). vid(k) körs för varje tryck. Löfte som blir klart när det är gjort.
   function tryckN(knapp, n, vid, sek) {
@@ -224,6 +227,44 @@
         await vanta(4); text('Sedan läses hans testamente upp.'); await vanta(6);
         text('Det är sista gången kungen talar till riksdagen.'); await vanta(6);
       },
+      // 1571. Riksdagen har beslutat en tiondel av allt silver, all koppar och all boskap till Älvsborgs lösen. Man tar själv emot silvret.
+      async silverskatt() {
+        const p = R.P.stockholm, K = B.K, st = V.Varld.tomt.stockholm, T = st && st.plan ? st.plan().torg : { x: 0, z: 0.2 }, cx = p.x + T.x * K, cz = p.z + T.z * K; Scene.setSeason(0.5);
+        const mb = new V.MB(); mb.snow = 0; mb.box(0, 0, 0, 0.5, 0.28, 0.34, '#6b4a2c', { low: '#4f3620' }); mb.box(0, 0.28, 0, 0.52, 0.06, 0.36, '#8a6a44'); const kista = B.mesh(mb); kista.position.set(cx, Geo.groundAt(cx, cz), cz - 0.3); kista.scale.setScalar(K); Scene.scene.add(kista); tempM.push(kista);
+        const hog = new V.MB(); hog.snow = 0; hog.cone(0, 0, 0, 0.2, 0.18, 6, '#d8dde2', { snowLow: 0, snowTip: 0 }); const silver = B.mesh(hog); silver.position.set(cx, Geo.groundAt(cx, cz) + 0.48, cz - 0.3); silver.scale.setScalar(0.01); Scene.scene.add(silver); tempM.push(silver);
+        const ek = johanE(), g = { x: cx - 0.9, z: cz - 0.5 }; hooks.push(dt => ek.place(g.x, g.z, 0.6, 0, tid, dt, false, true)); skylt('Kung Johan', () => g, 1.8);
+        const kon = []; for (let i = 0; i < 6; i++) { const u = Folk.add(cx + 0.2 + i * 0.4, cz + 1.4 + (i % 2) * 0.2, 'bonde', { ang: Math.PI }); kon.push(u); temp.push(u); }
+        Scene.cam.lut = 60; Scene.jump(cx, cz + 1.2, 13); plats('Stockholm, 1571');
+        await vanta(2); text('Älvsborg ska lösas ut. Varje bonde ger en tiondel av sitt silver.'); await vanta(6);
+        text('Tryck för att ta emot silvret');
+        let fyllt = 0; const n = await tryckN('Ta emot', 6, k => { const u = kon[k - 1]; if (u) { u.x = cx + 0.2; u.z = cz - 0.05; u.y = 0.08; setTimeout(() => { u.y = 0; }, 180); } fyllt = k / 6; silver.scale.setScalar(K * (0.3 + fyllt * 0.9)); Fx.guld(cx, Geo.groundAt(cx, cz) + 0.5, cz - 0.3, 14, 0.4); L.spela('kop'); if (k === 2) text(''); }, 20);
+        if (n < 6) silver.scale.setScalar(K * 1.2);
+        text('Silver, koppar och boskap kommer in från hela riket.'); await vanta(6);
+      },
+      // September 1587. Sigismund seglar från Kalmar för att bli kung i Polen.
+      async avsked() {
+        const p = R.P.kalmar, K = B.K, hav = p.hav || { x: p.x + 3, z: p.z }, ut = R.seaPath('kalmar', 'bornholm'), L0 = Math.min(R.length(ut), 16); Scene.setSeason(0.7);
+        const skepp = V.skepp('sverige', true); skepp.scale.setScalar(2.1); const a0 = R.along(ut, 0.5); skepp.position.set(a0.x, 0.02, a0.z); skepp.rotation.y = a0.ang; Scene.scene.add(skepp); tempM.push(skepp);
+        const ek = johanE(), g = { x: p.x + 0.9, z: p.z + 0.6 }; hooks.push(dt => ek.place(g.x, g.z, Math.atan2(hav.x - g.x, hav.z - g.z), 0, tid, dt, false, true)); skylt('Kung Johan', () => g, 1.8);
+        const sig = { x: a0.x, z: a0.z }; skylt('Sigismund', () => ({ x: skepp.position.x, z: skepp.position.z }), 1.6);
+        Scene.jump((g.x + a0.x) / 2, (g.z + a0.z) / 2 + 2, 22); plats('Kalmar, september 1587');
+        await vanta(2); text('Sigismund är 21 år. Han ska bli kung i Polen.'); await vanta(6);
+        text('Sverige och Polen ska inte blandas samman, står det i stadgarna.'); await vanta(6);
+        await akFard(ut, 0.5, L0, 0.7, 'Segla', 'Tryck för att segla', { kd: 26, ljud: 'vag', sikt: [g.x, g.z], satt: (a) => { skepp.position.set(a.x, 0.02 + Math.sin(tid * 1.4) * 0.03, a.z); skepp.rotation.y = a.ang; } });
+        UI.film.knapp(null); I.tar = null; text('Sigismund seglar mot Polen.'); await vanta(5);
+      },
+      // September 1589. Johan möter sin son i Reval och vill få honom hem. Råden sätter stopp.
+      async revalmote() {
+        const p = R.P.reval, K = B.K, st = V.Varld.tomt.reval, T = st && st.plan ? st.plan().torg : { x: 0, z: 0.2 }, cx = p.x + T.x * K, cz = p.z + T.z * K; Scene.setSeason(0.7);
+        const ek = johanE(), g = { x: cx - 0.35, z: cz - 0.3 }; hooks.push(dt => ek.place(g.x, g.z, 1.4, 0, tid, dt, false, true)); skylt('Kung Johan', () => g, 1.8);
+        const sig = Folk.add(cx + 0.4, cz - 0.3, 'borgare', { col: '#6a1f2a', sc: 1.3, ang: -1.4 }); temp.push(sig); skylt('Sigismund', () => sig, 1.6);
+        const rad = []; for (let i = 0; i < 8; i++) { const u = Folk.add(cx + (i - 3.5) * 0.36, cz + 0.6 + (i % 2) * 0.25, 'borgare', { ang: Math.PI }); rad.push(u); temp.push(u); }
+        Scene.cam.lut = 60; Scene.jump(cx, cz + 1.1, 13); plats('Reval, september 1589');
+        await vanta(2); text('Johan har inte sett sin son på två år. Han vill att Sigismund ska komma hem till Sverige.'); await vanta(7);
+        text('Tryck för att övertala honom');
+        await tryckN('Övertala', 3, k => { L.spela('sorl'); sig.y = 0.06; setTimeout(() => { sig.y = 0; }, 160); if (k === 1) text(''); }, 15);
+        L.spela('nej'); text('Råden i båda länderna sätter stopp. Sigismund stannar i Polen.'); await vanta(6.5);
+      },
       // 29 juni 1561. Erik går från Uppsala slott till domkyrkan på en röd matta, och man bär själv fram de nya regalierna.
       async kroning() {
         const p = R.P.uppsala, K = B.K; Scene.setSeason(0.47);
@@ -385,10 +426,10 @@
       if (V.Varld.popKlart) V.Varld.popKlart();
       if (V.Musik) V.Musik.spar(V.Musik.har(namn) ? namn : { staket: 'krig', gisslan: 'krig', vallen: 'krig', kalo: 'vinter', isen: 'vinter', kalmar: 'vinter' }[namn]);          // varje scen har sitt eget spår
       const c = Scene.cam, hem = { x: c.x, z: c.z, d: c.d }; c.locked = true; c.fly = null; c.fri = true; UI.visa(false); UI.dolj(); UI.textBort(); UI.film.pa(true); L.spela('klocka');
-      const Bu = V.Bud, budSyns = Bu.g.visible; if (namn !== 'isen') Bu.g.visible = false; V.Varld.scenDolj(true);          // budet hör inte hemma i scenen (på isen är det hästen som drar släden)
+      const Bu = V.Bud, budSyns = Bu.g.visible; if (namn !== 'isen') Bu.g.visible = false; const Hj = V.Gustav, hjSyns = Hj.g.visible; if (V.Game.s.varld >= 2) Hj.g.visible = false; V.Varld.scenDolj(true);          // budet hör inte hemma i scenen (på isen är det hästen som drar släden)
       try { await I.scener[namn](); } catch (e) { console.error(e); }
       UI.film.knapp(null); I.tar = null; text(''); plats(''); await new Promise(r => setTimeout(r, 950));          // sista raden tonar bort innan rutan kommer (i riktig tid, också i snabbspolning)
-      Bu.g.visible = budSyns; V.Varld.scenDolj(false); c.lut = 0; hooks = []; waits = []; aka = null; I.tar = null; I.nu = null; UI.film.knapp(null); if (GE) GE.g.visible = false; if (V.Musik) V.Musik.spar(V.Musik.grund()); rensa(); text(''); plats(''); UI.film.svart(0, 0.6); UI.film.pa(false); UI.visa(true); c.locked = false; c.fri = false; Scene.jump(hem.x, hem.z, Math.max(hem.d, 32)); I.aktiv = false; I.scenFart = 1; if (klar) klar();
+      Bu.g.visible = budSyns; if (V.Game.s.varld >= 2) V.Gustav.g.visible = hjSyns; V.Varld.scenDolj(false); c.lut = 0; hooks = []; waits = []; aka = null; I.tar = null; I.nu = null; UI.film.knapp(null); if (GE) GE.g.visible = false; if (V.Musik) V.Musik.spar(V.Musik.grund()); rensa(); text(''); plats(''); UI.film.svart(0, 0.6); UI.film.pa(false); UI.visa(true); c.locked = false; c.fri = false; Scene.jump(hem.x, hem.z, Math.max(hem.d, 32)); I.aktiv = false; I.scenFart = 1; if (klar) klar();
     },
     slut(klar) { hooks = []; waits = []; rensa(); aka = null; I.tar = null; regn = false; UI.film.knapp(null); UI.film.tal(null); UI.film.text(''); UI.film.plats(''); UI.film.svart(0, 1); UI.film.pa(false); Fx.sno = true; V.Varld._ruttKlar = false; V.Varld._ruttKey = null; klar(); },
     update(dt, t) {

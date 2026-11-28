@@ -4,6 +4,32 @@
   'use strict';
   const V = window.VASA = window.VASA || {};
   V.KORT = {
+    // ---- Johan III ----
+    jRiksdag: 'Riksdagen erkänner Johan som kung. Erik är avsatt.',
+    jKroning: 'Johan och Katarina kröns i Uppsala domkyrka.',
+    jStettin: 'Fred i Stettin. Älvsborg ska lösas ut för 150 000 riksdaler.',
+    jReval1: 'Reval håller. Magnus bränner sitt läger och drar sig undan.',
+    jSilver: 'En tiondel av allt silver och all boskap går till Älvsborgs lösen.',
+    jAlvsborg: 'Älvsborg är svenskt igen.',
+    jBorgholm: 'Borgholm blir en av Sveriges första bastionsfästningar.',
+    jErik: 'Planer på att befria Erik avslöjas. Vakterna får hårda order.',
+    jKalmar: 'Kalmar slott får sin gyllene sal.',
+    jRodaBoken: 'Röda boken trycks. Hertig Karl säger emot.',
+    jReval2: 'Reval håller igen.',
+    jKlosterlasse: 'Röda boken godkänns. Erik dör på Örbyhus.',
+    jWenden: 'Seger vid Wenden, tillsammans med polackerna.',
+    jDrottningholm: 'Drottningholm byggs, med namn efter drottningen.',
+    jPontus: 'Pontus De la Gardie får befälet i öster.',
+    jKexholm: 'Kexholm i Karelen är taget.',
+    jWesenberg: 'Wesenberg och Hapsal ger upp.',
+    jNarva: 'Narva är taget. Ivangorod ger upp.',
+    jPlussa: 'Stillestånd. Sverige behåller det som är taget.',
+    jKatarina: 'Drottning Katarina begravs i Uppsala.',
+    jGunilla: 'Johan gifter sig med Gunilla Bielke i Västerås.',
+    jStadgar: 'Sigismund seglar till Polen för att bli kung där.',
+    jRevalmote: 'Sigismund får inte komma hem.',
+    jNarva2: 'Narva anfalls. Johan kallar hem sina befälhavare.',
+    jSlut: 'Johan dör på Tre Kronor den 17 november.',
     // ---- förspelet: Sten Sture ----
     sVasteras: 'Budet är tillbaka från Västerås. "Slottet står på er sida."',
     sAbo: '"Åbo slott är ert." Nu har Sten Sture sin fars stora slott.',

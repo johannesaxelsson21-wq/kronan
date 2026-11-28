@@ -98,15 +98,15 @@
     tick(force) {
       const S = G.s, d = G.datum();
       $('dat-ar').textContent = V.arstid(V.kalender ? V.kalender(d) : d);
-      $('dat-titel').textContent = S.varld === 2 ? (S.titel === 'Kung' ? 'Erik XIV, Sveriges kung' : 'Erik, hertig av Kalmar') : S.varld === 0 ? (S.hjalte === 'kristina' ? 'Kristina Gyllenstierna, Sten Stures änka' : 'Sten Sture, ' + S.titel.toLowerCase()) : (S.titel === 'Kung' ? 'Gustav, Sveriges kung' : 'Gustav Eriksson, ' + (S.titel === 'Hövitsman' ? 'dalkarlarnas ledare' : S.titel.toLowerCase()));
+      $('dat-titel').textContent = S.varld >= 2 ? (D.VARLDAR[S.varld].titlar[S.titel] || D.VARLDAR[S.varld].namn) : S.varld === 0 ? (S.hjalte === 'kristina' ? 'Kristina Gyllenstierna, Sten Stures änka' : 'Sten Sture, ' + S.titel.toLowerCase()) : (S.titel === 'Kung' ? 'Gustav, Sveriges kung' : 'Gustav Eriksson, ' + (S.titel === 'Hövitsman' ? 'dalkarlarnas ledare' : S.titel.toLowerCase()));
       // vem som är kung just nu, sagt i förbigående under titeln
-      const tron = S.varld === 2 ? (S.titel === 'Kung' ? ['', ''] : ['Kung: Gustav Vasa, hans far', '']) : S.varld === 0 ? (S.uppror.dagtingan ? ['Herrarna har gått över till Kristian II', 'fara'] : ['Sverige har ingen kung', '']) : S.titel === 'Kung' ? ['', ''] : ['Kung: Kristian II av Danmark', 'fara'];
+      const tron = S.varld >= 2 ? (S.titel === 'Kung' || !D.VARLDAR[S.varld].tron ? ['', ''] : [D.VARLDAR[S.varld].tron, '']) : S.varld === 0 ? (S.uppror.dagtingan ? ['Herrarna har gått över till Kristian II', 'fara'] : ['Sverige har ingen kung', '']) : S.titel === 'Kung' ? ['', ''] : ['Kung: Kristian II av Danmark', 'fara'];
       const te = $('dat-tron'); te.textContent = tron[0]; te.className = tron[1]; te.style.display = tron[0] ? '' : 'none';
       te.title = S.varld === 0 ? 'Riket hör till unionen med Danmark och Norge, men har inte erkänt någon unionskung sedan 1501. Riksföreståndaren styr i kungens ställe.' : 'Kristian II kröntes i Stockholm den 4 november 1520.';
       $('m-ljud').classList.toggle('av', !S.ljud);
       // uppdraget
       const u = G.uppdrag(), box = $('uppdrag'); { const m = $('upp-mer'), visa = !!(u && u.mer && !S.slut) ? '' : 'none'; if (m.style.display !== visa) m.style.display = visa; }
-      if (!u || S.slut) { box.className = 'slut'; $('upp-akt').textContent = ''; $('upp-titel').textContent = S.varld === 0 ? 'Portarna är öppna' : S.varld === 2 ? 'Kronan går till Johan' : 'Kronan går i arv'; $('upp-vag').style.display = 'none'; $('upp-kost').innerHTML = ''; $('upp-knapp').style.display = 'none'; $('upp-fyll').style.width = '100%'; }
+      if (!u || S.slut) { box.className = 'slut'; $('upp-akt').textContent = ''; $('upp-titel').textContent = S.varld === 0 ? 'Portarna är öppna' : S.varld >= 2 ? D.VARLDAR[S.varld].slutRubrik : 'Kronan går i arv'; $('upp-vag').style.display = 'none'; $('upp-kost').innerHTML = ''; $('upp-knapp').style.display = 'none'; $('upp-fyll').style.width = '100%'; }
       else {
         const a = S.aktivt, k = G.kostnad(u);
         $('upp-akt').textContent = 'Steg ' + (S.nasta + 1) + ' av ' + D.UPPDRAG.length + ' · ' + D.AKTER[u.akt]; $('upp-titel').textContent = u.titel;
@@ -309,7 +309,7 @@
       if (!u || ['bud', 'flotta', 'tag', 'rid'].indexOf(u.slag) < 0) return ''; if (u.vag) return u.vag;
       const f = G.s.varld !== 0 && !u.fran && !u.med && u.slag !== 'rid' ? null : V.Varld.franId(u); return f && f !== u.plats ? 'Från ' + UI.platsnamn(f) + ' till ' + UI.platsnamn(u.plats) : 'Till ' + UI.platsnamn(u.plats);
     },
-    platsnamn(id) { const b = G.BAS[id]; if (b) return b.namn; return ({ brunnback: 'Brunnbäcks färja', brunkeberg: 'Brunkeberg', stegeborg: 'Stegeborg', orebro: 'Örebro', strangnas: 'Strängnäs', soderkoping: 'Söderköping', malmo: 'Malmö', lubeck: 'Lübeck', storatuna: 'Stora Tuna', skara: 'Västergötland', smaland: 'Småland', kisa: 'Kisa', virserum: 'Virserum', bornholm: 'Bornholm', staket: 'Stäket', vadla: 'Vädla', brannkyrka: 'Brännkyrka', bogesund: 'Åsundens is', alvsborg: 'Älvsborg', olandsudde: 'Ölands norra udde', getaryggen: 'Getaryggen', arboga: 'Arboga', halmstad: 'Halmstad', varberg: 'Varberg', axtorna: 'Axtorna', mared: 'Mared', visby: 'Visby', kopenhamn: 'Köpenhamn', rafsnas: 'Räfsnäs', nykoping: 'Nyköping' })[id] || id; },
+    platsnamn(id) { const b = G.BAS[id]; if (b) return b.namn; return ({ brunnback: 'Brunnbäcks färja', brunkeberg: 'Brunkeberg', stegeborg: 'Stegeborg', orebro: 'Örebro', strangnas: 'Strängnäs', soderkoping: 'Söderköping', malmo: 'Malmö', lubeck: 'Lübeck', storatuna: 'Stora Tuna', skara: 'Västergötland', smaland: 'Småland', kisa: 'Kisa', virserum: 'Virserum', bornholm: 'Bornholm', staket: 'Stäket', vadla: 'Vädla', brannkyrka: 'Brännkyrka', bogesund: 'Åsundens is', alvsborg: 'Älvsborg', wesenberg: 'Wesenberg', wenden: 'Wenden', kexholm: 'Kexholm', orbyhus: 'Örbyhus', borgholm: 'Borgholm', drottningholm: 'Drottningholm', olandsudde: 'Ölands norra udde', getaryggen: 'Getaryggen', arboga: 'Arboga', halmstad: 'Halmstad', varberg: 'Varberg', axtorna: 'Axtorna', mared: 'Mared', visby: 'Visby', kopenhamn: 'Köpenhamn', rafsnas: 'Räfsnäs', nykoping: 'Nyköping' })[id] || id; },
 
     // ---- varje bildruta: pilar över baser som går att bygga ut -----------------------------------
     frame() {
@@ -335,7 +335,7 @@
         mb.style.display = dold ? 'none' : ''; mb.style.transform = 'translate(' + (sp.x - 23) + 'px,' + (sp.y - 46) + 'px)';
       }
       // de första minuterna i en värld står det Du över den man är (och Ditt bud över budet, när man är Kristina och budet rider)
-      { const nd = S.varld === 2 ? 'Erik' : S.varld !== 0 ? 'Gustav' : S.hjalte === 'kristina' ? 'Kristina' : 'Sten Sture'; if ($('vem-du').textContent !== nd) { $('vem-du').textContent = nd; $('vem-bud').textContent = S.varld === 2 ? 'Eriks bud' : S.varld !== 0 ? 'Gustavs bud' : 'Kristinas bud'; } }          // namn, inte du (Johannes 2026-11-26)
+      { const nd = S.varld >= 2 ? D.VARLDAR[S.varld].namn : S.varld !== 0 ? 'Gustav' : S.hjalte === 'kristina' ? 'Kristina' : 'Sten Sture'; if ($('vem-du').textContent !== nd) { $('vem-du').textContent = nd; $('vem-bud').textContent = S.varld >= 2 ? D.VARLDAR[S.varld].namn + 's bud' : S.varld !== 0 ? 'Gustavs bud' : 'Kristinas bud'; } }          // namn, inte du (Johannes 2026-11-26)
       { const visa = spel && S.t < 150 && !S.slut, slag = spel && root.classList.contains('slag'), kr = spel && !S.slut && S.hjalte === 'kristina' && S.hjalteT !== undefined && S.t - S.hjalteT < 90 ? V.Varld._kristina : null,          // och en stund efter att man har blivit Kristina
         lagg = (id, o, h, pa) => { const e = $(id), sp = pa && o && o.g && o.g.visible ? V.Scene.screenPoint(o.x, V.Geo.groundAt(o.x, o.z) + h, o.z) : null, syns = sp && !sp.behind && sp.y > 50 && sp.y < golv && !UI._skymd(sp); e.style.display = syns ? 'block' : 'none'; if (syns) e.style.transform = 'translate(' + Math.round(sp.x) + 'px,' + Math.round(sp.y) + 'px) translate(-50%, -100%)'; };
         lagg('vem-du', kr ? { x: kr.x, z: kr.z, g: { visible: true } } : V.Gustav, kr ? 1.45 : V.Gustav.stupad ? 0.6 : 1.75, visa || !!kr || slag); lagg('vem-bud', V.Bud, 1.9, visa); }
@@ -460,10 +460,10 @@
     // Rutan i början: vem du är, hur läget ser ut och vad du ska göra. Går att ta fram igen med frågetecknet.
     forklara(varld, igen) {
       // Kort: vem du är, målet, och tre bilder för hur man spelar. Resten visar pekbubblorna i spelet (Johannes 2026-11-27).
-      const M = V.MED || {}, knapp = varld === 2 ? 'Rid' : 'Bud';
+      const M = V.MED || {}, knapp = varld >= 2 ? 'Rid' : 'Bud';
       const hur = [['<span class="knapp">' + knapp + '</span>', 'Tryck', 'den runda knappen'], [M[varld === 1 ? 'man' : 'mark'], varld === 1 ? 'Män' : 'Mark', varld === 1 ? 'samla folk' : 'rikets pengar'], [M[varld === 1 ? 'bygd' : 'stad'], 'Bygg ut', KLICKA + ' på en ' + (varld === 1 ? 'by' : 'stad')], [M.krona, 'Nästa steg', 'när du har råd']];
-      const text = varld === 2
-        ? '<h2>Kalmar 1560</h2><p>Du är <b>Erik</b>, 26 år, Gustav Vasas äldste son och hertig i Kalmar. Han ska ärva kronan, men först vill han gifta sig med drottningen av England.</p><p class="mal">Bygg upp ditt län, ta över riket och håll det samman.</p>'
+      const text = varld >= 2
+        ? D.VARLDAR[varld].startText
         : varld === 0
         ? '<h2>Sverige 1512</h2><p>Du är <b>Sten Sture</b>, nitton år. Din far styrde riket i kungens ställe, och nu är han död. Rådet vill ge hans plats åt en vän till Danmark.</p><p class="mal">Bygg upp dina städer, vinn folket och håll riket.</p>'
         : '<h2>Dalarna 1521</h2><p>Du är <b>Gustav Eriksson</b>, 24 år. Kristian II av Danmark lät halshugga din far i Stockholm. Nu har dalkarlarna valt dig till ledare.</p><p class="mal">Samla folk, ta Kopparberget och driv ut danskarna.</p>';
@@ -569,9 +569,10 @@
     },
     slut() {
       const S = G.s, arv = S.arvNu || G.arvVid();
-      if (S.varld === 2) {          // Erik XIV: portarna öppnas 1568
-        UI.ruta('<h2>Kronan går till Johan</h2><p>Den 29 september 1568 öppnades Stockholms portar för hertigarna. Erik togs till fånga, och hans bror Johan blev kung. Erik dog i fångenskap på Örbyhus 1577.</p><div class="arv">' + IK.krona + '<b>' + arv + '</b><span>arv till nästa regent</span></div><p class="svag">Johan III:s värld är inte byggd än. Tills dess kan du spela Erik XIV igen: varje arv ger en fjärdedel mer av allt.</p><button id="igen">Spela igen med arvet</button><button class="stang">Stanna kvar i riket</button>', true);
-        $('igen').addEventListener('click', () => UI.onIgen && UI.onIgen(arv)); return;
+      if (S.varld >= 2) {          // Eriks och de följande regenternas slut: vidare till nästa värld när den finns
+        const Vd = D.VARLDAR[S.varld], N = D.VARLDAR[S.varld + 1], vidare = N && D[N.lista] && D[N.lista].length >= 15;
+        UI.ruta('<h2>' + Vd.slutRubrik + '</h2><p>' + Vd.slut + '</p><div class="arv">' + IK.krona + '<b>' + arv + '</b><span>arv till nästa regent</span></div>' + (vidare ? '<p class="svag">Arvet följer med till ' + N.kung + ': allt ger en fjärdedel mer för varje arv.</p><button id="vidare">Fortsätt med ' + N.kung + '</button>' : '<p class="svag">Nästa regents värld är inte byggd än. Tills dess kan du spela ' + Vd.kung + ' igen: varje arv ger en fjärdedel mer av allt.</p>') + '<button id="igen">Spela igen med arvet</button><button class="stang">Stanna kvar i riket</button>', true);
+        $('igen').addEventListener('click', () => UI.onIgen && UI.onIgen(arv)); if ($('vidare')) $('vidare').addEventListener('click', () => UI.onVidare && UI.onVidare(arv)); return;
       }
       UI.ruta('<h2>Kronan går i arv</h2><p>Den 29 september 1560 dog Gustav på Stockholms slott. Han hade tagit ett rike utan pengar och lämnade efter sig ett arvrike med full skattkammare.</p><div class="arv">' + IK.krona + '<b>' + arv + '</b><span>arv till nästa regent</span></div>' + (D.ERIK.length >= 20 ? '<p class="svag">Arvet följer med till Erik XIV: allt ger en fjärdedel mer för varje arv. Städerna som Gustav byggde står kvar.</p><button id="vidare">Fortsätt med Erik XIV</button>' : '<p class="svag">Erik XIV:s värld byggs nu. Tills den är klar kan du spela Gustav Vasa igen: varje arv ger en fjärdedel mer av allt.</p>') + '<button id="igen">Spela igen med arvet</button><button class="stang">Stanna kvar i riket</button>', true);
       $('igen').addEventListener('click', () => UI.onIgen && UI.onIgen(arv));

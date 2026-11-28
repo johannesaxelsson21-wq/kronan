@@ -13,7 +13,8 @@
     soderkoping: [16.32, 58.485], storatuna: [15.5, 60.43], kisa: [15.63, 57.99], virserum: [15.58, 57.32], smaland: [15.3, 57.1], skara: [13.44, 58.39], bornholm: [15.5, 55.45],
     kivinebb: [29.3, 60.4], halsingland: [16.6, 61.3], nykoping: [17.01, 58.76], lima: [13.36, 60.94], evertsberg: [13.96, 61.13], oxberg: [14.2, 61.12], ostersjon: [17.6, 57.6], finskaviken: [25.5, 59.85],
     staket: [17.72, 59.5], vadla: [18.5, 59.6], brannkyrka: [17.81, 59.03], bogesund: [13.42, 57.79],          // förspelet: lagda en bit utanför Stockholm så att de syns för sig
-    kronoberg: [14.81, 56.91], oland: [16.66, 56.88], reval: [24.75, 59.44], arboga: [15.84, 59.39], halmstad: [12.86, 56.67], varberg: [12.25, 57.11], axtorna: [12.64, 57.04], mared: [12.97, 56.79], visby: [18.29, 57.64], olandsudde: [17.25, 57.45], getaryggen: [14.0, 57.79]          // Erik XIV:s värld
+    kronoberg: [14.81, 56.91], oland: [16.66, 56.88], reval: [24.75, 59.44], arboga: [15.84, 59.39], halmstad: [12.86, 56.67], varberg: [12.25, 57.11], axtorna: [12.64, 57.04], mared: [12.97, 56.79], visby: [18.29, 57.64], olandsudde: [17.25, 57.45], getaryggen: [14.0, 57.79],          // Erik XIV:s värld
+    narva: [28.19, 59.38], wesenberg: [26.36, 59.35], wenden: [25.27, 57.31], kexholm: [30.12, 61.03], orbyhus: [17.70, 60.23], borgholm: [16.66, 56.88], drottningholm: [17.88, 59.32]          // Johan III:s värld
   };
 
   // Baser. slag: bygd (ger män), gruva, stad, slott (ger mark). p0 = produktion per nivå och sekund, c0 = första nivåns pris, r = prisökning per nivå.
@@ -36,13 +37,16 @@
     { id: 'viborg', namn: 'Viborg', rad: 'Slottet längst i öster, med handeln mot Ryssland', slag: 'stad', ger: 'mark', p0: 2e7, c0: 4.5e11, r: 1.3, borg: 'viborg', hamn: 1, mur: 1 },
     { id: 'nykoping', namn: 'Nyköping', rad: 'Slott i Södermanland. Bönderna här håller på Sten Sture', slag: 'bygd', ger: 'man', p0: 0.4, c0: 8, r: 1.2, borg: 'liten', hamn: 1, kyrka: 1 },          // bara i förspelet: allmogen i Södermanland
     // Erik XIV:s värld (varld: bara i de världarna). Kronoberg och Öland hörde till hans län från 1557 med Kalmar.
-    { id: 'kronoberg', namn: 'Kronoberg', rad: 'Slott i Småland, en del av Eriks län', slag: 'bygd', ger: 'man', p0: 0.3, c0: 6, r: 1.2, borg: 'liten', kyrka: 1, varld: [2] },
-    { id: 'reval', namn: 'Reval', rad: 'Handelsstad i Estland, dagens Tallinn', slag: 'stad', ger: 'mark', p0: 40, c0: 400, r: 1.3, borg: 'liten', hamn: 1, mur: 1, varld: [2] }
+    { id: 'kronoberg', namn: 'Kronoberg', rad: 'Slott i Småland, en del av Eriks län', slag: 'bygd', ger: 'man', p0: 0.3, c0: 6, r: 1.2, borg: 'liten', kyrka: 1, varld: [2, 3] },
+    { id: 'reval', namn: 'Reval', rad: 'Handelsstad i Estland, dagens Tallinn', slag: 'stad', ger: 'mark', p0: 40, c0: 400, r: 1.3, borg: 'liten', hamn: 1, mur: 1, varld: [2, 3] },
+    { id: 'narva', namn: 'Narva', rad: 'Handelsstad vid floden Narva, mot Ryssland', slag: 'stad', ger: 'mark', p0: 60, c0: 600, r: 1.3, borg: 'liten', hamn: 1, mur: 1, varld: [3] }
   ];
   // Förspelet har egna, små siffror för de baser som finns med.
   // 2026-11-26: Stockholm och Västerås ger drygt en tredjedel mer än förut, Åbo hälften mer, Nyköping en tredjedel mer och Uppsala en femtedel mer (Johannes: "Det är lite för segt, öka tempot på produktion lite"). Priserna på stegen är desamma.
   // Erik XIV:s värld har egna, små siffror, som förspelet. Fylls på när stegen finns.
   const ERIK_BAS = { kalmar: { p0: 1, c0: 5 }, kronoberg: { p0: 0.3, c0: 6 }, stockholm: { p0: 8, c0: 80 }, vasteras: { p0: 4, c0: 60 }, reval: { p0: 30, c0: 600 }, uppsala: { p0: 60, c0: 900 }, abo: { p0: 6, c0: 300 }, gripsholm: { p0: 2000, c0: 40000 } };
+  // Johan III:s värld: egna, små siffror.
+  const JOHAN_BAS = { stockholm: { p0: 1, c0: 5 }, abo: { p0: 0.3, c0: 6 }, mora: { p0: 0.6, c0: 20 }, uppsala: { p0: 6, c0: 80 }, reval: { p0: 12, c0: 150 }, kalmar: { p0: 40, c0: 600 }, narva: { p0: 900, c0: 12000 }, vasteras: { p0: 3000, c0: 40000 } };
   const STURE_BAS = { stockholm: { p0: 0.7, c0: 5 }, vasteras: { p0: 1.65, c0: 25 }, abo: { p0: 0.15, c0: 6 }, nykoping: { p0: 0.2, c0: 20 }, uppsala: { p0: 17, c0: 1200 } };
 
   // Byggnader (förspelet, sedan 2026-11-26): köps för mark, byggs synligt vid en plats och låser upp något man kan göra.
@@ -77,9 +81,14 @@
     { id: 'gardarKron', varld: 2, niva: 1, namn: 'Gårdarna', plats: 'kronoberg', modell: 'gardar', fran: 1, cx: 30, r: 2.6, ger: 0.08, vad: 'Fler gårdar i Kronobergs län. Kronoberg ger fler män.' },
     { id: 'varvet', varld: 2, niva: 1, namn: 'Skeppsvarvet', plats: 'kalmar', modell: 'bod', fran: 6, cx: 30, r: 2.6, ger: 0.08, vad: 'Varvet vid Björkenäs norr om Kalmar, där Mars byggs. Kalmar ger mer mark.' },
     { id: 'bryggor2', varld: 2, niva: 1, namn: 'Bryggorna', plats: 'stockholm', modell: 'hamn', fran: 2, cx: 30, r: 2.6, ger: 0.08, vad: 'Bryggor där skeppen lägger till. Handeln ger Stockholm mer mark.' },
-    { id: 'revalHamn', varld: 2, niva: 1, namn: 'Hamnen i Reval', plats: 'reval', modell: 'hamn', fran: 4, cx: 30, r: 2.6, ger: 0.08, vad: 'Handeln med Ryssland går genom Reval. Reval ger mer mark.' },
+    { id: 'revalHamn', varld: [2, 3], niva: 1, namn: 'Hamnen i Reval', plats: 'reval', modell: 'hamn', fran: 4, cx: 30, r: 2.6, ger: 0.08, vad: 'Handeln med Ryssland går genom Reval. Reval ger mer mark.' },
     { id: 'disting2', varld: 2, niva: 1, namn: 'Distingsmarknaden', plats: 'uppsala', modell: 'disting', fran: 5, cx: 30, r: 2.6, ger: 0.08, vad: 'Den stora marknaden i Uppsala i februari. Uppsala ger mer mark.' },
     { id: 'garnison2', varld: 2, niva: 1, namn: 'Garnisonen', plats: 'abo', modell: 'garnison', fran: 11, cx: 30, r: 2.6, ger: 0.08, vad: 'Knektar i läger vid Åbo slott. Åbo ger fler män.' },
+    { id: 'bryggor3', varld: 3, niva: 1, namn: 'Bryggorna', plats: 'stockholm', modell: 'hamn', fran: 1, cx: 30, r: 2.6, ger: 0.08, vad: 'Bryggor där skeppen lägger till. Handeln ger Stockholm mer mark.' },
+    { id: 'garnison3', varld: 3, niva: 1, namn: 'Garnisonen', plats: 'abo', modell: 'garnison', fran: 1, cx: 30, r: 2.6, ger: 0.08, vad: 'Knektar i läger vid Åbo slott. Åbo ger fler män.' },
+    { id: 'gardarMora3', varld: 3, niva: 1, namn: 'Gårdarna', plats: 'mora', modell: 'gardar', fran: 2, cx: 30, r: 2.6, ger: 0.08, vad: 'Fler gårdar i Mora socken. Mora ger fler män.' },
+    { id: 'disting3', varld: 3, niva: 1, namn: 'Distingsmarknaden', plats: 'uppsala', modell: 'disting', fran: 3, cx: 30, r: 2.6, ger: 0.08, vad: 'Den stora marknaden i Uppsala i februari. Uppsala ger mer mark.' },
+    { id: 'narvaHamn', varld: 3, niva: 1, namn: 'Hamnen i Narva', plats: 'narva', modell: 'hamn', fran: 19, cx: 30, r: 2.6, ger: 0.08, vad: 'Handeln med Ryssland går genom Narva. Narva ger mer mark.' },
     { id: 'disting', niva: 1, namn: 'Distingsmarknaden', plats: 'uppsala', modell: 'disting', fran: 6, c0: 80000, r: 2.6, ger: 0.08, vad: 'Den stora marknaden i Uppsala i februari. Uppsala ger mer mark.' }
   ];
 
@@ -109,7 +118,11 @@
     eAlvsborg: 'Rusta<br>resan', eResan: 'Skriv<br>brev', eArboga: 'Kalla till<br>riksdag', eReval: 'Rusta<br>skepp', eKroning: 'Förbered<br>kröningen', eHoga: 'Skriv<br>lagar', eMars: 'Bygg<br>skepp',
     eFrieri: 'Skriv<br>brev', eBornholm: 'Rusta<br>flottan', eDom: 'Skriv<br>brev', eAbo: 'Rusta<br>flottan', eGripsholm: 'Rusta<br>skepp', eKagge: 'Kalla<br>män', eHalmstad: 'Kalla<br>män', eMared: 'Kalla<br>män',
     eOland: 'Rusta<br>flottan', eHorn: 'Rusta<br>flottan', eRugen: 'Rusta<br>flottan', eVarberg: 'Kalla<br>män', eAxtorna: 'Kalla<br>män', eBrobacka: 'Kalla<br>män', eVisby: 'Rusta<br>flottan',
-    eSkamritt: 'Skriv<br>brev', eSture: 'Kalla till<br>riksdag', eRadet: 'Be om<br>förlåtelse', eGetaryggen: 'Kalla<br>män', eBrollop: 'Förbered<br>bröllopet', eUpproret: 'Mana<br>försvaret'
+    eSkamritt: 'Skriv<br>brev', eSture: 'Kalla till<br>riksdag', eRadet: 'Be om<br>förlåtelse', eGetaryggen: 'Kalla<br>män', eBrollop: 'Förbered<br>bröllopet', eUpproret: 'Mana<br>försvaret',
+    jRiksdag: 'Kalla till<br>riksdag', jKroning: 'Förbered<br>kröningen', jStettin: 'Skriv<br>brev', jReval1: 'Mana<br>försvaret', jSilver: 'Samla<br>silver', jAlvsborg: 'Samla<br>silver', jBorgholm: 'Bygg<br>slott',
+    jErik: 'Skriv<br>order', jKalmar: 'Bygg<br>slott', jRodaBoken: 'Skriv', jReval2: 'Mana<br>försvaret', jKlosterlasse: 'Kalla till<br>riksdag', jWenden: 'Kalla<br>män', jDrottningholm: 'Bygg<br>slott',
+    jPontus: 'Skriv<br>order', jKexholm: 'Kalla<br>män', jWesenberg: 'Kalla<br>män', jNarva: 'Kalla<br>män', jPlussa: 'Skriv<br>brev', jKatarina: 'Förbered<br>begravningen', jGunilla: 'Förbered<br>bröllopet',
+    jStadgar: 'Skriv<br>stadgar', jRevalmote: 'Rusta<br>skepp', jNarva2: 'Kalla<br>män', jSlut: 'Bygg'
   };
   const HANDLINGAR = [
     { id: 'tal', namn: 'Tala till folket', sture: 'Tala till bönderna', kristina: 'Mana försvararna', vad: 'Du talar själv till dem som har samlats. I tjugo sekunder ger allt som ger män tre gånger så mycket.', tid: 20, vila: 60, ger: { man: 3 } },
@@ -304,11 +317,71 @@
       kronika: 'Den 29 september öppnas Stockholms portar för hertigarna. Erik tas till fånga, och Johan hyllas som kung.',
       vet: 'Erik sitter fången i nio år. Han dör på Örbyhus 1577, troligen förgiftad på Johans order.' }
   ];
+  // Johan III, 1568–1592.
+  const JOHAN = [
+    { id: 'jRiksdag', mal: 2, akt: 9, titel: 'Kalla riksdagen', plats: 'stockholm', ar: 1569, man: 1.2, slag: 'beslut', kostar: { mark: 2500000 }, ger: { titel: 'Kung', bas: ['mora'] }, mer: 'Erik är avsatt och sitter fången. Riksdagen ska bestämma vem som är kung.', merKalla: 'sv. Wikipedia, Johan III',
+      kronika: 'Riksdagen erkänner Johan som kung. Hertig Karl får sitt hertigdöme fritt, och adeln får nya privilegier.' },
+    { id: 'jKroning', mal: 5, akt: 9, titel: 'Låt kröna dig i Uppsala', plats: 'uppsala', ar: 1569, man: 7.3, slag: 'rid', kostar: { mark: 19000000 }, ger: { bas: ['uppsala'] }, mer: 'Johan rider till Uppsala för att krönas, och drottning Katarina Jagellonica ska krönas samma dag.', merKalla: 'sv. Wikipedia, Johan III',
+      kronika: 'Johan och Katarina kröns i Uppsala domkyrka. Hans valspråk är Gud vårt beskydd.' },
+    { id: 'jStettin', mal: 9, akt: 9, titel: 'Sluta fred med Danmark', plats: 'stockholm', ar: 1570, man: 12.4, slag: 'beslut', kostar: { mark: 70000000 }, ger: { x: { mark: 1.2 } }, mer: 'Sjuårskriget har pågått sedan 1563. I Stettin förhandlar Sverige och Danmark, med kejsaren som medlare.', merKalla: 'sv. Wikipedia, Freden i Stettin',
+      kronika: 'I Stettin sluts fred. Sverige ger upp anspråken på Skåne, Halland, Blekinge och Gotland, och ska lösa ut Älvsborg för 150 000 riksdaler. Kalmarunionen är slut för gott.' },
+    { id: 'jReval1', mal: 14, akt: 9, titel: 'Håll Reval', plats: 'reval', ar: 1571, man: 1, slag: 'beslut', belagring: 1, tid: 70, kostar: { mark: 130000000 }, ger: { bas: ['reval'] }, egen: 'Reval', fiende: 'Magnus av Ösel', order: [{ vanta: 5, ord: 'Vänta', rad: 'Magnus av Ösel har legat utanför Reval sedan hösten, med 25 000 man.' }, { bild: 'kanon', ord: 'Skjut!', hur: 'Tryck på ringen: kanonerna skjuter mot lägret.', rad: 'Gabriel Oxenstierna försvarar staden.', bra: 'Kanonerna håller dem borta.', miss: 'De kommer närmare.' }, { bild: 'mana', ord: 'Håll<br>muren', hur: 'Tryck på ringen: försvararna håller muren.', rad: 'Belägrarna går mot muren.', bra: 'Muren håller.', miss: 'Det är nära, men muren håller.' }, { hugg: 1, bild: 'kanon', ord: 'Skjut!', rad: 'Vintern är hård i lägret.', bra: 'Kulorna når fram.', miss: 'Lägret står kvar.' }, { vanta: 5, ord: 'Vänta', rad: 'I februari kommer nyheten om freden. Magnus bränner sitt läger och drar sig undan.' }], mer: 'Ryssland vill ta Estland. Magnus av Ösel belägrar Reval med en rysk här.', merKalla: 'sv. Wikipedia, Nordiska tjugofemårskriget',
+      kronika: 'Reval håller. Magnus av Ösel bränner sitt läger och drar sig undan.' },
+    { id: 'jSilver', mal: 19, akt: 9, scen: 'silverskatt', titel: 'Ta upp silverskatten', plats: 'stockholm', ar: 1571, man: 6, slag: 'beslut', kostar: { mark: 730000000 }, ger: { x: { mark: 1.25 } }, mer: 'Älvsborg ska lösas ut med 150 000 riksdaler på tre år. Riksdagen beslutar en skatt på det folk äger.', merKalla: 'sv. Wikipedia, Älvsborgs lösen',
+      kronika: 'Varje bonde ger en tiondel av sitt silver, sin koppar och sin boskap. Det är första gången en skatt tas på det man äger.' },
+    { id: 'jAlvsborg', mal: 23, akt: 9, titel: 'Lös ut Älvsborg', plats: 'alvsborg', fran: 'stockholm', ar: 1571, man: 8.5, slag: 'bud', kostar: { mark: 1300000000 }, ger: { x: { man: 1.2 } }, mer: 'Silvret är insamlat. Det ska betalas till Danmark, så att Älvsborg blir svenskt igen.', merKalla: 'sv. Wikipedia, Älvsborgs lösen',
+      kronika: 'Lösensumman betalas, och Älvsborg är svenskt igen. Sverige har sin väg ut mot Västerhavet tillbaka.' },
+    { id: 'jBorgholm', mal: 28, akt: 10, titel: 'Bygg om Borgholms slott', plats: 'borgholm', ar: 1572, man: 5, slag: 'bygg', kostar: { man: 300, mark: 1900000000 }, ger: { bas: ['kalmar'] }, mer: 'Johan älskar att bygga. Borgholm på Öland ska bli en modern fästning, och han tar dit byggmästaren Johan Baptista Pahr.', merKalla: 'sv. Wikipedia, Borgholms slottsruin',
+      kronika: 'Borgholm byggs om och blir en av Sveriges första bastionsfästningar.' },
+    { id: 'jErik', mal: 33, akt: 10, titel: 'Håll Erik fången', plats: 'orbyhus', ar: 1574, man: 9, slag: 'beslut', kostar: { mark: 2400000000 }, ger: {  }, mer: 'Erik sitter fången. Hans vänner vill sätta honom fri.', merKalla: 'sv. Wikipedia, Johan III',
+      kronika: 'Tre gånger avslöjas planer på att befria Erik. Johan befaller vakterna att döda honom om någon försöker.' },
+    { id: 'jKalmar', mal: 38, akt: 10, titel: 'Bygg gyllene salen i Kalmar', plats: 'kalmar', ar: 1576, man: 5, slag: 'bygg', kostar: { man: 400, mark: 4000000000 }, ger: { x: { mark: 1.25 } }, mer: 'Kalmar slott ska bli ett renässanspalats. Bröderna Pahr bygger, och kungen ritar med.', merKalla: 'sv. Wikipedia, Kalmar slott',
+      kronika: 'Gyllene salen får sitt tak i Kalmar slott. Två år senare kommer brunnen på borggården.' },
+    { id: 'jRodaBoken', mal: 43, akt: 10, titel: 'Skriv Röda boken', plats: 'stockholm', ar: 1576, man: 9, slag: 'bygg', kostar: { mark: 3500000000 }, ger: { las: ['konster'] }, mer: 'Johan läste teologi när han satt fången. Han vill ha en gudstjänst med prakt, mitt emellan den katolska och den nya läran.', merKalla: 'sv. Wikipedia, Liturgiska striden',
+      kronika: 'Röda boken trycks, på latin och svenska, och har fått sitt namn efter bandens färg. Hertig Karl säger emot.' },
+    { id: 'jReval2', mal: 49, akt: 10, titel: 'Håll Reval igen', plats: 'reval', ar: 1577, man: 1.8, slag: 'beslut', belagring: 1, tid: 70, kostar: { mark: 12000000000 }, ger: { x: { man: 1.25 } }, egen: 'Reval', fiende: 'Ryssarna', order: [{ vanta: 5, ord: 'Vänta', rad: 'Den 23 januari kommer ryssarna under Feodor Mstislavskij.' }, { bild: 'kanon', ord: 'Skjut!', hur: 'Tryck på ringen: kanonerna svarar.', rad: 'Beskjutningen börjar.', bra: 'Kanonerna svarar.', miss: 'Kulorna slår ner i staden.' }, { bild: 'mana', ord: 'Gör<br>utfall', hur: 'Tryck på ringen: försvararna gör utfall.', rad: 'Ivo Skenkenberg leder utfallen. Han kallas Revals Hannibal.', bra: 'Den ryske befälhavaren Ivan Kolzoff stupar.', miss: 'Utfallet slås tillbaka, men Kolzoff stupar.' }, { hugg: 1, bild: 'kanon', ord: 'Skjut!', rad: 'Ryssarna skjuter mot kyrkorna.', bra: 'Staden håller.', miss: 'Det brinner, men staden håller.' }, { vanta: 5, ord: 'Vänta', rad: 'I mars bränner de klostret i Marienthal och drar sig tillbaka.' }], mer: 'Tsaren vill ha Reval. En stor rysk här kommer mitt i vintern.', merKalla: 'sv. Wikipedia, Nordiska tjugofemårskriget',
+      kronika: 'Reval håller igen. Försvarare är Carl Horn och hans far Henrik Klasson Horn.' },
+    { id: 'jKlosterlasse', mal: 54, akt: 10, titel: 'Låt riksdagen godkänna boken', plats: 'stockholm', ar: 1577, man: 2.4, slag: 'beslut', kostar: { mark: 18000000000 }, ger: {  }, mer: 'Jesuiten Laurentius Nicolai, som kallas Klosterlasse, talar för Röda boken i Stockholm.', merKalla: 'sv. Wikipedia, Liturgiska striden',
+      kronika: 'Riksdagen godkänner Röda boken. I Örbyhus dör Erik den 26 februari, troligen förgiftad.' },
+    { id: 'jWenden', mal: 60, akt: 11, titel: 'Strid tillsammans med polackerna', plats: 'wenden', fran: 'reval', ar: 1578, man: 10.7, slag: 'tag', strid: 'liten', kostar: { man: 2000, mark: 31000000000 }, ger: { x: { mark: 1.2 } }, folk: [60, 70], egen: 'Svenskar och polacker', fiende: 'Ryssarna', fiendeSlag: 'rysk', order: [{ vanta: 4, ord: 'Vänta', rad: 'Johan har slutit förbund med Polens kung. Vid Wenden i Livland står en rysk här.' }, { ord: 'Anfall!', rad: 'Svenskar och polacker anfaller tillsammans.', bra: 'Ryssarna överraskas.', miss: 'Ryssarna står emot.' }, { hugg: 1, ord: 'Hugg!', rad: 'Leden möts.', bra: 'Ryssarnas led brister.', miss: 'De håller en stund till.' }, { ord: 'Driv dem<br>på flykt', mal: 'bak', rad: 'Ryssarna flyr.', bra: 'Wenden är vunnet.', miss: 'Många kommer undan, men slaget är vunnet.' }], mer: 'Ryssarna tar borg efter borg i Livland. Sverige och Polen går samman mot dem.', merKalla: 'sv. Wikipedia, Nordiska tjugofemårskriget',
+      kronika: 'Vid Wenden vinner svenskar och polacker tillsammans över ryssarna.' },
+    { id: 'jDrottningholm', mal: 66, akt: 11, titel: 'Bygg Drottningholm åt Katarina', plats: 'drottningholm', ar: 1579, man: 5, slag: 'bygg', kostar: { man: 500, mark: 24000000000 }, ger: { x: { mark: 1.2 } }, mer: 'Johan låter Willem Boy bygga ett slott på Lovön i Mälaren, åt drottningen.', merKalla: 'sv. Wikipedia, Drottningholms slott',
+      kronika: 'Drottningholm börjar byggas. Det får sitt namn efter Katarina.' },
+    { id: 'jPontus', mal: 71, akt: 11, titel: 'Ge Pontus De la Gardie befälet', plats: 'stockholm', ar: 1580, man: 6, slag: 'beslut', kostar: { mark: 45000000000 }, ger: { x: { man: 1.2 } }, mer: 'Kriget i öster behöver en ny befälhavare. Pontus De la Gardie är fransman och har tjänat Sverige länge.', merKalla: 'sv. Wikipedia, Pontus De la Gardie',
+      kronika: 'Pontus De la Gardie får befälet och gifter sig med Johans dotter Sofia.' },
+    { id: 'jKexholm', mal: 77, akt: 11, titel: 'Ta Kexholm', plats: 'kexholm', fran: 'viborg', ar: 1580, man: 10.9, slag: 'tag', strid: 'liten', kostar: { man: 3000, mark: 45000000000 }, ger: {  }, folk: [70, 30], egen: 'Pontus här', fiende: 'Kexholm', fiendeSlag: 'rysk', order: [{ vanta: 4, ord: 'Vänta', rad: 'Pontus De la Gardies här står framför fästningen Kexholm i Karelen.' }, { hugg: 1, ord: 'Skjut!', rad: 'Kanonerna skjuter mot fästningen.', bra: 'Muren får ett hål.', miss: 'Muren håller än.' }, { ord: 'Storma!', rad: 'Hären stormar.', bra: 'Kexholm är taget.', miss: 'Det tar tid, men Kexholm faller.' }], mer: 'Från Viborg går hären in i Karelen, mot den ryska fästningen Kexholm.', merKalla: 'sv. Wikipedia, Pontus De la Gardie',
+      kronika: 'Kexholm är taget i november.' },
+    { id: 'jWesenberg', mal: 82, akt: 11, titel: 'Ta Wesenberg och Hapsal', plats: 'wesenberg', fran: 'reval', ar: 1581, man: 3, slag: 'tag', kostar: { man: 3000, mark: 43000000000 }, ger: {  }, mer: 'Ryssarna håller fortfarande borgar i Estland.', merKalla: 'sv. Wikipedia, Nordiska tjugofemårskriget',
+      kronika: 'Wesenberg ger upp i mars och Hapsal i augusti, båda mot fritt avtåg.' },
+    { id: 'jNarva', mal: 88, akt: 11, titel: 'Ta Narva', plats: 'narva', fran: 'wesenberg', ar: 1581, man: 9.2, slag: 'tag', strid: 'stor', kostar: { man: 8000, mark: 50000000000 }, ger: { bas: ['narva'] }, folk: [200, 90], egen: 'Pontus här', fiende: 'Narva', fiendeSlag: 'rysk', order: [{ vanta: 4, ord: 'Vänta', rad: 'Pontus har 8 000 man. Clas Fleming kommer med flottan.' }, { hugg: 1, ord: 'Skjut!', rad: 'Kanonerna skjuter i två dagar.', bra: 'Muren brister.', miss: 'Muren håller ännu.' }, { ord: 'Storma!', rad: 'Den 6 september stormar hären staden.', bra: 'Narva är taget.', miss: 'Det tar tid, men staden faller.' }, { ord: 'Skona<br>folket', mal: 'egen', rad: 'Kungen har befallt att kvinnor, barn och gamla ska skonas.', alltid: 'Soldaterna lyder inte. Tusentals dör i staden.' }], mer: 'Narva är ryssarnas hamn vid Östersjön. Pontus De la Gardie går dit med hären, och flottan kommer från havet.', merKalla: 'sv. Wikipedia, Belägringen av Narva (1581)',
+      kronika: 'Narva är taget. Ivangorod på andra sidan floden ger upp efter tre dagar.' },
+    { id: 'jPlussa', mal: 94, akt: 11, titel: 'Sluta stillestånd vid Plussa', plats: 'narva', ar: 1583, man: 8, slag: 'beslut', kostar: { mark: 170000000000 }, ger: { x: { mark: 1.25 } }, mer: 'Ryssland och Polen har slutit stillestånd. Nu förhandlar också Sverige, vid floden Plussa söder om Narva.', merKalla: 'sv. Wikipedia, Fördraget i Plussa',
+      kronika: 'Stillestånd. Sverige behåller Ivangorod, Jamburg, Kexholm och Koporje.' },
+    { id: 'jKatarina', mal: 100, akt: 12, titel: 'Begrav drottning Katarina', plats: 'uppsala', ar: 1584, man: 2, slag: 'rid', kostar: { mark: 330000000000 }, ger: {  }, mer: 'Drottning Katarina dog på Tre Kronor i september. Hon ska begravas i Uppsala domkyrka.', merKalla: 'sv. Wikipedia, Katarina Jagellonica',
+      kronika: 'Katarina Jagellonica begravs i Uppsala domkyrka. Drottningholm, som bär hennes namn, är inte färdigt.' },
+    { id: 'jGunilla', mal: 106, akt: 12, titel: 'Gift dig med Gunilla Bielke', plats: 'vasteras', ar: 1585, man: 2.7, slag: 'rid', kostar: { mark: 510000000000 }, ger: { bas: ['vasteras'] }, mer: 'Gunilla Bielke har varit hovfröken hos drottning Katarina. Bröllopet ska stå i Västerås.', merKalla: 'sv. Wikipedia, Gunilla Bielke',
+      kronika: 'Johan gifter sig med Gunilla Bielke, sexton år. Dagen efter kröns hon i Västerås domkyrka.' },
+    { id: 'jStadgar', mal: 113, akt: 13, scen: 'avsked', titel: 'Skriv Kalmar stadgar', plats: 'kalmar', ar: 1587, man: 8.9, slag: 'rid', kostar: { mark: 1200000000000 }, ger: {  }, mer: 'Sigismund, Johans son med Katarina, ska väljas till kung i Polen. Innan han reser måste det bestämmas hur Sverige ska styras.', merKalla: 'sv. Wikipedia, Kalmar stadgar och Sigismund',
+      kronika: 'I Kalmar skrivs stadgarna: Sverige och Polen ska inte blandas samman, och Sveriges tro ska bestå. Sigismund seglar till Polen och kröns där i december.' },
+    { id: 'jRevalmote', mal: 120, akt: 13, scen: 'revalmote', titel: 'Möt Sigismund i Reval', plats: 'reval', fran: 'stockholm', ar: 1589, man: 8.8, slag: 'flotta', kostar: { mark: 1400000000000 }, ger: {  }, mer: 'Johan saknar sin son. Han seglar till Reval för att möta Sigismund, med drottning Gunilla.', merKalla: 'sv. Wikipedia, Sigismund och Gunilla Bielke',
+      kronika: 'Johan vill att Sigismund ska komma hem till Sverige. Råden i båda länderna sätter stopp för det.' },
+    { id: 'jNarva2', mal: 127, akt: 13, titel: 'Försvara Narva', plats: 'narva', ar: 1591, man: 2, slag: 'beslut', kostar: { mark: 1500000000000 }, ger: {  }, mer: 'Stilleståndet är slut, och ryssarna går mot Narva igen.', merKalla: 'sv. Wikipedia, Nordiska tjugofemårskriget',
+      kronika: 'Ryssarna anfaller Narva. Johan kallar hem befälhavarna Carl Horn och Gustav Banér, och Horn döms för förräderi.' },
+    { id: 'jSlut', mal: 134, akt: 13, titel: 'Bygg lusthuset på Skeppsholmen', plats: 'stockholm', ar: 1592, man: 5, slag: 'bygg', kostar: { mark: 2000000000000 }, ger: { slut: true }, mer: 'Kungen är sjuk i feber. Han vill vila i ett lusthus på Skeppsholmen.', merKalla: 'sv. Wikipedia, Johan III',
+      kronika: 'Johan bor i sitt lusthus på Skeppsholmen. Den 17 november dör han på Tre Kronor.' }
+  ];
   // Världarna i tur och ordning: listan med steg, var man börjar, hjälten, titeln och det som är upplåst från början.
   const VARLDAR = [
     { lista: 'STURE', start: { stockholm: 1 }, hem: 'stockholm', hjalte: 'sten', titel: 'Riddare', ar0: 1512, las: { mark: true } },
     { lista: 'VASA', start: { mora: 1 }, hem: 'mora', hjalte: 'gustav', titel: 'Hövitsman', ar0: 1521, las: {} },
-    { lista: 'ERIK', start: { kalmar: 1, kronoberg: 1 }, hem: 'kalmar', hjalte: 'erik', titel: 'Hertig', ar0: 1560, man0: 8, las: { mark: true, sold: true } }
+    { lista: 'ERIK', start: { kalmar: 1, kronoberg: 1 }, hem: 'kalmar', hjalte: 'erik', titel: 'Hertig', ar0: 1560, man0: 8, las: { mark: true, sold: true }, basVarden: 'ERIK_BAS', arvTest: 40,
+      namn: 'Erik', kung: 'Erik XIV', titlar: { Hertig: 'Erik, hertig av Kalmar', Kung: 'Erik XIV, Sveriges kung' }, tron: 'Kung: Gustav Vasa, hans far', sate: ['kalmar', 'stockholm'], utanFlagga: ['reval'],
+      startText: '<h2>Kalmar 1560</h2><p>Du är <b>Erik</b>, 26 år, Gustav Vasas äldste son och hertig i Kalmar. Han ska ärva kronan, men först vill han gifta sig med drottningen av England.</p><p class="mal">Bygg upp ditt län, ta över riket och håll det samman.</p>',
+      slutRubrik: 'Kronan går till Johan', slut: 'Den 29 september 1568 öppnades Stockholms portar för hertigarna. Erik togs till fånga, och hans bror Johan blev kung. Erik dog i fångenskap på Örbyhus 1577.' },
+    { lista: 'JOHAN', start: { stockholm: 1, abo: 1 }, hem: 'stockholm', hjalte: 'johan', titel: 'Hertig', ar0: 1568, man0: 10.5, las: { mark: true, sold: true }, basVarden: 'JOHAN_BAS', arvTest: 52,
+      namn: 'Johan', kung: 'Johan III', titlar: { Hertig: 'Johan, hertig av Finland', Kung: 'Johan III, Sveriges kung' }, tron: 'Erik XIV är avsatt', sate: ['stockholm', 'stockholm'], utanFlagga: ['narva'],
+      startText: '<h2>Stockholm 1568</h2><p>Du är <b>Johan</b>, 30 år, hertig av Finland. Stockholms portar har just öppnats för dig och din bror Karl, och Erik sitter fången.</p><p class="mal">Bli kung, sluta fred och håll riket samman.</p>',
+      slutRubrik: 'Kronan går till Sigismund', slut: 'Den 17 november 1592 dog Johan på Tre Kronor. Kronan gick till hans son Sigismund, som redan var kung i Polen.' }
   ];
   const STURE = [
     // vet = en rad om vad steget betyder för det som kommer sedan (visas under krönikan)
@@ -349,7 +422,7 @@
     privilegier: { namn: 'Lübecks privilegier', baser: [] }
   };
 
-  const AKTER = { 0: 'Sten Stures tid', 1: 'Upproret', 2: 'Kung utan pengar', 3: 'Riket byggs', 4: 'Landsfadern', 5: 'Arvet', 6: 'Brodern', 7: 'Sjuårskriget', 8: 'Galenskapen' };
+  const AKTER = { 0: 'Sten Stures tid', 1: 'Upproret', 2: 'Kung utan pengar', 3: 'Riket byggs', 4: 'Landsfadern', 5: 'Arvet', 6: 'Brodern', 7: 'Sjuårskriget', 8: 'Galenskapen', 9: 'Freden', 10: 'Fången och boken', 11: 'Kriget i öster', 12: 'Byggherren', 13: 'Sonen i Polen' };
 
   // Regentlängden: varje regent blir en egen värld. Bara den första är byggd.
   const REGENTER = [
@@ -368,6 +441,6 @@
   }
 
   // UPPDRAG pekar på den värld som spelas just nu (game.js byter): VASA eller STURE.
-  V.DATA = { PLATSER, BASER, BYGGNADER, KONSTER, HANDLINGAR, GOR, UPPDRAG, VASA: UPPDRAG, STURE, STURE_BAS, ERIK, ERIK_BAS, VARLDAR, UPPROR, AKTER, REGENTER };
+  V.DATA = { PLATSER, BASER, BYGGNADER, KONSTER, HANDLINGAR, GOR, UPPDRAG, VASA: UPPDRAG, STURE, STURE_BAS, ERIK, ERIK_BAS, JOHAN, JOHAN_BAS, VARLDAR, UPPROR, AKTER, REGENTER };
   if (typeof module !== 'undefined' && module.exports) module.exports = V.DATA;
 })(typeof window !== 'undefined' ? window : globalThis);

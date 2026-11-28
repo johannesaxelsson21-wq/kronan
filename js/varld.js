@@ -41,7 +41,7 @@
         else if (finns(b) && b.borg) {
           if (S.varld === 0) sort = b.id === 'uppsala' ? (S.hjalte === 'kristina' ? 'danmark' : null) : 'sverige';
           else if (S.varld === 1) sort = S.nasta <= idx(b.id === 'abo' || b.id === 'viborg' ? 'finland' : 'intag') ? 'danmark' : 'sverige';
-          else sort = b.id === 'reval' ? null : 'sverige';          // Eriks värld: riket är svenskt, Reval ännu inte
+          else sort = (D.VARLDAR[S.varld].utanFlagga || []).indexOf(b.id) >= 0 ? null : 'sverige';          // Eriks värld: riket är svenskt, Reval ännu inte
         }
         if ((flagga[b.id] && flagga[b.id].sort) !== sort && steg[b.id].length) {
           if (flagga[b.id] && flagga[b.id].m) grp[b.id].remove(flagga[b.id].m);
@@ -190,7 +190,7 @@
     // Sten Sture på Stockholms slott. Gustav i Mora, sedan med hären (Kopparberget, Hedemora, Västerås, Uppsala, lägret på Brunkeberg) och från midsommar 1523 i Stockholm.
     // Sedan 2026-11-26 rider han själv rundan (_gustav). Platsen här används för scenen med sigillen, för Kristina, och när det inte finns någon runda.
     sate() {
-      const S = G.s; let id = S.varld === 2 ? (S.titel === 'Kung' ? 'stockholm' : 'kalmar') : S.varld === 0 || S.bas.stockholm ? 'stockholm' : 'mora';          // Erik: Kalmar som hertig, Stockholm som kung
+      const S = G.s; let id = S.varld >= 2 ? D.VARLDAR[S.varld].sate[S.titel === 'Kung' ? 1 : 0] : S.varld === 0 || S.bas.stockholm ? 'stockholm' : 'mora';          // Erik: Kalmar som hertig, Stockholm som kung
       if (id === 'mora' && S.varld === 1) for (let k = 0; k < S.nasta && k < D.UPPDRAG.length; k++) { const u = D.UPPDRAG[k]; if (SATE.indexOf(u.id) >= 0 && R.P[u.plats]) id = u.plats; }
       const p = R.P[id], K = B.K; W._sateId = id;
       const b = G.BAS[id];          // på torget i en stad, vid elden i en bygd
@@ -553,10 +553,10 @@
         const c = vis.lager && vis.lager.length ? vis.lager[(m.typ === 'hugg' ? j : 0) % vis.lager.length] : R.P.stockholm; return { x: c.x, y: gy(c.x, c.z) + 0.4, z: c.z };
       }
       if (u.belagring) {          // belägringen: lägret vid Brunkeberg, Kristina med breven, försvararna och tornen
-        const p = R.P.stockholm;
-        if (m.typ === 'hugg') { if (o.bild === 'kanon') { const t = W._tornLagen && W._tornLagen.length ? W._tornLagen : [{ x: p.x + 1.4, z: p.z - 1.3 }], q = t[j % t.length]; return { x: q.x, y: gy(q.x, q.z) + 1.4, z: q.z }; } const e = vis.enh[(j * 3) % Math.max(1, vis.enh.length)]; return e ? { x: e.x, y: gy(e.x, e.z) + 0.5, z: e.z } : null; }
+        const p = R.P[u.plats] || R.P.stockholm;
+        if (m.typ === 'hugg') { if (o.bild === 'kanon') { const t = W._belTorn(u), q = t[j % t.length]; return { x: q.x, y: gy(q.x, q.z) + 1.4, z: q.z }; } const e = vis.enh[(j * 3) % Math.max(1, vis.enh.length)]; return e ? { x: e.x, y: gy(e.x, e.z) + 0.5, z: e.z } : null; }
         if (o.bild === 'brev') { const k = W._kristina; return k ? { x: k.x, y: gy(k.x, k.z) + 0.6, z: k.z } : null; }
-        const b = R.P.brunkeberg || p; return { x: b.x, y: gy(b.x, b.z) + 0.4, z: b.z };
+        const b = W._belLagerP(u) || p; return { x: b.x, y: gy(b.x, b.z) + 0.4, z: b.z };
       }
       if (u.slag === 'flotta') { const l = (o.mal === 'egen' ? vis.skepp : vis.fiende) || [], s = l.length ? l[(m.typ === 'hugg' ? j : 0) % l.length] : null; return s ? { x: s.position.x, y: 0.6, z: s.position.z } : null; }          // sjöslaget
       if (!vis.noll) return null;
@@ -584,7 +584,7 @@
     _slagNamn() {
       const ut = [], gy = (x, z) => Geo.groundAt(x, z), mitt = l => { let x = 0, z = 0, n = 0; for (const e of l) if (e.vis !== false && e.fall < 0.5) { x += e.x; z += e.z; n++; } return n ? { x: x / n, z: z / n } : null; };
       if (vis.u.belagring === 2) { (vis.lager || []).forEach((c, i) => ut.push({ id: 'slag-lager' + i, namn: 'Gustavs läger', x: c.x, z: c.z + 1.1, y: gy(c.x, c.z) + 0.2 })); const s = vis.skepp[0]; if (s) ut.push({ id: 'slag-skepp', namn: 'Lübecks skepp', x: s.position.x, z: s.position.z + 1.2, y: 0.4 }); const n = (vis.fiende || [])[0]; if (n && vis.norby > 0.05) ut.push({ id: 'slag-norby', namn: 'Søren Norby', x: n.position.x, z: n.position.z + 1.2, y: 0.4 }); return ut; }
-      if (vis.u.belagring) { const b = R.P.brunkeberg; if (b) ut.push({ id: 'slag-lager', namn: vis.u.fiende || 'Kristians läger', x: b.x, z: b.z + 0.9, y: gy(b.x, b.z) + 0.2 }); const f = mitt(vis.enh); if (f) ut.push({ id: 'slag-egen', namn: 'Försvararna', x: f.x, z: f.z + 0.4, y: gy(f.x, f.z) }); return ut; }
+      if (vis.u.belagring) { const b = W._belLagerP(vis.u); if (b) ut.push({ id: 'slag-lager', namn: vis.u.fiende || 'Kristians läger', x: b.x, z: b.z + 0.9, y: gy(b.x, b.z) + 0.2 }); const f = mitt(vis.enh); if (f) ut.push({ id: 'slag-egen', namn: 'Försvararna', x: f.x, z: f.z + 0.4, y: gy(f.x, f.z) }); return ut; }
       if (vis.u.slag === 'flotta') { const s = vis.skepp[0], fl = mitt((vis.fiende || []).map(q => ({ x: q.position.x, z: q.position.z, fall: 0 }))); if (s) ut.push({ id: 'slag-egen', namn: vis.u.skepp || (vis.u.id === 'grevefejden' ? 'Stora Kravelen' : vis.u.egen || 'Flottan'), x: s.position.x, z: s.position.z + 1.2, y: 0.5 }); if (fl) ut.push({ id: 'slag-fiende', namn: vis.u.fiende || 'Fienden', x: fl.x, z: fl.z + 1.4, y: 0.5 }); return ut; }
       const e = mitt(vis.enh), f = mitt(vis.fi), egen = vis.u.egen || (vis.u.id === 'sUppsala' ? 'Bönderna' : 'Sten Stures män');
       if (e) ut.push({ id: 'slag-egen', namn: egen, x: e.x, z: e.z, y: gy(e.x, e.z) + 1.1 }); if (f) ut.push({ id: 'slag-fiende', namn: vis.u.fiende || 'Danskarna', x: f.x, z: f.z, y: gy(f.x, f.z) + 1.1 });
@@ -628,17 +628,21 @@
       }
     },
     // Belägringen av Stockholm 1520 (förspelet): försvarare i rad framför slottet där Kristina står, och det ögonblicken visar.
+    // Var belägrarnas läger står: Brunkeberg vid Stockholm, annars på land en bit utanför staden (Reval).
+    _belLagerP(u) { if (u.plats === 'stockholm') return R.P.brunkeberg; if (vis && vis._lagerP) return vis._lagerP; const p = R.P[u.plats], r = (tomt[u.plats] ? tomt[u.plats].R : 6) + 3; let best = null;
+      for (let k = 0; k < 16 && !best; k++) { const a = 1.2 + k * 0.785, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (Geo.sdAt(x, z) > 1.2) best = { x, z }; } if (vis) vis._lagerP = best || { x: p.x, z: p.z + r }; return vis ? vis._lagerP : best; },
+    _belTorn(u) { const p = R.P[u.plats]; return u.plats === 'stockholm' && W._tornLagen && W._tornLagen.length ? W._tornLagen : [{ x: p.x + 1.4, z: p.z - 1.3 }, { x: p.x - 1.2, z: p.z - 0.9 }]; },
     _belStart(p) {
-      if (G.s.varld === 2) { const m = lager(R.P.brunkeberg, 10); scene.add(m); vis.lagerM = [m]; }          // hertigarnas läger 1568 (spelets bild: där Jöran Perssons kropp sattes upp)
+      if (G.s.varld >= 2) { const m = lager(W._belLagerP(vis.u), 10); scene.add(m); vis.lagerM = [m]; }          // hertigarnas läger 1568 (spelets bild: där Jöran Perssons kropp sattes upp)
       const K = B.K, kr = W._kristina, kx = kr ? (kr.bx !== undefined ? kr.bx : kr.x) : p.x + 1.9 * K, kz = kr ? kr.z : p.z - 0.5 * K;
       for (let j = 0; j < 4; j++) for (const s of [-1, 1]) vis.enh.push(Folk.add(kx + s * (0.6 + j * 0.56), kz + 0.5 + (j % 2) * 0.16, j % 2 ? 'borgare' : 'knekt', { pike: j % 2 === 0, ang: 0 }));
     },
     _belBild(bild, bra, nar) {
       if (vis && vis.u.belagring === 2) return W._bel2Bild(bild, bra, nar);
-      const p = R.P.stockholm, Lj = V.Ljud, kr = W._kristina, gy = (x, z) => Geo.groundAt(x, z), torn = W._tornLagen && W._tornLagen.length ? W._tornLagen : [{ x: p.x + 1.6, z: p.z - 1.2 }];
+      const p = R.P[vis.u.plats] || R.P.stockholm, Lj = V.Ljud, kr = W._kristina, gy = (x, z) => Geo.groundAt(x, z), torn = W._tornLagen && W._tornLagen.length ? W._tornLagen : [{ x: p.x + 1.6, z: p.z - 1.2 }];
       if (bild === 'mana') { if (vis) vis.enh.forEach((u, i) => { if (bra || i % 2) { u.y = 0.1; setTimeout(() => { u.y = 0; }, 170 + i * 15); } }); if (kr) kr.hoppT = 0.45; if (Lj) Lj.spela(nar === 'hugg' ? 'sorl' : bra ? 'klart' : 'nej'); return; }
       if (bild === 'kanon') {
-        const b = R.P.brunkeberg || p, mot = () => [b.x + (Math.random() - 0.5) * 1.4, b.z + (Math.random() - 0.5) * 1.4];
+        const b = W._belLagerP(vis.u) || p, mot = () => [b.x + (Math.random() - 0.5) * 1.4, b.z + (Math.random() - 0.5) * 1.4];
         if (nar === 'hugg') { const q = torn[Math.floor(Math.random() * torn.length)], m = mot(); W._kula(q.x, gy(q.x, q.z) + 1.5, q.z, m[0], m[1], false); if (Lj) Lj.spela('kanon'); return; }          // ett tryck: ett torn skjuter mot lägret, och man ser kulan flyga
         if (bra) torn.forEach((q, i) => setTimeout(() => { const m = mot(); W._kula(q.x, gy(q.x, q.z) + 1.5, q.z, m[0], m[1], false); }, i * 220));          // tornen skjuter mot lägret
         else { const x = p.x + (Math.random() - 0.5) * 2.4, z = p.z + 0.6 + Math.random() * 1.2; W._kula(b.x, gy(b.x, b.z) + 0.4, b.z, x, z, true); }          // en kula från lägret slår ner bland husen
@@ -761,7 +765,7 @@
         if (u.order) W._folj(p.x + 0.9, p.z - 0.2, 26);          // kameran står vid slottet medan staden försvaras
         if (u.nytt && V.kalender && !V.tyst) { const m = V.kalender().man; vis.nytt = vis.nytt || {}; u.nytt.forEach((q, i) => { if (!vis.nytt[i] && m >= q[0]) { vis.nytt[i] = 1; V.UI.text(q[1], 7); } }); }          // nyheter medan staden är instängd
         W._belT = (W._belT === undefined ? 1.5 : W._belT) - dt;
-        if (W._belT <= 0 && u.order) { W._belN = (W._belN || 0) + 1; W._belT = 3.2 + Math.random() * 2.4; const b = R.P.brunkeberg, ute = W._belN % 2 === 1;          // förspelet: man ser kulorna flyga, från lägret in i staden och från tornen till lägret
+        if (W._belT <= 0 && u.order) { W._belN = (W._belN || 0) + 1; W._belT = 3.2 + Math.random() * 2.4; const b = W._belLagerP(u), ute = W._belN % 2 === 1;          // förspelet: man ser kulorna flyga, från lägret in i staden och från tornen till lägret
           if (b) { if (ute) { const x = p.x + (Math.random() - 0.5) * 2.2, z = p.z + 0.4 + Math.random() * 1.2; W._kula(b.x, Geo.groundAt(b.x, b.z) + 0.4, b.z, x, z, true); } else { const t = W._tornLagen && W._tornLagen.length ? W._tornLagen[W._belN % W._tornLagen.length] : { x: p.x + 1.4, z: p.z - 1.3 }; W._kula(t.x, Geo.groundAt(t.x, t.z) + 1.5, t.z, b.x + (Math.random() - 0.5) * 1.2, b.z + (Math.random() - 0.5) * 1.2, false); } } }
         else if (W._belT <= 0) { W._belN = (W._belN || 0) + 1; W._belT = 1.8 + Math.random() * 2.4; const ute = W._belN % 2 === 1, q = ute ? R.P.brunkeberg : p, x = q.x + (Math.random() - 0.5) * 1.6, z = q.z + (ute ? 0.5 : -0.9); Fx.krut(x, Geo.groundAt(x, z) + (ute ? 0.3 : 1.2), z); if (!ute && V.Ljud) V.Ljud.spela('kanon'); if (!ute && W._tornLagen && W._tornLagen.length) { const q = W._tornLagen[W._belN % W._tornLagen.length]; Fx.krut(q.x, Geo.groundAt(q.x, q.z) + 1.7, q.z); } }
       }

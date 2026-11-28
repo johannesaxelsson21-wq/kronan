@@ -17,7 +17,7 @@
   }
   let S = nytt(1);
   const par = {};          // basens siffror i den värld som spelas
-  function P(id) { const k = S.varld + id, O = S.varld === 0 ? D.STURE_BAS : S.varld === 2 ? D.ERIK_BAS : null; return par[k] || (par[k] = O && O[id] ? Object.assign({}, BAS[id], O[id]) : BAS[id]); }          // förspelet och Eriks värld har egna siffror
+  function P(id) { const k = S.varld + id, O = S.varld === 0 ? D.STURE_BAS : D[(D.VARLDAR[S.varld] || {}).basVarden] || null; return par[k] || (par[k] = O && O[id] ? Object.assign({}, BAS[id], O[id]) : BAS[id]); }          // förspelet och Eriks värld har egna siffror
   Object.defineProperty(D, 'UPPDRAG', { get() { return D[(D.VARLDAR[S.varld] || D.VARLDAR[1]).lista]; }, configurable: true });
   const G = V.Game = {
     get s() { return S; }, BAS, KONST, KONST_MAX,
