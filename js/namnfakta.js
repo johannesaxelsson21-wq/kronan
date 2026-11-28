@@ -1,0 +1,236 @@
+// Fakta för alla andra namn på kartan (Johannes 2026-11-28: "Jag vill kunna trycka på alla namn och få info, som Mälaren, kloster osv,
+// allt som har ett namn ska ha en info ruta när man trycker på det"). Samma ruta och regler som ortfakta.js: nutid, inget om det som kommer
+// senare, inga källor i spelet. Raderna läggs till i V.OrtFakta.F. Varje rad: [från år, till år, text]. Källor och osäkerheter: docs/namnfakta.md.
+(function () {
+  'use strict';
+  const V = window.VASA; if (!V.OrtFakta) return;
+  const A = 9999, DANSK = 'hör till Danmark';
+  const N = {
+    // ---- länder ----
+    'Danmark': [[0, A, 'Ett kungarike kring sunden mellan Östersjön och Västerhavet. Den danske kungen äger också Skåne, Halland, Blekinge och Gotland, och tar tull av varje skepp som seglar genom Öresund.']],
+    'Norge': [[0, A, 'Ett land av berg och fjordar i väster. Norge lyder under den danske kungen.']],
+    'Finland': [[0, A, 'Rikets östra del, med skog, sjöar och skärgård. Åbo är den största staden, och slotten i Åbo, Tavastehus och Viborg håller landet.']],
+    'Polen': [[0, 1568, 'Ett stort kungarike söder om Östersjön, med rika städer och mäktiga adelsmän.'], [1569, A, 'Ett stort rike söder om Östersjön. Polen och Litauen är förenade under en kung, och adeln väljer kungen.']],
+    'Ryssland': [[0, A, 'Storfurstendömet Moskva, ett väldigt rike i öster. Storfursten vill nå Östersjön och dess handel.']],
+    'Estland': [[0, A, 'Landet söder om Finska viken. Reval är den största staden, tyska herrar äger gårdarna och bönderna talar estniska.']],
+    'Livland': [[0, 1560, 'Landet kring Riga, söder om Estland. Här styr tyska ordensriddare och biskopar över estniska och lettiska bönder.'], [1561, A, 'Landet kring Riga. Ordensstaten är upplöst, och Polen och Litauen styr över det mesta av landet.']],
+    'Karelen': [[0, A, 'Ett skogsland mellan Finska viken och Ladoga, där gränsen mellan riket och Ryssland går.']],
+    'Tyskland': [[0, A, 'Det tysk-romerska rikets länder söder om Östersjön, med hansestäder som Lübeck, Rostock och Stralsund.']],
+    'Ryska gränsen': [[0, A, 'Här går gränsen mot Ryssland, genom skog och myr där få bor.']],
+    // ---- landskap ----
+    'Uppland': [[0, A, 'Landskapet norr om Mälaren, med bördiga slätter, Uppsala och huvudstaden Stockholm.']],
+    'Södermanland': [[0, A, 'Landskapet söder om Mälaren, med herrgårdar, sjöar och staden Nyköping.']],
+    'Västmanland': [[0, A, 'Landskapet norr om Mälaren väster om Uppland, med Västerås och gruvorna i Bergslagen.']],
+    'Dalarna': [[0, A, 'Ett landskap av skog, sjöar och gruvor kring Dalälven. Dalkarlarna säger ifrån när fogdarna går för långt.']],
+    'Gästrikland': [[0, A, 'Ett litet landskap kring Gävle, med skog, järnbruk och fiske vid kusten.']],
+    'Hälsingland': [[0, A, 'Ett skogslandskap vid Bottenhavet, med stora bondgårdar och lin på åkrarna.']],
+    'Närke': [[0, A, 'Landskapet kring Örebro och Hjälmaren, med slätt i mitten och skog runt omkring.']],
+    'Värmland': [[0, A, 'Ett skogsland kring Klarälven och Vänerns norra strand, med finnar som bränner skog i nordost och bergsmän vid gruvorna i öster.']],
+    'Östergötland': [[0, A, 'En bördig slätt kring Linköping och Vadstena, ett av rikets rikaste landskap.']],
+    'Västergötland': [[0, A, 'Ett stort landskap mellan Vänern och Vättern, med slätter, skogar och domkyrkan i Skara.']],
+    'Småland': [[0, A, 'Ett stort landskap av skog, sten och små gårdar. Bönderna här är vana att klara sig själva.']],
+    'Gotland': [[0, A, 'En stor ö mitt i Östersjön, med Visby och nästan hundra stenkyrkor. Ön ' + DANSK + '.']],
+    'Öland': [[0, A, 'En lång och smal ö utanför Kalmar, med kalkslätter och väderkvarnar. Kungen jagar gärna här.']],
+    'Skåne': [[0, A, 'Ett bördigt slättland med Lund, Malmö och Helsingborg. Skåne ' + DANSK + '.']],
+    'Blekinge': [[0, A, 'Ett skogigt kustland med många öar och vikar. Blekinge ' + DANSK + '.']],
+    'Halland': [[0, A, 'Ett kustland med åar, sandstränder och ljunghedar. Halland ' + DANSK + '.']],
+    'Österbotten': [[0, A, 'Finlands långa kust mot Bottenviken, med bönder, sälfångare och tjärbrännare.']],
+    // ---- vatten ----
+    'Mälaren': [[0, A, 'Rikets stora sjö, med hundratals öar. Den är rikets viktigaste väg: båtar fraktar järn, koppar och spannmål in till Stockholm.']],
+    'Vättern': [[0, A, 'En lång och djup sjö med klart vatten mellan Östergötland och Västergötland. Vadstena och Jönköping ligger vid stränderna, och Visingsö mitt i.']],
+    'Vänern': [[0, A, 'Rikets största sjö. Båtar för järn från Värmland söderut, och Göta älv rinner ut mot Västerhavet.']],
+    'Hjälmaren': [[0, A, 'En grund sjö mellan Närke och Södermanland. Stränderna är sankiga och vattnet stiger om våren.']],
+    'Siljan': [[0, A, 'En stor sjö i Dalarna. Kring stränderna ligger Mora, Rättvik och Leksand, och om vintern går vägen över isen.']],
+    'Åsunden': [[0, A, 'En lång sjö i Västergötland vid Bogesund. Om vintern bär isen både folk och hästar.']],
+    'Västerhavet': [[0, A, 'Havet i väster. Vid Älvsborg i Göta älvs mynning har riket sin enda hamn mot väster, utan dansk tull.']],
+    'Östersjön': [[0, A, 'Havet mellan riket, Danmark, Tyskland, Polen och Livland. Här seglar hansans koggar med salt, tyg, säd och järn.']],
+    'Finska viken': [[0, A, 'Den långa viken mellan Finland och Estland. Den leder österut mot Ryssland.']],
+    'Ladoga': [[0, A, 'Europas största sjö, långt i öster mellan Karelen och Ryssland. Stormarna här är fruktade.']],
+    'Kattegatt': [[0, A, 'Havet mellan Halland och Jylland, på väg in mot Öresund.']],
+    'Öresund': [[0, A, 'Det smala sundet mellan Skåne och Själland. Varje skepp som passerar betalar tull till den danske kungen vid Helsingör.']],
+    'Dalälven': [[0, A, 'Dalarnas stora älv, som rinner från fjällen genom Siljan och ut i havet vid Gästrikland.']],
+    'Göta älv': [[0, A, 'Älven från Vänern ut mot Västerhavet. Vid mynningen ligger Älvsborg.']],
+    'Klarälven': [[0, A, 'Värmlands stora älv, som rinner från Norge ner till Vänern.']],
+    'Motala ström': [[0, A, 'Ån från Vättern genom Östergötland ut mot havet, med forsar och kvarnar.']],
+    // ---- trakter och platser ----
+    'Tiveden': [[0, A, 'En stor och mörk skog mellan Närke och Västergötland. Vägen genom den är smal, stenig och svår.']],
+    'Novgorod': [[0, A, 'En gammal handelsstad i Ryssland, som lyder under storfursten i Moskva.']],
+    'Lübeck': [[0, A, 'Hansans mäktigaste stad, med rika köpmän och stora skepp. Lübeck vill bestämma över handeln på Östersjön.']],
+    'Köpenhamn': [[0, A, 'Den danske kungens stad vid Öresund, med slott, flotta och tullkammare.']],
+    'Kalø': [[0, A, 'Ett slott på en halvö i en vik på Jylland, i den danske kungens tjänst.']],
+    'Jönköping': [[0, A, 'En stad vid Vätterns södra spets, där vägarna från Småland och Västergötland möts.']],
+    'Nydala kloster': [[0, 1529, 'Ett kloster i Smålands skogar, ett av de äldsta i riket. Munkarna odlar jorden och äger många gårdar.'], [1530, A, 'Klostret har dragits in till kronan, och munkarna har lämnat det.']],
+    'Enköping': [[0, A, 'En liten stad i Uppland mellan Mälaren och Uppsala, med torg och kyrka.']],
+    'Romfartuna': [[0, A, 'En socken med en stenkyrka norr om Västerås.']],
+    'Dalarö': [[0, A, 'En plats i skärgården söder om Stockholm, där skeppen väntar på vind innan de seglar ut.']],
+    'Falkenberg': [[0, A, 'En liten stad i Halland vid Ätrans mynning, med laxfiske i ån. Halland ' + DANSK + '.']],
+    'Bohus': [[0, A, 'En fästning på en klippa vid Göta älv, på den norska sidan av gränsen.']],
+    'Hova': [[0, A, 'En by i Västergötland vid vägen mot Närke, där skogen Tiveden börjar.']],
+    'Aspeboda': [[0, A, 'En by nära Kopparberget i Dalarna, med bergsmansgårdar.']],
+    'Rankhyttan': [[0, A, 'En hytta i Dalarna där malmen smälts till metall.']],
+    'Vissefjärda': [[0, A, 'En socken i Smålands skogar nära gränsen mot Blekinge.']],
+    'Borgå': [[0, A, 'En gammal stad i Nyland i Finland, vid en å nära kusten.']],
+    'Ekenäs': [[0, 1545, 'En by på Finlands sydkust, nära Raseborgs slott.'], [1546, A, 'En ny stad på Finlands sydkust. Kungen vill att handeln ska gå härifrån och inte till Reval.']],
+    'Raumo': [[0, A, 'En stad på Finlands västkust, med ett franciskanerkloster och sjöfart.']],
+    'Ulvsby': [[0, 1557, 'En stad vid Kumo älvs mynning i Finland, dit bönderna från inlandet kommer med sina varor.'], [1558, A, 'Hamnen har blivit för grund när landet stiger, och borgarna har flyttat till Björneborg.']],
+    'Björneborg': [[1558, A, 'En ny stad vid Kumo älv, närmare havet än Ulvsby, vars borgare har flyttat hit.']],
+    'Vilnius': [[0, A, 'Huvudstad i storfurstendömet Litauen.']],
+    'Warnemünde': [[0, A, 'En hamn där floden från Rostock når Östersjön.']],
+    'Mön': [[0, A, 'En dansk ö med höga vita kalkklippor mot havet.']],
+    'Bukow': [[0, A, 'En by i Mecklenburg nära Östersjökusten.']],
+    'Stora Karlsö': [[0, A, 'En liten ö med branta klippor väster om Gotland, där sjöfåglarna häckar.']],
+    'Odensala': [[0, A, 'En socken i Uppland nära Sigtuna, med en gammal stenkyrka.']],
+    'Björkenäs': [[0, A, 'En gård vid kusten strax norr om Kalmar.']],
+    'Hapsal': [[0, A, 'En liten stad med en biskopsborg på Estlands västkust.']],
+    'Jamburg': [[0, A, 'En fästning vid floden Luga, öster om Narva.']],
+    'Koporje': [[0, A, 'En fästning på en klippa söder om Finska viken.']],
+    'Plussa': [[0, A, 'En flod i skogarna söder om Narva.']],
+    'Ivangorod': [[0, A, 'En rysk fästning mittemot Narva, på andra sidan floden.']],
+    'Kastelholm': [[0, A, 'Ett slott på Åland, där kronans fogde bor.']],
+    'Vårfruberga': [[0, A, 'Ett kloster vid Mälarens strand i Södermanland.']],
+    'Vädla': [[0, A, 'En plats vid vattnet strax utanför Stockholm.']],
+    'Brännkyrka': [[0, A, 'En socken med kyrka söder om Stockholm, vid vägen mot Södertälje.']],
+    'Bogesund': [[0, A, 'En liten stad vid sjön Åsunden i Västergötland, vid vägen mot den danska gränsen.']],
+    'Räfsnäs': [[0, A, 'En adelsgård i Södermanland.']],
+    'Stora Tuna': [[0, A, 'En stor socken i Dalarna med en mäktig stenkyrka, nära Kopparberget.']],
+    'Kisa': [[0, A, 'En socken i Östergötlands skogsbygd.']],
+    'Virserum': [[0, A, 'En socken i Smålands skogar.']],
+    'Halmstad': [[0, A, 'En stad i Halland vid Nissans mynning, med borgare och fiskare. Halland ' + DANSK + '.']],
+    'Varberg': [[0, 1564, 'En stad och en fästning på Hallands kust. Halland ' + DANSK + '.'], [1565, 1568, 'Fästningen på Hallands kust är tagen av svenskarna.'], [1569, A, 'En stad och en fästning på Hallands kust. Danskarna har tagit tillbaka den.']],
+    'Axtorna': [[0, A, 'En by i Hallands skogar, öster om Varberg.']],
+    'Mared': [[0, A, 'En by i Halland nära gränsen mot Småland.']],
+    'Getaryggen': [[0, A, 'En höjd vid vägen i Västergötland.']],
+    'Wenden': [[0, A, 'En stad med en stor borg i Livland, där ordensmästaren har haft sitt säte.']],
+    'Wesenberg': [[0, A, 'En liten stad med en ordensborg i Estland, mellan Reval och Narva.']],
+    'Kexholm': [[0, A, 'En fästning där Vuoksen rinner ut i Ladoga.']],
+    'Brunnbäck': [[0, A, 'En färjeplats över Dalälven, där vägen från Västerås går in i Dalarna.']],
+    'Bornholm': [[0, A, 'En ö mitt i Östersjön, med klippor och fiskelägen.']],
+    'Lima': [[0, A, 'En socken i västra Dalarna vid Västerdalälven, nära Norge.']],
+    'Sälen': [[0, A, 'De sista gårdarna i Dalarnas skogar mot den norska gränsen.']],
+    'Kivinebb': [[0, A, 'En skans vid gränsen mot Ryssland på Karelska näset.']],
+    'Ölands norra udde': [[0, A, 'Den norra spetsen av Öland, där skeppen rundar ön.']],
+    'Teusina': [[0, A, 'En by nära Ivangorod, vid gränsen mot Ryssland.']],
+    'Nokia': [[0, A, 'En gård vid en fors i Kumo älv i Finlands inland.']],
+    'Riga': [[0, A, 'Livlands största stad vid floden Dünas mynning, en rik hansestad.']],
+    'Kirkholm': [[0, A, 'En borg vid floden Düna, uppströms från Riga.']],
+    'Skultuna': [[0, 1606, 'En by vid Svartån norr om Västerås.'], [1607, A, 'Ett mässingsbruk vid Svartån norr om Västerås.']],
+    'Ryssby': [[0, A, 'En socken i Småland.']],
+    // ---- städerna i orter.js: vad staden är ----
+    'Sigtuna': [[0, A, 'Rikets äldsta stad, vid en vik av Mälaren. Kyrkorna står som ruiner, men dominikanernas kyrka av tegel är kvar.']],
+    'Södertälje': [[0, A, 'En stad vid ett smalt näs mellan Mälaren och havet. Båtarna dras över land här.']],
+    'Torshälla': [[0, A, 'En liten stad vid ån från Mälaren upp mot Eskilstuna.']],
+    'Köping': [[0, A, 'En stad vid Mälarens västra ände. Hit kommer järnet från Bergslagen.']],
+    'Trosa': [[0, A, 'En liten stad vid en å nära kusten i Södermanland.']],
+    'Östhammar': [[0, A, 'En liten stad vid en vik i norra Uppland.']],
+    'Öregrund': [[0, A, 'En liten stad vid havet i norra Uppland, med fiskare och skeppare.']],
+    'Norrtälje': [[1622, A, 'En ny stad i Roslagen, vid ån där en gevärsfaktori har anlagts.']],
+    'Vaxholm': [[0, A, 'En ö i skärgården, där kungen har byggt ett torn som vaktar inloppet till Stockholm.']],
+    'Eskilstuna': [[0, A, 'En liten ort vid ån mellan Hjälmaren och Mälaren, med kungsgård och smedjor.']],
+    'Avesta': [[0, A, 'En plats vid forsarna i Dalälven, där kopparn från Falun smälts.']],
+    'Säter': [[0, A, 'En liten ort i en djup dal i södra Dalarna.']],
+    'Nora': [[0, A, 'En bergslagsort vid en sjö i norra Närke, med gruvor och hyttor runt omkring.']],
+    'Lindesberg': [[0, A, 'En bergslagsort vid en sjö i Västmanland.']],
+    'Askersund': [[0, A, 'En liten ort vid Vätterns norra spets.']],
+    'Tingvalla': [[0, A, 'En marknadsplats på ön i Klarälvens mynning, där värmlänningarna möts för att handla och hålla ting.']],
+    'Karlstad': [[1584, A, 'En ny stad på ön i Klarälvens mynning, där marknadsplatsen Tingvalla låg. Hertig Karl har gett den namn och stadsrättigheter.']],
+    'Bro': [[0, A, 'En marknadsplats vid Vänerns nordöstra hörn, där järnet från Bergslagen lastas på båtar.']],
+    'Broo': [[1582, A, 'En ny stad vid Vänerns nordöstra hörn, där järnet från Bergslagen lastas på båtar.']],
+    'Kristinehamn': [[1642, A, 'En stad vid Vänerns nordöstra hörn, där järnet från Bergslagen lastas på båtar.']],
+    'Filipstad': [[1611, A, 'En ny stad bland gruvorna i östra Värmland, uppkallad efter hertig Karl Filip.']],
+    'Åmål': [[0, A, 'En liten ort vid Vänerns västra strand i Dalsland.']],
+    'Söderhamn': [[0, A, 'En hamn vid Hälsinglands kust.']],
+    'Hudiksvall': [[0, A, 'En stad vid en vik i Hälsingland, med köpmän som handlar med lin och fisk.']],
+    'Norrköping': [[0, A, 'En liten stad vid forsarna i Motala ström, med kvarnar och laxfiske.']],
+    'Skänninge': [[0, A, 'En gammal stad på Östergötlands slätt, med stora tegelkyrkor och kloster.']],
+    'Västervik': [[0, A, 'En stad vid kusten i Småland, med borgen Stegeholm vid inloppet.']],
+    'Vimmerby': [[0, A, 'En liten stad i Smålands skogar, med marknad för boskap.']],
+    'Eksjö': [[0, A, 'En liten stad i Smålands höglänt skogsbygd, med hus av trä.']],
+    'Gränna': [[1652, A, 'En ny stad vid Vätterns strand, under Per Brahes slott på berget.']],
+    'Mönsterås': [[0, A, 'En liten ort vid Kalmarsund.']],
+    'Hjo': [[0, A, 'En liten stad vid Vätterns västra strand.']],
+    'Skövde': [[0, A, 'En liten stad vid foten av Billingen i Västergötland.']],
+    'Falköping': [[0, A, 'En stad på Västergötlands slätt mellan bergen, med marknader och en stor stenkyrka.']],
+    'Lidköping': [[0, A, 'En stad vid Lidans mynning i Vänern, med handel på sjön.']],
+    'Alingsås': [[0, A, 'En liten ort vid Säveån i Västergötland.']],
+    'Borås': [[1621, A, 'En ny stad i Västergötland, där bönderna har handlat med tyg och trävaror.']],
+    'Lödöse': [[0, A, 'En gammal handelsstad vid Göta älv, på vägen mellan Vänern och havet.']],
+    'Nya Lödöse': [[0, A, 'En stad nära Göta älvs mynning, där handeln mot väster går.']],
+    'Brätte': [[0, A, 'En liten stad vid Vänerns södra spets.']],
+    'Vänersborg': [[1644, A, 'En ny stad vid Vänerns södra spets, där Göta älv rinner ut.']],
+    'Göteborg': [[1603, 1611, 'En ny stad på Hisingen vid Göta älvs mynning.'], [1621, A, 'En ny stad vid Göta älvs mynning, med kanaler och vallar som i Holland.']],
+    'Kungsbacka': [[0, A, 'En liten stad i norra Halland. Halland ' + DANSK + '.']],
+    'Laholm': [[0, A, 'En liten stad vid Lagan i Halland, under borgen Lagaholm. Halland ' + DANSK + '.']],
+    'Uddevalla': [[0, A, 'En stad vid en fjord i Bohuslän, på den norska sidan av gränsen.']],
+    'Marstrand': [[0, A, 'En stad på en ö i Bohuslän, där sillen fångas. Ön hör till Norge.']],
+    'Strömstad': [[0, A, 'En liten stad vid kusten i norra Bohuslän.']],
+    'Ystad': [[0, A, 'En hamnstad på Skånes sydkust, med ett gråbrödrakloster. Skåne ' + DANSK + '.']],
+    'Trelleborg': [[0, A, 'En liten hamnstad på Skånes sydkust. Skåne ' + DANSK + '.']],
+    'Skanör': [[0, A, 'En stad på Skånes sydvästra udde, där sillmarknaden har lockat köpmän från hela Östersjön. Skåne ' + DANSK + '.']],
+    'Falsterbo': [[0, A, 'En stad längst ut på Skånes sydvästra udde, med en borg och sillmarknad. Skåne ' + DANSK + '.']],
+    'Simrishamn': [[0, A, 'En liten hamnstad på Skånes östkust. Skåne ' + DANSK + '.']],
+    'Åhus': [[0, A, 'En stad vid Helge ås mynning, med ärkebiskopens borg. Skåne ' + DANSK + '.']],
+    'Vä': [[0, A, 'En gammal stad på slätten i nordöstra Skåne, med en stor stenkyrka. Skåne ' + DANSK + '.']],
+    'Kristianstad': [[1614, A, 'En ny fästningsstad i nordöstra Skåne, byggd av den danske kungen mot svenskarna.']],
+    'Ängelholm': [[0, A, 'En liten stad vid Rönne å i nordvästra Skåne. Skåne ' + DANSK + '.']],
+    'Båstad': [[0, A, 'En liten stad vid havet under Hallandsåsen. Skåne ' + DANSK + '.']],
+    'Sölvesborg': [[0, A, 'En stad i västra Blekinge, under slottet på höjden. Blekinge ' + DANSK + '.']],
+    'Elleholm': [[0, A, 'En liten stad på en holme i Mörrumsån. Blekinge ' + DANSK + '.']],
+    'Ronneby': [[0, A, 'Blekinges största stad, på en backe vid ån, med Heliga Kors kyrka överst. Blekinge ' + DANSK + '.']],
+    'Lyckå': [[0, A, 'En liten stad vid Lyckebyån, under slottet Lyckå. Blekinge ' + DANSK + '.']],
+    'Kristianopel': [[1600, A, 'En liten befäst stad vid gränsen mellan Blekinge och Småland, byggd av den danske kungen.']],
+    'Karlshamn': [[1664, A, 'En ny hamnstad i Blekinge.']],
+    'Karlskrona': [[1680, A, 'En ny stad på öarna i östra Blekinge, där flottan har sin bas.']],
+    'Nystad': [[1617, A, 'En ny stad på Finlands västkust.']],
+    'Villmanstrand': [[1649, A, 'En ny stad vid Saimens strand i Finland.']],
+    'Fredrikshamn': [[1653, A, 'En ny stad vid Finska viken, nära den ryska gränsen.']],
+    'Sala': [[0, 1623, 'En gruvby vid Sala silvergruva, rikets rikaste gruva.'], [1624, A, 'En ny stad vid Sala silvergruva, rikets rikaste gruva.']]
+  };
+  N['Brunnbäcks färja'] = N['Brunnbäck']; N['Åsundens is'] = N['Åsunden'];
+  // lägg bara till där ortfakta.js inte redan har något
+  for (const k in N) if (!V.OrtFakta.F[k]) V.OrtFakta.F[k] = N[k];
+})();
+
+// ---- läget just nu, efter spelets steg (Johannes 2026-11-28: "är uppsala danskt här? Jag vill att inforutorna ska ändras med vad som händer ...
+// Danskarna har tagit det, så står det, är det svenskt så ska det stå, så att rutorna ändras under spelets gång hela tiden") ----
+// Överst i rutan: vem som håller orten nu, vad som just har hänt där, och vad som är på väg att hända. Räknas fram ur världens steg varje gång rutan öppnas.
+(function () {
+  'use strict';
+  const V = window.VASA; if (!V.OrtFakta) return;
+  const HALLER = { 'Danskarna': 'Danskarna', 'Fogdens män': 'Kungens fogde', 'Slottets knektar': 'Fiendens knektar', 'Knektarna': 'Fiendens knektar', 'Ryssarna': 'Ryssarna', 'Hertig Karls här': 'Hertig Karls folk', 'Dackes bönder': 'Dackes bönder' };
+  function platsId(namn) {
+    const D = V.DATA, L = V.Levande, R = V.Rike;
+    const b = D.BASER.find(q => q.namn === namn); if (b) return b.id;
+    if (L && L.NAMN) for (const id in L.NAMN) if (L.NAMN[id] === namn) return id;
+    if (L && L.ORT) for (const id in L.ORT) if (L.ORT[id][2] === namn) return id;
+    if (R && R.P && V.UI) for (const id in R.P) if (V.UI.platsnamn(id) === namn) return id;
+    return null;
+  }
+  function forsta(t) { const m = (t || '').split(/(?<=\.)\s+/); return m[0] || ''; }
+  function lage(namn) {
+    const G = V.Game, D = V.DATA, S = G && G.s; if (!S || !D.UPPDRAG) return [];
+    const id = platsId(namn); if (!id) return [];
+    const steg = D.UPPDRAG, ut = []; let senast = -1, fiende = null, kvar = null;
+    steg.forEach((u, i) => { if (u.plats !== id) return; if (i < S.nasta) { senast = i; } else if (kvar === null) kvar = i; if (u.fiende && i >= S.nasta && !fiende) fiende = u.fiende; });
+    if (S.bas && S.bas[id]) ut.push('Du håller ' + namn + '.');
+    else if (fiende && HALLER[fiende]) ut.push(HALLER[fiende] + ' håller ' + namn + '.');
+    if (senast >= 0 && S.nasta - senast <= 6) { const u = steg[senast], k = forsta(u.kronika || u.efter || ''); if (k) ut.push(k); }
+    if (kvar !== null && kvar === S.nasta) { const u = steg[kvar]; ut.push((S.aktivt ? 'Just nu: ' : 'Härnäst: ') + u.titel.charAt(0).toLowerCase() + u.titel.slice(1) + '.'); }
+    // personerna i historien som står här nu
+    const L = V.Levande, p = L && L.figs ? L.figs.filter(f => f.syns && f.k >= 0 && !f.leg && f.d.stopp[f.k] && f.d.stopp[f.k][2] === id).map(f => f.d.namn) : [];
+    if (p.length) ut.push((p.length > 1 ? p.slice(0, -1).join(', ') + ' och ' + p[p.length - 1] + ' är' : p[0] + ' är') + ' här.');
+    return ut;
+  }
+  // efter ortfakta.js har ritat rutan: lägg läget överst (dess egen läges-rad för egna städer står kvar)
+  document.addEventListener('click', ev => {
+    const el = ev.target && ev.target.closest ? ev.target.closest('.ortnamn') : null; if (!el) return;
+    const namn = el.textContent.trim();
+    setTimeout(() => {
+      const r = document.querySelector('.ortfakta'); if (!r || r._lage) return; r._lage = 1;
+      let rader = []; try { rader = lage(namn); } catch (e) { rader = []; }
+      if (!rader.length) return;
+      const p = document.createElement('p'); p.className = 'lage'; p.textContent = rader.join(' ');
+      r.querySelector('b').after(p);          // en egen stad har dessutom ortfakta.js rad med nivån under
+    }, 0);
+  }, true);
+  V.NamnLage = lage;
+})();
