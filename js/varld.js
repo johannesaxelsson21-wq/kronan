@@ -434,7 +434,7 @@
 
     // ---- varje bildruta -------------------------------------------------------------------------
     update(dt, t) {
-      W._vagSyn(dt);          // den streckade vägen till nästa förflyttning
+      // (den streckade vägen till nästa förflyttning är borttagen. Johannes 2026-11-28: "Ta bort den streckade linjen, den förstörde bara")
       const S = G.s;
       for (let k = pops.length - 1; k >= 0; k--) { const p = pops[k]; p.t += dt / 0.65; const e = p.t >= 1 ? 1 : 1 + 2.2 * Math.pow(p.t - 1, 3) + 1.2 * Math.pow(p.t - 1, 2); p.m.scale.setScalar(Math.max(0.01, p.fran + ((p.till || 1) - p.fran) * e)); if (p.t >= 1) pops.splice(k, 1); }
       if (paintDirty && !pops.length) { World.Paint.commit(); paintDirty = false; }
