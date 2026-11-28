@@ -139,6 +139,12 @@
     bud: [{ rock: '#7a6a52', rock2: '#5c4f3d', hatt: '#8a3a2a', mantel: null }],
     johan: [{ rock: '#2a2630', rock2: '#1c1920', hatt: '#1e1c22', mantel: '#4a3a6a', kedja: 1, fjader: 1 }, { rock: '#2a2630', rock2: '#1c1920', hatt: '#1e1c22', mantel: '#4a3a6a', kedja: 1, fjader: 1 }, { rock: '#2a2630', rock2: '#1c1920', hatt: '#1e1c22', mantel: '#f2eee2', kedja: 1, krona: 1 }],
     erik: [{ rock: '#2a6a5a', rock2: '#1e4d42', hatt: '#1e1c22', mantel: '#8a1f24', kedja: 1, fjader: 1 }, { rock: '#2a6a5a', rock2: '#1e4d42', hatt: '#1e1c22', mantel: '#8a1f24', kedja: 1, fjader: 1 }, { rock: '#8a1f24', rock2: '#641519', hatt: '#1e1c22', mantel: '#f2eee2', kedja: 1, krona: 1 }],
+    // de andra personerna på den levande kartan (levande.js)
+    kristian: [{ rock: '#8a1f24', rock2: '#641519', hatt: '#1e1c22', mantel: '#1e1c22', kedja: 1, krona: 1 }],
+    trolle: [{ rock: '#efe9dc', rock2: '#cfc6b4', hatt: '#7a2a6a', mantel: '#7a2a6a', kedja: 1 }],
+    slagheck: [{ rock: '#3a3a3a', rock2: '#262626', hatt: '#1e1c22', mantel: '#b8312a' }],
+    norby: [{ rock: '#b8312a', rock2: '#8a2420', hatt: '#1e1c22', mantel: null, kedja: 1, fjader: 1 }],
+    rantzau: [{ rock: '#b4bac0', rock2: '#858c93', hatt: '#b8312a', mantel: '#b8312a', fjader: 1 }],
     sten: [{ rock: '#2f4f8a', rock2: '#223c6c', hatt: '#d9b030', mantel: '#a8322a', fjader: 1 }, { rock: '#2f4f8a', rock2: '#223c6c', hatt: '#d9b030', mantel: '#d9b030', kedja: 1, fjader: 1 }]
   };
   function del(fn) { const b = new MB(); b.snow = 0; fn(b); const m = new THREE.Mesh(b.geometry(), V.Bygge.material(true)); m.castShadow = true; return m; }

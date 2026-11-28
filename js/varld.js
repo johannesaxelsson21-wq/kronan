@@ -25,6 +25,7 @@
       }
       for (const e of R.roads()) World.Paint.road(e, 0.13);
       World.Paint.commit();
+      V.Levande && V.Levande.init(sc);          // de andra personerna i historien (levande.js)
     },
     // Se till att världen stämmer med spelets läge (vid start, efter laddning och efter varje uppdrag).
     sync(tyst) {
@@ -438,7 +439,7 @@
       const S = G.s;
       for (let k = pops.length - 1; k >= 0; k--) { const p = pops[k]; p.t += dt / 0.65; const e = p.t >= 1 ? 1 : 1 + 2.2 * Math.pow(p.t - 1, 3) + 1.2 * Math.pow(p.t - 1, 2); p.m.scale.setScalar(Math.max(0.01, p.fran + ((p.till || 1) - p.fran) * e)); if (p.t >= 1) pops.splice(k, 1); }
       if (paintDirty && !pops.length) { World.Paint.commit(); paintDirty = false; }
-      W._gustav(dt, t); W._lopare(dt, t); W._folk(dt, t); W._uppdrag(dt, t); W._skatt(); W._foljNu();
+      W._gustav(dt, t); V.Levande && V.Levande.update(dt, t); W._lopare(dt, t); W._folk(dt, t); W._uppdrag(dt, t); W._skatt(); W._foljNu();
       if (S.marknad && Math.random() < dt * 5) { const p = R.P[S.marknad.bas]; Fx.guld(p.x, p.y + 0.3, p.z, 2, tomt[S.marknad.bas].R * 0.6); }
       // rök ur skorstenar och hyttor, gnistor ur eldar
       smokeAcc += dt; if (smokeAcc > 0.22) { smokeAcc = 0; const c = Scene.cam; for (const s of B.smoke) { if (Math.abs(s.x - c.x) > c.d * 1.2 + 10 || Math.abs(s.z - c.z) > c.d + 10) continue; if (!S.bas[s.bas] && s.slag !== 'eld') { if (Math.random() < 0.5) continue; } if (s.slag === 'eld') Fx.gnista(s.x, s.y, s.z); else if (Math.random() < 0.7) Fx.rok(s.x, s.y, s.z, false); }
