@@ -17,12 +17,16 @@
     mat.onBeforeCompile = sh => {
       Object.assign(sh.uniforms, U);
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 aFx; uniform float uTime, uSnow; uniform vec2 uMap; varying float vSnowB; varying vec4 vYtaB;')
+        .replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>
+          if (aFx.y > 3.5 && aFx.y < 4.5) { vec4 wpN = modelMatrix * vec4(position, 1.0); float fwN = aFx.x, phN = uTime * 2.6 - fwN * 5.5 + wpN.x * 0.7 + wpN.z * 0.5;
+            float lutN = (cos(phN) * -5.5 * 0.07 * fwN + sin(phN) * 0.07) / 0.55; objectNormal = normalize(vec3(objectNormal.x - lutN * objectNormal.z, objectNormal.y, objectNormal.z)); }`)
         .replace('#include <begin_vertex>', `#include <begin_vertex>
           vec4 wp4 = modelMatrix * vec4(transformed, 1.0);
           float sLocB = smoothstep(0.5, 0.72, uSnow * 1.25 + (0.5 - wp4.z / uMap.y - 0.5) * 0.5);
           vSnowB = aFx.y < 3.5 ? sLocB * aFx.x * smoothstep(0.15, 0.5, normal.y) : 0.0;
           vYtaB = vec4(wp4.xyz, aFx.y < 2.5 ? smoothstep(0.25, 0.4, normal.y) * (1.0 - smoothstep(0.9, 0.97, normal.y)) : -1.0);
-          if (aFx.y > 3.5 && aFx.y < 4.5) transformed += normal * sin(uTime * 5.0 + aFx.x * 5.0 + wp4.x * 2.0) * 0.075 * aFx.x;`);
+          if (aFx.y > 3.5 && aFx.y < 4.5) { float fwB = aFx.x, phB = uTime * 2.6 - fwB * 5.5 + wp4.x * 0.7 + wp4.z * 0.5;          // flaggduken böljar (Johannes 2026-11-28: "så de vajar snyggt i vinden")
+            transformed.z += (sin(phB) * 0.07 + sin(phB * 0.6 + transformed.y * 6.0) * 0.02) * fwB; transformed.x -= (1.0 - cos(phB)) * 0.012 * fwB; }`);
       sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vSnowB; varying vec4 vYtaB;')
         .replace('#include <color_fragment>', `#include <color_fragment>
           ${slat ? '' : `if (vYtaB.w > -0.5) {
@@ -352,13 +356,17 @@
   function flagga(sort) {
     const mb = new MB(); mb.cyl(0, 0, 0, 0.022, 0.016, 1.0, 5, '#5a4838');
     mb.kind = 4;
-    const duk = (c, y0, y1, x0, x1, off) => { for (const s of [1, -1]) { const z = s * (0.004 + (off || 0)), A = [x0, y0, z], B = [x1, y0, z], C = [x1, y1, z], Dd = [x0, y1, z], col = V.col(c), n = s; const i0 = mb._v(A[0], A[1], A[2], 0, 0, n, col, x0 / 0.55), i1 = mb._v(B[0], B[1], B[2], 0, 0, n, col, x1 / 0.55), i2 = mb._v(C[0], C[1], C[2], 0, 0, n, col, x1 / 0.55), i3 = mb._v(Dd[0], Dd[1], Dd[2], 0, 0, n, col, x0 / 0.55); if (s > 0) mb.i.push(i0, i1, i2, i0, i2, i3); else mb.i.push(i0, i2, i1, i0, i3, i2); } };
+    const duk1 = (c, y0, y1, x0, x1, off) => { for (const s of [1, -1]) { const z = s * (0.004 + (off ? off * 2.5 : 0)), A = [x0, y0, z], B = [x1, y0, z], C = [x1, y1, z], Dd = [x0, y1, z], col = V.col(c), n = s; const i0 = mb._v(A[0], A[1], A[2], 0, 0, n, col, x0 / 0.55), i1 = mb._v(B[0], B[1], B[2], 0, 0, n, col, x1 / 0.55), i2 = mb._v(C[0], C[1], C[2], 0, 0, n, col, x1 / 0.55), i3 = mb._v(Dd[0], Dd[1], Dd[2], 0, 0, n, col, x0 / 0.55); if (s > 0) mb.i.push(i0, i1, i2, i0, i2, i3); else mb.i.push(i0, i2, i1, i0, i3, i2); } };
+    const duk = (c, y0, y1, x0, x1, off) => { const n = Math.max(1, Math.ceil((x1 - x0) / 0.05)); for (let k = 0; k < n; k++) duk1(c, y0, y1, x0 + (x1 - x0) * k / n, x0 + (x1 - x0) * (k + 1) / n, off); };          // smala remsor: hela duken böljer
     const seg = (c, y0, y1, off) => { for (let k = 0; k < 4; k++) duk(c, y0, y1, 0.02 + k * 0.1325, 0.02 + (k + 1) * 0.1325, off); };
     if (sort === 'sverige') {          // tre kronor på blått: en ring och tre uddar per krona
       seg('#27539e', 0.64, 0.98);
       for (const [x, y] of [[0.11, 0.845], [0.335, 0.845], [0.222, 0.695]]) { duk('#e8c040', y, y + 0.032, x, x + 0.112, 0.004); for (const k of [0, 1, 2]) duk('#e8c040', y + 0.032, y + (k === 1 ? 0.09 : 0.072), x + 0.004 + k * 0.04, x + 0.028 + k * 0.04, 0.004); }
     }
     else if (sort === 'danmark') { seg('#b8312a', 0.64, 0.98); duk('#f2ede2', 0.78, 0.84, 0.02, 0.55, 0.004); duk('#f2ede2', 0.64, 0.98, 0.16, 0.23, 0.004); }
+    else if (sort === 'norge') { seg('#b8312a', 0.64, 0.98); duk('#e8c040', 0.72, 0.9, 0.2, 0.36, 0.004); duk('#e8c040', 0.86, 0.92, 0.17, 0.24, 0.004); }          // Norges guldlejon på rött
+    else if (sort === 'ryssland') { seg('#9a2a22', 0.64, 0.98); duk('#e8c040', 0.72, 0.9, 0.22, 0.34, 0.004); duk('#e8c040', 0.86, 0.94, 0.17, 0.39, 0.004); }          // storfurstens guldörn på rött
+    else if (sort === 'orden') { seg('#f2ede2', 0.64, 0.98); duk('#2a2622', 0.78, 0.84, 0.02, 0.55, 0.004); duk('#2a2622', 0.64, 0.98, 0.25, 0.31, 0.004); }          // Tyska ordens svarta kors på vitt
     else if (sort === 'lubeck') { seg('#f2ede2', 0.81, 0.98); seg('#b8312a', 0.64, 0.81); }
     else if (sort === 'polen') { seg('#b8312a', 0.64, 0.98); duk('#f2ede2', 0.71, 0.89, 0.18, 0.38, 0.004); duk('#e8c040', 0.89, 0.94, 0.22, 0.34, 0.004); }          // Polens vita örn på rött
     else if (sort === 'vasa') { seg('#e8c040', 0.64, 0.98); duk('#2a2622', 0.7, 0.92, 0.22, 0.34, 0.004); duk('#2a2622', 0.76, 0.86, 0.14, 0.42, 0.004); }

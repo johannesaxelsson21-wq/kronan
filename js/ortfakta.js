@@ -9,8 +9,11 @@
   const F = {
     'Stockholm': [
       [0, 1519, 'Rikets största stad, tätt byggd på holmen mellan Mälaren och Saltsjön. Slottet vid strömmen är rikets starkaste fäste, och tyska köpmän sätter tonen i rådhuset.'],
-      [1520, 1522, 'Danskarna håller staden. Minnet av avrättningarna på Stortorget i november ligger tungt över gränderna.'],
-      [1523, 1535, 'Kungen har tagit staden och bor på slottet. Danskarna är borta, och köpmännen från Lübeck vill ha betalt för sin hjälp.'],
+      [1520, 1520.33, 'Rikets största stad. Den danska hären är på väg, och Kristina Gyllenstierna håller staden.'],
+      [1520.34, 1520.67, 'Danskarna belägrar staden. Kristina Gyllenstierna leder försvaret bakom murarna.'],
+      [1520.68, 1520.83, 'Staden har gett sig till kung Kristian, som har lovat att ingen ska straffas. Han ska krönas här i november.'],
+      [1520.84, 1523.44, 'Danskarna håller staden. Minnet av avrättningarna på Stortorget i november 1520 ligger tungt över gränderna.'],
+      [1523.45, 1535, 'Kungen har tagit staden och bor på slottet. Danskarna är borta, och köpmännen från Lübeck vill ha betalt för sin hjälp.'],
       [1536, 1559, 'Kring slottet byggs en ny mur av tegel och en vallgrav. Kungens skrivare och fogdar går ut och in genom porten.'],
       [1560, 1567, 'Kung Eriks hov håller till på slottet, med musiker, konstnärer och lärda män från hela Europa.'],
       [1568, 1587, 'Slottet byggs om efter kung Johans smak, med nya gavlar och torn i renässansens stil.'],
@@ -19,7 +22,8 @@
     ],
     'Uppsala': [
       [0, 1519, 'Ärkebiskopens stad och rikets andliga mitt. Domkyrkan är Nordens största kyrka, och vid universitetet läser präster och lärda.'],
-      [1520, 1522, 'Fältet utanför staden bär spåren av långfredagens slag mellan upplänningarna och den danska hären.'],
+      [1520, 1520.25, 'Ärkebiskopens stad och rikets andliga mitt. Den danska hären närmar sig, och bönderna i Uppland samlas.'],
+      [1520.26, 1522, 'Fältet utanför staden bär spåren av långfredagens slag 1520 mellan upplänningarna och den danska hären.'],
       [1523, 1548, 'Kyrkans gods har gått till kronan, och ärkebiskopen har förlorat sin makt. Kungen kröntes i domkyrkan 1528.'],
       [1549, 1559, 'På åsen ovanför staden bygger kungen ett slott.'],
       [1560, 1566, 'Kung Erik kröntes här 1561, med en prakt som ingen svensk kung visat förut.'],
@@ -31,7 +35,8 @@
     ],
     'Kalmar': [
       [0, 1519, 'Kalmar slott kallas rikets nyckel. Det vaktar gränsen mot Danmark och sundet mot Öland. Här slöts unionen mellan de nordiska rikena 1397.'],
-      [1520, 1522, 'Handelsstad och fäste vid gränsen. Gustav Eriksson gick i land här när han kom hem från Lübeck.'],
+      [1520, 1520.40, 'Handelsstad och fäste vid gränsen mot Danmark. Slottet hålls för Sturarnas sak.'],
+      [1520.41, 1522, 'Handelsstad och fäste vid gränsen. Gustav Eriksson gick i land strax söder om staden när han kom hem från Lübeck i maj 1520.'],
       [1523, 1534, 'Slottet är kungens. Härifrån vaktas gränsen mot Danmark och sjövägen till Öland.'],
       [1535, 1559, 'Murare bygger runda hörntorn för kanoner på slottet.'],
       [1560, 1569, 'Kriget med Danmark pågår, och Kalmar är flottans hamn och ett fäste vid gränsen.'],
@@ -41,7 +46,8 @@
     ],
     'Västerås': [
       [0, 1520, 'Biskopsstad vid Svartåns mynning i Mälaren, med domkyrka och slott.'],
-      [1521, 1526, 'Biskopsstad vid Mälaren. Gustav Vasa slog danskarna här 1521.'],
+      [1521, 1521.31, 'Biskopsstad vid Mälaren. Danskarna håller slottet.'],
+      [1521.32, 1526, 'Biskopsstad vid Mälaren. Gustav Vasa slog danskarna här i april 1521.'],
       [1527, 1543, 'Biskopsstad vid Mälaren. Vid riksdagen här 1527 tog kungen kyrkans gods och makt.'],
       [1544, 1572, 'Biskopsstad vid Mälaren. Vid riksdagen här 1544 bestämdes att kronan går i arv till kungens söner.'],
       [1573, 1611, 'Biskopsstad vid Mälaren. På slottet har den avsatte kung Erik suttit fången.']
@@ -53,8 +59,8 @@
       [1573, 1611, 'Hertig Karl bygger om slottet till ett vitt renässansslott med fyra längor kring en gård.']
     ],
     'Strängnäs': [
-      [0, 1522, 'Biskopsstad vid Mälaren, med en domkyrka i tegel och ett av rikets högsta kyrktorn.'],
-      [1523, 1611, 'Biskopsstad vid Mälaren. Här valdes Gustav Vasa till kung den 6 juni 1523.']
+      [0, 1523.42, 'Biskopsstad vid Mälaren, med en domkyrka i tegel och ett av rikets högsta kyrktorn.'],
+      [1523.43, 1611, 'Biskopsstad vid Mälaren. Här valdes Gustav Vasa till kung den 6 juni 1523.']
     ],
     'Linköping': [
       [0, 1597, 'Östergötlands biskopsstad, med en domkyrka i kalksten som byggts i flera hundra år.'],
@@ -78,7 +84,8 @@
     'Stäket': [[0, 1611, 'Ärkebiskopens borg vid Mälarens inlopp. Den som har den kan stänga sjövägen till Uppsala.']],
     'Mora': [
       [0, 1519, 'Socken vid Siljan med en gammal stenkyrka. Bönderna här har vapen och vana att strida.'],
-      [1520, 1520, 'Socken vid Siljan. Gustav Eriksson har kommit hit på flykt och talar till dalkarlarna vid kyrkan.'],
+      [1520, 1520.89, 'Socken vid Siljan, där dalkarlarna bor.'],
+      [1520.9, 1520.99, 'Socken vid Siljan. Gustav Eriksson har kommit hit på flykt och talar till dalkarlarna vid kyrkan.'],
       [1521, 1611, 'Socken vid Siljan. Här blev Gustav Eriksson dalkarlarnas hövding vintern 1521.']
     ],
     'Leksand': [[0, 1611, 'Socken där älven lämnar Siljan, med kyrka på udden. Bönderna här är jägare, bergsmän och skickliga skidlöpare.']],
@@ -153,6 +160,7 @@
   F['Sala gruva'] = F['Sala silvergruva']; F['Falun'] = F['Kopparberget'];
 
   function ar() { try { return V.kalender ? V.kalender().ar : 1520; } catch (e) { return 1520; } }
+  function tid() { try { const d = V.Game.datum(); return d.ar + (d.man - 1) / 12; } catch (e) { return ar(); } }          // år och månad, så att inget sägs innan det har hänt
   // En stad i orter.js som inte har egna rader: när den fick sina stadsrättigheter (orter.js har årtalen).
   function stadText(namn, Y) {
     const O = V.Orter; if (!O || !O.STADER) return null;
@@ -167,11 +175,11 @@
     return null;
   }
   function text(namn) {
-    const L = F[namn], Y = ar(); if (!L) return stadText(namn, Y);
-    let r = L.find(q => Y >= q[0] && Y <= q[1]); if (!r) { const fore = L.filter(q => q[0] <= Y); r = fore[fore.length - 1]; }
+    const L = F[namn], Y = tid(); if (!L) return stadText(namn, Math.floor(Y));
+    let r = L.find(q => Y >= q[0] && Y < (q[1] === Math.floor(q[1]) ? q[1] + 1 : q[1] + 0.01)); if (!r) { const fore = L.filter(q => q[0] <= Y); r = fore[fore.length - 1]; }
     if (!r) return null;
     // säkerhet: en mening som nämner ett år efter året nu visas aldrig
-    const t = r[2].split(/(?<=\.)\s+/).filter(m => !(m.match(/\b1[0-9]{3}\b/g) || []).some(a => +a > Y)).join(' ');
+    const t = r[2].split(/(?<=\.)\s+/).filter(m => !(m.match(/\b1[0-9]{3}\b/g) || []).some(a => +a > Math.floor(Y))).join(' ');
     return t || null;
   }
 

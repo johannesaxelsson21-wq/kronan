@@ -305,7 +305,7 @@
   let husNyckel = '';
   function rita() {
     if (!scene || !V.Bygge || !V.MB) return;
-    const ar = arNu(), nyckel = ar + ':' + Object.keys(V.Game.s.bas).length + ':' + V.Game.s.varld; if (nyckel === husNyckel && grupp) return; husNyckel = nyckel; ritatAr = ar;
+    const ar = arNu(), nyckel = ar + ':' + Object.keys(V.Game.s.bas).length + ':' + V.Game.s.varld + ':' + V.Game.s.nasta; if (nyckel === husNyckel && grupp) return; husNyckel = nyckel; ritatAr = ar;          // stegen byter ägare på orterna, och därmed flaggorna
     if (grupp) scene.remove(grupp); grupp = new THREE.Group(); grupp.name = 'orter';
     const ritas = spelRitar();
     // grannarna: mina städer och spelets egna (som är stora, ungefär 5 enheter i radie)
@@ -319,7 +319,10 @@
       for (const q of mina) if (q !== p) maxR = Math.min(maxR, Math.hypot(q.x - p.x, q.z - p.z) * 0.42);
       for (const q of spelets) { if (q.agare === p) continue; const dd = Math.hypot(q.x - p.x, q.z - p.z); if (dd > 0.5) maxR = Math.min(maxR, dd - q.r); }
       if (maxR < 0.6) maxR = 0.6;
-      const m = hus(p, l.n, lagg().indexOf(p) + 1, maxR); m.position.set(p.x, V.Geo.groundAt(p.x, p.z), p.z); grupp.add(m); });
+      const m = hus(p, l.n, lagg().indexOf(p) + 1, maxR); m.position.set(p.x, V.Geo.groundAt(p.x, p.z), p.z); grupp.add(m);
+      flaggaVid(p.st[0], p.lon, p.lat, p.x, p.z, Math.min(1, maxR / 2.5)); });
+    // orterna som spelet ritar utan att de är egna baser (Varld._orter och de kända byggnaderna): också de hissar sin flagga
+    for (const id in ritas) { if (V.DATA.BASER.some(b => b.id === id) || !V.Rike.P[id]) continue; const q = V.Rike.P[id], ll = V.Geo.toLonLat(q.x, q.z); if (V.Geo.sdAt(q.x, q.z) < 0.3) continue; flaggaVid(id, ll[0], ll[1], q.x, q.z, 1); }
     scene.add(grupp);
   }
 
@@ -373,5 +376,50 @@
       } catch (e) { return friFore.call(this, lista); }
     };
   }
-  V.Orter = { kandaPlats, STADER, lage, lagg: () => lagg(), rita };
+  // ---- vem håller orten: flaggan (Johannes 2026-11-28: "Danska flaggor på alla orter som är danskt territorium, och samma med alla andra länder så man ser") ----
+  // Först spelets steg: en fiende i ett steg vid orten som inte är gjort än håller den, och en egen bas är din. Annars landet orten ligger i det året.
+  // Inga gränser ritas på kartan; flaggorna visar vem som har vad. Svar: [flagga, ockuperad] (ockuperad = en främmande makt håller en svensk ort).
+  function tidNu() { try { const d = V.Game.datum(); return d.ar + (d.man - 1) / 12; } catch (e) { return arNu(); } }
+  function agare(id, lon, lat) {
+    const Y = tidNu(), G = V.Game, S = G && G.s, D = V.DATA, R = V.Rike;
+    if (S && S.bas && S.bas[id]) return ['sverige', false];
+    if (S && D.UPPDRAG) for (let i = S.nasta; i < D.UPPDRAG.length; i++) { const u = D.UPPDRAG[i]; if (u.plats !== id || !u.fiende) continue; if (/[Dd]ansk|Rantzau/.test(u.fiende)) return ['danmark', true]; if (/Ryss/.test(u.fiende)) return ['ryssland', true]; break; }
+    if (lon < 10.95 || (lat > 54.5 && lat < 56.2 && lon < 12.68)) return ['danmark', false];          // Jylland och öarna
+    if (lat < 55.35 && lon > 14.6 && lon < 15.3) return ['danmark', false];          // Bornholm
+    if (Y < 1658 && lat > 55.2 && lat < 56.45 && lon < 14.65) return ['danmark', false];          // Skåne
+    if (Y < 1658 && lat < 56.4 && lon >= 14.65 && lon < 16.1) return ['danmark', false];          // Blekinge
+    if (Y < 1645 && lon < 13.15 && lat >= 56.3 && lat < 57.55) return ['danmark', false];          // Halland
+    if (Y < 1645 && lon > 18 && lon < 19.4 && lat > 56.85 && lat < 58.1) return ['danmark', false];          // Gotland
+    if ((Y < 1658 && lon < 12.0 && lat > 57.75) || (lon < 12.2 && lat > 59.0)) return ['norge', false];          // Bohuslän och Norge, under den danske kungen
+    if (lat < 54.6 && lat > 53.7 && lon > 10.4 && lon < 11.2) return ['lubeck', false];
+    if (lat < 54.65 && lon < 16.5) return [null, false];          // de tyska länderna: ingen flagga
+    if (lat < 56.0 && lon >= 16.5) return ['polen', false];          // Preussen, Polen och Litauen
+    if (lon >= 21 && lat < 59.8 && lon < 28.22) {          // Estland och Livland
+      if (Y < 1561) return ['orden', false];
+      if (lat < 57.9) return ['polen', false];
+      if (lon > 27.5 && Y < 1581) return ['ryssland', false];          // Narva är ryskt 1558–1581
+      return ['sverige', false];
+    }
+    if (lon >= 28.22 && lat < 60.1) return ['ryssland', false];          // Ingermanland
+    if (lon >= 29.6 && lat >= 60.1) return [Y >= 1580 && Y < 1597 ? 'sverige' : 'ryssland', false];          // Kexholm
+    // Sverige och Finland. Från blodbadet tills Gustav har tagit riket håller danskarna det han inte har nått (allt som ligger långt från hans orter).
+    if (Y >= 1520.84 && Y < 1523.5) {
+      if (S && S.varld === 1 && S.bas && R) { const w = V.Geo.toWorld(lon, lat); for (const b in S.bas) if (S.bas[b] && R.P[b] && Math.hypot(R.P[b].x - w[0], R.P[b].z - w[1]) < 18) return ['sverige', false]; }
+      return ['danmark', true];
+    }
+    return ['sverige', false];
+  }
+  function flaggaVid(id, lon, lat, x, z, sk) {
+    const a = agare(id, lon, lat)[0]; if (!a || !V.Bygge || !V.Bygge.flagga) return;
+    let fx = x + 0.55 * sk, fz = z - 0.45 * sk; if (V.Geo.sdAt(fx, fz) < 0.4) { fx = x; fz = z; }
+    const m = V.Bygge.flagga(a); m.scale.setScalar(1.05 * Math.max(0.7, sk)); m.position.set(fx, V.Geo.groundAt(fx, fz), fz); m.rotation.y = 0.6; grupp.add(m);
+  }
+  V.Agare = function (id) {
+    const R = V.Rike, L = V.Levande; let ll = null;
+    const q = lagg().find(o => o.st[0] === id); if (q) ll = [q.lon, q.lat];
+    else if (R && R.P[id]) ll = V.Geo.toLonLat(R.P[id].x, R.P[id].z);
+    else if (L && L.ORT && L.ORT[id]) ll = [L.ORT[id][0], L.ORT[id][1]];
+    return ll ? agare(id, ll[0], ll[1]) : [null, false];
+  };
+  V.Orter = { agare, kandaPlats, STADER, lage, lagg: () => lagg(), rita };
 })();
