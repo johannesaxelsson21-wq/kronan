@@ -245,7 +245,7 @@
       [D(1512, 7, 24), 'Hon är gift med riksföreståndaren Sten Sture den yngre.'],
       [D(1520, 2, 4), 'Hennes man Sten Sture den yngre har dött av sina sår den 3 februari 1520. Hon leder motståndet mot Kristian II och har tagit befälet över Stockholms slott.'],
       [D(1520, 9, 8), 'Hösten 1520 har hon gett upp Stockholm mot ett löfte om amnesti.'],
-      [D(1520, 11, 10), 'Hon är änka efter Sten Sture den yngre och hålls fången på slottet Tre Kronor i Stockholm.'],
+      [D(1520, 11, 10), 'Hon är änka efter Sten Sture den yngre och hålls fången på Stockholms slott.'],
       [D(1521, 9, 1), 'Hon är fånge hos Kristian II, och sommaren 1521 har hennes söner Nils och Svante förts till Danmark som fångar.'],
       [D(1522, 1, 1), 'Hon har förts till Danmark och sitter fången i Blåtårn.'],
       [D(1524, 1, 1), 'I början av 1524 släpps hon ur fångenskapen och kan återvända till Sverige, tillsammans med sin mor och sin äldste son Nils.'],
