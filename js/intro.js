@@ -154,7 +154,7 @@
       // färden tillbaka mot Mora: man åker själv, skidlöparna efter
       hooks = []; const tillbaka = ben4.slice().reverse(), LT = R.length(tillbaka);
       hooks.push(() => { if (!aka) return; jag.forEach((j, k) => { const a = R.along(tillbaka, Math.max(0, aka.d - 0.9 - k * 0.8)); j.u.x = a.x + k * 0.3; j.u.z = a.z; j.u.ang = a.ang; j.u.gar = aka.v > 0.05; j.u.lean = aka.v > 0.05 ? 0.25 : 0; }); });
-      await akFard(tillbaka, 1.5, Math.min(LT - 4, 18), 1.05, 'Åk hem', 'Tryck för att åka tillbaka till Mora', { rader: [[3, '', 'Tillsammans åker de tillbaka till Mora.'], [11, '', 'Samma väg, från Sälen till Mora, åker tusentals människor i dag i Vasaloppet.']] });
+      await akFard(tillbaka, 1.5, Math.min(LT - 4, 18), 1.05, 'Åk hem', 'Tryck för att åka tillbaka till Mora', { rader: [[3, '', 'Tillsammans åker de tillbaka till Mora.'], [11, '', 'Det är en lång väg genom skogen. Men nu har Mora sin hövitsman.']] });
       UI.film.knapp(null); I.tar = null; await vanta(2);
       UI.film.svart(1, 1.5); text(''); plats(''); await vanta(1.8);
       // ---- Mora, januari 1521 ----
@@ -398,9 +398,9 @@
         text('Sedan förlorar kungen all besinning.'); await vanta(6);
         UI.film.svart(0.65, 2); await vanta(2.5);
         text('Svante Sture och hans söner Nils och Erik dödas, och med dem Abraham Stenbock och Ivar Ivarsson.'); await vanta(8);
-        text('Kungen flyr ut i landet. Tre dagar senare hittas han förklädd i Odensala.'); await vanta(7);
+        text('Kungen flyr ut i landet. Ingen vet var han är.'); await vanta(7);
         UI.film.svart(0, 2); await vanta(1);
-        text('Sturarnas kläder finns kvar i Uppsala domkyrka än i dag.'); await vanta(7);
+        text('Adeln i hela riket är skräckslagen.'); await vanta(7);
       },
       // 4 juli 1568. Kungen gifter sig med Karin Månsdotter inför alla. Man ringer själv i kyrkklockorna.
       async brollop() {

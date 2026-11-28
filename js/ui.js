@@ -222,9 +222,9 @@
         (karta || rows)[id] = kort(sida, '', SLAG[b.slag], () => {
           const L = S.bas[id], res = G.prisRes(id), enh = ger(id), fx = S.full ? G.fullX() : 1, dub = G.rad(id), stopp = G.stoppad(id);
           return '<b>' + b.namn + '</b><span class="kort-n">nivå ' + L + '</span><p>' + b.rad + '.</p>' + (stopp ? '<p class="kort-f">' + D.UPPROR[stopp].namn + '. Platsen ger ingenting just nu.</p>' : '<p class="kort-g">Ger ' + tal(G.prod(id) * fx) + ' ' + enh + ' i sekunden.</p>') +
-            (G.maxad(id) ? '<p class="kort-x">Kan inte bli större än armén tillåter. Armén växer längre fram i historien.</p>' : '<p class="kort-x">Nästa nivå: ' + (dub ? (UI.byggNamn(id, L + 1) || 'dubbling') + ', ' + dubOrd(res) + ' ' + (res === 'man' ? 'män' : 'mark') : '+' + tal((G.prod(id, L + 1) - G.prod(id, L)) * fx) + ' ' + enh + ' i sekunden') + '.</p><p class="kort-p">Kostar ' + IK[res] + tal(G.pris(id)) + ' ' + (res === 'man' ? 'män' : 'mark') + '</p>' + (G.dagsverke(id) ? '<p class="kort-x">Stort bygge: ' + IK.man + tal(G.dagsverke(id)) + ' män gör dagsverken på det.</p>' : '')) +
+            (G.maxad(id) ? '<p class="kort-x">Kan inte bli större än armén tillåter.</p>' : '<p class="kort-x">Nästa nivå: ' + (dub ? (UI.byggNamn(id, L + 1) || 'dubbling') + ', ' + dubOrd(res) + ' ' + (res === 'man' ? 'män' : 'mark') : '+' + tal((G.prod(id, L + 1) - G.prod(id, L)) * fx) + ' ' + enh + ' i sekunden') + '.</p><p class="kort-p">Kostar ' + IK[res] + tal(G.pris(id)) + ' ' + (res === 'man' ? 'män' : 'mark') + '</p>' + (G.dagsverke(id) ? '<p class="kort-x">Stort bygge: ' + IK.man + tal(G.dagsverke(id)) + ' män gör dagsverken på det.</p>' : '')) +
             (S.fogde[id] ? '<p class="kort-h">En fogde bygger ut här åt dig.</p>' : '') + (V.pek ? '' : '<p class="kort-h">Högerklick visar platsen på kartan.</p>');
-        }, row => { valdBas = id; if (G.s.marknad && G.s.marknad.bas === id) { G.marknadTa(); return; } if (!UI.kop(id)) { UI._nej(row); if (G.maxad(id)) UI.text(b.namn + ' kan inte bli större än armén tillåter. Armén växer längre fram i historien.', 6); } },
+        }, row => { valdBas = id; if (G.s.marknad && G.s.marknad.bas === id) { G.marknadTa(); return; } if (!UI.kop(id)) { UI._nej(row); if (G.maxad(id)) UI.text(b.namn + ' kan inte bli större än armén tillåter.', 6); } },
         () => { valdBas = id; UI.onVisaBas && UI.onVisaBas(id); });
       };
       const konstKort = (s, kd) => { const id = kd.id;
@@ -251,7 +251,7 @@
         const s = nyFlik('mark', 'res-mark', IK.mark + '<b class="fl-n">Mark</b><em id="res-skuld" title="Det du är skyldig Lübeck för skeppen och soldaterna.">skuld <b id="skuld-v"></b></em>', RES.mark.rad + ' Mätaren visar hur långt du har kvar till nästa steg.');
         m.forEach(id => {
           bas(s, id); if (G.BAS[id].slag !== 'gruva') return;          // en gruva har också ett kort för att sätta män i arbete där
-          UI._arows[id] = kort(s, 'arb', IK.man, () => '<b>Gruvarbetare i ' + G.BAS[id].namn + '</b><span class="kort-n">' + G.arb(id) + ' lag</span><p>Du sätter män i arbete i gruvan. De lämnar armén och bryter malm i stället.</p><p class="kort-g">Varje lag ger gruvan en tiondel mer. Nu: +' + G.arb(id) * 10 + ' %.</p>' + (G.arbMax(id) ? '<p class="kort-x">Nästa lag är större än armén rymmer. Armén växer längre fram i historien.</p>' : '<p class="kort-p">Nästa lag: ' + IK.man + tal(G.arbPris(id)) + ' män</p>'),
+          UI._arows[id] = kort(s, 'arb', IK.man, () => '<b>Gruvarbetare i ' + G.BAS[id].namn + '</b><span class="kort-n">' + G.arb(id) + ' lag</span><p>Du sätter män i arbete i gruvan. De lämnar armén och bryter malm i stället.</p><p class="kort-g">Varje lag ger gruvan en tiondel mer. Nu: +' + G.arb(id) * 10 + ' %.</p>' + (G.arbMax(id) ? '<p class="kort-x">Nästa lag är större än armén rymmer.</p>' : '<p class="kort-p">Nästa lag: ' + IK.man + tal(G.arbPris(id)) + ' män</p>'),
             row => { if (G.kopArb(id)) V.Ljud && V.Ljud.spela('hammare'); else UI._nej(row); });
         });
         konstUnder(s, 'mark'); fogde(s, () => m);
@@ -642,18 +642,18 @@
       const S = G.s; let h = '<h2>Krönikan</h2><div class="krono">', akt = -1; const alla = G.alla();
       for (const k of S.kronika) { const u = alla.find(q => q.id === k.id); if (!u) continue; if (u.akt !== akt) { akt = u.akt; h += '<h3>' + D.AKTER[akt] + '</h3>'; } h += '<p>' + u.kronika + '</p>'; }
       if (!S.kronika.length && S.varld === 0) h += '<p class="svag">Sten Sture är nitton år. Hans far riksföreståndaren har just dött, och rådet vill ha en annan man i hans ställe.</p>';
-      else if (!S.kronika.length) h += '<p class="svag">Julen 1520 talade Gustav Eriksson till männen i Mora. De sade nej, och han åkte mot Norge. I Sälen hann två skidlöpare upp honom: Mora hade ändrat sig. Så berättar Peder Svarts krönika.</p>';
+      else if (!S.kronika.length) h += '<p class="svag">Det är nyår 1521. Vid jul talade Gustav Eriksson till männen i Mora, men de sade nej, och han for mot Norge. Nu har två skidlöpare hunnit upp honom i Sälen: Mora har ändrat sig.</p>';
       UI.ruta(h + '</div><button class="stang">Stäng</button>');
     },
     // Regentlängden: en rak tidslinje uppifrån och ner, grupperad efter kungahus (Johannes 2026-11-28: "en lista, en följd, tydligt och pedagogiskt").
     regenter() {
       const S = G.s, T = V.TESTLAGE, nu = S.varld;
-      const HUS = [[0, 'Sturarna', 'riksföreståndare, innan Sverige fick en egen kung'], [1, 'Vasaätten', ''], [8, 'Pfalziska huset', ''], [12, 'Hessiska huset', ''], [13, 'Holstein-Gottorpska huset', ''], [17, 'Bernadotte', '']];
+      const HUS = [[0, 'Sturarna', 'riksföreståndare, som styr i kungens ställe'], [1, 'Vasaätten', ''], [8, 'Pfalziska huset', ''], [12, 'Hessiska huset', ''], [13, 'Holstein-Gottorpska huset', ''], [17, 'Bernadotte', '']];
       const rad = [['Sten Sture den yngre', 1512, 1520]].concat(D.REGENTER);
-      let h = '<h2>Regentlängden</h2><p class="svag reg-in">Varje regent är en egen värld. Det du bygger går i arv till nästa. De ljusa är inte byggda än.</p><div class="tidslinje">';
+      let h = '<h2>Regentlängden</h2><p class="svag reg-in">Sveriges regenter, en efter en. Varje regent är en egen värld, och det du bygger går i arv till nästa.</p><div class="tidslinje">';
       rad.forEach((r, v) => {
         const hus = HUS.find(q => q[0] === v); if (hus) h += '<div class="tl-hus"><b>' + hus[1] + '</b>' + (hus[2] ? '<span>' + hus[2] + '</span>' : '') + '</div>';
-        const byggd = !!D.VARLDAR[v], ar = r[1] + '–' + (r[2] || 'i dag');
+        const byggd = !!D.VARLDAR[v], ar = r[1] + '–' + (r[2] || '');
         const status = v === nu ? (S.slut ? 'klar' : 'du spelar nu') : v === nu + 1 && byggd ? 'nästa värld' : '';          // de som inte är byggda än är bara ljusare
         h += '<div class="tl-rad' + (v === nu ? ' nu' : '') + (byggd ? ' byggd' : '') + '"><span class="tl-ar">' + ar + '</span><i class="tl-prick">' + (v === nu ? IK.krona : '') + '</i><b class="tl-namn">' + r[0] + '</b>' +
           (status ? '<em class="tl-st">' + status + '</em>' : '') + (T && byggd ? '<button class="reg-spela" data-v="' + v + '">Spela</button>' : '') + '</div>';
@@ -679,7 +679,7 @@
         UI.ruta('<h2>' + Vd.slutRubrik + '</h2><p>' + Vd.slut + '</p><div class="arv">' + IK.krona + '<b>' + arv + '</b><span>arv till nästa regent</span></div>' + (vidare ? '<p class="svag">Arvet följer med till ' + N.kung + ': allt ger en fjärdedel mer för varje arv.</p><button id="vidare">Fortsätt med ' + N.kung + '</button>' : '<p class="svag">Nästa regents värld är inte byggd än. Tills dess kan du spela ' + Vd.kung + ' igen: varje arv ger en fjärdedel mer av allt.</p>') + '<button id="igen">Spela igen med arvet</button><button class="stang">Stanna kvar i riket</button>', true);
         $('igen').addEventListener('click', () => UI.onIgen && UI.onIgen(arv)); if ($('vidare')) $('vidare').addEventListener('click', () => UI.onVidare && UI.onVidare(arv)); return;
       }
-      UI.ruta('<h2>Kronan går i arv</h2><p>Den 29 september 1560 dog Gustav på Stockholms slott. Han hade tagit ett rike utan pengar och lämnade efter sig ett arvrike med full skattkammare.</p><div class="arv">' + IK.krona + '<b>' + arv + '</b><span>arv till nästa regent</span></div>' + (D.ERIK.length >= 20 ? '<p class="svag">Arvet följer med till Erik XIV: allt ger en fjärdedel mer för varje arv. Städerna som Gustav byggde står kvar.</p><button id="vidare">Fortsätt med Erik XIV</button>' : '<p class="svag">Erik XIV:s värld byggs nu. Tills den är klar kan du spela Gustav Vasa igen: varje arv ger en fjärdedel mer av allt.</p>') + '<button id="igen">Spela igen med arvet</button><button class="stang">Stanna kvar i riket</button>', true);
+      UI.ruta('<h2>Kronan går i arv</h2><p>Den 29 september 1560 dör Gustav på Stockholms slott. Han tog över ett rike utan pengar, och nu lämnar han ett arvrike med full skattkammare efter sig.</p><div class="arv">' + IK.krona + '<b>' + arv + '</b><span>arv till nästa regent</span></div>' + (D.ERIK.length >= 20 ? '<p class="svag">Arvet följer med till Erik XIV: allt ger en fjärdedel mer för varje arv. Städerna som Gustav byggde står kvar.</p><button id="vidare">Fortsätt med Erik XIV</button>' : '<p class="svag">Erik XIV:s värld byggs nu. Tills den är klar kan du spela Gustav Vasa igen: varje arv ger en fjärdedel mer av allt.</p>') + '<button id="igen">Spela igen med arvet</button><button class="stang">Stanna kvar i riket</button>', true);
       $('igen').addEventListener('click', () => UI.onIgen && UI.onIgen(arv));
 
       if ($('vidare')) $('vidare').addEventListener('click', () => UI.onVidare && UI.onVidare(arv));    },

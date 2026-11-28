@@ -41,7 +41,7 @@
         [1520, 6.8, 'smaland', { mer: 'Kalmar vill inte resa sig. Gustav Eriksson tar sig upp genom Småland och söker stöd hos bönderna, men få lyssnar.' }],
         [1520, 8.4, 'rafsnas', { via: ['soderkoping', 'nykoping'], mer: 'Gustav Eriksson kommer till sin fars gård Räfsnäs i Södermanland, vid Mälaren. Där väntar han på vad som ska hända med Stockholm.' }]] },
       { id: 'kristian', namn: 'Kristian II', sort: 'kristian', sok: 'Kristian', kalla: 'sv. Wikipedia, Kristian II och Slaget vid Brännkyrka', stopp: [
-        [1512, 1, 'kopenhamn', { mer: 'Kristian är son till kung Hans av Danmark. Från 1513 är han själv kung i Danmark och Norge, och han vill ha Sverige tillbaka i unionen.' }],
+        [1512, 1, 'kopenhamn', { mer: 'Kristian är son till kung Hans av Danmark och tronföljare i Danmark och Norge. Han vill ha Sverige tillbaka i unionen.' }],
         [1518, 5.8, 'stockholm', { sjo: 'danmark', mer: 'Kristian II kommer själv med flotta och här och belägrar Stockholm från midsommar.' }],
         [1518, 9.5, 'kopenhamn', { sjo: 'danmark', mer: 'Belägringen har misslyckats. Kristian seglar hem till Köpenhamn med sex svenska gisslan ombord.' }],
         [1520, 5.5, 'stockholm', { sjo: 'danmark', mer: 'Kristian II kommer med sin flotta i slutet av maj, och Stockholm stängs in till lands och sjöss.' }]] },
@@ -262,7 +262,7 @@
     3: [
       { id: 'hRysk3', namn: 'Ryska hären', steg: 'jReval1', har: { n: 10, slag: 'rysk' }, alias: ['Ryssarna', 'ryssarna', 'ryska hären'], kalla: 'sv. Wikipedia, Belägringen av Reval, Slaget vid Wenden och Livländska kriget', stopp: [
         [1570, 7, 'narva', { mer: 'Tsar Ivan IV har gjort Magnus av Ösel till kung i Livland. Med en rysk här ska han ta Reval.' }],
-        [1570, 8.8, 'reval', { via: ['wesenberg'], mer: 'Hären belägrar Reval. Belägringen varar hela vintern.' }],
+        [1570, 8.8, 'reval', { via: ['wesenberg'], mer: 'Hären belägrar Reval. Ryssarna tänker ligga kvar över vintern.' }],
         [1571, 3.2, 'narva', { via: ['wesenberg'], mer: 'Magnus av Ösel bränner sitt läger och drar sig undan.' }],
         [1576, 12, 'narva', { mer: 'En stor rysk här samlas för att ta Reval.' }],
         [1577, 1.2, 'reval', { via: ['wesenberg'], mer: 'Ryssarna belägrar Reval igen.' }],
