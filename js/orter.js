@@ -375,12 +375,12 @@
     const vid = (x, y, r) => Math.abs(lon - x) < r * 2 && Math.abs(lat - y) < r;
     const mellan = (a, b) => Y >= a && Y < b;
     // ---- enskilda orter med kända byten ----
-    if (vid(18.075, 59.335, 0.04)) return Y < 1520 ? SV : Y < DAG(1520, 9, 8) ? SV : Y < DAG(1523, 6, 18) ? DKO : SV;          // Stockholm: Kristina håller staden till september 1520, danskarna till 17 juni 1523
-    if (vid(16.34, 56.66, 0.03)) return Y < 1520 ? SV : Y < 1521 ? INGEN : Y < DAG(1523, 5, 28) ? DKO : Y < DAG(1611, 5, 28) ? SV : Y < DAG(1613, 1, 21) ? DKO : INGEN;          // Kalmar: danskt till 27 maj 1523; staden stormas 27 maj 1611, freden i Knäred 20 januari 1613
+    if (vid(18.075, 59.335, 0.04)) return Y < 1520 ? SV : Y < DAG(1520, 9, 8) ? SV : Y < DAG(1523, 6, 18) ? DKO : Y < DAG(1523, 6, 21) ? INGEN : SV;          // Stockholm: Kristina håller staden till 7 september 1520, danskarna till juni 1523 (17 juni enligt sv. Wikipedia, 20 juni enligt Nordisk familjebok)
+    if (vid(16.34, 56.66, 0.03)) return Y < 1520 ? SV : Y < 1521 ? INGEN : Y < DAG(1523, 5, 28) ? DKO : Y < DAG(1523, 7, 8) ? INGEN : Y < DAG(1611, 5, 28) ? SV : Y < DAG(1613, 1, 21) ? DKO : INGEN;          // Kalmar: danskt till sommaren 1523 (27 maj enligt sv. Wikipedia, 7 juli enligt Nordisk familjebok); staden stormas 27 maj 1611, freden i Knäred 20 januari 1613
     if (vid(16.6, 58.43, 0.03)) return Y < 1520 ? SV : Y < 1521 ? INGEN : Y < DAG(1521, 12, 1) ? DKO : Y < 1522 ? INGEN : SV;          // Stegeborg: faller strax före julen 1521
     if (vid(16.55, 59.625, 0.03)) return Y < 1520 ? SV : Y < 1521 ? INGEN : Y < DAG(1521, 5, 21) ? DKO : Y < DAG(1522, 1, 31) ? INGEN : SV;          // Västerås: staden 20 maj 1521, slottet 30 januari 1522
     if (vid(15.21, 59.275, 0.03)) return Y < 1520 ? SV : Y < DAG(1522, 5, 1) ? INGEN : SV;          // Örebro: slottet tas i början av 1522
-    if (vid(11.93, 57.69, 0.02)) return Y < 1520 ? SV : Y < 1523.47 ? INGEN : Y < DAG(1563, 9, 5) ? SV : Y < DAG(1570, 12, 14) ? DKO : Y < DAG(1612, 5, 25) ? INGEN : Y < DAG(1619, 2, 1) ? DKO : SV;          // Älvsborg: danskt 4 september 1563 till lösen (återlämnandet står inte i källan), igen maj 1612 till januari 1619
+    if (vid(11.93, 57.69, 0.02)) return Y < 1520 ? SV : Y < 1523.47 ? INGEN : Y < DAG(1563, 9, 5) ? SV : Y < DAG(1570, 12, 14) ? DKO : Y < DAG(1612, 5, 23) ? INGEN : Y < DAG(1619, 2, 1) ? DKO : SV;          // Älvsborg: danskt 4 september 1563 till lösen (återlämnandet står inte i källan), igen maj 1612 till januari 1619
     if (vid(12.25, 57.11, 0.04)) return Y < DAG(1565, 8, 29) ? DK : Y < DAG(1569, 11, 14) ? SV : Y < DAG(1645, 8, 14) ? DK : SV;          // Varberg: svenskt 28 augusti 1565 till 13 november 1569
     if (lon > 16.5 && lon < 17.2 && lat > 56.2 && lat < 57.4) return mellan(1611, DAG(1611, 10, 8)) ? INGEN : Y < 1520 || Y >= 1523.47 ? SV : INGEN;          // Öland: Borgholm danskt 1611 till 7 oktober
     if (vid(16.04, 56.25, 0.03) && mellan(1611, 1612)) return INGEN;          // Kristianopel 1611

@@ -18,8 +18,8 @@
       [1520.86, 1521.47, 'Kristian II kröntes i Storkyrkan den 4 november 1520, och den 8–9 november avrättades Sten Stures anhängare i Stockholms blodbad. En dansk här håller staden.'],
       [1521.48, 1522.82, 'En dansk här håller staden. Sedan midsommar 1521 belägras den av Gustav Erikssons här.'],
       [1522.83, 1523.46, 'En dansk här håller staden. Gustav Erikssons här belägrar den, och sedan oktober 1522 stänger Lübecks örlogsfartyg vägen från havet.'],
-      [1523.47, 1523.47, 'Staden gav sig den 17 juni 1523.'],
-      [1523.48, 1535, 'Staden gav sig den 17 juni 1523, och en vecka senare tågade Gustav Vasa in.'],
+      [1523.47, 1523.49, 'Staden ger sig i juni 1523.'],
+      [1523.50, 1535, 'Staden gav sig i juni 1523, och Gustav Vasa tågade in.'],
       [1536, 1536, 'År 1536 börjar man bygga en ny yttre försvarsmur av tegel runt slottet.'],
       [1537, 1540, 'En ny yttre försvarsmur av tegel byggs runt slottet.'],
       [1541, 1547, 'Runt slottet byggs en ny mur av tegel, en vallgrav och ett porthus med vindbrygga.'],
@@ -38,7 +38,8 @@
       [1520.27, 1522, 'Den 6 april 1520 vann den danska hären slaget vid Uppsala mot en svensk bondehär.'],
       [1523, 1526, 'Kyrkligt centrum i Sverige sedan 1164. Domkyrkan är Nordens största gotiska kyrkobyggnad.'],
       [1527, 1527, 'År 1527 bryts kyrkans ekonomiska och militära makt vid riksdagen i Västerås.'],
-      [1528, 1548, 'Kyrkans ekonomiska och militära makt bröts vid riksdagen i Västerås 1527, och kyrkans gods går till kronan.'],
+      [1528, 1528.03, 'Kyrkans ekonomiska och militära makt bröts vid riksdagen i Västerås 1527, och kyrkans gods går till kronan.'],
+      [1528.04, 1548, 'Gustav Vasa kröntes i Uppsala den 12 januari 1528. Kyrkans makt bröts vid riksdagen i Västerås 1527, och kyrkans gods går till kronan.'],
       [1549, 1549, 'År 1549 börjar man bygga ett slott på Kasåsen, högt över staden.'],
       [1550, 1566, 'På Kasåsen högt över staden byggs ett slott.'],
       [1567, 1567.39, 'År 1567 blir de första boningsdelarna på slottet klara.'],
@@ -51,9 +52,11 @@
     ],
     'Kalmar': [
       [0, 1519, 'Kalmar slott ligger på Slottsholmen vid Slottsfjärden. Under medeltiden var staden ett gränsfäste mot Danmark, Sveriges nyckel, och år 1397 stod slottet i centrum när Kalmarunionen bildades.'],
-      [1520, 1520, 'Kalmar slott ligger på Slottsholmen vid Slottsfjärden, där stadens medeltida hamn ligger.'],
+      [1520, 1520.41, 'Kalmar slott ligger på Slottsholmen vid Slottsfjärden, där stadens medeltida hamn ligger.'],
+      [1520.42, 1520, 'Den 31 maj 1520 gick Gustav Eriksson i land vid Stensö udde söder om Kalmar.'],
       [1521, 1523.40, 'Kung Kristians knektar håller Kalmar slott.'],
-      [1523.41, 1534, 'Kalmar intogs den 27 maj 1523. Näst efter Stockholm var Kalmar slott den plats där kung Kristians knektar höll ut längst.'],
+      [1523.41, 1523.51, 'År 1523 strider Gustav Vasas folk om Kalmar slott.'],
+      [1523.52, 1534, 'Kalmar slott gav sig sommaren 1523. Näst efter Stockholm var det den plats där kung Kristians knektar höll ut längst.'],
       [1535, 1535, 'År 1535 bygger man slottets fyra runda hörntorn under ledning av Henrik von Cöllen.'],
       [1536, 1556, 'Slottet har fått fyra runda hörntorn och nya flyglar.'],
       [1557, 1560.74, 'Kungens son Erik är hertig av Kalmar och Kronobergs län och har Kalmar slott som residens.'],
@@ -97,9 +100,8 @@
       [1604.23, 1611, 'Kung Karl bygger om slottet till ett renässansslott med fyra längor kring en borggård.']
     ],
     'Strängnäs': [
-      [0, 1522, 'Biskopssäte sedan början av 1100-talet, med en domkyrka av tegel.'],
-      [1523, 1523, 'År 1523 väljs Gustav Vasa till kung vid mötet i Strängnäs.'],
-      [1524, 1611, 'Biskopssäte med en domkyrka av tegel. Här valdes Gustav Vasa till kung 1523.']
+      [0, 1523.43, 'Biskopssäte sedan början av 1100-talet, med en domkyrka av tegel.'],
+      [1523.44, 1611, 'Biskopssäte med en domkyrka av tegel. Här valdes Gustav Vasa till kung den 6 juni 1523.']
     ],
     'Linköping': [
       [0, 1598.73, 'Biskopssäte med en domkyrka som började byggas på 1100-talet.'],
