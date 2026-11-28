@@ -728,3 +728,39 @@ button { font-family: inherit; cursor: pointer; }
   #titel .t-under { letter-spacing: 0.26em; padding-left: 0.26em; }
   #titel .t-borja { min-width: 200px; font-size: 19px; padding: 13px 30px 12px; }
 }
+
+/* ---- Tryck här, rutan som förklarar Driv in skatt, notiserna och Meddelanden (Johannes 2026-11-28 13:42) ---- */
+.tip.peka { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 6px 15px 7px; animation: tipIn 0.45s ease-out both, pekgupp 2.4s ease-in-out 0.6s infinite; }
+@keyframes pekgupp { 50% { transform: translateY(-3px); } }
+.tip.vid.peka { animation: tipIn 0.45s ease-out both, pekgupp-s 2.4s ease-in-out 0.6s infinite; }
+@keyframes pekgupp-s { 50% { transform: translateX(-3px); } }
+.tip-tryck { font-size: 17px; font-weight: bold; letter-spacing: 0.03em; color: #3a2408; white-space: nowrap; }
+.tip.peka small { display: block; margin-top: 1px; font-size: 12.5px; line-height: 1.3; color: #6b5233; }
+.peka-mal { animation: pekglod 2.4s ease-in-out infinite !important; }
+@keyframes pekglod { 0%, 100% { box-shadow: 0 0 0 2px rgba(242, 207, 90, 0.75), 0 0 6px 1px rgba(242, 207, 90, 0.3); } 50% { box-shadow: 0 0 0 2px #f2cf5a, 0 0 18px 4px rgba(242, 207, 90, 0.65); } }
+.tip.lar { width: 292px; max-width: calc(100vw - 16px); box-sizing: border-box; padding: 11px 16px 12px; text-align: center; pointer-events: auto; background: radial-gradient(ellipse at 50% 35%, #f8efd6, #ecdcb4 70%, #dfcb9a); border: 2px solid #5a4634; border-radius: 9px; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(201, 162, 74, 0.6) inset; }
+.tip.lar::after { bottom: -9px; margin-left: -9px; border-width: 9px; border-bottom: 0; }
+.lar-rubrik { margin: 0 18px 9px; font-size: 12.5px; letter-spacing: 0.2em; text-transform: uppercase; color: #8a6a45; }
+.lar-bild { display: flex; align-items: flex-start; justify-content: center; gap: 2px; }
+.lar-mk { display: flex; flex-direction: column; align-items: center; width: 96px; }
+.lar-rund { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 30%, #fdf3d6, #e9cf8e 60%, #c79a4c); box-shadow: 0 0 0 2px #f2cf5a inset, 0 0 0 4px #6b4a12 inset, 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 0 1px #1a130d; }
+.lar-rund svg { width: 36px; height: 36px; }
+.lar-mk b { margin-top: 6px; font-size: 16px; font-weight: normal; line-height: 1.1; color: #2b1c08; white-space: nowrap; }
+.lar-mk span { font-size: 12.5px; color: #7a6040; }
+.lar-pil { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 15px; font-size: 13px; color: #6b5233; }
+.lar-pil svg { width: 44px; height: 14px; fill: none; stroke: #8a6a45; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tip.lar p { margin: 10px 0 0; font-size: 14px; line-height: 1.38; color: #3a2a14; text-wrap: balance; }
+.lar-x, .notis-x { flex: none; width: 26px; height: 26px; padding: 6px; border: 0; border-radius: 50%; background: transparent; }
+.lar-x { position: absolute; right: 4px; top: 4px; }
+.lar-x svg, .notis-x svg { display: block; width: 100%; height: 100%; fill: none; stroke: #6b5233; stroke-width: 1.8; stroke-linecap: round; }
+.lar-x:hover, .notis-x:hover { background: rgba(90, 70, 52, 0.14); }
+.text.notis { display: flex; align-items: center; padding-right: 8px; }
+.notis-t { flex: 1; }
+.notis .text-ga { flex: none; }
+.notis-x { margin-left: 6px; }
+.ruta-in .logg p { text-align: left; }
+.ruta-in .logg button.logg-ga { display: inline-flex; align-items: center; gap: 5px; width: auto; margin: 0 0 0 8px; padding: 1px 9px; font-size: 13.5px; letter-spacing: 0; vertical-align: 1px; color: #fff3d6; background: #5a4634; border: 0; border-radius: 4px; box-shadow: none; }
+.logg-ga svg { width: 8px; height: 8px; fill: currentColor; }
+.skylt.lang { display: flex; align-items: center; gap: 4px; max-width: 600px; padding-right: 8px; text-align: center; pointer-events: auto; cursor: pointer; }
+.skylt.lang .notis-x svg { stroke: #5d430f; }
+.skylt.lang .notis-x:hover { background: rgba(93, 67, 15, 0.15); }

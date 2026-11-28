@@ -19,6 +19,7 @@
     tal: '<svg viewBox="0 0 24 24"><path d="M4 5h16v10h-8l-5 4v-4H4z" fill="#e9dcc0" stroke="#5a4634" stroke-width="1.3" stroke-linejoin="round"/><path d="M7.5 9h9M7.5 12h6" stroke="#5a4634" stroke-width="1.4" stroke-linecap="round"/></svg>',
     brev: '<svg viewBox="0 0 24 24"><path d="M3 6h18v12H3z" fill="#e9dcc0" stroke="#5a4634" stroke-width="1.3" stroke-linejoin="round"/><path d="M3 6l9 7 9-7" fill="none" stroke="#5a4634" stroke-width="1.3"/><circle cx="12" cy="14.5" r="2.6" fill="#b8312a"/></svg>',
     monstra: '<svg viewBox="0 0 24 24"><path d="M6 3v18" stroke="#e9dcc0" stroke-width="1.8" stroke-linecap="round"/><path d="M7 4h12l-3 3.5 3 3.5H7z" fill="#27539e" stroke="#e9dcc0" stroke-width="1"/><circle cx="11" cy="7.5" r="1.2" fill="#e8c040"/></svg>',
+    lapp: '<svg viewBox="0 0 24 24"><path d="M5.5 3.5h9l4 4v13h-13z" fill="#e9dcc0" stroke="#5a4634" stroke-width="1.3" stroke-linejoin="round"/><path d="M14.5 3.5v4h4" fill="none" stroke="#5a4634" stroke-width="1.3" stroke-linejoin="round"/><path d="M8.5 11h7M8.5 14h7M8.5 17h4.5" stroke="#8a6a45" stroke-width="1.3" stroke-linecap="round"/></svg>',          // meddelandena: allt som har stått på skärmen
     sikte: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="none" stroke="#e9dcc0" stroke-width="2"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5" stroke="#e9dcc0" stroke-width="2"/></svg>'
   };
   // Vad tillgångarna är, varför man får dem och vad de är till för.
@@ -33,7 +34,7 @@
     gruva: '<svg viewBox="0 0 24 24"><path d="M4 7c5-4 11-4 16 0-5-1.6-11-1.6-16 0z" fill="currentColor"/><path d="M12 5.5V21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>',
     slott: '<svg viewBox="0 0 24 24"><path d="M3 20V6h3v2.5h2.5V6h3v2.5H14V6h3v2.5h1V6h3v14z" fill="currentColor"/></svg>'
   };
-  let root, rows = {}, krows = {}, erows = {}, skattRad = null, varvRad = null, soldRad = null, byggRader = [], fogdeKnappar = [], kortNu = null, hrows = {}, sistaHandl = '?', flikar = {}, flik = '', pilar = {}, ortEl = {}, rows2 = {}, husRader = [], sistaBaser = '', caption = null, capT = 0, tips = { nu: null }, valdBas = null, valtHus = null;          // valtHus: huset man senast tryckt på i världen (se UI.husMal)
+  let root, rows = {}, krows = {}, erows = {}, skattRad = null, varvRad = null, soldRad = null, byggRader = [], fogdeKnappar = [], kortNu = null, hrows = {}, sistaHandl = '?', flikar = {}, flik = '', pilar = {}, ortEl = {}, rows2 = {}, husRader = [], sistaBaser = '', caption = null, capT = 0, tips = { nu: null }, valdBas = null, valtHus = null, notisEl = null;          // valtHus: huset man senast tryckt på i världen (se UI.husMal)
   const sek = n => (Math.round(n * 100) / 100).toString().replace('.', ',');
   V.pek = /[?&]mobil=1/.test(location.search) || !!(window.matchMedia && matchMedia('(hover: none)').matches);          // pekskärm: inget mellanslag, ingen muspekare som svävar
   // Testläge (Johannes 2026-11-27): i Regentlängden (kronan uppe till höger) kan man börja vilken byggd värld som helst direkt.
@@ -80,7 +81,7 @@
       root = $('ui');
       root.innerHTML = `
         <div id="datum"><div id="dat-ar"></div><div id="dat-titel"></div><div id="dat-tron"></div></div>
-        <div id="meny"><button id="m-fraga" title="Så fungerar det">${IK.fraga}</button><button id="m-bok" title="Krönikan">${IK.bok}</button><button id="m-krona" title="Regentlängden">${IK.krona}</button><button id="m-ljud" title="Ljud">${IK.ljud}</button><button id="m-kugg" title="Inställningar">${IK.kugg}</button></div>
+        <div id="meny"><button id="m-fraga" title="Så fungerar det">${IK.fraga}</button><button id="m-bok" title="Krönikan">${IK.bok}</button><button id="m-logg" aria-label="Meddelanden">${IK.lapp}</button><button id="m-krona" title="Regentlängden">${IK.krona}</button><button id="m-ljud" title="Ljud">${IK.ljud}</button><button id="m-kugg" title="Inställningar">${IK.kugg}</button></div>
         <div id="kassa"></div>
         <div id="konsol">
           <div id="uppdrag"><span id="upp-mer" style="display:none">${IK.bok}Läs mer</span><div id="upp-akt"></div><div id="upp-titel"></div><div id="upp-vag" style="display:none"></div><div id="upp-kost"></div><div id="upp-bar"><div id="upp-fyll"></div></div><button id="upp-knapp"></button></div>
@@ -103,7 +104,7 @@
       UI._svava($('upp-kost'), () => { if (!UI._kostKort()) return; kortNu = { row: $('upp-kost'), kort: UI._kostKort, t: performance.now() }; UI._kort(); }, () => { if (kortNu && kortNu.row === $('upp-kost')) { kortNu = null; UI._kort(); } });          // vad priset betyder: samma ruta som på korten, först efter en stund
       $('datum').addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); if (flikar.kung) { flik = 'kung'; G.s.flik = 'kung'; UI.tick(); } else UI.kung(); });
       $('hitta').addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); UI.onHitta && UI.onHitta(); });
-      $('m-bok').addEventListener('click', UI.kronika); $('m-krona').addEventListener('click', UI.regenter); $('m-kugg').addEventListener('click', UI.installningar); $('m-fraga').addEventListener('click', () => UI.forklara(G.s.varld, true));
+      $('m-bok').addEventListener('click', UI.kronika); $('m-logg').addEventListener('click', UI.logg); $('m-krona').addEventListener('click', UI.regenter); $('m-kugg').addEventListener('click', UI.installningar); $('m-fraga').addEventListener('click', () => UI.forklara(G.s.varld, true));
       $('m-ljud').addEventListener('click', () => { G.s.ljud = !G.s.ljud; V.Ljud && V.Ljud.pa(G.s.ljud); V.Musik && V.Musik.satt(G.s.ljud && G.s.musik !== false); UI.tick(true); });
       $('ruta').addEventListener('click', e => { if (e.target.id === 'ruta' && !UI._last) UI.stang(); });
       root.addEventListener('pointerdown', e => { if (e.target.closest('button, .bas')) V.Ljud && V.Ljud.vakna(); }, true);
@@ -165,10 +166,10 @@
         if (sk) { const kv = G.skeppKvar(); sv('.ks-skepp b', String(G.skepp())); sv('.ks-skepp i', isFinite(kv) ? 'nästa om ' + (kv < 60 ? Math.ceil(kv) + ' s' : Math.ceil(kv / 60) + ' min') : G.efter('eHorn') ? '+' + Math.round((G.tullX() - 1) * 100) + ' % mark' : 'ingen tull än'); }
       } }
       if (UI._kungOppen) { if ($('ruta').style.display === 'none') UI._kungOppen = false; else UI._kungKort(); }
-      if (S.t > 25 && !S.aktivt && !G.skede() && root.classList.contains('spel')) {          // en ny sak i taget, med en lugn rad
-        if ((D.VARLDAR[S.varld] || {}).takKung && S.titel === 'Kung' && !S.takSagt) { S.takSagt = 1; UI.text('Som kung har ' + ((D.KUNGINFO[S.varld] || {}).namn || 'kungen') + ' rikets stående armé av svenskt fotfolk. Armén rymmer nu ' + tal(G.tak()) + ' män.', 10); }
-        else if (G.harVarv() && !S.varvSagt) { S.varvSagt = 1; UI.text('På skeppsgården vid Björkenäs kan män bygga skepp. Kortet ligger under Män.', 10); }
-        else if (G.egLista().length && S.varvSagt && !S.kungSagt && S.t > 70) { S.kungSagt = 1; UI.text('Tryck på ' + ((D.KUNGINFO[S.varld] || {}).namn || 'kungen') + ', så ser du vem han är och vad han kan bli bättre på.', 10); }
+      if (S.t > 25 && !S.aktivt && !G.skede() && root.classList.contains('spel') && !UI.notisUppe()) {          // en ny sak i taget, som en notis som står kvar tills man har sett den
+        if ((D.VARLDAR[S.varld] || {}).takKung && S.titel === 'Kung' && !S.takSagt) { S.takSagt = 1; UI.notis('Som kung har ' + ((D.KUNGINFO[S.varld] || {}).namn || 'kungen') + ' rikets stående armé av svenskt fotfolk. Armén rymmer nu ' + tal(G.tak()) + ' män.'); }
+        else if (G.harVarv() && !S.varvSagt) { S.varvSagt = 1; UI.notis('På skeppsgården vid Björkenäs kan män bygga skepp. Kortet ligger under Män.', 'varv'); }
+        else if (G.egLista().length && S.varvSagt && !S.kungSagt && S.t > 70) { S.kungSagt = 1; UI.notis('Tryck på ' + ((D.KUNGINFO[S.varld] || {}).namn || 'kungen') + ', så ser du vem han är och vad han kan bli bättre på.', 'kung'); }
       }
       if (skattRad) {            // driv in skatt: män ut, mark hem
         const sk = S.skatt, ute = G.skattUte(), fullt = ute >= G.skattMax();
@@ -218,7 +219,7 @@
       // rutan med berättelsen och textraderna ligger strax ovanför konsolen
       const h = $('konsol').offsetHeight + 22; $('berattar').style.bottom = h + 'px'; $('text').style.bottom = (h + 28) + 'px';          // ovanför knappen Hitta mig
       V.Scene.lyft = (innerWidth < 720 || innerHeight < 520) && root.classList.contains('spel') ? (h - 22) / 2 : 0;          // se scene.js: bilden lyfts så att mitten hamnar ovanför konsolen
-      UI._tips();
+      UI._notis(); UI._tips();
     },
     // Tre flikar: män, mark och egna förmågor. Tillgången står i själva fliken. Under dem ligger den valda flikens kort.
     _byggBaser(ids) {
@@ -303,7 +304,7 @@
     // När ska rutan om en knapp visas? Med mus: när pekaren är över knappen. På pekskärm: bara när fingret hålls kvar en stund,
     // och då räknas trycket inte som ett köp. Ett vanligt tryck på telefon köper utan att någon ruta kommer upp.
     _svava(e, visa, dolj) {
-      if (!V.pek) { let mt = null, uppe = false; e.addEventListener('mouseenter', () => { clearTimeout(mt); mt = setTimeout(() => { uppe = true; visa(); }, 2000); }); e.addEventListener('mousemove', () => { if (!uppe) { clearTimeout(mt); mt = setTimeout(() => { uppe = true; visa(); }, 2000); } }); e.addEventListener('mouseleave', () => { clearTimeout(mt); mt = null; if (uppe) { uppe = false; dolj(); } }); return; }          // med mus: rutan kommer först när pekaren har stått still över kortet en stund (Johannes 2026-11-28: "den poppar upp för mycket")
+      if (!V.pek) { let mt = null, uppe = false; e.addEventListener('mouseenter', () => { clearTimeout(mt); mt = setTimeout(() => { uppe = true; visa(); }, 1500); }); e.addEventListener('mousemove', () => { if (!uppe) { clearTimeout(mt); mt = setTimeout(() => { uppe = true; visa(); }, 1500); } }); e.addEventListener('mouseleave', () => { clearTimeout(mt); mt = null; if (uppe) { uppe = false; dolj(); } }); return; }          // med mus: rutan kommer först när pekaren har stått still över kortet en stund (Johannes 2026-11-28: "den poppar upp för mycket")
       let tm = null; const slut = () => { clearTimeout(tm); tm = null; if (e._visar) { e._visar = false; dolj(); } };
       e.addEventListener('pointerdown', () => { e._hallen = false; clearTimeout(tm); tm = setTimeout(() => { e._hallen = true; e._visar = true; visa(); }, 450); });
       ['pointerup', 'pointerleave', 'pointercancel'].forEach(n => e.addEventListener(n, slut));
@@ -512,23 +513,69 @@
     // En kort rad som försvinner av sig själv (bara för sådant som inte behöver läsas noga).
     // gaTill: vad ett tryck på raden gör (Johannes 2026-11-28: "om man trycker på den så kommer man dit den pekar")
     text(t, sek, stor, gaTill) {
+      if ((sek || 7) >= 4 || gaTill) UI._logga(t);          // korta svar i slagen sparas inte, allt annat finns kvar under Meddelanden (Johannes 2026-11-28)
       if (caption) caption.remove(); caption = el('div', 'text' + (stor ? ' stor' : '') + (gaTill ? ' kan' : ''), t + (gaTill ? '<span class="text-ga">Visa <svg viewBox="0 0 14 14"><path d="M3 2l8 5-8 5z"/></svg></span>' : '')); $('text').appendChild(caption); capT = performance.now() + (sek || 7) * 1000;
       if (gaTill) { const c = caption; c.addEventListener('pointerdown', ev => { ev.stopPropagation(); V.Ljud && V.Ljud.vakna(); gaTill(); c.remove(); if (caption === c) caption = null; }); }
     },
     // Vart en rad om något nytt pekar: staden där huset ska byggas, eller kortet och fliken där saken finns
+    // Efter Visa står en lugn bubbla Tryck här vid det man ska trycka på, tills man har tryckt (Johannes 2026-11-28: "mer Tryck här").
     gaTill(id) {
-      const lys = sel => { const m = document.querySelector(sel); if (!m) return; m.classList.add('glod-ny'); m.scrollIntoView && m.scrollIntoView({ block: 'nearest', inline: 'nearest' }); setTimeout(() => m.classList.remove('glod-ny'), 3500); };
-      const flik = (fl, sel) => () => { const f = $('res-' + fl); if (f && !(f.classList.contains('vald') || f.classList.contains('aktiv'))) f.click(); setTimeout(() => lys(sel), 120); };
-      const stad = p => () => { if (!p) return; if (G.s.bas[p]) UI.visaStad(p); if (UI.onVisaBas) UI.onVisaBas(p); };
+      const pek = sel => setTimeout(() => { const m = document.querySelector(sel); if (!m) return; m.scrollIntoView && m.scrollIntoView({ block: 'nearest', inline: 'nearest' }); UI._pek = { sel, t0: performance.now() }; delete G.s.tips.pek; tips.nu = null; tips.malSel = null; $('tips').innerHTML = ''; UI.tick(); }, 150);          // går före ett annat tips som hann komma upp
+      const oppna = (fl, sel) => () => { const f = $('res-' + fl); if (f && !(f.classList.contains('vald') || f.classList.contains('aktiv'))) f.click(); if (sel) pek(sel); };
+      const stad = (p, sel) => () => { if (!p) return; if (G.s.bas[p]) UI.visaStad(p); if (UI.onVisaBas) UI.onVisaBas(p); if (sel) pek(sel); };
       if (!id) return null;
-      const b = D.BYGGNADER.find(q => q.id === id); if (b) return stad(b.stad || b.plats);
-      if (id === 'skatt') return flik('man', '#skatt');
+      const b = D.BYGGNADER.find(q => q.id === id); if (b) return stad(b.stad || b.plats, b.niva ? '#hus-' + id : '#bygg-' + id);          // står huset redan klart finns inget kort, och då pekar ingen bubbla
+      if (id === 'skatt') return oppna('man');          // Driv in skatt förklaras i en egen ruta när kortet syns (se _tips)
       if (id === 'marknad') return G.s.marknad ? stad(G.s.marknad.bas) : null;
-      if (id.slice(0, 2) === 'h:') return () => lys('#hk-' + id.slice(2));
-      if (id.slice(0, 2) === 'k:') return () => { if (flikar.kung) { flik = 'kung'; G.s.flik = 'kung'; UI.tick(); } };          // förmågorna finns på kungens sida
+      if (id === 'varv') return oppna('man', '#varv');
+      if (id === 'kung') return () => UI.kung();
+      if (id.slice(0, 2) === 'h:') return () => pek('#hk-' + id.slice(2));
+      if (id.slice(0, 2) === 'k:' || id.slice(0, 2) === 'e:') return () => { if (flikar.kung) { flik = 'kung'; G.s.flik = 'kung'; UI.tick(); if (id[0] === 'k') pek('#konst-' + id.slice(2)); } };          // förmågorna och egenskaperna finns på regentens flik
       return null;
+    },
+    // ---- notiser: en rad om något nytt man kan göra (Johannes 2026-11-28: "de försvinner för snabbt och kommer för ofta") ----
+    // Den står kvar tills man trycker på den (Visa) eller stänger den, och bara en i taget. Nästa ny sak i förspelet kommer först en stund efter (game.js _infor).
+    notis(t, id) {
+      if (V.tyst || !t) return; const ko = G.s.notis || (G.s.notis = []); if (id && G.s.nytt) G.s.nytt = G.s.nytt.filter(k => k !== id);          // notisen tar över den nya sakens pekbubbla: en sak i taget
+      if (!ko.some(q => q.t === t)) ko.push({ t, id: id || '' }); UI._notis();
+    },
+    notisUppe() { return !!(G.s.notis && G.s.notis.length); },
+    _notis() {
+      const S = G.s, q = (S.notis || [])[0];
+      if (!q) { if (notisEl) { notisEl.remove(); notisEl = null; } return; }
+      if (!notisEl || notisEl._q !== q) {
+        if (notisEl) notisEl.remove(); const ga = q.id ? UI.gaTill(q.id) : null;
+        notisEl = el('div', 'text notis kan', '<span class="notis-t">' + q.t + '</span>' + (ga ? '<span class="text-ga">Visa <svg viewBox="0 0 14 14"><path d="M3 2l8 5-8 5z"/></svg></span>' : '') + '<button class="notis-x" aria-label="Stäng"><svg viewBox="0 0 14 14"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7"/></svg></button>');
+        notisEl._q = q; $('text').appendChild(notisEl);
+        notisEl.addEventListener('pointerdown', ev => { ev.stopPropagation(); V.Ljud && V.Ljud.vakna(); const bara = !!ev.target.closest('.notis-x'); UI._notisBort(); if (!bara && ga) ga(); });
+        if (!q.sedd) { q.sedd = 1; UI._logga(q.t, q.id); V.Ljud && V.Ljud.spela('klart'); }
+      }
+      const syns = root.classList.contains('spel') && !root.classList.contains('slag') && $('ruta').style.display === 'none' && $('berattar').style.display === 'none' && !(V.Intro && V.Intro.aktiv) && G.skede() !== 'strid';
+      if (notisEl.style.display !== (syns ? '' : 'none')) notisEl.style.display = syns ? '' : 'none';
+    },
+    _notisBort() { const S = G.s; if (S.notis) S.notis.shift(); if (notisEl) { notisEl.remove(); notisEl = null; } S.infordT = S.t; UI.tick(); },          // nästa nya sak dröjer räknat från nu
+    // ---- meddelandena: allt som har stått på skärmen, så att man kan läsa det man missade (Johannes 2026-11-28). Berättelsen finns i Krönikan. ----
+    _logga(t, id) {
+      const S = G.s; if (!S || V.tyst || !t) return; const txt = String(t).replace(/<br\s*\/?>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(); if (!txt) return;
+      const L = S.logg || (S.logg = []); if (L.some(q => q.t === txt)) return;          // samma rad en gång till sparas inte
+      const d = $('dat-ar') ? $('dat-ar').textContent : ''; L.push(id ? { t: txt, d, id } : { t: txt, d }); if (L.length > 200) L.splice(0, L.length - 200);
+    },
+    logg() {
+      const L = G.s.logg || []; let h = '<h2>Meddelanden</h2><div class="krono logg">', d = null;
+      for (let i = L.length - 1; i >= 0; i--) { const q = L[i]; if (q.d !== d) { d = q.d; h += '<h3>' + (d || '') + '</h3>'; } h += '<p>' + q.t + (q.id && UI.gaTill(q.id) ? '<button class="logg-ga" data-i="' + i + '">Visa <svg viewBox="0 0 14 14"><path d="M3 2l8 5-8 5z"/></svg></button>' : '') + '</p>'; }
+      if (!L.length) h += '<p class="svag">Här samlas tipsen och raderna som visas under spelets gång.</p>';
+      UI.ruta(h + '</div><button class="stang">Stäng</button>');
+      document.querySelectorAll('.logg-ga').forEach(b => b.addEventListener('click', () => { const ga = UI.gaTill(L[+b.dataset.i].id); UI.stang(); if (ga) ga(); }));
     },          // riktig tid: på en skärm med 120 bilder i sekunden försvann raden annars dubbelt så fort
-    skylt(t, iSlag) { if (!iSlag && root.classList.contains('slag')) return; const e = el('div', 'skylt', t); $('text').appendChild(e); setTimeout(() => e.classList.add('bort'), 2600); setTimeout(() => e.remove(), 3400); },
+    // lang: en guldruta om något man har fått (en stad på nivå 10, 20 ...). Den står kvar en god stund, stannar medan musen är över den, går bort med ett tryck och sparas i Meddelanden (Johannes 2026-11-28: "försvinner för snabbt").
+    skylt(t, iSlag, lang) {
+      if (!iSlag && root.classList.contains('slag')) return; const e = el('div', 'skylt' + (lang ? ' lang' : ''), t + (lang ? '<button class="notis-x" aria-label="Stäng"><svg viewBox="0 0 14 14"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7"/></svg></button>' : '')); $('text').appendChild(e);
+      if (!lang) { setTimeout(() => e.classList.add('bort'), 2600); setTimeout(() => e.remove(), 3400); return; }
+      UI._logga(t); { const alla = $('text').querySelectorAll('.skylt.lang'); if (alla.length > 2) alla[0].remove(); }          // högst två på en gång
+      let kvar = 9000, sist = performance.now(), over = false; const bort = () => { if (e._bort) return; e._bort = 1; e.classList.add('bort'); setTimeout(() => e.remove(), 800); };
+      e.addEventListener('pointerdown', ev => { ev.stopPropagation(); bort(); }); e.addEventListener('mouseenter', () => { over = true; }); e.addEventListener('mouseleave', () => { over = false; });
+      const ur = setInterval(() => { const nu = performance.now(); if (!over && !document.hidden) kvar -= nu - sist; sist = nu; if (kvar <= 0 || !e.isConnected) { clearInterval(ur); bort(); } }, 200);
+    },
 
     // ---- berättelsen: en ruta ovanför konsolen som står kvar tills man trycker bort den -------------
     berattar(plats, ar, text, med, mer) {
@@ -611,10 +658,21 @@
       UI._paus = !igen; if (!igen && V.Musik) V.Musik.spar('titel');
     },
 
+    // En bubbla som bara säger var man ska trycka (Johannes 2026-11-28 13:42: "Det ska vara mer Tryck här").
+    _pekText(under) { return '<b class="tip-tryck">Tryck här</b>' + (under ? '<small>' + under + '</small>' : ''); },
+    // Rutan som förklarar Driv in skatt när man har öppnat fliken Män: bild först, en kort rad, kryss för att stänga.
+    _skattLar() {
+      const M = V.MED || {}, X = '<svg viewBox="0 0 14 14"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7"/></svg>';
+      return '<button class="lar-x" aria-label="Stäng">' + X + '</button><div class="lar-rubrik">Driv in skatt</div>' +
+        '<div class="lar-bild"><div class="lar-mk"><div class="lar-rund">' + (M.man || '') + '</div><b>' + tal(G.skattPris()) + ' män</b><span>går ut</span></div>' +
+        '<div class="lar-pil"><svg viewBox="0 0 44 14"><path d="M2 7h34M30 2l7 5-7 5"/></svg><span>12 s</span></div>' +
+        '<div class="lar-mk"><div class="lar-rund">' + (M.mark || '') + '</div><b>+' + tal(G.skattGer()) + ' mark</b><span>kommer hem</span></div></div>' +
+        '<p>Tryck på det gröna kortet. Laget kommer hem med skatten efter tolv sekunder, och tre lag kan vara ute på en gång.</p>';
+    },
     // ---- första stegen: en pekande ruta i taget, som står kvar tills steget är gjort ------------------
     _tips() {
-      const S = G.s, T = S.tips, e = $('tips'), spel = root.classList.contains('spel') && $('ruta').style.display === 'none' && $('berattar').style.display === 'none' && !root.classList.contains('slag');          // ingen ruta som pekar medan berättelsen står uppe (Johannes 2026-11-26: "Rutan ligger ovanpå här och stör")
-      if (!spel) { e.innerHTML = ''; tips.nu = null; return; }
+      const S = G.s, T = S.tips, e = $('tips'), spel = root.classList.contains('spel') && $('ruta').style.display === 'none' && $('berattar').style.display === 'none' && !root.classList.contains('slag') && !UI.notisUppe();          // ingen ruta som pekar medan berättelsen står uppe (Johannes 2026-11-26: "Rutan ligger ovanpå här och stör")
+      if (!spel) { e.innerHTML = ''; tips.nu = null; document.querySelectorAll('.peka-mal').forEach(x => x.classList.remove('peka-mal')); return; }
       const forst = (D.VARLDAR[S.varld] || D.VARLDAR[1]).hem, synlig = sel => { const m = document.querySelector(sel); return !!(m && m.offsetParent); };
       const steg = [
         ['ak', '#ak', 'Tryck här. Varje tryck ger mark och fyller ringen runt knappen.' + (V.pek ? '' : ' Mellanslag går också, ett tryck i taget.'), S.tryck < 5, S.tryck >= 5],
@@ -628,26 +686,31 @@
         ['knekt', '#sold', 'Ta en knekt i tjänst här. Mark blir män.', S.varld === 0 && G.kanSold() && !S.sold, S.sold > 0],
         ['stad', '#flik-stad', 'Varje stad har en egen flik med sina hus. Tryck på en stad på kartan, så öppnas den.', G.husLista().length > 0 && !S.stadSett, !!S.stadSett],
         ['stadByt', '#flik-stad', 'Tryck på fliken igen för att byta stad.', flik === 'stad' && Object.keys(S.bas).length > 1 && !S.stadMenyN, !!S.stadMenyN],
-        ['skattFlik', '#res-man', 'Här under finns kortet Driv in skatt. Med det blir män till mark.', G.kanSkatt() && !S.skattN && !synlig('#skatt'), S.skattN > 0 || synlig('#skatt')],
-        ['skatt', '#skatt', 'Skicka ut män här. De kommer hem med mark.', G.kanSkatt() && !S.skattN, !!S.skatt || S.skattN > 0],
-        ['tak', '#res-man', 'Armén är full. Driv in skatt (det gröna kortet) så blir männen till mark.', S.res.man >= G.tak() * 0.999 && S.nasta >= 2 && !S.aktivt, S.res.man < G.tak() * 0.9]
+        ['skattFlik', '#res-man', UI._pekText('Under Män finns Driv in skatt'), G.kanSkatt() && !S.skattN && !synlig('#skatt'), S.skattN > 0 || synlig('#skatt'), false, 'peka', 'Driv in skatt finns under fliken Män.'],
+        ['skatt', '#skatt', UI._skattLar(), G.kanSkatt() && !S.skattN, !!S.skatt || S.skattN > 0, false, 'lar', 'Driv in skatt: skicka ut ett lag män. Efter tolv sekunder kommer de hem med mark. Upp till tre lag kan vara ute samtidigt.'],
+        synlig('#skatt') ? ['tak', '#skatt', 'Armén är full. Skicka ut män här, så kommer de hem med mark.', S.res.man >= G.tak() * 0.999 && S.nasta >= 2 && !S.aktivt, S.res.man < G.tak() * 0.9]
+          : ['tak', '#res-man', UI._pekText('Armén är full. Under Män kan de driva in skatt.'), S.res.man >= G.tak() * 0.999 && S.nasta >= 2 && !S.aktivt, S.res.man < G.tak() * 0.9, false, 'peka', 'Armén är full. Under Män kan de driva in skatt, så blir männen till mark.']
       ];
+      // efter Visa i en notis: Tryck här vid det den gällde, tills man har tryckt (eller gått till en annan flik)
       // Nytt sedan förra rutan (S.nytt): en glödande pekbubbla i taget. Den går bort när man trycker på saken, eller efter en stund.
       const nyttSteg = UI._nyttSteg(); if (nyttSteg) steg.unshift(nyttSteg);
-      if (tips.nu) { const s = steg.find(q => q[0] === tips.nu); if (!s || s[4]) { T[tips.nu] = 1; tips.nu = null; e.innerHTML = ''; } else if (!s[3] || !synlig(s[1])) { tips.nu = null; e.innerHTML = ''; } }
+      if (UI._pek) { const p = UI._pek; if (!synlig(p.sel) && performance.now() - p.t0 > 1200) UI._pek = null; else steg.unshift(['pek', p.sel, UI._pekText(), true, false, false, 'peka', '']); }
+      if (tips.nu) { const s = steg.find(q => q[0] === tips.nu); if (!s || s[4]) { T[tips.nu] = 1; tips.nu = null; e.innerHTML = ''; } else if (!s[3] || !synlig(s[1]) || (tips.malSel && s[1] !== tips.malSel)) { tips.nu = null; tips.malSel = null; e.innerHTML = ''; } }
       if (tips.nu === 'stadByt' && performance.now() - tips.t0 > 6000) { tips.nu = null; e.innerHTML = ''; }          // flik-tipset visas en gång, en kort stund (Johannes 2026-11-28: "nu blir man bara irriterad")
-      if (!tips.nu) { const s = steg.find(q => !T[q[0]] && q[3] && synlig(q[1])); if (s) { tips.nu = s[0]; tips.t0 = performance.now(); if (s[0] === 'stadByt') T.stadByt = 1; e.innerHTML = '<div class="tip' + (s[5] ? ' nytt' : '') + '">' + (s[5] ? '<span class="tip-ny">Nytt</span>' : '') + s[2] + '</div>'; } }
+      if (!tips.nu) { const s = steg.find(q => !T[q[0]] && q[3] && synlig(q[1])); if (s) { tips.nu = s[0]; tips.t0 = performance.now(); if (s[0] === 'stadByt') T.stadByt = 1; e.innerHTML = '<div class="tip' + (s[5] ? ' nytt' : '') + (s[6] ? ' ' + s[6] : '') + '">' + (s[5] ? '<span class="tip-ny">Nytt</span>' : '') + s[2] + '</div>'; UI._logga(s[7] !== undefined ? s[7] : s[2]);
+        const x = e.querySelector('.lar-x'); if (x) x.addEventListener('pointerdown', ev => { ev.stopPropagation(); T[s[0]] = 1; tips.nu = null; tips.malSel = null; e.innerHTML = ''; document.querySelectorAll('.peka-mal').forEach(m => m.classList.remove('peka-mal')); }); } }          // rutan som förklarar stängs med krysset, eller när man trycker på kortet
+      { const s = tips.nu && steg.find(q => q[0] === tips.nu), pm = s && s[6] ? document.querySelector(s[1]) : null; document.querySelectorAll('.peka-mal').forEach(x => { if (x !== pm) x.classList.remove('peka-mal'); }); if (pm && !pm.classList.contains('peka-mal')) pm.classList.add('peka-mal'); }          // det man ska trycka på lyser lugnt
       if (tips.nu && tips.nu === (nyttSteg && nyttSteg[0])) { const m0 = document.querySelector(nyttSteg[1]); document.querySelectorAll('.glod-ny').forEach(x => { if (x !== m0) x.classList.remove('glod-ny'); }); if (m0) m0.classList.add('glod-ny'); } else document.querySelectorAll('.glod-ny').forEach(x => x.classList.remove('glod-ny'));
       if (tips.nu) {            // håll rutan ovanför det den pekar på
         const s = steg.find(q => q[0] === tips.nu), mal = document.querySelector(s[1]), t = e.firstChild; tips.malSel = s[1]; if (!mal || !t) return;
         // ett tryck på det bubblan pekar på tar bort den direkt (Johannes 2026-11-28: "rutorna ska försvinna när man trycker på knappen den visar till direkt")
-        if (!tips.allm) { tips.allm = ev => { const k = tips.nu; if (!k || !tips.malSel) return; const m = document.querySelector(tips.malSel); if ((!m || !m.contains(ev.target)) && k.slice(0, 5) !== 'nytt:') return; if (k.slice(0, 5) === 'nytt:') { if (G.s.nytt) G.s.nytt.shift(); } else G.s.tips[k] = 1; tips.nu = null; tips.malSel = null; $('tips').innerHTML = ''; document.querySelectorAll('.glod-ny').forEach(x => x.classList.remove('glod-ny')); }; document.addEventListener('pointerdown', tips.allm, true); } t.style.visibility = mal.offsetParent ? '' : 'hidden';
+        if (!tips.allm) { tips.allm = ev => { const k = tips.nu; if (!k || !tips.malSel) return; const m = document.querySelector(tips.malSel); if ((!m || !m.contains(ev.target)) && k.slice(0, 5) !== 'nytt:') return; if (k.slice(0, 5) === 'nytt:') { if (G.s.nytt) G.s.nytt.shift(); } else if (k === 'pek') UI._pek = null; else G.s.tips[k] = 1; tips.nu = null; tips.malSel = null; $('tips').innerHTML = ''; document.querySelectorAll('.glod-ny').forEach(x => x.classList.remove('glod-ny')); }; document.addEventListener('pointerdown', tips.allm, true); } t.style.visibility = mal.offsetParent ? '' : 'hidden';
         const r = mal.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight, pan = mal.closest('#baser'), pr = pan && pan.getBoundingClientRect();
-        if (pr && pr.left - w - 16 >= 8) {          // pekar den på något i panelen står rutan bredvid panelen, inte över korten (Johannes 2026-11-28)
+        if (pr && pr.left - w - 16 >= 8 && !mal.classList.contains('flik') && !t.classList.contains('lar') && !t.classList.contains('peka')) {          // pekar den på något i panelen står rutan bredvid panelen, inte över korten (Johannes 2026-11-28). Tryck här och rutan som förklarar står i stället ovanför, med pilen rakt ner
           t.classList.add('vid'); t.style.left = (pr.left - w - 14) + 'px'; t.style.top = Math.max(8, Math.min(innerHeight - h - 8, r.top + r.height / 2 - h / 2)) + 'px';
           t.style.setProperty('--pilY', Math.max(10, Math.min(h - 10, r.top + r.height / 2 - parseFloat(t.style.top))) + 'px');
         } else {
-          t.classList.remove('vid'); t.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; t.style.top = (r.top - h - (mal.closest('.sida') ? 50 : 14)) + 'px';
+          t.classList.remove('vid'); t.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; { const pk = t.classList.contains('peka'); t.style.top = ((!pk && mal.closest('.sida') && $('flikar') ? $('flikar').getBoundingClientRect().top - 4 : r.top) - h - (pk ? 10 : 14)) + 'px'; }          // ett kort: rutan står ovanför flikarna, så att den inte täcker dem. Tryck här står rakt ovanför det den gäller, så att det inte går att ta miste på
           t.style.setProperty('--pil', Math.max(14, Math.min(w - 14, r.left + r.width / 2 - parseFloat(t.style.left))) + 'px');
         }
       }

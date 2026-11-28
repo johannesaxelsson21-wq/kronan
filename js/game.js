@@ -44,7 +44,7 @@
     ],
     inford(id) { return S.varld !== 0 || !G.INFOR.some(q => q.id === id) || !!(S.inford && S.inford[id]); },
     _infor() {
-      if (S.varld !== 0 || S.slut || G.skede() || S.t < 45 || S.t - (S.infordT || 0) < G.INFOR_MELLAN) return; const inf = S.inford || (S.inford = {});
+      if (S.varld !== 0 || S.slut || G.skede() || S.t < 45 || S.t - (S.infordT || 0) < G.INFOR_MELLAN || (S.notis && S.notis.length)) return; const inf = S.inford || (S.inford = {});          // en i taget: nästa kommer först när förra notisen är sedd, och INFOR_MELLAN räknas från dess (ui.js _notisBort)
       for (const q of G.INFOR) { if (inf[q.id] || !q.nar()) continue; inf[q.id] = S.t; S.infordT = S.t; G.ut('infor', { id: q.id, text: q.text }); return; }
     },
     inforAlla() { const inf = S.inford || (S.inford = {}); for (const q of G.INFOR) if (!inf[q.id]) inf[q.id] = S.t || 1; },          // för provet

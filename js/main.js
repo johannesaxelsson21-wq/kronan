@@ -29,8 +29,8 @@
     else if (typ === 'marknad') { if (!V.lugn) { UI.skylt('Marknadsdag i ' + G.BAS[d.bas].namn); V.Ljud.spela('klocka'); } }
     else if (typ === 'marknadKlar') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.2, p.z, 'Marknad +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark'), d.res); V.Ljud.spela('dubbel');
     }
-    else if (typ === 'sold' && d.dubbel) UI.skylt((G.s.varld === 0 ? 'Knektarna' : 'Soldaterna') + ': ' + (G.dub() === 2 ? 'dubbelt så många män' : Math.round((G.dub() - 1) * 100) + ' % fler män'));
-    else if (typ === 'infor') { if (/^[ke]:/.test(d.id)) G.s.nytt = (G.s.nytt || []).concat(d.id); if (!V.tyst) { UI.text(d.text, 12, false, UI.gaTill(d.id)); V.Ljud.spela('klart'); } UI.tick(true); }          // en ny sak i taget, med en lugn rad
+    else if (typ === 'sold' && d.dubbel) UI.skylt((G.s.varld === 0 ? 'Knektarna' : 'Soldaterna') + ': ' + (G.dub() === 2 ? 'dubbelt så många män' : Math.round((G.dub() - 1) * 100) + ' % fler män'), false, true);
+    else if (typ === 'infor') { if (/^[ke]:/.test(d.id)) G.s.nytt = (G.s.nytt || []).concat(d.id); UI.notis(d.text, d.id); UI.tick(true); }          // en ny sak i taget, som en notis som står kvar tills man har tryckt på den eller stängt den (Johannes 2026-11-28)
     else if (typ === 'slagTryck') UI._studs = performance.now();
     else if (typ === 'malVald' && !fritt()) { UI._studs = performance.now(); UI.svar('Tryck nu på knappen', true); V.Ljud.spela('kop'); }
     else if (typ === 'malForst') { if (performance.now() > (UI._forstT || 0)) { UI._forstT = performance.now() + (fritt() ? 4000 : 1800); if (fritt()) UI.text(slagHur(G.uppdrag()), 3); else UI.svar('Tryck på ringen i slaget', false); } }          // ringen i slaget studsar till
@@ -42,19 +42,19 @@
     else if (typ === 'orderSvar' && !fritt(d.u)) { if (!d.o.alltid && d.bra) UI.svar('Bra', true); }
     if (typ === 'orderSvar' && !fritt(d.u)) { UI.text(d.o.alltid || (d.bra ? d.o.bra : d.o.miss), 3.2); if (d.bra && !d.o.alltid) V.Ljud.spela('klart'); }
     else if (typ === 'kula') { UI.text(d.o.rad, 6.5); V.Ljud.spela('kanon'); Scene.shake(0.5); if (d.o.efter && !V.tyst) setTimeout(() => UI.text(d.o.efter, 6), 6800 / Math.min(snabb, 10)); }
-    else if (typ === 'byggnad') { UI.skylt(d.b.skylt || d.b.namn + ' står klart'); if (d.b.klart && !V.tyst) UI.text(d.b.klart, 10, false, UI.gaTill(d.id)); V.Ljud.spela('hammare'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } UI.tick(true); }          // kameran går dit så att man ser huset resas
+    else if (typ === 'byggnad') { UI.skylt(d.b.skylt || d.b.namn + ' står klart'); if (d.b.klart) UI.notis(d.b.klart, d.id); V.Ljud.spela('hammare'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } UI.tick(true); }          // kameran går dit så att man ser huset resas
     else if (typ === 'hus') { if (d.niva === 1) { UI.skylt(d.h.namn + ' står klart'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } } UI.tick(true); }          // stadens hus: kameran går dit första gången
     else if (typ === 'handling') { V.Ljud.spela(d.id === 'tal' ? 'sorl' : d.id === 'monstra' ? 'horn' : 'kop'); const h = D.HANDLINGAR.find(q => q.id === d.id); UI.skylt(UI.handlNamn(h) + (d.fick ? ': +' + V.tal(d.fick) + ' män' : '')); }
     else if (typ === 'skattUt') { if (!d.auto) V.Ljud.spela('kop'); }
     else if (typ === 'skatt') { UI.skattKlar(d.mark); const p = Varld.skattTill && Varld.pos(Varld.skattTill); if (p) UI.flyt(p.x, p.y + 1.8, p.z, 'Skatt +' + V.tal(d.mark) + ' mark', 'mark'); if (!d.auto) V.Ljud.spela('samling'); }
     else if (typ === 'samling' && !d.lopare) { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 1.8, p.z, d.res === 'mark' ? 'Skatt +' + V.tal(d.antal) + ' mark' : '+' + V.tal(d.antal) + ' män går med', d.res); V.Ljud.spela('samling'); }
-    else if (typ === 'niva' && d.dubbel) UI.skylt(UI.byggnad(d.bas, d.niva));
+    else if (typ === 'niva' && d.dubbel) UI.skylt(UI.byggnad(d.bas, d.niva), false, true);          // står kvar så att man hinner läsa den (Johannes 2026-11-28)
     else if (typ === 'stapel') { const q = Varld.varvPlats(); UI.flyt(q.x, 2.2, q.z, '+' + d.man + ' män på varvet (' + V.tal(d.alla) + ')', 'man'); }
     else if (typ === 'skepp') { const q = Varld.varvPlats(); UI.flyt(q.x, 2.2, q.z, 'Skeppet sjösätts vid Björkenäs', 'mark'); UI.skylt(d.n === 1 ? 'Ditt första skepp är sjösatt vid Björkenäs' : 'Ett skepp till är sjösatt: ' + d.n + ' i flottan'); V.Ljud.spela('dubbel'); }
     else if (typ === 'egenskap') { const e = G.egLista().find(q => q.id === d.id); if (e) UI.skylt(e.namn + ', nivå ' + d.niva); }
     else if (typ === 'leverans') UI.leverans(d);
     else if (typ === 'arbetare') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.4, p.z, d.antal + ' lag i gruvan', 'mark'); V.Fx.damm(p.x, p.y + 0.2, p.z, 10); }
-    else if (typ === 'konst' && d.dubbel) UI.skylt(UI.konst(d.id)[0] + ': dubbelt upp');
+    else if (typ === 'konst' && d.dubbel) UI.skylt(UI.konst(d.id)[0] + ': dubbelt upp', false, true);
     else if (typ === 'full') V.Ljud.spela('full');
     else if (typ === 'skickat') { V.Ljud.spela(d.u.slag === 'beslut' ? 'klocka' : 'horn'); if (V.Musik && (d.u.slag === 'tag' || d.u.strid)) V.Musik.spar('krig'); if (d.u.belagring && !d.u.order && !V.tyst) UI.text('Kristians armé och flotta stänger in Stockholm. Håll ut.', 9); }
     else if (typ === 'val') {
