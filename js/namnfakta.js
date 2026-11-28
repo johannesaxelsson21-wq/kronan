@@ -234,3 +234,67 @@
   }, true);
   V.NamnLage = lage;
 })();
+
+// ---- Mer om personen (Johannes 2026-11-28: "när man trycker på denna så ska de finnas en mer info knapp om karaktären här så man kan läsa ännu mer
+// om man vill, så man får koll på vem det är, vad den har för impakt och vad som sker") ----
+// Personrutan (levande.js mer()) får en knapp. Den visar vem personen är och vilken betydelse den har just nu (efter året), i nutid och utan källor.
+(function () {
+  'use strict';
+  const V = window.VASA, A = 9999;
+  const P = {
+    gustavE: { vem: 'En ung adelsman av Vasaätten, son till riksrådet Erik Johansson.', b: [[0, 1519, 'Han hör till Sten Stures krets och vill att riket ska styras av svenskar, inte av den danske kungen.'], [1520, A, 'Han har kommit hem från Lübeck och försöker få folk att resa sig mot danskarna.']] },
+    kristian: { vem: 'Kristian II, kung av Danmark och Norge.', b: [[0, 1520, 'Han vill också vara kung i Sverige, som unionen mellan de tre rikena säger, och han har legoknektar och en flotta för att ta det.'], [1521, 1522, 'Han har krönts till Sveriges kung, men i Dalarna har ett uppror börjat mot honom.'], [1523, A, 'Han har förlorat Sverige, och också i Danmark har hans herrar vänt sig mot honom.']] },
+    trolle: { vem: 'Gustav Trolle, ärkebiskop i Uppsala, av en mäktig adelssläkt.', b: [[0, 1520, 'Han står på den danske kungens sida och är Sten Stures fiende. Både kyrkans makt och hans egen står på spel.'], [1521, 1522, 'Han är den danske kungens man i Sverige, och många ger honom skulden för avrättningarna i Stockholm.'], [1523, A, 'Han har fått lämna riket, och kyrkans makt i Sverige krymper utan honom.']] },
+    kristina: { vem: 'Kristina Gyllenstierna, Sten Sture den yngres hustru, av en mäktig adelssläkt.', b: [[0, 1519, 'Hon står vid sin makes sida, rikets främsta kvinna.'], [1520, 1520, 'Hennes make har dött, och hon leder försvaret av Stockholm mot danskarna.'], [1521, 1523, 'Hon hålls fången i Danmark.'], [1524, A, 'Hon har kommit hem till Sverige.']] },
+    slagheck: { vem: 'Didrik Slagheck, en präst från Westfalen i den danske kungens tjänst.', b: [[0, A, 'Han är en av kungens närmaste män och styr i Sverige i hans namn.']] },
+    norby: { vem: 'Søren Norby, en dansk sjökapten och den danske kungens man på Gotland.', b: [[0, A, 'Från Visby jagar hans skepp svenska och lybska handelsskepp på Östersjön.']] },
+    johan: { vem: 'Hertig Johan, Gustav Vasas son och hertig av Finland.', b: [[0, 1562, 'Han styr Finland från Åbo slott och har egna planer, vid sidan av sin bror.'], [1563, 1567, 'Hans bror kung Erik håller honom fången på Gripsholm.'], [1568, A, 'Han leder upproret mot sin bror kung Erik.']] },
+    rantzau: { vem: 'Daniel Rantzau, en holsteinsk adelsman och den danske kungens främste fältherre.', b: [[0, A, 'Han leder den danska hären i kriget mot Sverige, och han är djärv och snabb.']] },
+    karin: { vem: 'Karin Månsdotter, en ung kvinna av enkel börd vid kung Eriks hov.', b: [[0, A, 'Hon står kungen närmast, närmare än någon adelsman, och många herrar tycker illa om det.']] },
+    delagardie: { vem: 'Jakob De la Gardie, en ung fältherre av fransk släkt.', b: [[0, A, 'Han leder svenska trupper i Ryssland.']] },
+    gustavadolf: { vem: 'Gustav Adolf, hertig Karls son, en ung prins.', b: [[0, A, 'Han lär sig språk, krigskonst och att styra, och följer sin far.']] },
+    karl: { vem: 'Hertig Karl, Gustav Vasas yngste son, hertig över Södermanland, Närke och Värmland.', b: [[0, 1592, 'Han styr sitt hertigdöme som ett eget litet rike.'], [1593, 1599, 'Han leder riket medan kung Sigismund är i Polen, och de två drar åt olika håll.'], [1600, A, 'Han styr riket.']] },
+    fleming: { vem: 'Klas Fleming, riksamiral och ståthållare i Finland.', b: [[0, A, 'Han håller Finland för kung Sigismund mot hertig Karl, och hans knektar ligger hos bönderna.']] },
+    erik: { vem: 'Erik, Gustav Vasas äldste son.', b: [[0, 1559, 'Kronprinsen. Han är lärd och musikalisk och har stora planer, bland annat att gifta sig med drottningen av England.'], [1560, 1568, 'Kung Erik XIV.'], [1569, A, 'Han är avsatt och hålls fången av sin bror Johan.']] },
+    hDansk0: { vem: 'Den danske kungens här, mest legoknektar från Tyskland.', b: [[0, A, 'Knektarna slåss för betalning, och kungen behöver mycket pengar för att hålla dem.']] },
+    hDansk1: { vem: 'Den danske kungens knektar i Sverige.', b: [[0, A, 'De håller Stockholm och slotten runt Mälaren åt kung Kristian.']] },
+    hDansk2: { vem: 'Den danske kungens här.', b: [[0, A, 'Den består av danska adelsmän, knektar och legosoldater från Tyskland.']] },
+    fLubeck1: { vem: 'Lübecks örlogsskepp.', b: [[0, A, 'Lübeck hjälper Gustav mot danskarna, men vill ha betalt och handeln på Östersjön för egen del.']] },
+    fLubeck2: { vem: 'Lübecks örlogsskepp.', b: [[0, A, 'Lübeck vill behålla sin makt över Östersjöns handel och har gått i krig för det.']] },
+    hDacke: { vem: 'Bönder från Smålands skogar under Nils Dacke.', b: [[0, A, 'De har rest sig mot kungens skatter, fogdar och den nya kyrkan, och de slåss i skogarna där de är hemma.']] },
+    hRysk1: { vem: 'Storfursten av Moskvas här.', b: [[0, A, 'Med ryttare och bågskyttar går den in i Finland och Livland.']] },
+    hRysk3: { vem: 'Tsarens här.', b: [[0, A, 'Ryssarna vill ha Livland och en hamn vid Östersjön.']] },
+    fDansk2: { vem: 'Den danske kungens örlogsflotta.', b: [[0, A, 'Den vill stänga Östersjön för svenska skepp.']] },
+    hPolsk3: { vem: 'Den polske kungens här.', b: [[0, A, 'Polska ryttare och tyska knektar strider om Livland.']] },
+    hPolsk4: { vem: 'Kung Sigismunds här.', b: [[0, A, 'Med polska ryttare och tyska knektar kommer kungen för att ta tillbaka makten i Sverige.']] },
+    hKarl: { vem: 'Hertig Karls bönder och knektar.', b: [[0, A, 'De strider för hertigen mot kung Sigismund och hans anhängare.']] },
+    hFinsk: { vem: 'Knektarna i Finland under Klas Fleming.', b: [[0, A, 'De håller Finland för kung Sigismund.']] },
+    hKlubbor: { vem: 'Bönder i Österbotten.', b: [[0, A, 'De har rest sig mot knektarna som ligger på deras gårdar och tar deras mat.']] }
+  };
+  function ar() { try { return V.kalender ? V.kalender().ar : 1520; } catch (e) { return 1520; } }
+  function text(id) { const p = P[id]; if (!p) return null; const Y = ar(); let r = p.b.find(q => Y >= q[0] && Y <= q[1]); if (!r) { const f = p.b.filter(q => q[0] <= Y); r = f[f.length - 1]; } return [p.vem, r ? r[2] : '']; }
+  function koppla() {
+    const L = V.Levande; if (!L || !L.mer || L._merOm) return; L._merOm = 1;
+    const fore = L.mer;
+    L.mer = function (f) {
+      const r = fore.apply(this, arguments);
+      try {
+        const t = text(f.d.id), ruta = document.getElementById('ruta'), stang = ruta && ruta.querySelector('.stang'); if (!t || !stang) return r;
+        const knapp = document.createElement('button'); knapp.textContent = 'Mer om ' + f.d.namn;
+        knapp.style.cssText = 'display:block;margin:0 auto 10px;padding:6px 16px;background:transparent;border:2px solid #b8913f;border-radius:6px;color:#5a2a14;font:inherit;cursor:pointer';
+        knapp.addEventListener('click', ev => {
+          ev.stopPropagation();
+          const nu = ruta.querySelector('.ruta-in > p:not(.mal)');          // det som sker just nu står redan i rutan
+          const mer = document.createElement('div'); mer.innerHTML = '<p style="margin:6px 0 4px;font-style:italic"></p><p style="margin:4px 0 10px"></p>';
+          mer.children[0].textContent = t[0]; mer.children[1].textContent = t[1];
+          if (nu) nu.before(mer); else knapp.before(mer);
+          knapp.remove(); if (L.lanka) try { L.lanka(mer); } catch (e) { /* inget */ }
+        });
+        stang.before(knapp);
+      } catch (e) { /* rutan står som förut */ }
+      return r;
+    };
+  }
+  document.addEventListener('DOMContentLoaded', koppla); setTimeout(koppla, 0);
+  V.PersonFakta = { P, text };
+})();
