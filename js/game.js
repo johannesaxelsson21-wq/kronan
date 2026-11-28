@@ -369,7 +369,7 @@
       const tak = G.tak(); if (S.res.man > tak) S.res.man = tak;
       if (S.aktivt && S.aktivt.val && S.varld === 0) { S.aktivt.valT = (S.aktivt.valT || 0) + dt; if (S.aktivt.valT > 30) G.valj(); }      // i förspelet väntar historien inte
       if (S.aktivt && !S.aktivt.val) {
-        S.aktivt.t += dt; G._order(dt);
+        if (!S.aktivt.lasa) S.aktivt.t += dt; G._order(dt);          // slaget väntar medan rutan före striden läses (main.js slagStart)
         if (S.aktivt.t >= S.aktivt.dur) { const u = D.UPPDRAG.find(q => q.id === S.aktivt.id); if (u.val && !S.aktivt.valt) { S.aktivt.val = true; G.ut('val', { u }); } else G._klar(); }
       }
       if (S.las.fogdar) for (const id in S.fogde) { let n = 0; while (S.fogde[id] && G.kanKopa(id) && G.pris(id) <= S.res[G.prisRes(id)] * 0.12 && n++ < 5) G.kop(id); }

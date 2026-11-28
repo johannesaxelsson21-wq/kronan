@@ -20,6 +20,9 @@
   }
   const UTSIKT = 32;          // en bra nivå att se sig omkring från: dit zoomar kameran ut efter ett inzoomat moment
   let haller = false, hallT = 0;          // mellanslag eller knappen hålls in: buden går i jämn takt utan att man behöver hamra
+  // Slag där man trycker direkt på fienden (Johannes 2026-11-28): fältslag, överfall, samtal och sjöslag. Belägringarna har kvar sina ringar.
+  function fritt(u) { u = u || G.uppdrag(); return !!(u && u.order && !u.belagring && (u.slag === 'tag' || u.slag === 'flotta')); }
+  function slagHur(u) { u = u || {}; return u.typ === 'overfall' ? 'Tryck på fogdens män, så tas de till fånga.'.replace('fogdens män', u.id === 'kopparberget' ? 'fogdens män' : 'vakterna') : u.typ === 'samtal' ? 'Tryck på dem för att övertyga dem.' : u.slag === 'flotta' ? 'Tryck på fiendens skepp.' : 'Tryck på fiendens här. Varje tryck fäller några av dem.'; }
   function handelse(typ, d) {
     Varld.handelse(typ, d);
     if (typ === 'tryck') { if (spelar && !(V.lugn && d.skede)) UI.tryckt(d); }          // i förspelets slag inga siffror från knappen: där syns trycken i slaget
@@ -29,14 +32,15 @@
     else if (typ === 'sold' && d.dubbel) UI.skylt((G.s.varld === 0 ? 'Knektarna' : 'Soldaterna') + ': ' + (G.dub() === 2 ? 'dubbelt så många män' : Math.round((G.dub() - 1) * 100) + ' % fler män'));
     else if (typ === 'infor') { if (!V.tyst) { UI.text(d.text, 12, false, UI.gaTill(d.id)); V.Ljud.spela('klart'); } UI.tick(true); }          // en ny sak i taget, med en lugn rad
     else if (typ === 'slagTryck') UI._studs = performance.now();
-    else if (typ === 'malVald') { UI._studs = performance.now(); UI.svar('Tryck nu på knappen', true); V.Ljud.spela('kop'); }
-    else if (typ === 'malForst') { if (performance.now() > (UI._forstT || 0)) { UI._forstT = performance.now() + 1800; UI.svar('Tryck på ringen i slaget', false); } }          // ringen i slaget studsar till
-    else if (typ === 'slagStart') { UI.skylt(d.u.belagring ? 'Belägringen börjar' : 'Slaget börjar', true); V.Ljud.spela('horn'); }
+    else if (typ === 'malVald' && !fritt()) { UI._studs = performance.now(); UI.svar('Tryck nu på knappen', true); V.Ljud.spela('kop'); }
+    else if (typ === 'malForst') { if (performance.now() > (UI._forstT || 0)) { UI._forstT = performance.now() + (fritt() ? 4000 : 1800); if (fritt()) UI.text(slagHur(G.uppdrag()), 3); else UI.svar('Tryck på ringen i slaget', false); } }          // ringen i slaget studsar till
+    else if (typ === 'slagStart') { V.Ljud.spela('horn'); if (fritt(d.u)) { if (!V.tyst) { const a0 = G.s.aktivt, o0 = d.u.order[0]; a0.lasa = 1; UI.efter = () => { a0.lasa = 0; }; UI.berattar(UI.platsnamn(d.u.plats), d.u.ar, (o0 && o0.vanta ? o0.rad + '<br>' : '') + '<b>' + slagHur(d.u) + '</b>', []); } } else UI.skylt(d.u.belagring ? 'Belägringen börjar' : 'Slaget börjar', true); }          // en ruta att läsa och trycka bort, sedan strid (Johannes 2026-11-28)
+    else if (typ === 'order' && fritt(d.u)) { if (!(d.i === 0 && d.typ === 'vanta')) UI.text(d.o.rad, 4.5); V.Ljud.spela(d.typ === 'vanta' ? 'trumma' : 'horn'); }          // slag utan ring: en kort rad per order, på samma ställe
     else if (typ === 'order') { const a0 = G.s.aktivt, ex = d.typ !== 'vanta' && a0 && !a0.forklarad ? 'Tryck många gånger på ringen i slaget. Den flyttar sig dit varje order gäller. Stapeln högst upp visar vem som är på väg att vinna.' : ''; if (ex) a0.forklarad = 1; UI.text(d.o.rad + (d.o.hur ? '<br>' + d.o.hur : '') + (ex ? '<br><b>' + ex + '</b>' : ''), d.typ === 'hugg' ? 6.8 : d.typ === 'vanta' ? 5.5 : 5, !!ex); V.Ljud.spela(d.typ === 'hugg' ? 'trumma' : 'horn'); }          // första gången förklaras varje sort          // i början av varje slag
     else if (typ === 'hugg') { UI.svar(d.traff ? 'Träff' : d.igen ? 'Vänta på nästa ring' : d.d < 0 ? 'Lite tidigt' : 'Lite sent', d.traff); }          // varje hugg får ett svar där ringen är
     else if (typ === 'orderVanta') UI.svar('Vänta tills ringen når pricken', false);
-    else if (typ === 'orderSvar') { if (!d.o.alltid && d.bra) UI.svar('Bra', true); }
-    if (typ === 'orderSvar') { UI.text(d.o.alltid || (d.bra ? d.o.bra : d.o.miss), 3.2); if (d.bra && !d.o.alltid) V.Ljud.spela('klart'); }
+    else if (typ === 'orderSvar' && !fritt(d.u)) { if (!d.o.alltid && d.bra) UI.svar('Bra', true); }
+    if (typ === 'orderSvar' && !fritt(d.u)) { UI.text(d.o.alltid || (d.bra ? d.o.bra : d.o.miss), 3.2); if (d.bra && !d.o.alltid) V.Ljud.spela('klart'); }
     else if (typ === 'kula') { UI.text(d.o.rad, 6.5); V.Ljud.spela('kanon'); Scene.shake(0.5); if (d.o.efter && !V.tyst) setTimeout(() => UI.text(d.o.efter, 6), 6800 / Math.min(snabb, 10)); }
     else if (typ === 'byggnad') { UI.skylt(d.b.skylt || d.b.namn + ' står klart'); if (d.b.klart && !V.tyst) UI.text(d.b.klart, 10, false, UI.gaTill(d.id)); V.Ljud.spela('hammare'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } UI.tick(true); }          // kameran går dit så att man ser huset resas
     else if (typ === 'hus') { if (d.niva === 1) { UI.skylt(d.h.namn + ' står klart'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } } UI.tick(true); }          // stadens hus: kameran går dit första gången
@@ -129,7 +133,7 @@
     UI.onTestVarld = v => { byter = true; const lj = G.s.ljud, mu = G.s.musik; G.ny(); G.s.ljud = lj; G.s.musik = mu; G.s.arv = (D.VARLDAR[v] || {}).arvTest || 0; G.nyVarld(v); skriv(); laddaOm(); };          // testläget: vilken värld som helst från början, med dess film (Eriks värld är vägd för ungefär 40 arv från Gustav)
     UI.onIgen = arv => { byter = true; G.s.arv += arv; G.s.varv++; const s = G.ny(true); s.intro = true; skriv(); laddaOm(); };
     Scene.onClick = (e, g) => {
-      if (spelar && G.skede() === 'strid' && (G.uppdrag() || {}).order) { Varld.foljUppdraget(); const q = Varld.malSkarm(); tryck(false, q && Math.hypot(q.x - e.clientX, q.y - e.clientY) <= q.r + 12 ? 'ring' : 'karta'); return; }          // ett tryck på ringen räknas, annars inte          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget
+      if (spelar && G.skede() === 'strid' && (G.uppdrag() || {}).order) { Varld.foljUppdraget(); const tr = Varld.slagTraff(e.clientX, e.clientY); if (tr === 'traff') { tryck(false, 'ring'); return; } if (tr === 'ring') { const q = Varld.malSkarm(); tryck(false, q && Math.hypot(q.x - e.clientX, q.y - e.clientY) <= q.r + 12 ? 'ring' : 'karta'); return; } tryck(false, 'karta'); return; }          // slagen 2026-11-28: man trycker direkt på fienden (belägringarna har kvar sina ringar)          // ett tryck på ringen räknas, annars inte          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget
       const id = Varld.basVid(g) || Varld.byggVid(g), egen = !!(id && spelar && G.s.bas[id]);
       if (egen && !(G.s.marknad && G.s.marknad.bas === id) && !UI.stadVald(id)) { V.Ljud.vakna(); UI.visaStad(id); Varld.foljPlats(id); return; }          // ett tryck på en egen stad öppnar alltid dess flik först, också när hjälten står mitt i den (Johannes 2026-11-27); nästa tryck bygger ut den
       if (spelar && Varld.valjVid(e.clientX, e.clientY, egen)) { V.Ljud.vakna(); if (Varld.valdHjalte && !G.skede()) UI.kung(); return; }          // ett tryck på kungen öppnar hans sida (Johannes 2026-11-28)          // förspelet: det man trycker på följs (Johannes 2026-11-26)
