@@ -111,10 +111,13 @@
         // folket tågar längs vägen från Kopparberget
         const l = R.path('kopparberget', 'hedemora'), L0 = R.length(l), n = 10, tag = [];
         for (let i = 0; i < n; i++) tag.push(folk(0, 0, i % 4 === 3 ? 'borgare' : 'bonde', { pike: i % 3 !== 2, gar: true }));          // ingen bild av Engelbrekt själv: han finns bara i raden
-        let d = L0 * 0.32;
-        const satt = () => { tag.forEach((u, i) => { const b = R.along(l, Math.max(0, d - 0.55 - Math.floor(i / 2) * 0.55)), s = (i % 2 ? 1 : -1) * 0.22; u.x = b.x + Math.cos(b.ang) * s; u.z = b.z - Math.sin(b.ang) * s; u.ang = b.ang; }); };
-        return { steg(dt) { d = Math.min(L0, d + dt * 0.38); satt(); const a = R.along(l, d), b = R.along(l, Math.max(0, d - 5)); T._fri = [[a.x, a.z, b.x, b.z, -2.4]]; },
-          kam(f) { const a = R.along(l, Math.max(0, d - 1.6)); return { x: a.x, z: a.z, d: mix(10, 8.5, f), p: mix(30, 26, f), y: grader(a.ang) + mix(-62, -78, f), h: 0.3 }; } };
+        let d = L0 * 0.32, ky = null;
+        // riktningen längs vägen, utjämnad över krökarna: gubbarna svänger mjukt och kameran vrider sig långsamt efter (Johannes 2026-11-28: bilden hoppade i krökarna)
+        const rikt = s => { const a = R.along(l, Math.max(0, s - 1.2)), b = R.along(l, Math.min(L0, s + 1.2)); return Math.atan2(b.x - a.x, b.z - a.z); };
+        const kvinkel = dt => { const m = rikt(Math.max(0, d - 1.6)); if (ky === null) ky = m; else { let e = m - ky; while (e > Math.PI) e -= 2 * Math.PI; while (e < -Math.PI) e += 2 * Math.PI; ky += e * Math.min(1, dt * 0.8); } return ky; };
+        const satt = () => { tag.forEach((u, i) => { const s0 = Math.max(0, d - 0.55 - Math.floor(i / 2) * 0.55), b = R.along(l, s0), r = rikt(s0), s = (i % 2 ? 1 : -1) * 0.22; u.x = b.x + Math.cos(r) * s; u.z = b.z - Math.sin(r) * s; u.ang = r; }); };
+        return { steg(dt) { d = Math.min(L0, d + dt * 0.38); satt(); kvinkel(dt); const a = R.along(l, d), b = R.along(l, Math.max(0, d - 5)); T._fri = [[a.x, a.z, b.x, b.z, -2.4]]; },
+          kam(f) { const a = R.along(l, Math.max(0, d - 1.6)); if (ky === null) kvinkel(0); return { x: a.x, z: a.z, d: mix(10, 8.5, f), p: mix(30, 26, f), y: grader(ky) + mix(-62, -78, f), h: 0.3 }; } };
       } },
     { ort: 'Brunkeberg', tid: 'oktober 1471', sasong: 0.76, el: 14, varm: 0.45, utanFlagg: true, glanta: 1,
       rader: ['Riksföreståndaren Sten Sture den äldre styr Sverige. Danmarks kung Kristian I kommer med en här för att störta honom.', 'Vid Brunkeberg, strax norr om Stockholm, vinner Sten Sture.'],
