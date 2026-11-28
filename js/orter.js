@@ -86,7 +86,19 @@
     ['tavastehus', 24.46, 61.00, [[1639, 2, 'Tavastehus']]],
     ['nyslott', 28.88, 61.87, [[1639, 2, 'Nyslott']]],
     ['villmanstrand', 28.19, 61.06, [[1649, 2, 'Villmanstrand']]],
-    ['fredrikshamn', 27.20, 60.57, [[1653, 2, 'Fredrikshamn']]]
+    ['fredrikshamn', 27.20, 60.57, [[1653, 2, 'Fredrikshamn']]],
+    // Städer som också är platser i spelet (läget tas därifrån). De står här tills spelet själv ritar dem, så att de alltid syns (Johannes 2026-11-28: "Staden finns inte ens med?" om Örebro i förspelet)
+    ['stockholm', null, null, [[ST, 3, 'Stockholm']]], ['uppsala', null, null, [[ST, 2, 'Uppsala']]], ['vasteras', null, null, [[ST, 2, 'Västerås']]],
+    ['orebro', null, null, [[ST, 2, 'Örebro']]], ['arboga', null, null, [[ST, 2, 'Arboga']]], ['strangnas', null, null, [[ST, 2, 'Strängnäs']]],
+    ['nykoping', null, null, [[ST, 2, 'Nyköping']]], ['soderkoping', null, null, [[ST, 2, 'Söderköping']]], ['linkoping', null, null, [[ST, 2, 'Linköping']]],
+    ['vadstena', null, null, [[ST, 2, 'Vadstena']]], ['skara', null, null, [[ST, 2, 'Skara']]], ['jonkoping', null, null, [[ST, 2, 'Jönköping']]],
+    ['enkoping', null, null, [[ST, 2, 'Enköping']]], ['hedemora', null, null, [[ST, 2, 'Hedemora']]], ['gavle', null, null, [[ST, 2, 'Gävle']]],
+    ['sala', null, null, [[ST, 1, 'Sala'], [1624, 2]]], ['kalmar', null, null, [[ST, 2, 'Kalmar']]], ['visby', null, null, [[ST, 2, 'Visby']]],
+    ['halmstad', null, null, [[ST, 2, 'Halmstad']]], ['varberg', null, null, [[ST, 2, 'Varberg']]], ['falkenberg', null, null, [[ST, 2, 'Falkenberg']]],
+    ['malmo', null, null, [[ST, 3, 'Malmö']]], ['kopenhamn', null, null, [[ST, 3, 'Köpenhamn']]], ['abo', null, null, [[ST, 2, 'Åbo']]],
+    ['borga', null, null, [[ST, 2, 'Borgå']]], ['raumo', null, null, [[ST, 2, 'Raumo']]], ['ulvsby', null, null, [[ST, 2, 'Ulvsby'], [1558, 1]]],
+    ['ekenas', null, null, [[1546, 2, 'Ekenäs']]], ['helsingfors', null, null, [[1550, 2, 'Helsingfors']]], ['viborg', null, null, [[ST, 2, 'Viborg']]],
+    ['reval', null, null, [[ST, 3, 'Reval']]], ['narva', null, null, [[ST, 2, 'Narva']]], ['goteborg', null, null, [[1621, 2, 'Göteborg'], [1640, 3]]]
   ];
 
   // Läget för året: storlek och namn
@@ -100,11 +112,14 @@
     const R = V.Rike, G = V.Geo, D = V.DATA, L = V.Levande; platser = [];
     const andra = []; for (const id in R.P) andra.push([R.P[id].x, R.P[id].z]);
     if (L && L.ORT) for (const id in L.ORT) { const w = G.toWorld(L.ORT[id][0], L.ORT[id][1]); andra.push(w); }
-    const namnFinns = {}; for (const b of D.BASER) namnFinns[b.namn] = 1; if (L && L.NAMN) for (const id in L.NAMN) namnFinns[L.NAMN[id]] = 1; if (L && L.ORT) for (const id in L.ORT) if (L.ORT[id][2]) namnFinns[L.ORT[id][2]] = 1;
+    const sett = {};
     for (const st of STADER) {
-      if (D.PLATSER[st[0]] || st[3].some(f => f[2] && namnFinns[f[2]])) continue;
-      let [x, z] = G.toWorld(st[1], st[2]);
-      if (andra.some(a => Math.hypot(a[0] - x, a[1] - z) < 1.6)) continue;
+      if (sett[st[0]]) continue;
+      let x, z, egen = st[1] === null;
+      if (egen) { if (R.P[st[0]]) { x = R.P[st[0]].x; z = R.P[st[0]].z; } else if (L && L.ORT && L.ORT[st[0]]) [x, z] = G.toWorld(L.ORT[st[0]][0], L.ORT[st[0]][1]); else continue; }
+      else { if (R.P[st[0]] || D.PLATSER[st[0]]) continue; [x, z] = G.toWorld(st[1], st[2]); if (andra.some(a => Math.hypot(a[0] - x, a[1] - z) < 1.6)) continue; }
+      sett[st[0]] = 1;
+      if (egen) { platser.push({ st, x, z, egen }); continue; }
       if (G.sdAt(x, z) < 0.8) { let bast = null; for (let r = 0.3; r < 3 && !bast; r += 0.3) for (let a = 0; a < 6.283; a += 0.5 / r) { const px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; if (G.sdAt(px, pz) > 0.8) { bast = [px, pz]; break; } } if (!bast) continue; [x, z] = bast; }
       platser.push({ st, x, z });
     }
@@ -118,11 +133,20 @@
     for (let k = n >= 2 ? 1 : 0; k < antal; k++) { const h = HUS[k], s = 0.85 + ((seed * 7 + k * 3) % 5) * 0.05; mb.push().move(h[0] * 1.15, 0, h[1] * 1.15).rotY(h[2] + seed); B.stuga(mb, 0.95 * s, 0.62 * s, 0.36 * s, n >= 2 && k % 2 ? 'tegel' : k % 3 ? 'span' : 'torv', { skorsten: 1, ljus: 1 }); mb.pop(); }
     const m = B.mesh(mb); m.scale.setScalar(B.K * (n === 1 ? 0.55 : 0.62)); return m;
   }
+  // orter som spelet själv ritar hus för: egna baser och orterna i den här världens steg (Varld._orter)
+  function spelRitar() {
+    const S = V.Game.s, D = V.DATA, ut = {}; for (const id in S.bas) ut[id] = 1;
+    for (const u of D.UPPDRAG) { if (u.plats) ut[u.plats] = 1; if (u.fran) ut[u.fran] = 1; }
+    const Vd = D.VARLDAR && D.VARLDAR[S.varld]; if (Vd && Vd.orter) for (const id in Vd.orter) ut[id] = 1;
+    return ut;
+  }
+  let husNyckel = '';
   function rita() {
     if (!scene || !V.Bygge || !V.MB) return;
-    const ar = arNu(); if (ar === ritatAr && grupp) return; ritatAr = ar;
+    const ar = arNu(), nyckel = ar + ':' + Object.keys(V.Game.s.bas).length + ':' + V.Game.s.varld; if (nyckel === husNyckel && grupp) return; husNyckel = nyckel; ritatAr = ar;
     if (grupp) scene.remove(grupp); grupp = new THREE.Group(); grupp.name = 'orter';
-    lagg().forEach((p, i) => { const l = lage(p.st, ar); if (!l.n) return; const m = hus(l.n, i); m.position.set(p.x, V.Geo.groundAt(p.x, p.z), p.z); grupp.add(m); });
+    const ritas = spelRitar();
+    lagg().forEach((p, i) => { const l = lage(p.st, ar); if (!l.n || (p.egen && ritas[p.st[0]])) return; const m = hus(l.n, i); m.position.set(p.x, V.Geo.groundAt(p.x, p.z), p.z); grupp.add(m); });
     scene.add(grupp);
   }
 
@@ -133,14 +157,16 @@
   }
   if (V.Levande) {
     const initFore = V.Levande.init, orterFore = V.Levande.orter;
-    V.Levande.init = function (sc) { const r = initFore.apply(this, arguments); if (grupp && scene) scene.remove(grupp); scene = sc; grupp = null; ritatAr = -1; return r; };
+    V.Levande.init = function (sc) { const r = initFore.apply(this, arguments); if (grupp && scene) scene.remove(grupp); scene = sc; grupp = null; ritatAr = -1; husNyckel = ""; return r; };
     // skyltarna: tidens namn, bara när staden finns. Inte i slag och filmer (då visar levande.js inget heller).
     V.Levande.orter = function (upptagna) {
       const ut = orterFore.apply(this, arguments);
       if (V.Game.skede() === 'strid' || (V.Intro && V.Intro.aktiv)) return ut;
       try {
-        rita(); const ar = arNu();
-        for (const p of lagg()) { const l = lage(p.st, ar); if (!l.n) continue; const z = p.z + 1.1; ut.push({ id: 't:' + p.st[0] + ':' + l.namn, plats: p.st[0], namn: l.namn, x: p.x, z, y: Math.max(0.02, V.Geo.groundAt(p.x, z)), liten: true }); }
+        rita(); const ar = arNu(), har = ut.map(o => [o.x, o.z]), finns = {}; for (const o of ut) finns[o.plats] = 1;
+        for (const k in upptagna) if (k[0] === '_') { const q = k.slice(1).split(','); har.push([q[0] * 2.2, q[1] * 2.2]); }
+        for (const p of lagg()) { const l = lage(p.st, ar); if (!l.n) continue;
+          if (p.egen && (upptagna[p.st[0]] || finns[p.st[0]] || har.some(a => Math.hypot(a[0] - p.x, a[1] - p.z - 0.9) < 1.5))) continue; const z = p.z + 1.1; ut.push({ id: 't:' + p.st[0] + ':' + l.namn, plats: p.st[0], namn: l.namn, x: p.x, z, y: Math.max(0.02, V.Geo.groundAt(p.x, z)), liten: true }); }
       } catch (e) { /* inget */ }
       return ut;
     };
