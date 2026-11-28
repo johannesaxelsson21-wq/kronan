@@ -202,7 +202,7 @@
     ruta.querySelector('b').textContent = namn + ', ' + ar(); ruta.querySelector('div').textContent = t || '';
     const lp = ruta.querySelector('.lage');
     const fyll = () => { if (!lp.isConnected) return; try { lp.textContent = lage(id).join(' '); } catch (e) { lp.textContent = ''; } setTimeout(fyll, 1000); };
-    if (!id) lp.remove();
+    lp.remove();          // bara historisk info i rutan, ingen nivå eller produktion (Johannes 2026-11-28: "nivå grejen kan tas bort från denna rutan")
     if (!t && ruta.querySelector('small')) ruta.querySelector('small').remove();          // källan visas inte i spelet (Johannes 2026-11-28: bryter inlevelsen), den står i docs/ortfakta.md
     document.body.appendChild(ruta); if (id) fyll();
     // Rutan står kvar vid orten: den följer namnskylten när kartan dras (Johannes 2026-11-28: "så ska den stanna där den spawnade, vid orten").
