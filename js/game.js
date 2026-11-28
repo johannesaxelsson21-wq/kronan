@@ -110,7 +110,7 @@
     husPris(id) { const h = D.BYGGNADER.find(q => q.id === id), p = (h.c0 || P(h.plats).c0 * h.cx) * Math.pow(h.r, G.hus(id)); return p < 1000 ? Math.ceil(p) : p; },          // Gustavs hus: cx gånger platsens första pris
     kanHus(id) { const h = D.BYGGNADER.find(q => q.id === id); return G.husFinns(id) && S.res[G.husRes(h)] >= G.husPris(id); },
     kopHus(id) { if (!G.kanHus(id)) return false; const h = D.BYGGNADER.find(q => q.id === id), res = G.husRes(h); S.res[res] -= G.husPris(id); (S.hus || (S.hus = {}))[id] = G.hus(id) + 1; G.ut('hus', { id, h, niva: S.hus[id] }); return true; },
-    husX(plats) { if (!S.hus) return 1; let x = 1; for (const h of D.BYGGNADER) if (h.niva && G.iVarld(h) && h.plats === plats && S.hus[h.id]) x *= 1 + h.ger * S.hus[h.id]; return x; },
+    husX(plats) { if (!S.hus) return 1; let x = 1; for (const h of D.BYGGNADER) if (h.niva && G.iVarld(h) && (h.till || h.plats) === plats && S.hus[h.id]) x *= 1 + h.ger * S.hus[h.id]; return x; },          // till: huset ger mer åt en annan ort (hamnen i Gävle åt Kopparberget)
     kanSold() { return !!S.las.sold && !G.manFull() && S.res.mark >= G.soldPris(); },
     kopSold() { if (!G.kanSold()) return false; S.res.mark -= G.soldPris(); S.sold = (S.sold || 0) + 1; G.ut('sold', { niva: S.sold, dubbel: S.sold % 10 === 0 }); return true; },
     pris(id, L) { const b = P(id), p = b.c0 * Math.pow(b.r, L === undefined ? (S.bas[id] || 0) : L); return p < 1000 ? Math.ceil(p) : p; },
