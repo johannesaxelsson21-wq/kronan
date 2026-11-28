@@ -320,6 +320,24 @@
       const h = kortNu.kort(); if (k._h !== h) { k._h = h; k.innerHTML = h; } k.style.display = '';
       const r = kortNu.row.getBoundingClientRect(), w = k.offsetWidth; k.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; k.style.top = Math.max(8, r.top - k.offsetHeight - 8) + 'px';
     },
+    // Guldrutan när något når nivå 10, 20 … (Johannes 2026-11-28 17:58: "Dubbelt så mycket mark. Det är förvirrande, vem får det, vad är det? Tydligare text krävs").
+    // Den säger vad som når nivån, och visar leveransen före och efter med samma siffror som korten.
+    _nivaRuta(rubrik, bild, text) { return UI._lar(rubrik, bild, text); },
+    _storre(fore, nu) { return nu >= fore * 1.95 ? 'dubbelt så stor' : 'större'; },
+    nivaSkylt(typ, id, niva) {
+      if (typ === 'bas') {
+        const b = G.BAS[id]; if (!b || niva < 10) return; const enh = b.ger === 'man' ? 'män' : 'mark', fore = G.levStorlek(id, niva - 1), nu = G.levStorlek(id, niva), n = UI.byggNamn(id, niva);
+        const tid = L => Math.max(3, 10 * Math.pow(0.9, Math.floor(L / 10)) * G.konstVarv()), oftare = tid(niva) < tid(niva - 1) - 0.01;          // som G.varvTid
+        const text = (n ? n[0].toUpperCase() + n.slice(1) + ' i ' + b.namn + '. Varje leverans därifrån' : 'Varje leverans från ' + b.namn) + ' blir ' + UI._storre(fore, nu) + (oftare ? ', och de kommer lite oftare.' : '.');
+        UI.skylt('', false, true, { html: UI._nivaRuta(b.namn + ' · nivå ' + niva, [{ ik: { bygd: 'bygd', gruva: 'gruva', slott: 'slott' }[b.slag] || 'stad', stor: b.namn, liten: 'nivå ' + niva }, { pil: '' }, { ik: b.ger === 'man' ? 'man' : 'mark', stor: tal(fore) + ' → ' + tal(nu), liten: enh + ' per leverans' }], text), logg: b.namn + ' nivå ' + niva + ': ' + text + ' ' + tal(fore) + ' → ' + tal(nu) + ' ' + enh + ' per leverans.' });
+      } else if (typ === 'sold') {
+        const namn = G.s.varld === 0 ? 'Knektarna' : 'Soldaterna', fore = G.soldProd(niva - 1) * 10, nu = G.soldProd(niva) * 10, text = 'Varje leverans av män från ' + namn.toLowerCase() + ' blir ' + UI._storre(fore, nu) + '.';
+        UI.skylt('', false, true, { html: UI._nivaRuta(namn + ' · nivå ' + niva, [{ ik: 'man', stor: namn, liten: 'nivå ' + niva }, { pil: '' }, { ik: 'man', stor: tal(fore) + ' → ' + tal(nu), liten: 'män per leverans' }], text), logg: namn + ' nivå ' + niva + ': ' + text + ' ' + tal(fore) + ' → ' + tal(nu) + ' män per leverans.' });
+      } else if (typ === 'konst' && id === 'skidor' && G.s.varld === 0) {          // bara Skidor och hästar i förspelet gör något särskilt var tionde nivå: full mätare går ännu fortare (G.fullX)
+        const namn = UI.konst(id)[0], x = G.fullX(), ord = { 3: 'tre', 4: 'fyra', 5: 'fem' }[x] || String(x), text = 'När ringen runt knappen är full går alla mätare nu ' + ord + ' gånger så fort.';
+        UI.skylt('', false, true, { html: UI._nivaRuta(namn + ' · nivå ' + niva, [{ ik: 'fart', stor: namn, liten: 'nivå ' + niva }, { pil: '' }, { ik: 'upp', stor: '×' + (x - 1) + ' → ×' + x, liten: 'när ringen är full' }], text), logg: namn + ' nivå ' + niva + ': ' + text });
+      }
+    },
     // Vad som byggs när en plats når en ny tiotal: det som faktiskt reser sig på kartan.
     byggnad(id, niva) { const b = G.BAS[id], n = UI.byggNamn(id, niva); return b.namn + ': ' + (n ? n + '. ' : '') + 'Dubbelt så ' + (b.ger === 'man' ? 'många män' : 'mycket mark'); },
     byggNamn(id, niva) {
@@ -584,10 +602,10 @@
       document.querySelectorAll('.logg-ga').forEach(b => b.addEventListener('click', () => { const ga = UI.gaTill(L[+b.dataset.i].id); UI.stang(); if (ga) ga(); }));
     },          // riktig tid: på en skärm med 120 bilder i sekunden försvann raden annars dubbelt så fort
     // lang: en guldruta om något man har fått (en stad på nivå 10, 20 ...). Den står kvar en god stund, stannar medan musen är över den, går bort med ett tryck och sparas i Meddelanden (Johannes 2026-11-28: "försvinner för snabbt").
-    skylt(t, iSlag, lang) {
-      if (!iSlag && root.classList.contains('slag')) return; const e = el('div', 'skylt' + (lang ? ' lang' : ''), t + (lang ? '<button class="notis-x" aria-label="Stäng"><svg viewBox="0 0 14 14"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7"/></svg></button>' : '')); $('text').appendChild(e);
+    skylt(t, iSlag, lang, rik) {          // rik: { html, logg } en guldruta med bilder (UI.nivaSkylt)
+      if (!iSlag && root.classList.contains('slag')) return; const e = el('div', 'skylt' + (lang ? ' lang' : '') + (rik ? ' rik' : ''), rik ? rik.html : t + (lang ? '<button class="notis-x" aria-label="Stäng"><svg viewBox="0 0 14 14"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7"/></svg></button>' : '')); $('text').appendChild(e);
       if (!lang) { setTimeout(() => e.classList.add('bort'), 2600); setTimeout(() => e.remove(), 3400); return; }
-      UI._logga(t); { const alla = $('text').querySelectorAll('.skylt.lang'); if (alla.length > 2) alla[0].remove(); }          // högst två på en gång
+      UI._logga(rik ? rik.logg : t); { const alla = $('text').querySelectorAll('.skylt.lang'); if (alla.length > 2) alla[0].remove(); }          // högst två på en gång
       let kvar = 9000, sist = performance.now(), over = false; const bort = () => { if (e._bort) return; e._bort = 1; e.classList.add('bort'); setTimeout(() => e.remove(), 800); };
       e.addEventListener('pointerdown', ev => { ev.stopPropagation(); bort(); }); e.addEventListener('mouseenter', () => { over = true; }); e.addEventListener('mouseleave', () => { over = false; });
       const ur = setInterval(() => { const nu = performance.now(); if (!over && !document.hidden) kvar -= nu - sist; sist = nu; if (kvar <= 0 || !e.isConnected) { clearInterval(ur); bort(); } }, 200);

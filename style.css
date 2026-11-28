@@ -777,3 +777,9 @@ button { font-family: inherit; cursor: pointer; }
 .skylt.lang { display: flex; align-items: center; gap: 4px; max-width: 600px; padding-right: 8px; text-align: center; pointer-events: auto; cursor: pointer; }
 .skylt.lang .notis-x svg { stroke: #5d430f; }
 .skylt.lang .notis-x:hover { background: rgba(93, 67, 15, 0.15); }
+/* guldrutan vid nivå 10, 20 …: samma bilder som rutan för nya saker, i guld (Johannes 2026-11-28 17:58) */
+.skylt.lang.rik { display: block; position: relative; width: 320px; max-width: calc(100vw - 16px); box-sizing: border-box; padding: 11px 16px 12px; font-size: 14px; color: #3a2a14; background: radial-gradient(ellipse at 50% 30%, #fff3cf, #f3d98f 65%, #e3bd5e); border: 2px solid #5d430f; border-radius: 9px; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 240, 190, 0.75) inset; }
+.skylt.rik .lar-rubrik { color: #6b4a12; }
+.skylt.rik .lar-mk { width: 120px; }
+.skylt.rik .lar-mk b { white-space: nowrap; }
+.skylt.rik p { margin: 10px 0 0; font-size: 14px; line-height: 1.38; text-wrap: balance; }
