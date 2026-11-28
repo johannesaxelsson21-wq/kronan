@@ -11,6 +11,8 @@
 //    sv.wikipedia Jösse Eriksson: fogden i Västerås är dansk till börden). Unionens huvudstad är i praktiken Köpenhamn (en.wikipedia Kalmar Union).
 //  Brunkeberg 1471: Sten Sture den äldre är riksföreståndare från 1470; Kristian I av Danmark kommer för att störta honom och förlorar
 //    10 oktober 1471 vid Brunkebergsåsen, en ås strax norr om Stockholm; handbössor nämns (en.wikipedia Battle of Brunkeberg, Sten Sture the Elder).
+//    Kristian har sitt läger på åsen; Sten anfaller västerifrån (Nils Sture österifrån, Knut Posse från staden), och Kristian drar sig undan mot ön
+//    Käpplingen (Blasieholmen) vid vattnet öster om åsen, där bron brister (en.wikipedia Battle of Brunkeberg). Scenen visar bara Stens anfall.
 //  Stockholm 1512: Svante Nilsson är riksföreståndare 1504 till 2 januari 1512, då han dör; i början av 1512 är det krig med kung Hans av Danmark,
 //    som var Sveriges kung 1497–1501 (en.wikipedia Svante Nilsson, John King of Denmark, Dano-Swedish War 1512–1520). Sten "inte ens tjugo år" som i data.js.
 (function () {
@@ -101,54 +103,54 @@
     { ort: 'Brunkeberg', tid: 'oktober 1471', sasong: 0.76, el: 14, varm: 0.45, utanFlagg: true, glanta: 1,
       rader: ['Riksföreståndaren Sten Sture den äldre styr Sverige. Danmarks kung Kristian I kommer med en här för att störta honom.', 'Vid Brunkeberg, strax norr om Stockholm, vinner Sten Sture.'],
       bygg() {
-        // Kristians här står på åsen norr om staden, Sten Stures här kommer söderifrån. Linjerna möts och slåss man mot man; några faller
-        // (bakåt, mot sin egen sida, så att ingen sedan står i en kropp), och när raden säger att Sten Sture vinner vänder danskarna och går
-        // norrut medan svenskarna står kvar. Få och tydliga figurer och ingen går igenom någon (Johannes 2026-11-28: "här springer de igenom
-        // varandra utan att slåss, de ska slåss"). Ingen krutrök: på avstånd blev den en vit klump.
-        const p = R.P.stockholm, st = V.Varld.tomt.stockholm, mx = p.x + 2.8, mz = p.z - 11.4, N = 5, D = [], Sv = [], LED = 0.8;
+        // Kristians här står på åsen, Sten Stures här kommer västerifrån. Linjerna möts och slåss man mot man; några faller (bakåt, mot sin
+        // egen sida, så att ingen sedan står i en kropp), och när raden säger att Sten Sture vinner drar sig danskarna undan österut, mot
+        // vattnet där Käpplingen ligger, medan svenskarna står kvar. Få och tydliga figurer, ingen går igenom någon (Johannes 2026-11-28:
+        // "här springer de igenom varandra utan att slåss, de ska slåss"). Ingen krutrök: på avstånd blev den en vit klump.
+        const p = R.P.stockholm, st = V.Varld.tomt.stockholm, mx = p.x + 2.8, mz = p.z - 11.4, N = 5, D = [], Sv = [], LED = 0.8, OST = Math.PI / 2;
         const fri = (x, z) => !(st && V.Filmstad.iHus(st, x, z, 0.12)) && Geo.sdAt(x, z) > 0.4;
         for (let r = 0; r < 2; r++) for (let i = 0; i < N; i++) {
-          const x = mx + (i - (N - 1) / 2) * 0.6, a = torr(x, mz - 1.55 - r * LED, st), b = torr(x + 0.1, mz + 1.95 + r * LED, st);
-          D.push(Object.assign(folk(a[0], a[1], 'dansk', { pike: r === 1, ang: 0, gar: false }), { bx: a[0], bz: a[1], rad: r, kol: i, fal: -1 }));
-          Sv.push(Object.assign(folk(b[0], b[1], r === 0 && i % 2 ? 'bonde' : 'knekt', { pike: r === 1, ang: Math.PI, gar: false }), { bx: b[0], bz: b[1], rad: r, kol: i, fal: -1 }));
+          const z = mz + (i - (N - 1) / 2) * 0.6, a = torr(mx + 0.35 + r * LED, z, st), b = torr(mx - 2.6 - r * LED, z + 0.1, st);
+          D.push(Object.assign(folk(a[0], a[1], 'dansk', { pike: r === 1, ang: -OST, gar: false }), { bx: a[0], bz: a[1], rad: r, kol: i, fal: -1 }));
+          Sv.push(Object.assign(folk(b[0], b[1], r === 0 && i % 2 ? 'bonde' : 'knekt', { pike: r === 1, ang: OST, gar: false }), { bx: b[0], bz: b[1], rad: r, kol: i, fal: -1 }));
         }
         // vem i främsta ledet som faller och när (sekunder efter att linjerna har mötts)
         const FALL = [[D, 1, 1.3], [D, 3, 2.6], [Sv, 2, 3.3], [D, 0, 4.0], [D, 4, 5.1], [Sv, 0, 6.0]], fallen = FALL.map(() => 0);
         const fram = (L, k) => L.find(u => u.kol === k && u.rad === 0 && u.fal < 0);
-        const MAL_D = 1.2, MAL_S = -1.6;          // så långt linjerna går innan de möts: främsta leden står då 0,7 isär
-        let t = 0, offD = 0, offS = 0, tm = -1, gT = 0, bryt = -1;
-        T._fri = [[mx - 4.4, mz - 1, mx + 4.4, mz - 1, -4.8]];
+        const MAL_S = 2.25;          // svenskarna går fram tills främsta leden står 0,7 från danskarnas
+        let t = 0, offS = 0, tm = -1, gT = 0, bryt = -1;
+        T._fri = [[mx - 4.5, mz, mx + 6.5, mz, -4.8]];
         return { steg(dt) {
             t += dt;
-            const gang = t > 0.9 && tm < 0;
-            if (gang) { offD = Math.min(MAL_D, offD + dt * 0.36); offS = Math.max(MAL_S, offS - dt * 0.5); }
-            if (tm < 0 && offD >= MAL_D && offS <= MAL_S) tm = 0;
+            const gang = t > 0.7 && tm < 0;
+            if (gang) offS = Math.min(MAL_S, offS + dt * 0.6);
+            if (tm < 0 && offS >= MAL_S) tm = 0;
             if (tm >= 0) tm += dt;
             if (bryt < 0 && tm > 2.4 && (rad >= 1 || tm > 9)) bryt = 0;          // raden "vinner Sten Sture" står uppe
             if (bryt >= 0) bryt += dt;
             if (tm >= 0 && bryt < 0) FALL.forEach(([L, k, nar], j) => { if (fallen[j] || tm < nar) return; fallen[j] = 1; const u = fram(L, k); if (u) u.fal = 0; });
-            const steg1 = (u, sid) => {
-              const z0 = u.bz + (sid > 0 ? offD : offS);
+            const steg1 = (u, sid) => {          // sid 1: danskarna (vända mot väster), -1: svenskarna (vända mot öster)
+              const x0 = u.bx + (sid > 0 ? 0 : offS);
               if (u.fal >= 0) { u.fal = Math.min(1, u.fal + dt * 2.6); const e = mjuk(u.fal); u.lean = -1.5 * e; u.y = 0.05 * e; u.gar = false; return; }          // faller bakåt
-              if (sid > 0 && bryt >= 0) {          // danskarna vänder och går norrut, de bakre först
+              if (sid > 0 && bryt >= 0) {          // danskarna vänder och drar sig österut mot vattnet, de bakre först
                 const b = bryt - (1 - u.rad) * 0.5 - u.kol * 0.15;
-                if (b > 0) { u.ang = Math.PI + Math.sin(u.fas) * 0.15; u.gar = true; u.lean = 0.18; const ny = (u._fly || 0) + dt * 0.8; if (fri(u.x, z0 - ny)) u._fly = ny; }
+                if (b > 0) { u.ang = OST + Math.sin(u.fas) * 0.15; u.gar = true; u.lean = 0.18; const ny = (u._fly || 0) + dt * 0.8; if (fri(x0 + ny, u.bz)) u._fly = ny; }
                 else { u.lean = 0; u.gar = false; }
-                u.x = u.bx; u.z = z0 - (u._fly || 0); return;
+                u.x = x0 + (u._fly || 0); u.z = u.bz; return;
               }
               let lunge = 0;
               if (tm >= 0 && bryt < 0 && u.rad === 0) {          // man mot man: stöt, tillbaka, stöt
                 const pu = Math.max(0, Math.sin(t * 6.2 + u.fas)); lunge = 0.12 * pu * pu; u.lean = 0.42 * pu - 0.04; u.gar = true;
-                u.ang = (sid > 0 ? 0 : Math.PI) + Math.sin(t * 1.7 + u.fas) * 0.12;
-              } else if (bryt >= 0) { u.lean = 0; u.gar = false; u.ang = Math.PI; }          // svenskarna står kvar på fältet
-              else { u.lean = tm >= 0 ? 0.06 * Math.sin(t * 3 + u.fas) : 0.12; u.gar = gang; }
-              u.x = u.bx; u.z = z0 + (sid > 0 ? lunge : -lunge);
+                u.ang = (sid > 0 ? -OST : OST) + Math.sin(t * 1.7 + u.fas) * 0.12;
+              } else if (bryt >= 0) { u.lean = 0; u.gar = false; u.ang = OST; }          // svenskarna står kvar på fältet
+              else { u.lean = tm >= 0 ? 0.06 * Math.sin(t * 3 + u.fas) : (sid < 0 && gang ? 0.12 : 0); u.gar = sid < 0 && gang; }
+              u.x = x0 + (sid > 0 ? -lunge : lunge); u.z = u.bz;
             };
             D.forEach(u => steg1(u, 1)); Sv.forEach(u => steg1(u, -1));
             // gnistor där vapnen möts
             if (tm >= 0 && bryt < 0) { gT -= dt; if (gT <= 0) { gT = 0.25 + Math.random() * 0.4; const k = Math.floor(Math.random() * N), a = fram(D, k), b = fram(Sv, k); if (a && b) { const x = (a.x + b.x) / 2, z = (a.z + b.z) / 2; Fx.gnista(x, Geo.groundAt(x, z) + 0.42, z); Fx.gnista(x, Geo.groundAt(x, z) + 0.46, z); } } }
           },
-          kam(f) { return { x: mx, z: mz - 0.4, d: mix(9.8, 8.9, mjuk(f)), p: mix(44, 40, f), y: mix(97, 86, f), h: 0.4 }; } };          // från sidan: svenskarna till vänster, danskarna till höger
+          kam(f) { return { x: mx + 0.2, z: mz, d: mix(9.8, 8.9, mjuk(f)), p: mix(44, 40, f), y: mix(-7, 4, f), h: 0.4 }; } };          // söderifrån: svenskarna till vänster, danskarna till höger och vattnet bortom dem
       } },
     { ort: 'Stockholm', tid: 'januari 1512', sasong: null, el: 12, varm: 0.45,
       rader: ['Sverige har ingen kung. Riksföreståndaren Svante Nilsson har styrt riket sedan 1504, och nu är han död.', 'Det är krig med kung Hans av Danmark, som en gång var Sveriges kung. Svantes son Sten är inte ens tjugo år.'],
