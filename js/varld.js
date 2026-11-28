@@ -454,7 +454,7 @@
     },
     _malUppdrag() { return { pos: () => vis && W._foljVis ? { x: W._foljVis.x, z: W._foljVis.z, d: G.skede() === 'strid' ? W._foljVis.d : 0 } : null }; },
     _malHjalten() { const Gu = V.Gustav; return { pos: () => { const k = G.s.hjalte === 'kristina' && W._kristina; if (k) return { x: k.x, z: k.z }; if (vis && vis.gustav && W._foljVis) return W._malUppdrag().pos(); return Gu.g.visible ? { x: Gu.x, z: Gu.z } : null; } }; },
-    foljUppdraget() { if (vis && !V.tyst) W._foljer = Object.assign({ t: performance.now() }, W._malUppdrag()); },          // i slaget: varje tryck tar kameran tillbaka dit
+    foljUppdraget() { if (vis && !V.tyst) W._foljer = Object.assign({ t: performance.now() }, W._malUppdrag()); },          // när striden börjar går kameran dit, och den följer tills man själv rör kartan eller trycker
     foljPlats(id) { if (!V.tyst && R.P[id]) W._foljer = { t: performance.now(), pos: () => ({ x: R.P[id].x, z: R.P[id].z }) }; },          // en vald stad: kameran står där tills man drar eller väljer något annat
     foljHjalten() { if (!V.tyst) W._foljer = Object.assign({ t: performance.now() }, W._malHjalten()); },          // knappen Hitta mig
     _foljNu() {
