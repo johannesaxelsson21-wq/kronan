@@ -358,6 +358,7 @@
     }
     else if (sort === 'danmark') { seg('#b8312a', 0.64, 0.98); duk('#f2ede2', 0.78, 0.84, 0.02, 0.55, 0.004); duk('#f2ede2', 0.64, 0.98, 0.16, 0.23, 0.004); }
     else if (sort === 'lubeck') { seg('#f2ede2', 0.81, 0.98); seg('#b8312a', 0.64, 0.81); }
+    else if (sort === 'polen') { seg('#b8312a', 0.64, 0.98); duk('#f2ede2', 0.71, 0.89, 0.18, 0.38, 0.004); duk('#e8c040', 0.89, 0.94, 0.22, 0.34, 0.004); }          // Polens vita örn på rött
     else if (sort === 'vasa') { seg('#e8c040', 0.64, 0.98); duk('#2a2622', 0.7, 0.92, 0.22, 0.34, 0.004); duk('#2a2622', 0.76, 0.86, 0.14, 0.42, 0.004); }
     const m = new THREE.Mesh(mb.geometry(), material()); m.castShadow = true; return m;
   }

@@ -155,6 +155,140 @@
     ]
   };
 
+  // Landskap, länder och vatten som texterna nämner: en skylt mitt i området
+  Object.assign(ORT, {
+    danmark: [11.75, 55.45, 'Danmark'], norge: [11.0, 60.4, 'Norge'], finland: [24.3, 61.5, 'Finland'], polen: [19.6, 53.95, 'Polen'], ryssland: [30.4, 58.9, 'Ryssland'],
+    estland: [25.6, 58.85, 'Estland'], livland: [25.9, 57.7, 'Livland'], karelen: [29.9, 61.4, 'Karelen'], tyskland: [12.6, 53.85, 'Tyskland'], halland: [12.75, 56.85, 'Halland'],
+    dalarna: [14.6, 61.25, 'Dalarna'], gastrikland: [16.75, 60.55, 'Gästrikland'], uppland: [17.95, 60.05, 'Uppland'], sodermanland: [16.75, 59.05, 'Södermanland'], vastmanland: [16.1, 59.75, 'Västmanland'],
+    ostergotland: [15.7, 58.25, 'Östergötland'], vastergotland: [13.3, 58.1, 'Västergötland'], gotland: [18.55, 57.45, 'Gotland'], skane: [13.55, 55.85, 'Skåne'], blekinge: [15.1, 56.25, 'Blekinge'],
+    narke: [15.1, 59.15, 'Närke'], varmland: [13.3, 59.75, 'Värmland'], siljan: [14.8, 60.85, 'Siljan'], malaren: [17.0, 59.45, 'Mälaren'], vattern: [14.55, 58.35, 'Vättern'],
+    vasterhavet: [11.1, 57.55, 'Västerhavet'], ladoga: [31.0, 60.9, 'Ladoga'], novgorod: [31.25, 58.52, 'Novgorod'], tiveden: [14.6, 58.75, 'Tiveden'],
+    osterbotten: [22.3, 61.9, null], upplandkust: [18.75, 59.8, null]
+  });
+
+  // Härar och flottor, per värld: syns från steget som nämner dem (steg) och rör sig som de gjorde i verkligheten.
+  // har = soldater till fots (slag = klädfärg), skepp = antal skepp till sjöss, flotta = bara skepp. flagga på skeppen och fanan.
+  const HAR = {
+    0: [
+      { id: 'hDansk0', namn: 'Danska hären', steg: 'sVadla', har: { n: 9, slag: 'dansk' }, skepp: 4, flagga: 'danmark', alias: ['danska hären', 'danskarna', 'Kristians här'], kalla: 'sv. Wikipedia, Slaget vid Vädla, Slaget vid Brännkyrka och Slaget på Åsundens is', stopp: [
+        [1517, 5, 'kopenhamn', { mer: 'Kristian II rustar en här och en flotta i Köpenhamn. De ska hjälpa ärkebiskopen Gustav Trolle.' }],
+        [1517, 6.8, 'vadla', { sjo: 'danmark', mer: 'Den danska hären har gått i land vid Vädla, nära Stockholm.' }],
+        [1517, 8.5, 'kopenhamn', { sjo: 'danmark', mer: 'Efter Vädla seglar danskarna hem till Köpenhamn.' }],
+        [1518, 6, 'kopenhamn', { mer: 'Kristian II samlar en ny och större här, och leder den själv.' }],
+        [1518, 7.5, 'brannkyrka', { sjo: 'danmark', mer: 'Danskarna har gått i land söder om Stockholm och vill belägra staden.' }],
+        [1518, 9.6, 'kopenhamn', { sjo: 'danmark', mer: 'Efter Brännkyrka seglar hären hem igen.' }],
+        [1519, 12, 'halmstad', { sjo: 'danmark', mer: 'En stor här av legoknektar samlas i Halland, under Otto Krumpen.' }],
+        [1520, 1.4, 'bogesund', { mer: 'Hären går över gränsen in i Västergötland. Vid Åsunden väntar Sten Stures folk.' }],
+        [1520, 2.2, 'tiveden', { mer: 'Danskarna tar sig igenom skogarna i Tiveden, där svenskarna har fällt träd över vägen.' }],
+        [1520, 3, 'strangnas', { mer: 'Hären går mot Mälardalen, och rådsherrarna i Uppsala förhandlar med Otto Krumpen.' }],
+        [1520, 4, 'uppsala', { mer: 'Danskarna står vid Uppsala. På långfredagen kommer bönderna mot dem.' }],
+        [1520, 5, 'stockholm', { mer: 'Hären belägrar Stockholm hela sommaren. Kristina Gyllenstierna håller staden.' }]] }
+    ],
+    1: [
+      { id: 'hDansk1', namn: 'Danska hären', steg: 'brunnback', har: { n: 8, slag: 'dansk' }, flagga: 'danmark', alias: ['danska hären', 'danskarna'], kalla: 'sv. Wikipedia, Befrielsekriget', stopp: [
+        [1521, 1, 'stockholm', { mer: 'Kristian II:s knektar håller Stockholm och slotten runt Mälaren.' }],
+        [1521, 3.6, 'vasteras', { mer: 'En dansk här går från Stockholm mot Dalarna för att slå ner upproret.' }],
+        [1521, 3.95, 'brunnback', { mer: 'Danskarna vill över Dalälven vid Brunnbäcks färja.' }],
+        [1521, 4.5, 'vasteras', { mer: 'Efter Brunnbäck drar sig danskarna tillbaka till Västerås.' }],
+        [1521, 5.3, 'stockholm', { mer: 'Det som är kvar av hären tar sig till Stockholm. Där håller danskarna ut bakom murarna.' }],
+        [1523, 6.7, null, {}]] },
+      { id: 'fLubeck1', namn: 'Lübecks flotta', steg: 'lubeck', flotta: 1, skepp: 4, flagga: 'lubeck', alias: ['Lübecks skepp', 'Lübecks flotta', 'lybska skepp'], kalla: 'sv. Wikipedia, Befrielsekriget', stopp: [
+        [1522, 4, 'lubeck', { mer: 'Lübeck rustar skepp åt Gustav, på kredit.' }],
+        [1522, 6, 'soderkoping', { sjo: 'lubeck', mer: 'Tio skepp med 750 tyska knektar kommer till Söderköping.' }],
+        [1522, 9, 'stockholm', { sjo: 'lubeck', mer: 'Lübecks skepp stänger inloppet till Stockholm.' }],
+        [1523, 7.2, 'lubeck', { sjo: 'lubeck', mer: 'Stockholm är taget. Skeppen seglar hem till Lübeck.' }],
+        [1523, 9, null, {}]] },
+      { id: 'fLubeck2', namn: 'Lübecks flotta', steg: 'grevefejden', flotta: 1, skepp: 4, flagga: 'lubeck', alias: ['Lübecks flotta'], kalla: 'sv. Wikipedia, Grevefejden', stopp: [
+        [1535, 3, 'lubeck', { mer: 'I Grevefejden strider Lübeck om Danmarks tron. Flottan ska hålla Östersjön.' }],
+        [1535, 6.1, 'bornholm', { sjo: 'lubeck', mer: 'Lübecks flotta möter den svenska, danska och preussiska flottan vid Bornholm.' }],
+        [1535, 7, 'lubeck', { sjo: 'lubeck', mer: 'Slagen till sjöss seglar flottan hem.' }],
+        [1535, 9, null, {}]] },
+      { id: 'hDacke', namn: 'Dackes bönder', steg: 'kisa', har: { n: 9, slag: 'bonde' }, alias: ['Dackes män', 'Dackes bönder'], kalla: 'sv. Wikipedia, Dackefejden', stopp: [
+        [1542, 7, 'vissefjarda', { mer: 'Bönderna i Småland har rest sig under Nils Dacke. De är arga över skatterna och över att kyrkornas silver tas.' }],
+        [1542, 8.8, 'kisa', { mer: 'Dackes män väntar i skogarna vid Kisa, där vägen går fram.' }],
+        [1542, 11, 'vissefjarda', { mer: 'Efter Kisa styr Dacke stora delar av Småland. Kungen sluter stillestånd med honom.' }],
+        [1543, 2.8, 'virserum', { mer: 'Dackes bönder samlas på isarna vid Virserum.' }],
+        [1543, 3.5, null, {}]] },
+      { id: 'hRysk1', namn: 'Ryska hären', steg: 'viborg', har: { n: 9, slag: 'rysk' }, alias: ['Ryssarna', 'ryssarna', 'ryska hären'], kalla: 'sv. Wikipedia, Rysk-svenska kriget 1554–1557', stopp: [
+        [1555, 11, 'novgorod', { mer: 'Tsar Ivan IV samlar en här i Novgorod. Kriget gäller gränsen i Karelen.' }],
+        [1555, 12.8, 'viborg', { via: ['kivinebb'], mer: 'Den ryska hären belägrar Viborg.' }],
+        [1556, 3, 'novgorod', { via: ['kivinebb'], mer: 'Ryssarna drar sig tillbaka efter belägringen.' }],
+        [1557, 4.5, null, {}]] }
+    ],
+    2: [
+      { id: 'fDansk2', namn: 'Danska flottan', steg: 'eBornholm', flotta: 1, skepp: 5, flagga: 'danmark', alias: ['danska flottan', 'den danska flottan'], kalla: 'sv. Wikipedia, Nordiska sjuårskriget', stopp: [
+        [1563, 4, 'kopenhamn', { mer: 'Danmarks flotta ligger i Köpenhamn.' }],
+        [1563, 5.8, 'bornholm', { sjo: 'danmark', mer: 'En dansk eskader seglar vid Bornholm.' }],
+        [1563, 7, 'kopenhamn', { sjo: 'danmark', mer: 'Kriget har börjat. Flottan är hemma i Köpenhamn.' }],
+        [1564, 5.6, 'olandsudde', { sjo: 'danmark', mer: 'Den danska och lybska flottan under Herluf Trolle möter svenskarna vid Öland.' }],
+        [1564, 6.6, 'kopenhamn', { sjo: 'danmark', mer: 'Flottan är tillbaka i Köpenhamn.' }],
+        [1564, 7.9, 'olandsudde', { sjo: 'danmark', mer: 'Herluf Trolle möter Klas Horn vid Öland igen.' }],
+        [1564, 9, 'kopenhamn', { sjo: 'danmark', mer: 'Flottan är tillbaka i Köpenhamn.' }],
+        [1565, 6.6, 'bornholm', { sjo: 'danmark', mer: 'Flottan går mot svenskarna mellan Rügen och Bornholm.' }],
+        [1565, 7.5, 'kopenhamn', { sjo: 'danmark', mer: 'Flottan är tillbaka i Köpenhamn.' }],
+        [1566, 7.2, 'olandsudde', { sjo: 'danmark', mer: 'Den danska och lybska flottan möter svenskarna vid Ölands norra udde.' }],
+        [1566, 7.7, 'visby', { sjo: 'danmark', mer: 'Flottan ankrar på redden utanför Visby.' }],
+        [1566, 8, null, {}]] },
+      { id: 'hDansk2', namn: 'Danska hären', steg: 'eKagge', har: { n: 9, slag: 'dansk' }, flagga: 'danmark', alias: ['danska hären', 'danskarna'], kalla: 'sv. Wikipedia, Nordiska sjuårskriget och Daniel Rantzau', stopp: [
+        [1563, 8, 'halmstad', { mer: 'Kung Fredrik II samlar den danska hären i Halland.' }],
+        [1563, 8.9, 'alvsborg', { mer: 'Den danska hären belägrar Älvsborg, Sveriges enda hamn mot väster.' }],
+        [1563, 10, 'halmstad', { mer: 'Danskarna är tillbaka i Halland.' }],
+        [1563, 10.8, 'mared', { mer: 'Den danska hären följer efter svenskarna när de lämnar Halmstad.' }],
+        [1563, 12, 'halmstad', { mer: 'Hären ligger i vinterkvarter i Halland.' }],
+        [1565, 10.4, 'axtorna', { mer: 'Under Daniel Rantzau går hären mot den svenska hären i Halland.' }],
+        [1565, 11.5, 'halmstad', { mer: 'Hären är tillbaka i Halmstad.' }],
+        [1567, 10.4, 'getaryggen', { mer: 'Hären går in i Sverige, upp längs Nissastigen.' }],
+        [1568, 2.5, 'halmstad', { via: ['jonkoping'], mer: 'Efter vintertåget genom Östergötland och Småland går hären tillbaka till Halland.' }]] }
+    ],
+    3: [
+      { id: 'hRysk3', namn: 'Ryska hären', steg: 'jReval1', har: { n: 10, slag: 'rysk' }, alias: ['Ryssarna', 'ryssarna', 'ryska hären'], kalla: 'sv. Wikipedia, Belägringen av Reval, Slaget vid Wenden och Livländska kriget', stopp: [
+        [1570, 7, 'narva', { mer: 'Tsar Ivan IV har gjort Magnus av Ösel till kung i Livland. Med en rysk här ska han ta Reval.' }],
+        [1570, 8.8, 'reval', { via: ['wesenberg'], mer: 'Hären belägrar Reval. Belägringen varar hela vintern.' }],
+        [1571, 3.2, 'narva', { via: ['wesenberg'], mer: 'Magnus av Ösel bränner sitt läger och drar sig undan.' }],
+        [1576, 12, 'narva', { mer: 'En stor rysk här samlas för att ta Reval.' }],
+        [1577, 1.2, 'reval', { via: ['wesenberg'], mer: 'Ryssarna belägrar Reval igen.' }],
+        [1577, 3.3, 'narva', { via: ['wesenberg'], mer: 'Efter sju veckor drar sig ryssarna tillbaka.' }],
+        [1578, 9.5, 'wenden', { mer: 'Den ryska hären belägrar Wenden i Livland.' }],
+        [1578, 11, null, {}],
+        [1590, 12, 'novgorod', { mer: 'Ryssland vill ha tillbaka städerna vid Finska viken.' }],
+        [1591, 1.8, 'narva', { via: ['jamburg'], mer: 'Ryssarna anfaller Narva.' }],
+        [1591, 4, null, {}]] },
+      { id: 'hPolsk3', namn: 'Polska hären', steg: 'jWenden', har: { n: 8, slag: 'knekt' }, alias: ['polackerna', 'polacker'], kalla: 'sv. Wikipedia, Slaget vid Wenden', stopp: [
+        [1578, 8, 'vilnius', { mer: 'Kung Stefan Batory av Polen och Litauen skickar en här till Livland.' }],
+        [1578, 10.3, 'wenden', { mer: 'Polacker och svenskar går mot ryssarna vid Wenden tillsammans.' }],
+        [1578, 12, 'vilnius', { mer: 'Polackerna går tillbaka mot Litauen.' }],
+        [1579, 2, null, {}]] }
+    ],
+    4: [
+      { id: 'hPolsk4', namn: 'Polska hären', steg: 'siFlottan', har: { n: 10, slag: 'knekt' }, skepp: 6, flagga: 'polen', alias: ['kungens här', 'Kungens här', 'polska hären', 'en här'], kalla: 'sv. Wikipedia, Kriget mot Sigismund', stopp: [
+        [1598, 5, 'danzig', { mer: 'Kungens här samlas i Danzig: omkring 5 000 man, de flesta legoknektar, och omkring hundra skepp.' }],
+        [1598, 7.9, 'kalmar', { sjo: 'polen', mer: 'Hären har gått i land vid Kalmar.' }],
+        [1598, 8.9, 'stegeborg', { sjo: 'polen', mer: 'Flottan och hären går norrut till Stegeborg.' }],
+        [1598, 9.6, 'linkoping', { mer: 'Kungens här går mot Linköping.' }],
+        [1598, 10.2, 'kalmar', { mer: 'Efter Stångebro lovar kungen att skicka hem sin här.' }],
+        [1598, 10.6, 'danzig', { sjo: 'polen', mer: 'Hären och flottan seglar hem till Danzig.' }],
+        [1598, 12, null, {}]] },
+      { id: 'hKarl', namn: 'Hertig Karls här', steg: 'siStegeborg', har: { n: 10, slag: 'knekt' }, flagga: 'sverige', alias: ['Karls här', 'Karls folk'], kalla: 'sv. Wikipedia, Slaget vid Stegeborg och Slaget vid Stångebro', stopp: [
+        [1598, 7, 'nykoping', { mer: 'Hertig Karl samlar sin här i Södermanland.' }],
+        [1598, 8.7, 'linkoping', { via: ['soderkoping'], mer: 'Karls här står i Linköping och spärrar vägen.' }],
+        [1598, 9.1, 'stegeborg', { via: ['soderkoping'], mer: 'Karls här ligger i läger vid Mem, nära Stegeborg.' }],
+        [1598, 9.7, 'linkoping', { via: ['soderkoping'], mer: 'Karls här följer efter kungens folk mot Linköping.' }],
+        [1598, 11, 'stockholm', { via: ['soderkoping', 'nykoping'], mer: 'Hertig Karls här tar Stockholm.' }],
+        [1599, 2.9, 'kalmar', { mer: 'Karls här belägrar Kalmar slott.' }],
+        [1599, 5.6, null, {}]] },
+      { id: 'hFinsk', namn: 'Finska hären', steg: 'siKorv', har: { n: 8, slag: 'knekt' }, skepp: 3, flagga: 'sverige', alias: ['finnarna'], kalla: 'sv. Wikipedia, Arvid Stålarm', stopp: [
+        [1598, 6, 'abo', { mer: 'Arvid Stålarm, som håller Finland åt kungen, rustar en här.' }],
+        [1598, 7.3, 'upplandkust', { sjo: 'sverige', mer: 'Finnarna går i land på Upplandskusten.' }],
+        [1598, 8, 'abo', { sjo: 'sverige', mer: 'Upplandsbönderna möter dem, och finnarna seglar tillbaka.' }],
+        [1598, 9, null, {}]] },
+      { id: 'hKlubbor', namn: 'Böndernas här', steg: 'siKlubbor', har: { n: 9, slag: 'bonde' }, alias: ['Bönderna', 'bönderna'], kalla: 'sv. Wikipedia, Klubbekriget', stopp: [
+        [1596, 11, 'osterbotten', { mer: 'Bönderna i Österbotten har rest sig mot knektarna som bor i deras gårdar. Deras vapen är klubbor.' }],
+        [1596, 12.4, 'nokia', { mer: 'Böndernas här möter Klas Flemings ryttare vid Nokia.' }],
+        [1597, 1.5, null, {}]] }
+    ]
+  };
+
+  const txt2 = [];
   let scene = null, figs = [], taggEl = {}, orter = null, orterV = -1;
   const datumNu = () => { const d = V.Game.datum(); return d.ar + (d.man - 1) / 12; };
   const dat = s => s[0] + (s[1] - 1) / 12;
@@ -180,13 +314,19 @@
   const L = V.Levande = {
     ORT, FIG, NAMN, get figs() { return figs; },
     init(sc) {
-      for (const f of figs) { if (f.h) f.h.scene.remove(f.h.g); if (f.u) V.Folk.remove(f.u); if (f.skepp) f.skepp.parent && f.skepp.parent.remove(f.skepp); }
+      for (const f of figs) { if (f.h) f.h.scene.remove(f.h.g); if (f.u) V.Folk.remove(f.u); if (f.us) f.us.forEach(u => V.Folk.remove(u)); if (f.fana) f.fana.parent && f.fana.parent.remove(f.fana); if (f.skeppen) f.skeppen.forEach(k => k.parent && k.parent.remove(k)); if (f.skepp) f.skepp.parent && f.skepp.parent.remove(f.skepp); }
       for (const id in taggEl) taggEl[id].remove(); taggEl = {};
       scene = sc; figs = []; orter = null;
       const S = V.Game.s;
-      for (const d of FIG[S.varld] || []) {
+      L._lankStil();
+      for (const d of (FIG[S.varld] || []).concat(HAR[S.varld] || [])) {
         const f = { d, k: undefined, leg: null, vandra: null };
-        if (d.kvinna) f.u = V.Folk.add(0, 0, 'kvinna', { col: d.kvinna[0], col2: d.kvinna[1], sc: 1.3, vis: false });
+        if (d.har || d.flotta) {          // en här: en klunga soldater med fana, till sjöss några skepp
+          f.us = []; if (d.har) for (let i = 0; i < d.har.n; i++) f.us.push(V.Folk.add(0, 0, d.har.slag, { pike: i % 3 !== 1, sc: 1.25, vis: false }));
+          if (d.flagga && d.har) { f.fana = V.Bygge.flagga(d.flagga); f.fana.scale.setScalar(1.3); f.fana.visible = false; sc.add(f.fana); }
+          f.skeppen = [];
+        }
+        else if (d.kvinna) f.u = V.Folk.add(0, 0, 'kvinna', { col: d.kvinna[0], col2: d.kvinna[1], sc: 1.3, vis: false });
         else { const h = Object.create(V.Gustav); h.init(sc, d.sort); h.utanRing = true; h.kanSkida = d.sort === 'gustav'; h.g.scale.setScalar(1.4 * 1.06); h.g.visible = false; f.h = h; }
         figs.push(f);
       }
@@ -195,7 +335,9 @@
     // Nämns hen i ett stegs titel eller Läs mer syns hen när steget står på tur; nämns hen först i krönikan efter steget syns hen när steget är klart.
     // kand = känd från början av världen (världens inledning eller förra världen).
     _introducerad(d, nasta) {
-      if (d.kand) return true; if (!d.sok) return true;
+      if (d.kand) return true;
+      if (d.steg) { const i = D.UPPDRAG.findIndex(u => u.id === d.steg); return i >= 0 && nasta >= i; }          // härar och flottor: från steget som nämner dem
+      if (!d.sok) return true;
       const L0 = D.UPPDRAG;
       if (d._intro === undefined || d._introL !== L0) { d._introL = L0; d._intro = 1e9; for (let i = 0; i < L0.length; i++) { const u = L0[i]; if ([u.titel, u.mer].join(' ').indexOf(d.sok) >= 0) { d._intro = i; break; } if ([u.kronika, u.vet, u.vet2, u.efter].join(' ').indexOf(d.sok) >= 0) { d._intro = i + 1; break; } } }
       return nasta >= d._intro;
@@ -219,12 +361,14 @@
         if (f.leg) {
           const lg = f.leg; lg.d += dt * (lg.sjo ? 3.2 : 2.4); const a = V.Rike.along(lg.pts, Math.min(lg.d, lg.len)); x = a.x; z = a.z; ang = a.ang; fart = 0.55; sjo = !!lg.sjo; fots = false; f.pos = { x, z }; syns = !dold;
           if (lg.d >= lg.len) { f.leg = null; f.k++; f.pos = punkt(st[f.k][2]); f.vandra = null; }
-        } else if (f.pos) {          // går runt i staden, stannar en stund, går vidare
+        } else if (f.pos && (f.d.har || f.d.flotta)) { x = f.pos.x; z = f.pos.z; ang = f.vila === undefined ? 0 : f.vila; }          // en här ligger i läger, en flotta för ankar
+        else if (f.pos) {          // går runt i staden, stannar en stund, går vidare
           const c = punkt(st[f.k][2]), v = f.vandra || (f.vandra = { x: f.pos.x, z: f.pos.z, tx: f.pos.x, tz: f.pos.z, vila: 1 + Math.random() * 2, ang: Math.random() * 6 });
           if (v.vila > 0) { v.vila -= dt; if (v.vila <= 0) { for (let k = 0; k < 12; k++) { const a = Math.random() * 6.283, r = 0.5 + Math.random() * 1.6, px = c.x + Math.cos(a) * r, pz = c.z + Math.sin(a) * r; if (V.Geo.sdAt(px, pz) > 0.6) { v.tx = px; v.tz = pz; break; } } } }
           else { const dx = v.tx - v.x, dz = v.tz - v.z, l = Math.hypot(dx, dz); if (l < 0.05) v.vila = 2 + Math.random() * 5; else { const s = Math.min(l, dt * 0.45); v.x += dx / l * s; v.z += dz / l * s; v.ang = Math.atan2(dx, dz); fart = 0.3; } }
           x = v.x; z = v.z; ang = v.ang; f.pos = { x, z };
         }
+        if (f.us) { if (!L._har(f, x, z, ang, syns, sjo, t)) syns = false; const ak = f.d.flotta && !f.leg && f.ankar && f.ankar[0]; f.syns = syns; f.sx = ak ? ak.x : x; f.sz = ak ? ak.z : z; f.till = ak ? 2.6 : 2.4; if (f.leg) f.vila = ang; continue; }
         if (f.h) { if (syns) f.h.place(x, z, ang, fart, t, dt, sjo, fots); else f.h.g.visible = false; }
         if (f.u) { f.u.vis = syns && !sjo; if (syns) { f.u.x = x; f.u.z = z; f.u.ang = ang; f.u.gar = fart > 0; } }
         // till sjöss: ett skepp
@@ -236,6 +380,85 @@
       }
     },
     // namnskyltarna över personerna. Ett tryck visar vad personen gör just nu.
+    // En här på kartan: soldaterna går i en kolonn längs vägen och ligger i läger på platsen; till sjöss och för ankar syns skeppen.
+    _har(f, x, z, ang, syns, sjo, t) {
+      const d = f.d, lg = f.leg, Geo = V.Geo, tillSjoss = syns && (sjo || (!!d.flotta && !lg)), nS = tillSjoss ? (d.skepp || 3) : 0;
+      while (f.skeppen.length < nS) { const k = V.skepp(d.flagga || 'sverige'); k.scale.setScalar(1.8); k.visible = false; scene.add(k); f.skeppen.push(k); }
+      let ankar = null;
+      if (tillSjoss && !lg) { if (f.ankarK !== f.k) { f.ankarK = f.k; f.ankar = L._ankarplats(x, z, nS); } ankar = f.ankar; }
+      let syntSkepp = 0;
+      f.skeppen.forEach((k, i) => {
+        if (i >= nS || (ankar && !ankar[i])) { k.visible = false; return; }
+        let px, pz, a;
+        if (lg && lg.d - i * 1.1 < 0) { k.visible = false; return; }          // skeppen lämnar hamnen ett i taget
+        if (lg) { const b = V.Rike.along(lg.pts, Math.max(0, Math.min(lg.d, lg.len) - i * 1.1)), sid = i ? (i % 2 ? 0.55 : -0.55) : 0; px = b.x + Math.cos(b.ang) * sid; pz = b.z - Math.sin(b.ang) * sid; a = b.ang; }
+        else { px = ankar[i].x; pz = ankar[i].z; a = 0.6 + i * 0.9; }
+        if (lg && V.Geo.sdAt(px, pz) > -0.1) { k.visible = false; return; }          // inga skepp på land (där vägen går genom en flodmynning)
+        k.position.set(px, 0.02 + Math.sin(t * 1.4 + i) * 0.03, pz); k.rotation.y = a; k.visible = true; syntSkepp++;
+      });
+      const iland = syns && !sjo && !d.flotta;
+      f.us.forEach((u, i) => {
+        u.vis = iland; if (!iland) return;
+        if (lg) { const b = V.Rike.along(lg.pts, Math.max(0, Math.min(lg.d, lg.len) - (i >> 1) * 0.45)), sid = (i % 2 ? 0.2 : -0.2); u.x = b.x + Math.cos(b.ang) * sid; u.z = b.z - Math.sin(b.ang) * sid; u.ang = b.ang; u.gar = true; }
+        else {          // lägret: i en ring runt platsen, på land
+          const a = i * 2.4, r = 0.5 + 0.3 * Math.sqrt(i), cx = Geo.sdAt(x + 1.3, z + 0.4) > 0.6 ? x + 1.3 : x, cz = cx !== x ? z + 0.4 : z; let px = cx + Math.cos(a) * r, pz = cz + Math.sin(a) * r;          // lägret ligger strax utanför staden
+          if (Geo.sdAt(px, pz) < 0.3) { px = x; pz = z; }
+          u.x = px; u.z = pz; u.ang = a + Math.PI + Math.sin(t * 0.3 + i) * 0.4; u.gar = false;
+        }
+      });
+      if (f.fana) { f.fana.visible = iland; if (iland) { const u = f.us[0]; f.fana.position.set(u.x + 0.2, Geo.groundAt(u.x, u.z), u.z); f.fana.rotation.y = u.ang + 1.2; } }
+      if (tillSjoss && !syntSkepp) return false;
+      return true;
+    },
+    // var skeppen ankrar: på vattnet närmast platsen
+    _ankarplats(x, z, n) {
+      const Geo = V.Geo, vatten = (px, pz) => Geo.sdAt(px, pz) < -0.5; let c = null;
+      for (let r = 0.5; r <= 7 && !c; r += 0.5) for (let k = 0; k < 16; k++) { const a = k / 16 * 6.283, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; if (vatten(px, pz)) { c = { x: px, z: pz }; break; } }
+      const ut = []; if (!c) return ut;
+      for (let i = 0; i < n; i++) { let p = null; for (let k = 0; k < 10 && !p; k++) { const a = i * 2.1 + k * 0.7, r = i ? 1.7 + k * 0.35 : 0, px = c.x + Math.cos(a) * r, pz = c.z + Math.sin(a) * r; if (vatten(px, pz)) p = { x: px, z: pz }; } ut.push(p); }
+      return ut;
+    },
+    // Läs mer-rutorna: platser, personer och härar som nämns går att trycka på, och kameran åker dit
+    _lankStil() {
+      if (!document.getElementById('lank-stil')) { const st = document.createElement('style'); st.id = 'lank-stil'; st.textContent = '.lank{color:#7a3410;font-weight:600;text-decoration:underline dotted 1.5px;text-underline-offset:3px;cursor:pointer;border-radius:3px}.lank:hover{color:#a5481a;background:rgba(232,192,64,.18)}'; document.head.appendChild(st); }
+      const UI = V.UI; if (UI && !UI._lankad) { UI._lankad = 1; const ruta = UI.ruta; UI.ruta = function (html) { const r = ruta.apply(this, arguments); try { if (/class="mal"/.test(html)) L.lanka(r.querySelector('.ruta-in') || r); } catch (e) { } return r; }; }
+    },
+    _mal_namn() {
+      const S = V.Game.s, R = V.Rike, ut = [], sett = {};
+      const lagg = (n, m) => { if (n && n.length > 2 && !sett[n]) { sett[n] = 1; ut.push([n, m]); } };
+      for (const f of figs) if (f.syns) for (const n of [f.d.namn, f.d.sok].concat(f.d.alias || [])) lagg(n, { f });
+      if (S.hjalte !== 'kristina') for (const n of ({ 0: ['Sten Sture'], 1: ['Gustav Eriksson', 'Gustav'], 2: ['Erik'], 3: ['Johan'], 4: ['Sigismund'] })[S.varld] || []) lagg(n, { hjalte: 1 });
+      for (const b of D.BASER) if (R.P[b.id]) lagg(b.namn, { plats: b.id });
+      for (const id in NAMN) if (punkt(id)) lagg(NAMN[id], { plats: id });
+      for (const id in ORT) if (ORT[id][2]) lagg(ORT[id][2], { plats: id });
+      for (const id in R.P) { const n = V.UI.platsnamn(id); if (n !== id) lagg(n, { plats: id }); }
+      return ut;
+    },
+    lanka(el) {
+      if (!el) return; const mal = L._mal_namn(); if (!mal.length) return;
+      mal.sort((a, b) => b[0].length - a[0].length);
+      const karta = {}; for (const [n, m] of mal) karta[n] = m;
+      const re = new RegExp('(?<![\\p{L}])(' + mal.map(m => m[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')(s)?(?![\\p{L}])', 'gu');
+      const tagna = new Set(), noder = [], w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      while (w.nextNode()) { const nd = w.currentNode, p = nd.parentElement; if (p && !p.closest('h2, .svag, button, .lank, .mal')) noder.push(nd); }
+      for (const nd of noder) {
+        const t = nd.nodeValue; re.lastIndex = 0; let m, sist = 0, frag = null;
+        while ((m = re.exec(t))) {
+          const mm = karta[m[1]], nyckel = mm.f ? 'f' + mm.f.d.id : mm.hjalte ? 'h' : 'p' + mm.plats; if (tagna.has(nyckel)) continue; tagna.add(nyckel);
+          frag = frag || document.createDocumentFragment(); frag.appendChild(document.createTextNode(t.slice(sist, m.index)));
+          const s = document.createElement('span'); s.className = 'lank'; s.textContent = m[0]; s.addEventListener('click', ev => { ev.stopPropagation(); L.gaTill(mm); }); frag.appendChild(s); sist = m.index + m[0].length;
+        }
+        if (frag) { frag.appendChild(document.createTextNode(t.slice(sist))); nd.parentNode.replaceChild(frag, nd); }
+      }
+    },
+    gaTill(m) {
+      const UI = V.UI, W = V.Varld, Sc = V.Scene, G = V.Game; UI.stang(); V.Ljud && V.Ljud.vakna && V.Ljud.vakna();
+      const d = Math.min(Sc.cam.d, 34);
+      if (m.f) { const f = m.f; Sc.flyTo(f.sx, f.sz + 1.2, d, 1.0); W._foljer = { t: performance.now(), pos: () => f.syns ? { x: f.sx, z: f.sz } : null }; return; }
+      if (m.hjalte) { W.foljHjalten(); const h = V.Gustav; if (h && h.g) Sc.flyTo(h.g.position.x, h.g.position.z + 1.2, d, 1.0); return; }
+      if (G.s.bas[m.plats] && UI.onVisaBas) { UI.visaStad(m.plats); UI.onVisaBas(m.plats); return; }
+      const p = punkt(m.plats); if (!p) return; Sc.flyTo(p.x, p.z + 1.2, Math.min(Sc.cam.d, 40), 1.0); W._foljer = { t: performance.now(), pos: () => ({ x: p.x, z: p.z }) };
+    },
     taggar(spel, golv) {
       const box = document.getElementById('ortnamn'); if (!box) return;
       const satta = [];          // skyltar som redan står: flera personer i samma stad får sina namn i en liten stapel
@@ -257,12 +480,15 @@
     // ortsskyltarna: platser som den här världens texter nämner, och platser där personerna är, som inte redan har ett namn på kartan
     orter(upptagna) {
       const S = V.Game.s; if (V.Game.skede() === 'strid' || (V.Intro && V.Intro.aktiv)) return [];
-      if (!orter || orterV !== S.varld) {
-        orterV = S.varld; const steg = D.UPPDRAG, txt = steg.map(u => [u.titel, u.mer, u.kronika, u.vet, u.vet2, u.efter].join(' ')).join(' '), ids = {};
-        for (const u of steg) { if (u.plats) ids[u.plats] = 1; if (u.fran) ids[u.fran] = 1; }
-        for (const f of FIG[S.varld] || []) for (const s of f.stopp) if (s[2]) ids[s[2]] = 1;
-        for (const id in NAMN) if (txt.indexOf(NAMN[id]) >= 0) ids[id] = 1;
-        for (const id in ORT) if (ORT[id][2] && txt.indexOf(ORT[id][2]) >= 0) ids[id] = 1;
+      const nyckel = S.varld + ':' + S.nasta + ':' + figs.filter(f => f.syns).length;
+      if (!orter || orterV !== nyckel) {          // kartan växer med berättelsen: bara platser som har nämnts hittills, och dit personerna och härarna har gått
+        orterV = nyckel; const steg = D.UPPDRAG, ids = {};
+        const txt = steg.map((u, i) => i < S.nasta ? [u.titel, u.mer, u.kronika, u.vet, u.vet2, u.efter, V.DJUP && V.DJUP[u.id]].join(' ') : i === S.nasta ? [u.titel, u.mer].join(' ') : '').join(' ');
+        steg.forEach((u, i) => { if (i > S.nasta) return; if (u.plats) ids[u.plats] = 1; if (u.fran) ids[u.fran] = 1; });
+        for (const f of figs) if (f.k !== undefined && f.k >= 0) for (let i = 0; i <= Math.min(f.k + 1, f.d.stopp.length - 1); i++) { const s = f.d.stopp[i]; if (s[2]) ids[s[2]] = 1; if (s[3].mer) txt2.push(s[3].mer); }
+        const alla = txt + ' ' + txt2.join(' '); txt2.length = 0;
+        for (const id in NAMN) if (alla.indexOf(NAMN[id]) >= 0) ids[id] = 1;
+        for (const id in ORT) if (ORT[id][2] && alla.indexOf(ORT[id][2]) >= 0) ids[id] = 1;
         orter = [];
         for (const id in ids) { const n = platsNamn(id), p = punkt(id); if (!n || !p || (ORT[id] && !ORT[id][2])) continue; orter.push({ id: 'o:' + id, plats: id, namn: n, x: p.x, z: p.z + 0.9, y: Math.max(0.02, V.Geo.groundAt(p.x, p.z + 0.9)), liten: true }); }
       }
