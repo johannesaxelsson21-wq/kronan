@@ -347,10 +347,10 @@
         e.innerHTML = '<div class="sl-rubrik"><span>Dina orter</span><i class="sl-antal"></i></div><div class="sl-rader"></div>';
         const box = e.querySelector('.sl-rader');
         for (const id of ids) {
-          const b = G.BAS[id], r = el('div', 'sl-rad', '<i class="sl-ikon">' + SLAG[b.slag] + '</i><div class="sl-in"><div class="sl-r1"><span class="sl-namn">' + (b.kort || b.namn) + '</span><b class="sl-niva"></b></div><div class="sl-r2"><span class="sl-ger"></span><span class="sl-kop"></span></div></div>');
+          const b = G.BAS[id], r = el('div', 'sl-rad', '<i class="sl-ikon">' + SLAG[b.slag] + '</i><div class="sl-in"><div class="sl-r1"><span class="sl-namn">' + (b.kort || b.namn) + '</span><b class="sl-niva"></b></div><div class="sl-r2"><span class="sl-ger"></span></div></div>');
           r.dataset.id = id; box.appendChild(r);
           r.addEventListener('click', ev => { ev.stopPropagation(); V.Ljud && V.Ljud.vakna(); UI.visaStad(id); if (UI.onVisaBas) UI.onVisaBas(id); });
-          e._r[id] = { r, niva: r.querySelector('.sl-niva'), ger: r.querySelector('.sl-ger'), kop: r.querySelector('.sl-kop') };
+          e._r[id] = { r, niva: r.querySelector('.sl-niva'), ger: r.querySelector('.sl-ger') };
         }
       }
       const fx = S.full ? G.fullX() : 1; let kan = 0;
@@ -359,12 +359,9 @@
         const L = S.bas[id], res = G.prisRes(id), max = G.maxad(id), stopp = G.stoppad(id), mk = !!S.marknad && S.marknad.bas === id, dv = G.dagsverke(id), ok = !max && !stopp && !mk && G.kanKopa(id), dub = G.rad(id) && !max && !stopp;
         if (ok) kan++;
         const nv = String(L), gv = stopp ? D.UPPROR[stopp].namn : tal(G.prod(id) * fx) + ' ' + (G.BAS[id].ger === 'man' ? 'män' : 'mark') + '/s';
-        const kv = mk ? 'Marknad!' : stopp ? '' : max ? 'full' : IK.pil + IK[res] + tal(G.pris(id)) + (dv ? ' ' + IK.man + tal(dv) : '');
         if (o._n !== nv) { o._n = nv; o.niva.textContent = nv; }
         if (o._g !== gv) { o._g = gv; o.ger.textContent = gv; }
-        if (o._k !== kv) { o._k = kv; o.kop.innerHTML = kv; o.kop.style.display = kv ? '' : 'none'; }
         o.r.classList.toggle('kan', ok || mk); o.r.classList.toggle('dubbel', dub); o.r.classList.toggle('stopp', !!stopp); o.r.classList.toggle('full', !!max && !mk); o.r.classList.toggle('vald', UI.stadVald(id) || (flik !== 'stad' && valdBas === id));
-        o.kop.title = mk ? 'Marknadsdag i ' + G.BAS[id].namn : max ? 'Kan inte bli större förrän armén har vuxit' : dub ? 'Nästa nivå fördubblar vad orten ger' : '';
       }
       { const a = e.querySelector('.sl-antal'), t = kan ? kan + ' kan byggas ut' : ''; if (a._t !== t) { a._t = t; a.textContent = t; } }
       // aldrig över konsolen: listan slutar ovanför det som står nertill på hennes sida av skärmen

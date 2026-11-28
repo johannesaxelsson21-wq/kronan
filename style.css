@@ -653,18 +653,12 @@ button { font-family: inherit; cursor: pointer; }
 .sl-namn { flex: 1; min-width: 0; font-size: 14px; color: #f4e9cd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sl-niva { flex: none; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: rgba(0, 0, 0, 0.4); font-size: 11.5px; font-weight: normal; line-height: 18px; text-align: center; color: #fff7df; }
 .sl-ger { flex: 1; min-width: 0; font-size: 11.5px; color: #b3a482; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sl-kop { flex: none; display: inline-flex; align-items: center; gap: 2px; height: 19px; padding: 0 6px 0 3px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(0, 0, 0, 0.35); color: #9d907a; font-size: 11.5px; white-space: nowrap; pointer-events: none; }
-.sl-kop svg { width: 13px; height: 13px; flex: none; }
-.sl-kop svg:first-child { display: none; }
 .sl-rad.kan { background: linear-gradient(180deg, rgba(84, 65, 44, 0.95), rgba(69, 53, 36, 0.95)); color: #f4e9cd; box-shadow: 0 0 0 1px rgba(242, 207, 90, 0.35) inset; }
 .sl-rad.kan .sl-ikon { color: var(--guld2); }
 .sl-rad.kan .sl-ger { color: #b9d58a; }
-.sl-rad.kan .sl-kop { background: rgba(242, 207, 90, 0.12); color: var(--guld2); border-color: rgba(242, 207, 90, 0.7); }
 .sl-rad.kan { animation: sl-glod 2.4s ease-in-out infinite; }
-.sl-rad.kan .sl-kop svg:first-child { display: block; }
 @keyframes sl-glod { 50% { box-shadow: 0 0 0 1px rgba(242, 207, 90, 0.75) inset, 0 0 8px rgba(242, 207, 90, 0.35); } }
 .sl-rad.dubbel .sl-niva { background: linear-gradient(180deg, #f7dc7a, #c9992e); color: #2b1c08; text-shadow: none; }
-.sl-rad.full .sl-kop { font-style: italic; }
 .sl-rad.stopp .sl-ger { color: #ff9c8c; }
 
 /* rutan uppe till vänster lyser lite när något på kungens sida går att köpa */
