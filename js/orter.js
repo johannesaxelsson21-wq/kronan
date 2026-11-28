@@ -272,6 +272,7 @@
     let kp = null; if (kandaHar) { const k = kandaPlats(p); kp = [k.x, k.z]; }
     for (const it of plan.ut) {
       if (kandaHar && (it.typ === 'borg' || (it.typ === 'kyrka' && kandaKyrka && !it.extra))) continue;
+      if (it.typ === 'hus' && Math.hypot(it.x, it.z) * sk < 1.0) continue;          // mitt i staden står personerna i historien: inga hus där som skymmer dem
       if (kp && it.typ !== 'mur') { const w = varld(it.x || 0, it.z || 0); if (Math.hypot(w[0] - kp[0], w[1] - kp[1]) < 1.35) continue; }
       if (it.typ === 'mur') { for (let k = 0; k < 28; k++) { if (k % 7 === 3) continue; const a0 = k / 28 * 6.283, a1 = (k + 1) / 28 * 6.283, x0 = Math.cos(a0) * it.rx, z0 = Math.sin(a0) * it.rz, x1 = Math.cos(a1) * it.rx, z1 = Math.sin(a1) * it.rz; if (!torr((x0 + x1) / 2, (z0 + z1) / 2, 0.2)) continue; const L = Math.hypot(x1 - x0, z1 - z0); mb.push().move((x0 + x1) / 2, Y((x0 + x1) / 2, (z0 + z1) / 2), (z0 + z1) / 2).rotY(Math.atan2(-(z1 - z0), x1 - x0)); mb.box(0, 0, 0, L + 0.05, 0.3, 0.12, dansk ? '#7a8a55' : '#a49c8c', { low: dansk ? '#5c6a3e' : '#7d776a' }); mb.pop(); } continue; }
       if (it.typ === 'kanal') { mb.box(it.x, Y(it.x, it.z) + 0.005, it.z, it.w, 0.02, 0.28, '#4f7f9a', { low: '#3c6178' }); continue; }
@@ -357,5 +358,20 @@
     if (d.f === 'a' || (d.x || []).indexOf('a') >= 0) { const r = aRiktning(p.x, p.z); if (r) ut.u = r; }
     return ut;
   };
+  // Träden krymper bort kring personerna i historien (levande.js) som står nära där kameran tittar
+  // (Johannes 2026-11-28: "träden är ivägen här så man ser inte dom"). Gläntorna är få (World.FRI_N), så de närmaste får dem.
+  if (V.World && V.World.fri) {
+    const friFore = V.World.fri;
+    V.World.fri = function (lista) {
+      try {
+        const L = V.Levande, c = V.Scene && V.Scene.cam, N = V.World.FRI_N || 12; if (!L || !c || lista.length >= N) return friFore.call(this, lista);
+        const ut = lista.slice(), nara = [];
+        for (const f of L.figs || []) if (f.syns && f.sx !== undefined && V.Geo.sdAt(f.sx, f.sz) > 0.2) { const d = Math.hypot(f.sx - c.tx, f.sz - c.tz); if (d < Math.max(14, c.d * 0.7)) nara.push([d, f.sx, f.sz]); }
+        nara.sort((a, b) => a[0] - b[0]);
+        for (const q of nara) { if (ut.length >= N) break; if (ut.some(u => Math.hypot(u[0] - q[1], u[1] - q[2]) < 0.8)) continue; ut.push([q[1], q[2], q[1], q[2], -1.5]); }
+        return friFore.call(this, ut);
+      } catch (e) { return friFore.call(this, lista); }
+    };
+  }
   V.Orter = { kandaPlats, STADER, lage, lagg: () => lagg(), rita };
 })();
