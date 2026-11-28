@@ -65,10 +65,10 @@
         [1521, 1, 'stockholm', { mer: 'Ärkebiskop Gustav Trolle är i Stockholm, där danskarna styr.' }],
         [1521, 4.5, 'uppsala', { mer: 'Ärkebiskopen är i sin stad Uppsala.' }],
         [1521, 5.7, 'stockholm', { via: ['brunkeberg'], mer: 'Bönderna har tagit ärkebiskopsgården i Uppsala, och Gustav Trolle har tagit sig till Stockholm.' }],
-        [1521, 9.2, 'kopenhamn', { sjo: 'danmark', mer: 'I september 1521 måste Gustav Trolle lämna Sverige. Han far till Danmark.' }]] },
+        [1521, 9.2, 'kopenhamn', { sjo: 'danmark', mer: 'Gustav Trolle måste lämna Sverige. Han far till Danmark.' }]] },
       { id: 'kristina', namn: 'Kristina Gyllenstierna', kvinna: ['#7a2a3a', '#f2eee2'], kand: 1, kalla: 'sv. Wikipedia, Kristina Nilsdotter (Gyllenstierna) och Blåtårn', stopp: [
         [1521, 1, 'stockholm', { mer: 'Sten Stures änka Kristina Gyllenstierna sitter fången på Stockholms slott.' }],
-        [1521, 9, 'kopenhamn', { sjo: 'danmark', mer: 'Kristina Gyllenstierna förs till Danmark och sätts i Blåtårn, fängelsetornet på Köpenhamns slott.' }],
+        [1521, 9, 'kopenhamn', { sjo: 'danmark', mer: 'Kristina Gyllenstierna förs fången till Danmark.' }],
         [1524, 1.5, 'kalmar', { sjo: 'danmark', mer: 'I januari 1524 får Kristina Gyllenstierna komma hem till Sverige, tillsammans med sin mor och sin son Nils.' }],
         [1524, 3, null, {}]] },
       { id: 'slagheck', namn: 'Didrik Slagheck', sort: 'slagheck', sok: 'Slagheck', kalla: 'sv. Wikipedia, Didrik Slagheck', stopp: [

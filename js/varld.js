@@ -42,7 +42,10 @@
         if (L) sort = G.stoppad(b.id) === 'dagtingan' ? 'danmark' : 'sverige';
         else if (finns(b) && b.borg) {
           if (S.varld === 0) sort = b.id === 'uppsala' ? (S.hjalte === 'kristina' ? 'danmark' : null) : 'sverige';
-          else if (S.varld === 1) sort = S.nasta <= idx(b.id === 'abo' || b.id === 'viborg' ? 'finland' : 'intag') ? 'danmark' : 'sverige';
+          else if (S.varld === 1) {          // Gustavs värld: varje slott är danskt tills det steg där det faller (docs/historia.md); Uppsala och Nyköping utan belagt datum får ingen flagga
+            const t = { vasteras: 'slotten', kalmar: 'kalmar', stockholm: 'intag', abo: 'finland', viborg: 'finland' }[b.id];
+            sort = t ? (S.nasta <= idx(t) ? 'danmark' : 'sverige') : null;
+          }
           else sort = (D.VARLDAR[S.varld].utanFlagga || []).indexOf(b.id) >= 0 ? null : 'sverige';          // Eriks värld: riket är svenskt, Reval ännu inte
         }
         if ((flagga[b.id] && flagga[b.id].sort) !== sort && steg[b.id].length) {
