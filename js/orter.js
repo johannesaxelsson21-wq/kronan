@@ -289,9 +289,39 @@
     const Vd = D.VARLDAR && D.VARLDAR[S.varld]; if (Vd && Vd.orter) for (const id in Vd.orter) ut[id] = 1;
     return ut;
   }
+  // ---- varje regents del av kartan (Johannes 2026-11-28: "jag vill att de olika ska se det som är relevant för deras tid, så man vet var de rörde sig och var deras liv utspelades") ----
+  // Rutan runt alla platser i världens steg, dess orter och de platser som personerna och härarna i världen far till (levande.js), med en kant runt om.
+  // Kameran stannar inom rutan (scene.js, cam.ram), och kartan utanför är skuggad. Scener (cam.fri) och resor går fritt.
+  let ramNyckel = '', ramMesh = null;
+  function satRam() {
+    const G = V.Game, S = G && G.s, D = V.DATA, L = V.Levande, Sc = V.Scene, Geo = V.Geo; if (!S || !Sc || !Sc.cam || !D.PLATSER || !scene) return;
+    const nyckel = S.varld + ':' + (L && L.figs ? L.figs.length : 0); if (nyckel === ramNyckel && ramMesh && ramMesh.parent === scene) return; ramNyckel = nyckel;
+    const Vd = D.VARLDAR[S.varld] || {}, ids = new Set([Vd.hem]);
+    (D.UPPDRAG || []).forEach(u => { if (u.plats) ids.add(u.plats); if (u.fran) ids.add(u.fran); (u.via || []).forEach(x => ids.add(x)); });
+    for (const k in (Vd.orter || {})) ids.add(k); for (const k in (Vd.start || {})) ids.add(k);
+    const stopp = f => (f.stopp || []).forEach(s => { if (s[2]) ids.add(s[2]); ((s[3] || {}).via || []).forEach(x => ids.add(x)); });
+    ((L && L.FIG && L.FIG[S.varld]) || []).forEach(stopp); if (L && L.figs) L.figs.forEach(f => f && f.d && stopp(f.d));
+    let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9;
+    for (const id of ids) { const ll = D.PLATSER[id] || (L && L.ORT && L.ORT[id]); if (!ll) continue; const w = Geo.toWorld(ll[0], ll[1]); x0 = Math.min(x0, w[0]); x1 = Math.max(x1, w[0]); z0 = Math.min(z0, w[1]); z1 = Math.max(z1, w[1]); }
+    if (ramMesh) { scene.remove(ramMesh); ramMesh.geometry.dispose(); ramMesh.material.map.dispose(); ramMesh.material.dispose(); ramMesh = null; }
+    if (x0 > x1) { Sc.cam.ram = null; return; }
+    const K = 18;          // kant runt platserna, ungefär fem mil
+    x0 -= K; x1 += K; z0 -= K; z1 += K;
+    Sc.cam.ram = [x0, z0, x1, z1, Math.max(140, Math.min(560, Math.max((x1 - x0) / 0.95, (z1 - z0) / 0.52)))];
+    // skuggan utanför rutan: en mörk hinna över kartan med ett mjukt hål där regentens liv utspelades
+    const cw = 1024, ch = Math.round(cw * Geo.H / Geo.W), c = document.createElement('canvas'); c.width = cw; c.height = ch; const g = c.getContext('2d');
+    const px = x => (x + Geo.W / 2) / Geo.W * cw, pz = z => (z + Geo.H / 2) / Geo.H * ch;
+    g.fillStyle = 'rgba(24,19,12,0.55)'; g.fillRect(0, 0, cw, ch);
+    g.globalCompositeOperation = 'destination-out'; g.filter = 'blur(18px)'; g.fillStyle = '#000';
+    g.fillRect(px(x0), pz(z0), px(x1) - px(x0), pz(z1) - pz(z0));
+    const tex = new THREE.CanvasTexture(c), geo = new THREE.PlaneGeometry(Geo.W, Geo.H); geo.rotateX(-Math.PI / 2);
+    ramMesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false }));
+    ramMesh.position.y = 0.6; ramMesh.renderOrder = 998; ramMesh.layers.set(1);          /* lager 1: inte med i djupbilden (efterbild.js) */ ramMesh.name = 'regentensRuta'; scene.add(ramMesh);
+  }
   let husNyckel = '';
   function rita() {
     if (!scene || !V.Bygge || !V.MB) return;
+    satRam();
     const ar = arNu(), nyckel = ar + ':' + Object.keys(V.Game.s.bas).length + ':' + V.Game.s.varld + ':' + V.Game.s.nasta; if (nyckel === husNyckel && grupp) return; husNyckel = nyckel; ritatAr = ar;          // stegen byter ägare på orterna, och därmed flaggorna
     if (grupp) scene.remove(grupp); grupp = new THREE.Group(); grupp.name = 'orter';
     const ritas = spelRitar();
