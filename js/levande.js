@@ -194,10 +194,11 @@
       for (const id of ['vem-du', 'vem-bud']) { const h = document.getElementById(id); if (h && h.style.display === 'block') { const r = h.getBoundingClientRect(); satta.push({ x: r.left + r.width / 2, y: r.bottom, w: r.width }); } }          // hjältens namn står kvar, de andra flyttar upp
       for (const f of figs) {
         let e = taggEl[f.d.id];
-        if (!e) { e = taggEl[f.d.id] = document.createElement('div'); e.className = 'vem annan'; e.textContent = f.d.namn; box.appendChild(e); e.addEventListener('click', ev => { ev.stopPropagation(); L.mer(f); }); }
+        // boken i skylten visar att man kan trycka och läsa mer
+        if (!e) { e = taggEl[f.d.id] = document.createElement('div'); e.className = 'vem annan'; e.innerHTML = f.d.namn + '<svg class="vem-bok" viewBox="0 0 24 24"><path d="M4 4.5h7c1 0 1 .6 1 1.2V20c0-.7-.4-1.2-1-1.2H4zM20 4.5h-7c-1 0-1 .6-1 1.2V20c0-.7.4-1.2 1-1.2h7z" fill="#fff3d6" stroke="#5a4634" stroke-width="1.6" stroke-linejoin="round"/></svg>'; box.appendChild(e); e.addEventListener('click', ev => { ev.stopPropagation(); L.mer(f); }); }
         let syns = spel && f.syns;
         if (syns) { const sp = V.Scene.screenPoint(f.sx, V.Geo.groundAt(f.sx, f.sz) + f.till, f.sz); syns = !sp.behind && sp.y > 50 && sp.y < golv && sp.x > 10 && sp.x < innerWidth - 10 && !V.UI._skymd(sp); if (syns) { let y = sp.y - 8; const bw = f.d.namn.length * 7.6 + 18; for (let k = 0; k < 4; k++) { const krock = satta.find(r => Math.abs(r.x - sp.x) < (r.w + bw) / 2 && Math.abs(r.y - y) < 21); if (!krock) break; y = krock.y - 22; } satta.push({ x: sp.x, y, w: bw }); e.style.transform = 'translate(' + Math.round(sp.x) + 'px,' + Math.round(y) + 'px) translate(-50%, -100%)'; } }
-        e.style.display = syns ? 'block' : 'none';
+        e.style.display = syns ? 'flex' : 'none';
       }
     },
     mer(f) {

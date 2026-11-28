@@ -510,3 +510,21 @@ button { font-family: inherit; cursor: pointer; }
 .tip.intro button { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; font: inherit; font-size: 14px; color: #fff3d6; background: #5a4634; border: 1px solid #3a2a1c; border-radius: 4px; cursor: pointer; }
 .tip.intro button svg { width: 10px; height: 10px; fill: currentColor; }
 @keyframes introIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Läs mer syns tydligt (Johannes 2026-11-28): en riktig liten knapp med en bok, i spelets stil */
+#upp-mer { display: inline-flex; align-items: center; gap: 4px; right: 6px; top: 5px; padding: 2px 8px 2px 5px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.03em; color: #2b1c08; background: linear-gradient(180deg, #fbf0cf, #e3cc8e); border: 1px solid #8a6a1f; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45); cursor: pointer; }
+#upp-mer svg { width: 15px; height: 15px; }
+#upp-mer:hover { background: linear-gradient(180deg, #fff6dc, #ecd8a0); }
+#uppdrag #upp-akt { padding-right: 82px; }
+#berattar .ber-mer { padding: 5px 13px 5px 8px; font-style: normal; font-weight: 600; color: #3a2510; background: linear-gradient(180deg, #f6e7bd, #dcc285); border: 1px solid #8a6a1f; border-radius: 16px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5); }
+#berattar .ber-mer:hover { background: linear-gradient(180deg, #fbf0cf, #e6cf94); color: #2b1c08; }
+.ber-mer { padding: 4px 12px; color: #2b1c08; background: linear-gradient(180deg, #fbf0cf, #e3cc8e); border: 1px solid #8a6a1f; border-radius: 14px; }
+.vem.annan { display: inline-flex; align-items: center; gap: 4px; }
+.vem-bok { width: 14px; height: 14px; flex: none; }
+
+/* raderna om det som händer: pergament i stället för svart, och de som pekar på något går att trycka på (Johannes 2026-11-28) */
+.text { color: #2b1c08; background: linear-gradient(180deg, #fbf0cf, #ecd9a6); border: 2px solid #5a4634; border-radius: 8px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(201, 162, 74, 0.55) inset; text-shadow: none; }
+.text.kan { pointer-events: auto; cursor: pointer; }
+.text.kan:hover { background: linear-gradient(180deg, #fff6dc, #f0dfb0); }
+.text-ga { display: inline-flex; align-items: center; gap: 5px; margin-left: 10px; padding: 2px 10px; font-size: 14px; vertical-align: 2px; color: #fff3d6; background: #5a4634; border-radius: 4px; white-space: nowrap; }
+.text-ga svg { width: 9px; height: 9px; fill: currentColor; }

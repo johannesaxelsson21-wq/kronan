@@ -69,7 +69,7 @@
         <div id="datum"><div id="dat-ar"></div><div id="dat-titel"></div><div id="dat-tron"></div></div>
         <div id="meny"><button id="m-fraga" title="Så fungerar det">${IK.fraga}</button><button id="m-bok" title="Krönikan">${IK.bok}</button><button id="m-krona" title="Regentlängden">${IK.krona}</button><button id="m-ljud" title="Ljud">${IK.ljud}</button><button id="m-kugg" title="Inställningar">${IK.kugg}</button></div>
         <div id="konsol">
-          <div id="uppdrag"><span id="upp-mer" style="display:none">Läs mer</span><div id="upp-akt"></div><div id="upp-titel"></div><div id="upp-vag" style="display:none"></div><div id="upp-kost"></div><div id="upp-bar"><div id="upp-fyll"></div></div><button id="upp-knapp"></button></div>
+          <div id="uppdrag"><span id="upp-mer" style="display:none">${IK.bok}Läs mer</span><div id="upp-akt"></div><div id="upp-titel"></div><div id="upp-vag" style="display:none"></div><div id="upp-kost"></div><div id="upp-bar"><div id="upp-fyll"></div></div><button id="upp-knapp"></button></div>
           <div id="akwrap"><i id="ak-order" style="display:none"></i><button id="ak"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" class="spar"/><circle cx="60" cy="60" r="54" id="ak-ring" class="ring"/></svg><span id="ak-txt">Skicka<br>bud</span><span id="fullx"></span></button><div id="ak-hint">${HALL}</div></div>
           <div id="handl"></div>
           <div id="baser"></div>
@@ -388,7 +388,24 @@
       e.style.left = (b.left + b.width / 2) + 'px'; e.style.top = (b.top - 4) + 'px'; $('flyt').appendChild(e); setTimeout(() => e.remove(), 950);
     },
     // En kort rad som försvinner av sig själv (bara för sådant som inte behöver läsas noga).
-    text(t, sek, stor) { if (caption) caption.remove(); caption = el('div', 'text' + (stor ? ' stor' : ''), t); $('text').appendChild(caption); capT = performance.now() + (sek || 7) * 1000; },          // riktig tid: på en skärm med 120 bilder i sekunden försvann raden annars dubbelt så fort
+    // gaTill: vad ett tryck på raden gör (Johannes 2026-11-28: "om man trycker på den så kommer man dit den pekar")
+    text(t, sek, stor, gaTill) {
+      if (caption) caption.remove(); caption = el('div', 'text' + (stor ? ' stor' : '') + (gaTill ? ' kan' : ''), t + (gaTill ? '<span class="text-ga">Visa <svg viewBox="0 0 14 14"><path d="M3 2l8 5-8 5z"/></svg></span>' : '')); $('text').appendChild(caption); capT = performance.now() + (sek || 7) * 1000;
+      if (gaTill) { const c = caption; c.addEventListener('pointerdown', ev => { ev.stopPropagation(); V.Ljud && V.Ljud.vakna(); gaTill(); c.remove(); if (caption === c) caption = null; }); }
+    },
+    // Vart en rad om något nytt pekar: staden där huset ska byggas, eller kortet och fliken där saken finns
+    gaTill(id) {
+      const lys = sel => { const m = document.querySelector(sel); if (!m) return; m.classList.add('glod-ny'); m.scrollIntoView && m.scrollIntoView({ block: 'nearest', inline: 'nearest' }); setTimeout(() => m.classList.remove('glod-ny'), 3500); };
+      const flik = (fl, sel) => () => { const f = $('res-' + fl); if (f && !(f.classList.contains('vald') || f.classList.contains('aktiv'))) f.click(); setTimeout(() => lys(sel), 120); };
+      const stad = p => () => { if (!p) return; if (G.s.bas[p]) UI.visaStad(p); if (UI.onVisaBas) UI.onVisaBas(p); };
+      if (!id) return null;
+      const b = D.BYGGNADER.find(q => q.id === id); if (b) return stad(b.stad || b.plats);
+      if (id === 'skatt') return flik('man', '#skatt');
+      if (id === 'marknad') return G.s.marknad ? stad(G.s.marknad.bas) : null;
+      if (id.slice(0, 2) === 'h:') return () => lys('#hk-' + id.slice(2));
+      if (id.slice(0, 2) === 'k:') { const kd = D.KONSTER.find(q => q.id === id.slice(2)); return kd ? flik(kd.flik0 || 'mark', '#konst-' + kd.id) : null; }
+      return null;
+    },          // riktig tid: på en skärm med 120 bilder i sekunden försvann raden annars dubbelt så fort
     skylt(t, iSlag) { if (!iSlag && root.classList.contains('slag')) return; const e = el('div', 'skylt', t); $('text').appendChild(e); setTimeout(() => e.classList.add('bort'), 2600); setTimeout(() => e.remove(), 3400); },
 
     // ---- berättelsen: en ruta ovanför konsolen som står kvar tills man trycker bort den -------------
@@ -539,7 +556,9 @@
       if (!tips.nu) { const s = steg.find(q => !T[q[0]] && q[3] && synlig(q[1])); if (s) { tips.nu = s[0]; tips.t0 = performance.now(); e.innerHTML = '<div class="tip' + (s[5] ? ' nytt' : '') + '">' + (s[5] ? '<span class="tip-ny">Nytt</span>' : '') + s[2] + '</div>'; } }
       if (tips.nu && tips.nu === (nyttSteg && nyttSteg[0])) { const m0 = document.querySelector(nyttSteg[1]); document.querySelectorAll('.glod-ny').forEach(x => { if (x !== m0) x.classList.remove('glod-ny'); }); if (m0) m0.classList.add('glod-ny'); } else document.querySelectorAll('.glod-ny').forEach(x => x.classList.remove('glod-ny'));
       if (tips.nu) {            // håll rutan ovanför det den pekar på
-        const s = steg.find(q => q[0] === tips.nu), mal = document.querySelector(s[1]), t = e.firstChild; if (!mal || !t) return; t.style.visibility = mal.offsetParent ? '' : 'hidden';
+        const s = steg.find(q => q[0] === tips.nu), mal = document.querySelector(s[1]), t = e.firstChild; tips.malSel = s[1]; if (!mal || !t) return;
+        // ett tryck på det bubblan pekar på tar bort den direkt (Johannes 2026-11-28: "rutorna ska försvinna när man trycker på knappen den visar till direkt")
+        if (!tips.allm) { tips.allm = ev => { const k = tips.nu; if (!k || !tips.malSel) return; const m = document.querySelector(tips.malSel); if (!m || !m.contains(ev.target)) return; if (k.slice(0, 5) === 'nytt:') { if (G.s.nytt) G.s.nytt.shift(); } else G.s.tips[k] = 1; tips.nu = null; tips.malSel = null; $('tips').innerHTML = ''; document.querySelectorAll('.glod-ny').forEach(x => x.classList.remove('glod-ny')); }; document.addEventListener('pointerdown', tips.allm, true); } t.style.visibility = mal.offsetParent ? '' : 'hidden';
         const r = mal.getBoundingClientRect(), w = t.offsetWidth; t.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; t.style.top = (r.top - t.offsetHeight - (mal.closest('.sida') ? 50 : 14)) + 'px';
         t.style.setProperty('--pil', Math.max(14, Math.min(w - 14, r.left + r.width / 2 - parseFloat(t.style.left))) + 'px');
       }
@@ -567,7 +586,6 @@
       tips.osyn = null;
       const klar = () => { S.nytt.shift(); tips.nu = null; if (tips.klick) document.removeEventListener('pointerdown', tips.klick, true); tips.klick = null; };
       if (tips.nu === 'nytt:' + k && har && performance.now() - tips.t0 > 9000) { klar(); return null; }          // har stått en stund vid saken: nog sett
-      if (!tips.klick) { tips.klick = ev => { const m = document.querySelector(sel); if (m && m.contains(ev.target)) klar(); }; document.addEventListener('pointerdown', tips.klick, true); }
       return ['nytt:' + k + (mal === sel ? '' : ':alt'), mal, txt, true, false, true];
     },
 

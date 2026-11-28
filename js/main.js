@@ -27,7 +27,7 @@
     else if (typ === 'marknadKlar') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.2, p.z, 'Marknad +' + V.tal(d.antal) + (d.res === 'man' ? ' män' : ' mark'), d.res); V.Ljud.spela('dubbel');
     }
     else if (typ === 'sold' && d.dubbel) UI.skylt((G.s.varld === 0 ? 'Knektarna' : 'Soldaterna') + ': dubbelt så många män');
-    else if (typ === 'infor') { if (!V.tyst) { UI.text(d.text, 10); V.Ljud.spela('klart'); } UI.tick(true); }          // en ny sak i taget, med en lugn rad
+    else if (typ === 'infor') { if (!V.tyst) { UI.text(d.text, 12, false, UI.gaTill(d.id)); V.Ljud.spela('klart'); } UI.tick(true); }          // en ny sak i taget, med en lugn rad
     else if (typ === 'slagTryck') UI._studs = performance.now();
     else if (typ === 'malVald') { UI._studs = performance.now(); UI.svar('Tryck nu på knappen', true); V.Ljud.spela('kop'); }
     else if (typ === 'malForst') { if (performance.now() > (UI._forstT || 0)) { UI._forstT = performance.now() + 1800; UI.svar('Tryck på ringen i slaget', false); } }          // ringen i slaget studsar till
@@ -38,7 +38,7 @@
     else if (typ === 'orderSvar') { if (!d.o.alltid && d.bra) UI.svar('Bra', true); }
     if (typ === 'orderSvar') { UI.text(d.o.alltid || (d.bra ? d.o.bra : d.o.miss), 3.2); if (d.bra && !d.o.alltid) V.Ljud.spela('klart'); }
     else if (typ === 'kula') { UI.text(d.o.rad, 6.5); V.Ljud.spela('kanon'); Scene.shake(0.5); if (d.o.efter && !V.tyst) setTimeout(() => UI.text(d.o.efter, 6), 6800 / Math.min(snabb, 10)); }
-    else if (typ === 'byggnad') { UI.skylt(d.b.skylt || d.b.namn + ' står klart'); if (d.b.klart && !V.tyst) UI.text(d.b.klart, 9); V.Ljud.spela('hammare'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } UI.tick(true); }          // kameran går dit så att man ser huset resas
+    else if (typ === 'byggnad') { UI.skylt(d.b.skylt || d.b.namn + ' står klart'); if (d.b.klart && !V.tyst) UI.text(d.b.klart, 10, false, UI.gaTill(d.id)); V.Ljud.spela('hammare'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } UI.tick(true); }          // kameran går dit så att man ser huset resas
     else if (typ === 'hus') { if (d.niva === 1) { UI.skylt(d.h.namn + ' står klart'); const w = Varld.byggPlats(d.id); if (w && !V.tyst) { Varld._foljPaus = performance.now() + 4000; Varld._foljD = Scene.cam.td; Scene.flyTo(w.x, w.z + 1, 22, 1.0); } } UI.tick(true); }          // stadens hus: kameran går dit första gången
     else if (typ === 'handling') { V.Ljud.spela(d.id === 'tal' ? 'sorl' : d.id === 'monstra' ? 'horn' : 'kop'); const h = D.HANDLINGAR.find(q => q.id === d.id); UI.skylt(UI.handlNamn(h) + (d.fick ? ': +' + V.tal(d.fick) + ' män' : '')); }
     else if (typ === 'skattUt') { if (!d.auto) V.Ljud.spela('kop'); }
