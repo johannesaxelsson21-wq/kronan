@@ -17,7 +17,7 @@
   'use strict';
   const V = window.VASA, Scene = V.Scene, Geo = V.Geo, R = V.Rike, B = V.Bygge, Folk = V.Folk, Fx = V.Fx, U = V.U, World = V.World, lin = V.hexToLin;
   const RAD = Math.PI / 180, mix = (a, b, f) => a + (b - a) * f, mjuk = t => t * t * (3 - 2 * t), q = new URLSearchParams(location.search);
-  let E = null, sasong0 = 0.025, kam = null, fas = 'av', tid = 0, klarFn = null, nr = -1, scen = null, kT = 0, rad = 0, radT = 0, temp = [], tempM = [], hj = {}, spar = null, menyT = 0, svep = null, ut = 0;
+  let E = null, sasong0 = 0.025, kam = null, fas = 'av', tid = 0, klarFn = null, nr = -1, scen = null, sfas = 'kort', kortT = 0, kT = 0, rad = 0, radT = 0, temp = [], tempM = [], hj = {}, spar = null, menyT = 0, svep = null, ut = 0;
 
   // ---- kameran: vridning och lutning, som en filmkamera ------------------------------------------------
   // kam = { x, z (det kameran tittar på), d (avstånd), p (lutning i grader), y (vridning i grader: 0 = från söder), h (höjd över marken) }
@@ -28,7 +28,7 @@
     if (!kam) return;
     const c = Scene.camera, k = Scene.cam.k || 1, d = kam.d * k, gy = Geo.groundAt(kam.x, kam.z) + (kam.h || 0), p = kam.p * RAD, y = kam.y * RAD;
     c.position.set(kam.x + d * Math.cos(p) * Math.sin(y), gy + d * Math.sin(p), kam.z + d * Math.cos(p) * Math.cos(y));
-    c.lookAt(kam.x, gy, kam.z); c.near = Math.max(0.05, d * 0.05); c.far = d * 12 + 700; c.updateProjectionMatrix();
+    c.lookAt(kam.x, gy, kam.z); c.near = Math.max(0.05, d * 0.05); c.far = fas === 'svep' ? d * 12 + 700 : d * 5 + 40; c.updateProjectionMatrix();          // bara det nära ritas (hela skogen bort till horisonten fick det att hacka)
     if (fas !== 'av') { if (V.Gustav.g) V.Gustav.g.visible = false; if (V.Bud.g) V.Bud.g.visible = false; }          // kartans hjälte och bud hör inte hemma i berättelsen
   };
   // Gläntorna i berättelsen: scenens egna kapslar går först (World.fri tar bara FRI_N stycken)
@@ -77,45 +77,45 @@
   // Varje scen bygger det som syns och ger kam(f) (kameran, f = 0..1 genom scenen) och steg(dt, f) (det som rör sig).
   // rader visas en i taget; var och en står kvar tills man trycker, eller så länge det tar att läsa den.
   const SCENER = [
-    { plats: 'Kalmar · juni 1397', sasong: 0.47, el: 24, varm: 0.3, utanFlagg: true,
+    { ort: 'Kalmar', tid: 'juni 1397', sasong: 0.47, el: 24, varm: 0.3, utanFlagg: true,
       rader: ['I Kalmar kröns Erik av Pommern till kung över tre riken: Danmark, Norge och Sverige.', 'Drottning Margareta har fört samman dem i en union.'],
       bygg() {
         // folket i Kalmar samlas utanför kyrkan, där kröningen är
         const p = R.P.kalmar, K = B.K, st = V.Varld.tomt.kalmar, S = V.Filmstad.stad('kalmar'), T0 = st && st.plan ? st.plan().torg : { x: 0, z: 0.2 }, cx = p.x + T0.x * K, cz = p.z + T0.z * K;
         const mal = S && S.dom ? S.dom : (S && S.t && S.t.b && S.t.b.kyrka ? [p.x - 0.6 * K, p.z - 1.8 * K] : [cx, cz - 1.2]);
         const slag = ['borgare', 'kvinna', 'bonde', 'borgare', 'kvinna'];
-        for (let i = 0; i < 22; i++) { const a = i * 2.39996, r = 0.35 + Math.sqrt(i) * 0.3, q0 = torr(cx + Math.cos(a) * r, cz + Math.sin(a) * r * 0.8, st); folk(q0[0], q0[1], slag[i % 5], { ang: vant(q0[0], q0[1], mal[0], mal[1]) }); }
+        for (let i = 0; i < 10; i++) { const a = i * 2.39996, r = 0.45 + Math.sqrt(i) * 0.36, q0 = torr(cx + Math.cos(a) * r, cz + Math.sin(a) * r * 0.8, st); folk(q0[0], q0[1], slag[i % 5], { ang: vant(q0[0], q0[1], mal[0], mal[1]) }); }
         return { kam(f) { return { x: mix(cx, mal[0], 0.2), z: mix(cz, mal[1], 0.2), d: mix(15, 11, mjuk(f)), p: mix(34, 28, f), y: mix(168, 138, f), h: 0.3 }; } };
       } },
-    { plats: 'Dalarna · sommaren 1434', sasong: 0.53, el: 22, varm: 0.3, utanFlagg: true, glanta: 1,
+    { ort: 'Dalarna', tid: 'sommaren 1434', sasong: 0.53, el: 22, varm: 0.3, utanFlagg: true, glanta: 1,
       rader: ['Unionens kung styr från Danmark. Hans danska fogdar är hårda mot folket, och skatterna är tunga.', 'I Dalarna och Bergslagen reser sig folket, med Engelbrekt Engelbrektsson i spetsen.'],
       bygg() {
         // folket tågar längs vägen från Kopparberget
-        const l = R.path('kopparberget', 'hedemora'), L0 = R.length(l), n = 18, tag = [];
+        const l = R.path('kopparberget', 'hedemora'), L0 = R.length(l), n = 10, tag = [];
         for (let i = 0; i < n; i++) tag.push(folk(0, 0, i % 4 === 3 ? 'borgare' : 'bonde', { pike: i % 3 !== 2, gar: true }));          // ingen bild av Engelbrekt själv: han finns bara i raden
         let d = L0 * 0.32;
-        const satt = () => { tag.forEach((u, i) => { const b = R.along(l, Math.max(0, d - 0.55 - Math.floor(i / 2) * 0.42)), s = (i % 2 ? 1 : -1) * 0.2; u.x = b.x + Math.cos(b.ang) * s; u.z = b.z - Math.sin(b.ang) * s; u.ang = b.ang; }); };
+        const satt = () => { tag.forEach((u, i) => { const b = R.along(l, Math.max(0, d - 0.55 - Math.floor(i / 2) * 0.55)), s = (i % 2 ? 1 : -1) * 0.22; u.x = b.x + Math.cos(b.ang) * s; u.z = b.z - Math.sin(b.ang) * s; u.ang = b.ang; }); };
         return { steg(dt) { d = Math.min(L0, d + dt * 0.38); satt(); const a = R.along(l, d), b = R.along(l, Math.max(0, d - 5)); T._fri = [[a.x, a.z, b.x, b.z, -2.4]]; },
-          kam(f) { const a = R.along(l, Math.max(0, d - 2.2)); return { x: a.x, z: a.z, d: mix(9, 7.5, f), p: mix(16, 13, f), y: grader(a.ang) + mix(-62, -78, f), h: 0.35 }; } };
+          kam(f) { const a = R.along(l, Math.max(0, d - 1.6)); return { x: a.x, z: a.z, d: mix(10, 8.5, f), p: mix(30, 26, f), y: grader(a.ang) + mix(-62, -78, f), h: 0.3 }; } };
       } },
-    { plats: 'Brunkeberg · oktober 1471', sasong: 0.76, el: 14, varm: 0.45, utanFlagg: true, glanta: 1,
+    { ort: 'Brunkeberg', tid: 'oktober 1471', sasong: 0.76, el: 14, varm: 0.45, utanFlagg: true, glanta: 1,
       rader: ['Riksföreståndaren Sten Sture den äldre styr Sverige. Danmarks kung Kristian I kommer med en här för att störta honom.', 'Vid Brunkeberg, strax norr om Stockholm, vinner Sten Sture.'],
       bygg() {
         // Kristians här på åsen norr om staden, Sten Stures här söderifrån (bara på öppen mark, ingen i ett hus)
         const p = R.P.stockholm, st = V.Varld.tomt.stockholm, mx = p.x + 2.8, mz = p.z - 11.4, D = [], Sv = [], ga = (u, dz) => { if (!(st && V.Filmstad.iHus(st, u.x, u.z + dz, 0.12)) && Geo.sdAt(u.x, u.z + dz) > 0.4) u.z += dz; };
-        for (let r = 0; r < 3; r++) for (let i = 0; i < 9; i++) {
-          const qa = torr(mx + (i - 4) * 0.42, mz - 1.6 - r * 0.42, st); D.push(folk(qa[0], qa[1], 'dansk', { pike: (i + r) % 3 !== 1, ang: 0, gar: true }));
-          const qb = torr(mx + (i - 4) * 0.42 + 0.2, mz + 1.6 + r * 0.42, st); Sv.push(folk(qb[0], qb[1], (i + r) % 3 === 2 ? 'bonde' : 'knekt', { pike: (i + r) % 3 !== 1, ang: Math.PI, gar: true }));
+        for (let r = 0; r < 2; r++) for (let i = 0; i < 6; i++) {
+          const qa = torr(mx + (i - 2.5) * 0.5, mz - 1.6 - r * 0.42, st); D.push(folk(qa[0], qa[1], 'dansk', { pike: (i + r) % 3 !== 1, ang: 0, gar: true }));
+          const qb = torr(mx + (i - 2.5) * 0.5 + 0.2, mz + 1.6 + r * 0.42, st); Sv.push(folk(qb[0], qb[1], (i + r) % 3 === 2 ? 'bonde' : 'knekt', { pike: (i + r) % 3 !== 1, ang: Math.PI, gar: true }));
         }
         let krut = 0.6;
         T._fri = [[mx - 4.4, mz, mx + 4.4, mz, -4.6]];
         return { steg(dt, f) {
             Sv.forEach(u => ga(u, -dt * 0.42)); D.forEach(u => ga(u, dt * 0.12));
-            krut -= dt; if (krut <= 0) { krut = 0.5 + Math.random() * 0.5; const L = Math.random() < 0.5 ? D : Sv, u = L[Math.floor(Math.random() * L.length)]; if (u) Fx.krut(u.x, Geo.groundAt(u.x, u.z) + 0.45, u.z); }          // handbössor
+            krut -= dt; if (krut <= 0) { krut = 1.1 + Math.random() * 0.8; const L = Math.random() < 0.5 ? D : Sv, u = L[Math.floor(Math.random() * L.length)]; if (u) Fx.krut(u.x, Geo.groundAt(u.x, u.z) + 0.45, u.z); }          // handbössor
           },
-          kam(f) { return { x: mx, z: mz + 0.6, d: mix(13, 10.5, mjuk(f)), p: mix(16, 12, f), y: mix(104, 82, f), h: 0.5 }; } };
+          kam(f) { return { x: mx, z: mz + 0.6, d: mix(13, 11, mjuk(f)), p: mix(30, 25, f), y: mix(104, 82, f), h: 0.4 }; } };
       } },
-    { plats: 'Stockholm · januari 1512', sasong: null, el: 12, varm: 0.45,
+    { ort: 'Stockholm', tid: 'januari 1512', sasong: null, el: 12, varm: 0.45,
       rader: ['Sverige har ingen kung. Riksföreståndaren Svante Nilsson har styrt riket sedan 1504, och nu är han död.', 'Det är krig med kung Hans av Danmark, som en gång var Sveriges kung. Svantes son Sten är inte ens tjugo år.'],
       bygg() {
         // Sten i snön i Stockholm, där spelet börjar
@@ -142,13 +142,13 @@
   function sida() {
     if (E) return E; const r = document.createElement('div'); r.id = 'titel';
     r.innerHTML = '<div class="t-moln"></div><div class="t-vinj"></div><div class="t-svart"></div><div class="t-rand upp"></div><div class="t-rand ner"></div>' +
-      '<div class="t-text"><div class="t-plats"></div><div class="t-rad"></div></div>' +
+      '<div class="t-text"><div class="t-rad"></div></div><div class="t-kort"><div class="t-ort"></div><div class="t-streck"></div><div class="t-ar"></div></div>' +
       '<div class="t-logo"><div class="t-krona">' + KRONA + '</div><h1>Kronan</h1><div class="t-orn"><i></i><b>✦</b><i></i></div><div class="t-under">Sveriges regenter</div></div>' +
       '<button class="t-borja">Börja</button><button class="t-hoppa">Hoppa över ▸▸</button>' +
       '<div class="t-port"><div class="t-krona liten">' + KRONA + '</div><div class="t-tryck">Tryck för att börja</div></div>';
     document.body.appendChild(r);
     const $ = s => r.querySelector(s);
-    E = { r, plats: $('.t-plats'), rad: $('.t-rad'), svart: $('.t-svart'), logo: $('.t-logo'), borja: $('.t-borja'), hoppa: $('.t-hoppa'), port: $('.t-port') };
+    E = { r, kort: $('.t-kort'), ort: $('.t-ort'), ar: $('.t-ar'), rad: $('.t-rad'), svart: $('.t-svart'), logo: $('.t-logo'), borja: $('.t-borja'), hoppa: $('.t-hoppa'), port: $('.t-port') };
     E.borja.addEventListener('pointerdown', ev => { ev.preventDefault(); ev.stopPropagation(); T.borja(); });
     E.hoppa.addEventListener('pointerdown', ev => { ev.preventDefault(); ev.stopPropagation(); T.hoppa(); });
     E.port.addEventListener('pointerdown', ev => { ev.preventDefault(); ev.stopPropagation(); T._starta(); });
@@ -165,27 +165,41 @@
   }
 
   // ---- berättelsens gång ---------------------------------------------------------------------------------
+  // Varje scen börjar med orten och året på svart en stund (Johannes 2026-11-28: "nu blir man lite inslängd direkt. Det kan stå stad och år först,
+  // och sen kommer filmen"). Scenen byggs medan det är svart, så att övergången inte hackar.
+  const kortSek = i => i === 0 ? 3.6 : 2.6;
   function nastaScen() {
     rensa(); nr++; const s = SCENER[nr]; if (!s) { slutFilm(); return; }
-    ljus(s.sasong === null ? sasong0 : s.sasong, s.el, s.varm); Fx.sno = true; scen = s.bygg(); kT = 0; rad = 0; radT = 0; ut = 0;
+    ljus(s.sasong === null ? sasong0 : s.sasong, s.el, s.varm); Fx.sno = s.sasong === null; scen = s.bygg(); sfas = 'kort'; kortT = 0; kT = 0; rad = 0; radT = 0; ut = 0;   // snöfall bara i vintern 1512
     if (s.utanFlagg) flaggor(false);
-    if (scen.steg) scen.steg(0.016, 0); kam = scen.kam(0);
-    svart(0, 1.1); visa(E.plats, false); visa(E.rad, false);
-    setTimeout(() => { if (SCENER[nr] === s && fas === 'film') { E.plats.textContent = s.plats; visa(E.plats, true); } }, 600);
-    setTimeout(() => { if (SCENER[nr] === s && fas === 'film' && rad === 0) { E.rad.textContent = s.rader[0]; visa(E.rad, true); radT = 0; } }, 1300);
+    kam = scen.kam(0); kapslar(s);
+    svart(1, 0); visa(E.rad, false); E.ort.textContent = s.ort; E.ar.textContent = s.tid; visa(E.kort, true);
+  }
+  // kortet tonar bort och filmen tonar in
+  function borjaBild() {
+    const s = SCENER[nr]; if (!s || sfas !== 'kort') return; sfas = 'bild'; kT = 0; radT = 0; visa(E.kort, false);
+    setTimeout(() => { if (SCENER[nr] === s && fas === 'film') svart(0, 1.4); }, 450);
+    setTimeout(() => { if (SCENER[nr] === s && fas === 'film' && rad === 0) { E.rad.textContent = s.rader[0]; visa(E.rad, true); radT = 0; } }, 1500);
   }
   // nästa rad, eller ut ur scenen efter den sista
   function nastaRad() {
     const s = SCENER[nr]; if (!s || ut) return;
     if (rad < s.rader.length - 1) { rad++; radT = 0; visa(E.rad, false); const r0 = rad; setTimeout(() => { if (SCENER[nr] === s && fas === 'film' && rad === r0) { E.rad.textContent = s.rader[r0]; visa(E.rad, true); } }, 380); return; }
-    ut = 1; visa(E.plats, false); visa(E.rad, false); svart(1, 0.9); setTimeout(() => { if (SCENER[nr] === s && fas === 'film') nastaScen(); }, 1000);
+    ut = 1; visa(E.rad, false); svart(1, 0.9); setTimeout(() => { if (SCENER[nr] === s && fas === 'film') nastaScen(); }, 1000);
+  }
+  // gläntor i skogen: kring dem som rör sig, och en bred gata från det kameran tittar på ända fram till kameran (krymp-kapslar, se world.js)
+  function kapslar(s) {
+    const fl = (T._fri || []).slice(0, 8).map(g => g.length === 5 ? g : [g[0], g[1], g[0], g[1], -g[2]]);
+    if (s.glanta) { const dd = kam.d * (Scene.cam.k || 1) * Math.cos(kam.p * RAD), cx = kam.x + dd * Math.sin(kam.y * RAD), cz = kam.z + dd * Math.cos(kam.y * RAD), r = Math.max(2.4, kam.d * (Scene.cam.k || 1) * 0.42);
+      fl.push([kam.x, kam.z, cx, cz, -r], [mix(kam.x, cx, 0.7), mix(kam.z, cz, 0.7), cx, cz, -r * 1.6]); }
+    T._kaps = fl.length ? fl : null;
   }
   function slutFilm() { rensa(); kam = null; fas = 'paus'; svart(1, 0); setTimeout(() => menyn(false), 500); }
   // Titelskärmen: Stockholm vintern 1512, där spelet börjar. Kameran glider sakta runt staden.
-  function titelKam(t) { const p = R.P.stockholm; return { x: p.x + 0.6, z: p.z - 0.4, d: 40 - Math.min(6, t * 0.12), p: 17, y: 146 - t * 0.6, h: 0 }; }
+  function titelKam(t) { const p = R.P.stockholm; return { x: p.x + 0.6, z: p.z - 0.4, d: 40 - Math.min(6, t * 0.12), p: 22, y: 146 - t * 0.6, h: 0 }; }
   function menyn(snabbt) {
     rensa(); fas = 'meny'; menyT = 0; nr = SCENER.length; ljus(sasong0, 12, 0.45); Fx.sno = true; kam = titelKam(0);
-    E.r.classList.remove('film'); E.r.classList.add('meny'); visa(E.plats, false); visa(E.rad, false); visa(E.hoppa, false);
+    E.r.classList.remove('film'); E.r.classList.add('meny'); visa(E.kort, false); visa(E.rad, false); visa(E.hoppa, false);
     if (V.Musik) { V.Musik.satt(musikPa()); V.Musik.spar('titel'); }
     svart(0, snabbt ? 1.2 : 2.6); setTimeout(() => visa(E.logo, true), snabbt ? 200 : 700); setTimeout(() => { if (fas === 'meny') visa(E.borja, true); }, snabbt ? 1600 : 3000);
   }
@@ -206,9 +220,9 @@
       if (V.Musik) { V.Musik.satt(musikPa()); V.Musik.spar('titel'); } V.Ljud.vakna();
       E.r.classList.add('film'); visa(E.hoppa, true); svart(1, 0); tid = 0; nr = -1; setTimeout(() => { if (fas === 'film') nastaScen(); }, 900);
     },
-    vidare() { if (fas === 'film' && scen && E.rad.classList.contains('syns')) nastaRad(); },          // bara när raden syns: ingen rad hoppas över
+    vidare() { if (fas !== 'film' || !scen) return; if (sfas === 'kort') { if (kortT > 0.6) borjaBild(); } else if (E.rad.classList.contains('syns')) nastaRad(); },          // bara när raden syns: ingen rad hoppas över
     hoppa() {
-      if (fas !== 'film') return; fas = 'paus'; svart(1, 0.3); visa(E.plats, false); visa(E.rad, false); visa(E.hoppa, false);
+      if (fas !== 'film') return; fas = 'paus'; svart(1, 0.3); visa(E.kort, false); visa(E.rad, false); visa(E.hoppa, false);
       setTimeout(() => { rensa(); kam = null; menyn(true); }, 350);
     },
     borja() {
@@ -221,14 +235,13 @@
     update(dt) {
       if (fas === 'av') return; tid += dt;
       if (fas === 'film' && scen) {
-        const s = SCENER[nr], tot = s.rader.reduce((a, r) => a + lasTid(r), 1.3); kT += dt; radT += dt; const f = Math.min(1, kT / tot);
-        if (scen.steg) scen.steg(dt, f); kam = scen.kam(f); if (T._over) kam = Object.assign(kam, T._over);
-        // gläntor i skogen: kring dem som rör sig, och en bred gata från det kameran tittar på ända fram till kameran (krymp-kapslar, se world.js)
-        const fl = (T._fri || []).slice(0, 8).map(g => g.length === 5 ? g : [g[0], g[1], g[0], g[1], -g[2]]);
-        if (s.glanta) { const dd = kam.d * (Scene.cam.k || 1) * Math.cos(kam.p * RAD), cx = kam.x + dd * Math.sin(kam.y * RAD), cz = kam.z + dd * Math.cos(kam.y * RAD), r = Math.max(2.4, kam.d * (Scene.cam.k || 1) * 0.42);
-          fl.push([kam.x, kam.z, cx, cz, -r], [mix(kam.x, cx, 0.7), mix(kam.z, cz, 0.7), cx, cz, -r * 1.6]); }
-        T._kaps = fl.length ? fl : null;
-        if (!ut && kT > 1.3 && radT > lasTid(s.rader[rad])) nastaRad();          // raden har stått länge nog
+        const s = SCENER[nr];
+        if (sfas === 'kort') { kortT += dt; kam = scen.kam(0); if (T._over) kam = Object.assign(kam, T._over); kapslar(s); if (kortT >= kortSek(nr)) borjaBild(); }
+        else {
+          const tot = s.rader.reduce((a, r) => a + lasTid(r), 1.5); kT += dt; radT += dt; const f = Math.min(1, kT / tot);
+          if (scen.steg) scen.steg(dt, f); kam = scen.kam(f); if (T._over) kam = Object.assign(kam, T._over); kapslar(s);
+          if (!ut && kT > 1.5 && radT > lasTid(s.rader[rad])) nastaRad();          // raden har stått länge nog
+        }
       }
       if (fas === 'meny') { menyT += dt; kam = titelKam(menyT); T._liv(dt); }
       if (fas === 'svep' && svep) {
@@ -249,7 +262,7 @@
       const k = klarFn; klarFn = null; if (k) k();
     },
     // för prov och skärmbilder: V.Titel.prov(2, 3) visar scen 2 efter 3 sekunder
-    prov(i, sek) { sida(); fas = 'film'; E.port.style.display = 'none'; E.r.classList.add('film'); V.UI.visa(false); himmel(true); nr = i - 1; nastaScen(); svart(0, 0); for (let s = 0; s < sek; s += 0.05) T.update(0.05); }
+    prov(i, sek) { sida(); fas = 'film'; E.port.style.display = 'none'; E.r.classList.add('film'); V.UI.visa(false); himmel(true); nr = i - 1; nastaScen(); borjaBild(); svart(0, 0); for (let s = 0; s < sek; s += 0.05) T.update(0.05); }
   };
   function ljudFritt() {
     const a = V.Ljud && V.Ljud.ac; if (a) return a.state === 'running';

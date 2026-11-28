@@ -5,7 +5,9 @@
   'use strict';
   const V = window.VASA, Scene = V.Scene, Geo = V.Geo;
   const RADER = {
-    0: ['Min far är död. Riket får inte gå förlorat.']          // en kort replik i rollen, inget om knappar (Johannes 2026-11-28: förklaringar bryter inlevelsen, det gör guldrutorna)
+    // repliker i rollen, inget om knappar (Johannes 2026-11-28: förklaringar bryter inlevelsen, det gör guldrutorna). Han ville ändå ha fler än en:
+    // "Jag fick bara bubbla över sten sture? Ska de inte vara flera?" Raderna bygger på stegets text i data.js (sVasteras, sv. Wikipedia Sten Sture den yngre).
+    0: ['Min far är död. Riket får inte gå förlorat.', 'Rådet vill ha en annan man i fars ställe. Men slotten är lovade åt mig, och den som har slotten har makten.', 'Jag måste skicka ett bud till slottet i Västerås.']
   };
   let stil = false;
   function css() {
