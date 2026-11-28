@@ -54,10 +54,28 @@
   function tryckN(knapp, n, vid, sek) {
     return new Promise(res => {
       let k = 0, klar = false; const slut = () => { if (klar) return; klar = true; UI.film.knapp(null); I.tar = null; res(k); };
-      UI.film.knapp(knapp, () => I.tar && I.tar()); I.tar = () => { if (klar) return; k++; vid(k); if (k >= n) slut(); }; vanta(sek || 20).then(slut);
+      const b = UI.film.knapp(knapp, () => I.tar && I.tar()), pips = n > 1 && b ? document.createElement('span') : null;          // prickar under knappen: hur många tryck som är kvar
+      if (pips) { pips.className = 'knapp-pips'; pips.innerHTML = '<i></i>'.repeat(n); b.appendChild(pips); }
+      I.tar = () => { if (klar) return; k++; vid(k); if (pips && pips.children[k - 1]) pips.children[k - 1].classList.add('full'); if (k >= n) slut(); }; vanta(sek || 20).then(slut);
     });
   }
+  // Hoppa över: en diskret knapp i hörnet medan en film går (Johannes 2026-11-28). Filmen spolas fram bakom svart, så att spelet
+  // hamnar i samma läge som om den hade spelats klart.
+  let hoppEl = null;
+  function hoppKnapp() {
+    const syns = (I.aktiv || I.ifilm) && !I.hoppar;
+    if (!hoppEl) { if (!syns) return; const film = document.getElementById('film'); if (!film) return; hoppEl = document.createElement('button'); hoppEl.className = 'hoppa'; hoppEl.textContent = 'Hoppa över ▸▸';
+      hoppEl.style.cssText = 'position:absolute;right:18px;top:calc(env(safe-area-inset-top,0px) + 14px);z-index:60;padding:6px 14px;font:14px Georgia,serif;color:#f6ecd6;background:rgba(30,20,12,.55);border:1px solid rgba(232,192,64,.55);border-radius:16px;cursor:pointer;pointer-events:auto;opacity:.75';
+      hoppEl.addEventListener('pointerdown', ev => { ev.stopPropagation(); ev.preventDefault(); I.hoppa(); }); film.appendChild(hoppEl); }
+    const d = syns ? '' : 'none'; if (hoppEl.style.display !== d) hoppEl.style.display = d;
+  }
   const I = V.Intro = {
+    ifilm: false, hoppar: false,
+    hoppa() {
+      if (I.hoppar || !(I.aktiv || I.ifilm)) return; I.hoppar = true; const f = UI.film; f.svart(1, 0.3); f.text(''); f.plats(''); f.knapp(null); hoppKnapp();
+      I._hf = { svart: f.svart, text: f.text, plats: f.plats, knapp: f.knapp, tal: f.tal }; f.svart = () => {}; f.text = () => {}; f.plats = () => {}; f.knapp = () => {}; if (f.tal) f.tal = () => {};          // allt som syns står still bakom det svarta
+    },
+    _slapp() { if (!I._hf) return; Object.assign(UI.film, I._hf); I._hf = null; UI.film.tal && UI.film.tal(null); },
     tar: null, fart: +new URLSearchParams(location.search).get('introfart') || 1,          // ?introfart=4 spolar filmen (för prov)
     // Titelskärmen för ett helt nytt spel. Sedan börjar förspelet direkt.
     titel(klar) {
@@ -73,6 +91,7 @@
       UI.film.knapp('Fortsätt', () => { UI.film.knapp(null); document.getElementById('film-text').classList.remove('mitt'); text(''); I.film(klar).catch(e => { console.error(e); I.slut(klar); }); });
     },
     async film(klar) {
+      I.ifilm = true;
       const K = B.K;
       // Johannes 2026-11-28: världen börjar med flykten från Räfsnäs, så att man inte ser hela blodbadet igen. Budet om det kommer på Räfsnäs.
       UI.film.pa(true); if (V.Musik) V.Musik.spar('blodbadet');
@@ -537,19 +556,19 @@
       const c = Scene.cam, hem = { x: c.x, z: c.z, d: c.d }; c.locked = true; c.fly = null; c.fri = true; UI.visa(false); UI.dolj(); UI.textBort(); UI.film.pa(true); L.spela('klocka');
       const Bu = V.Bud, budSyns = Bu.g.visible; if (namn !== 'isen') Bu.g.visible = false; const Hj = V.Gustav, hjSyns = Hj.g.visible; if (V.Game.s.varld >= 2) Hj.g.visible = false; V.Varld.scenDolj(true);          // budet hör inte hemma i scenen (på isen är det hästen som drar släden)
       try { await I.scener[namn](); } catch (e) { console.error(e); }
-      UI.film.knapp(null); I.tar = null; text(''); plats(''); await new Promise(r => setTimeout(r, 950));          // sista raden tonar bort innan rutan kommer (i riktig tid, också i snabbspolning)
-      Bu.g.visible = budSyns; if (V.Game.s.varld >= 2) V.Gustav.g.visible = hjSyns; V.Varld.scenDolj(false); c.lut = 0; hooks = []; waits = []; aka = null; I.tar = null; I.nu = null; UI.film.knapp(null); [GE, EE, JE, SE, KE].forEach(e => { if (e) e.g.visible = false; }); if (V.Musik) V.Musik.spar(V.Musik.grund()); rensa(); text(''); plats(''); UI.film.svart(0, 0.6); UI.film.pa(false); UI.visa(true); c.locked = false; c.fri = false; Scene.jump(hem.x, hem.z, Math.max(hem.d, 32)); I.aktiv = false; I.scenFart = 1; if (klar) klar();
+      I._slapp(); UI.film.knapp(null); I.tar = null; text(''); plats(''); await new Promise(r => setTimeout(r, 950));          // sista raden tonar bort innan rutan kommer (i riktig tid, också i snabbspolning)
+      Bu.g.visible = budSyns; if (V.Game.s.varld >= 2) V.Gustav.g.visible = hjSyns; V.Varld.scenDolj(false); c.lut = 0; hooks = []; waits = []; aka = null; I.tar = null; I.nu = null; UI.film.knapp(null); [GE, EE, JE, SE, KE].forEach(e => { if (e) e.g.visible = false; }); if (V.Musik) V.Musik.spar(V.Musik.grund()); rensa(); text(''); plats(''); UI.film.svart(0, 0.6); UI.film.pa(false); UI.visa(true); c.locked = false; c.fri = false; Scene.jump(hem.x, hem.z, Math.max(hem.d, 32)); I.aktiv = false; I.scenFart = 1; I.hoppar = false; hoppKnapp(); if (klar) klar();
     },
-    slut(klar) { hooks = []; waits = []; rensa(); aka = null; I.tar = null; regn = false; UI.film.knapp(null); UI.film.tal(null); UI.film.text(''); UI.film.plats(''); UI.film.svart(0, 1); UI.film.pa(false); Fx.sno = true; V.Varld._ruttKlar = false; V.Varld._ruttKey = null; klar(); },
+    slut(klar) { I.ifilm = false; I.hoppar = false; I._slapp(); hoppKnapp(); hooks = []; waits = []; rensa(); aka = null; I.tar = null; regn = false; UI.film.knapp(null); UI.film.tal(null); UI.film.text(''); UI.film.plats(''); UI.film.svart(0, 1); UI.film.pa(false); Fx.sno = true; V.Varld._ruttKlar = false; V.Varld._ruttKey = null; klar(); },
     update(dt, t) {
       skyltar.forEach(s => { const p = s.var_(), sp = p ? Scene.screenPoint(p.x, (p.gy !== undefined ? p.gy : Geo.groundAt(p.x, p.z)) + s.h, p.z) : null; if (!sp || sp.behind) { s.e.style.display = 'none'; return; } s.e.style.display = ''; const w = s.e.offsetWidth / 2 + 6, x = Math.max(w, Math.min(innerWidth - w, sp.x)); s.e.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(sp.y) + 'px) translate(-50%, -100%)'; });
-      tid = t; const fart = I.aktiv ? (I.scenFart || 1) : (I.fart || 1);
+      tid = t; const fart = I.hoppar ? 400 : I.aktiv ? (I.scenFart || 1) : (I.fart || 1); hoppKnapp();
       for (let k = waits.length - 1; k >= 0; k--) { waits[k].t -= dt * fart; if (waits[k].t <= 0) { const w = waits.splice(k, 1)[0]; w.r(); } }
-      hooks.slice().forEach(h => h(I.aktiv ? dt * fart : dt)); stader.forEach(s => s.update(I.aktiv ? dt * fart : dt));
+      hooks.slice().forEach(h => h(I.aktiv || I.hoppar ? dt * fart : dt)); stader.forEach(s => s.update(I.aktiv || I.hoppar ? dt * fart : dt));
       if (regn) { const c = Scene.cam, n = Math.round(dt * 240); for (let k = 0; k < n; k++) Fx.spawn({ x: c.x + (Math.random() - 0.5) * c.d * 1.6, y: c.gy + 3 + Math.random() * 6, z: c.z + (Math.random() - 0.7) * c.d * 1.2, vx: 1.2, vy: -11, vz: 0.4, size: 0.03 + c.d * 0.0012, r: 0.7, gr: 0.76, b: 0.86, a: 0.5, max: 0.9, golv: 1, fade: 0 }); }
-      if (I.aktiv && fart > 1 && I.tar) { autoT += dt; if (autoT > 0.08) { autoT = 0; I.tar(); } }          // i snabbspolning (provet) trycker scenen själv
+      if ((I.aktiv || I.ifilm) && fart > 1 && I.tar) { autoT += dt; if (autoT > 0.08) { autoT = 0; I.tar(); } }          // i snabbspolning (provet) trycker scenen själv
       if (aka) {
-        aka.v = Math.max(0, aka.v - 0.75 * dt); aka.d = Math.min(aka.d1, aka.d + aka.v * aka.fartX * dt * (I.aktiv ? fart : 1)); aka.stilla += dt;
+        aka.v = Math.max(0, aka.v - 0.75 * dt); aka.d = Math.min(aka.d1, aka.d + aka.v * aka.fartX * dt * (I.aktiv || I.hoppar ? fart : 1)); aka.stilla += dt;
         const a = R.along(aka.pts, aka.d); if (aka.satt) aka.satt(a, aka.v / 3.4, t, dt); else V.Gustav.place(a.x, a.z, a.ang, aka.v / 3.4, t, dt, false);
         V.Varld.friExtra = [[a.x, a.z, 1.1]];
         { const sk = aka.sikt; Scene.cam.fly = null; Scene.cam.tx = sk ? (a.x + sk[0]) / 2 : a.x; Scene.cam.tz = (sk ? (a.z + sk[1]) / 2 : a.z) + 1.5; Scene.cam.td = aka.kd; }          /* sikt = kameran håller både den som far och målet i bild */
