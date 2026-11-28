@@ -134,6 +134,7 @@
       satt('mark-v', e => { e.textContent = tal(Math.floor(S.res.mark)); }); satt('mark-t', e => { e.textContent = '+' + tal(G.takt('mark')) + '/s'; });
       satt('res-skuld', e => { e.style.display = S.skuld > 0 ? '' : 'none'; }); satt('skuld-v', e => { e.textContent = tal(S.skuld); });
       if (varvRad) { const st = S.stapel, mx = G.skeppMax(); uppd(varvRad, { namn: 'Bygg skepp', niva: G.skepp() || undefined, v: st ? 'på stapeln' : mx ? 'armén är för liten än' : '+' + Math.round(G.TULL * 100 * (1 + 0.1 * G.eg('flotta'))) + ' % mark', k: st || mx ? '' : IK.man + tal(G.skeppPris()), ok: G.kanSkepp(), bar: st ? Math.min(100, st.t / G.VARV_TID * 100) : 0 }); varvRad.row.classList.toggle('pagar', !!st); }
+      UI._kassaPlats();
       { const k = $('kassa'); if (k) {          // kassan: byggs en gång, sedan skrivs bara siffrorna (så att den kan lysa till när en leverans kommer)
         const sk = G.harVarv() || G.skepp() > 0, nyck = sk ? 3 : 2;
         if (k._n !== nyck) { k._n = nyck; k.innerHTML = '<div class="ks ks-man" title="Män: din armé. Stapeln visar hur full den är.">' + IK.man + '<b></b><span></span><i></i><u><u></u></u></div><div class="ks ks-mark" title="Mark: rikets pengar. Stapeln visar hur långt du har kvar till nästa steg.">' + IK.mark + '<b></b><span>mark</span><i></i><u><u></u></u></div>' + (sk ? '<div class="ks ks-skepp" title="Flottans skepp tar tull av fartygen på Östersjön.">' + IK.skepp + '<b></b><span>skepp</span><i></i></div>' : ''); }
@@ -575,6 +576,14 @@
     },
 
     // ---- rutor --------------------------------------------------------------------------------
+    // Kassan står nere till höger, i raden med flikarna över korten (Johannes 2026-11-28: "lägga den här"). Får den inte plats bredvid flikarna står den ovanför dem.
+    _kassaPlats() {
+      const k = $('kassa'), bx = $('baser'), fl = $('flikar'); if (!k || !bx || !fl || !bx.offsetParent) return;
+      if (innerWidth < 720) { if (k._plats) { k._plats = ''; k.style.right = k.style.bottom = ''; } return; }          // telefon: kassan står uppe under datumet, där finns plats
+      const br = bx.getBoundingClientRect(), fr = fl.getBoundingClientRect(), kw = k.offsetWidth; let sista = 0; for (const c of fl.children) sista = Math.max(sista, c.getBoundingClientRect().right);
+      const bredvid = br.right - sista - 10 >= kw, hoger = Math.max(6, innerWidth - br.right), kt = Math.min(fr.top, $('konsol').getBoundingClientRect().top), botten = bredvid ? innerHeight - fr.bottom : innerHeight - kt + 6;
+      const nyck = hoger + '|' + botten; if (k._plats !== nyck) { k._plats = nyck; k.style.right = hoger + 'px'; k.style.bottom = botten + 'px'; }
+    },
     // Kungens sida (Johannes 2026-11-28): vem han är, och dyra egenskaper som gör en sak mer givande. Öppnas med ett tryck på kungen eller på rutan uppe till vänster.
     kung() {
       const S = G.s, ki = D.KUNGINFO && D.KUNGINFO[S.varld], eg = G.egLista(); if (!ki && !eg.length) return false;

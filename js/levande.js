@@ -26,10 +26,10 @@
   const KALLA = 'sv. Wikipedia';
 
   // Personerna, per värld. stopp: [år, månad, plats, { sjo: flagga på skeppet, via: [platser på vägen], mer: vad personen gör där }].
-  // sok = namnet som texterna introducerar personen med; före det syns hen inte (kand = känd från start). Plats null = personen lämnar kartan. Datumen följer historien. Namnskyltarna säger bara vem det är, aldrig vad som ska hända.
+  // Plats null = personen lämnar kartan. Datumen följer historien. Namnskyltarna säger bara vem det är, aldrig vad som ska hända.
   const FIG = {
     0: [
-      { id: 'gustavE', namn: 'Gustav Eriksson', sort: 'gustav', sok: 'Gustav Eriksson', kalla: 'sv. Wikipedia, Gustav Vasa och Kalø', stopp: [
+      { id: 'gustavE', namn: 'Gustav Eriksson', sort: 'gustav', kalla: 'sv. Wikipedia, Gustav Vasa och Kalø', stopp: [
         [1512, 1, 'uppsala', { mer: 'Gustav Eriksson är en ung adelsman, son till riksrådet Erik Johansson. Han har gått i skola i Uppsala.' }],
         [1514, 6, 'stockholm', { mer: 'Gustav Eriksson tjänar vid Sten Stures hov i Stockholm, som många unga adelsmän.' }],
         [1518, 7.4, 'brannkyrka', { via: ['nykoping'], mer: 'Gustav Eriksson rider med Sten Stures här. Vid Brännkyrka bär han rikets fana.' }],
@@ -40,49 +40,49 @@
         [1520, 5.95, 'kalmar', { sjo: 'lubeck', mer: 'Med ett lybskt skepp kommer Gustav Eriksson hem. Den 31 maj går han i land vid Stensö strax söder om Kalmar.' }],
         [1520, 6.8, 'smaland', { mer: 'Kalmar vill inte resa sig. Gustav Eriksson tar sig upp genom Småland och söker stöd hos bönderna, men få lyssnar.' }],
         [1520, 8.4, 'rafsnas', { via: ['soderkoping', 'nykoping'], mer: 'Gustav Eriksson kommer till sin fars gård Räfsnäs i Södermanland, vid Mälaren. Där väntar han på vad som ska hända med Stockholm.' }]] },
-      { id: 'kristian', namn: 'Kristian II', sort: 'kristian', sok: 'Kristian', kalla: 'sv. Wikipedia, Kristian II och Slaget vid Brännkyrka', stopp: [
+      { id: 'kristian', namn: 'Kristian II', sort: 'kristian', kalla: 'sv. Wikipedia, Kristian II och Slaget vid Brännkyrka', stopp: [
         [1512, 1, 'kopenhamn', { mer: 'Kristian är son till kung Hans av Danmark. Från 1513 är han själv kung i Danmark och Norge, och han vill ha Sverige tillbaka i unionen.' }],
         [1518, 5.8, 'stockholm', { sjo: 'danmark', mer: 'Kristian II kommer själv med flotta och här och belägrar Stockholm från midsommar.' }],
         [1518, 9.5, 'kopenhamn', { sjo: 'danmark', mer: 'Belägringen har misslyckats. Kristian seglar hem till Köpenhamn med sex svenska gisslan ombord.' }],
         [1520, 5.5, 'stockholm', { sjo: 'danmark', mer: 'Kristian II kommer med sin flotta i slutet av maj, och Stockholm stängs in till lands och sjöss.' }]] },
-      { id: 'trolle', namn: 'Gustav Trolle', sort: 'trolle', sok: 'Gustav Trolle', kalla: 'sv. Wikipedia, Gustav Trolle och Almarestäkets borg', stopp: [
+      { id: 'trolle', namn: 'Gustav Trolle', sort: 'trolle', kalla: 'sv. Wikipedia, Gustav Trolle och Almarestäkets borg', stopp: [
         [1515, 6, 'uppsala', { mer: 'Gustav Trolle kommer hem från Rom som ny ärkebiskop i Uppsala, kyrkans högste man i Sverige.' }],
         [1516, 9, 'staket', { mer: 'Ärkebiskopen sitter på sin borg Stäket vid Mälaren. Han håller på unionen och Danmarks kung.' }],
         [1517, 12, 'stockholm', { mer: 'Gustav Trolle är avsatt och hålls fången.' }],
         [1520, 3, 'uppsala', { via: ['brunkeberg'], mer: 'Sten Sture är död. Gustav Trolle är fri, och Kristian vill ha honom tillbaka som ärkebiskop.' }]] },
-      { id: 'kristina', namn: 'Kristina Gyllenstierna', kvinna: ['#7a2a3a', '#f2eee2'], ej: 'kristina', sok: 'Kristina', kalla: 'sv. Wikipedia, Kristina Nilsdotter (Gyllenstierna)', stopp: [
+      { id: 'kristina', namn: 'Kristina Gyllenstierna', kvinna: ['#7a2a3a', '#f2eee2'], ej: 'kristina', kalla: 'sv. Wikipedia, Kristina Nilsdotter (Gyllenstierna)', stopp: [
         [1512, 1, 'stockholm', { mer: 'Kristina Gyllenstierna är gift med Sten Sture och bor på Stockholms slott.' }]] }
     ],
     1: [
-      { id: 'kristian', namn: 'Kristian II', sort: 'kristian', kand: 1, kalla: 'sv. Wikipedia, Kristian II och Blodbadet i Nydala', stopp: [
+      { id: 'kristian', namn: 'Kristian II', sort: 'kristian', kalla: 'sv. Wikipedia, Kristian II och Blodbadet i Nydala', stopp: [
         [1520, 12, 'stockholm', { mer: 'Kristian II är krönt till kung av Sverige. Nu gör han sig redo att lämna Stockholm och resa hem till Danmark.' }],
         [1521, 1.6, 'jonkoping', { via: ['nykoping', 'soderkoping'], mer: 'Kristian II reser söderut genom Sverige, mot Danmark.' }],
         [1521, 2.05, 'nydala', { mer: 'Vid Nydala kloster i Småland låter Kristian avrätta abboten och flera munkar.' }],
         [1521, 2.4, 'kopenhamn', { mer: 'Kristian II är tillbaka i Köpenhamn.' }],
         [1523, 4.3, 'kattegatt', { sjo: 'danmark', mer: 'De danska stormännen har avsatt Kristian. I april 1523 lämnar han Danmark med sina skepp för att söka hjälp utomlands.' }],
         [1523, 4.7, null, {}]] },
-      { id: 'trolle', namn: 'Gustav Trolle', sort: 'trolle', sok: 'Trolle', kalla: 'sv. Wikipedia, Gustav Trolle', stopp: [
+      { id: 'trolle', namn: 'Gustav Trolle', sort: 'trolle', kalla: 'sv. Wikipedia, Gustav Trolle', stopp: [
         [1521, 1, 'stockholm', { mer: 'Ärkebiskop Gustav Trolle är i Stockholm, där danskarna styr.' }],
         [1521, 4.5, 'uppsala', { mer: 'Ärkebiskopen är i sin stad Uppsala.' }],
         [1521, 5.7, 'stockholm', { via: ['brunkeberg'], mer: 'Bönderna har tagit ärkebiskopsgården i Uppsala, och Gustav Trolle har tagit sig till Stockholm.' }],
         [1521, 9.2, 'kopenhamn', { sjo: 'danmark', mer: 'I september 1521 måste Gustav Trolle lämna Sverige. Han far till Danmark.' }]] },
-      { id: 'kristina', namn: 'Kristina Gyllenstierna', kvinna: ['#7a2a3a', '#f2eee2'], kand: 1, kalla: 'sv. Wikipedia, Kristina Nilsdotter (Gyllenstierna) och Blåtårn', stopp: [
+      { id: 'kristina', namn: 'Kristina Gyllenstierna', kvinna: ['#7a2a3a', '#f2eee2'], kalla: 'sv. Wikipedia, Kristina Nilsdotter (Gyllenstierna) och Blåtårn', stopp: [
         [1521, 1, 'stockholm', { mer: 'Sten Stures änka Kristina Gyllenstierna sitter fången på Stockholms slott.' }],
         [1521, 9, 'kopenhamn', { sjo: 'danmark', mer: 'Kristina Gyllenstierna förs till Danmark och sätts i Blåtårn, fängelsetornet på Köpenhamns slott.' }],
         [1524, 1.5, 'kalmar', { sjo: 'danmark', mer: 'I januari 1524 får Kristina Gyllenstierna komma hem till Sverige, tillsammans med sin mor och sin son Nils.' }],
         [1524, 3, null, {}]] },
-      { id: 'slagheck', namn: 'Didrik Slagheck', sort: 'slagheck', sok: 'Slagheck', kalla: 'sv. Wikipedia, Didrik Slagheck', stopp: [
+      { id: 'slagheck', namn: 'Didrik Slagheck', sort: 'slagheck', kalla: 'sv. Wikipedia, Didrik Slagheck', stopp: [
         [1521, 1, 'stockholm', { mer: 'Didrik Slagheck styr Sverige åt Kristian II, från Stockholms slott.' }],
         [1521, 4, 'vasteras', { mer: 'Didrik Slagheck leder danskarna i Västerås.' }],
         [1521, 5, 'stockholm', { mer: 'Didrik Slagheck är tillbaka i Stockholm.' }],
         [1521, 9, 'kopenhamn', { sjo: 'danmark', mer: 'Didrik Slagheck kallas hem till Danmark. Kristian gör honom till ärkebiskop i Lund.' }],
         [1522, 1.8, null, {}]] },
-      { id: 'norby', namn: 'Søren Norby', sort: 'norby', sok: 'Norby', kalla: 'sv. Wikipedia, Sören Norby', stopp: [
+      { id: 'norby', namn: 'Søren Norby', sort: 'norby', kalla: 'sv. Wikipedia, Sören Norby', stopp: [
         [1521, 1, 'visby', { mer: 'Den danske sjöhjälten Søren Norby håller Gotland och Visby åt Kristian II.' }],
         [1525, 8, null, {}]] }
     ],
     2: [
-      { id: 'johan', namn: 'Hertig Johan', sort: 'johan', kand: 1, kalla: 'sv. Wikipedia, Johan III', stopp: [
+      { id: 'johan', namn: 'Hertig Johan', sort: 'johan', kalla: 'sv. Wikipedia, Johan III', stopp: [
         [1560, 8, 'abo', { mer: 'Eriks bror Johan är hertig av Finland och håller hov på Åbo slott.' }],
         [1561, 3.6, 'arboga', { sjo: 'sverige', via: ['stockholm'], mer: 'Hertig Johan kommer till riksmötet i Arboga.' }],
         [1561, 6, 'abo', { via: ['stockholm'], sjo: 'sverige', mer: 'Hertig Johan är tillbaka i Åbo.' }],
@@ -94,13 +94,13 @@
         [1567, 10.2, 'stockholm', { mer: 'Hertig Johan är fri igen.' }],
         [1568, 7, 'vadstena', { mer: 'Hertigarna Johan och Karl samlas i Östergötland.' }],
         [1568, 8.6, 'stockholm', { mer: 'Hertigarna kommer till Stockholm.' }]] },
-      { id: 'rantzau', namn: 'Daniel Rantzau', sort: 'rantzau', sok: 'Rantzau', kalla: 'sv. Wikipedia, Daniel Rantzau', stopp: [
+      { id: 'rantzau', namn: 'Daniel Rantzau', sort: 'rantzau', kalla: 'sv. Wikipedia, Daniel Rantzau', stopp: [
         [1565, 8.5, 'halmstad', { mer: 'Daniel Rantzau, en holsteinsk adelsman, leder den danska hären.' }],
         [1565, 10.5, 'axtorna', { mer: 'Daniel Rantzau går mot den svenska hären i Halland.' }],
         [1565, 11.5, 'halmstad', { mer: 'Daniel Rantzau är tillbaka i Halmstad.' }],
         [1567, 10.4, 'getaryggen', { mer: 'Daniel Rantzau går in i Sverige med hären, upp längs Nissastigen.' }],
         [1568, 2.5, 'halmstad', { via: ['jonkoping'], mer: 'Efter vintertåget genom Östergötland och Småland går Rantzau tillbaka till Halland.' }]] },
-      { id: 'karin', namn: 'Karin Månsdotter', kvinna: ['#8a6a3a', '#efe9dc'], sok: 'Karin', kalla: 'sv. Wikipedia, Karin Månsdotter', stopp: [
+      { id: 'karin', namn: 'Karin Månsdotter', kvinna: ['#8a6a3a', '#efe9dc'], kalla: 'sv. Wikipedia, Karin Månsdotter', stopp: [
         [1565, 1, 'stockholm', { mer: 'Karin Månsdotter, dotter till en knekt, lever vid Eriks hov.' }],
         [1567, 5, 'uppsala', { mer: 'Karin Månsdotter är med kungen i Uppsala.' }],
         [1567, 9, 'stockholm', { mer: 'Karin Månsdotter är i Stockholm.' }]] }
@@ -133,7 +133,7 @@
         [1597, 4.3, null, {}]] }
     ],
     3: [
-      { id: 'erik', namn: 'Erik', sort: 'erik', kand: 1, kalla: 'sv. Wikipedia, Erik XIV', stopp: [
+      { id: 'erik', namn: 'Erik', sort: 'erik', kalla: 'sv. Wikipedia, Erik XIV', stopp: [
         [1568, 10, 'stockholm', { mer: 'Den avsatte kungen Erik sitter fången i ett torn på slottet Tre Kronor.' }],
         [1570, 7, 'abo', { sjo: 'sverige', mer: 'Erik förs över havet och hålls fången på Åbo slott.' }],
         [1571, 7, 'kastelholm', { sjo: 'sverige', mer: 'Erik flyttas till Kastelholm på Åland.' }],
@@ -180,22 +180,13 @@
         figs.push(f);
       }
     },
-    // Har berättelsen introducerat personen? (Johannes 2026-11-28: ingen huvudperson syns på kartan innan hen har introducerats.)
-    // Nämns hen i ett stegs titel eller Läs mer syns hen när steget står på tur; nämns hen först i krönikan efter steget syns hen när steget är klart.
-    // kand = känd från början av världen (världens inledning eller förra världen).
-    _introducerad(d, nasta) {
-      if (d.kand) return true; if (!d.sok) return true;
-      const L0 = D.UPPDRAG;
-      if (d._intro === undefined || d._introL !== L0) { d._introL = L0; d._intro = 1e9; for (let i = 0; i < L0.length; i++) { const u = L0[i]; if ([u.titel, u.mer].join(' ').indexOf(d.sok) >= 0) { d._intro = i; break; } if ([u.kronika, u.vet, u.vet2, u.efter].join(' ').indexOf(d.sok) >= 0) { d._intro = i + 1; break; } } }
-      return nasta >= d._intro;
-    },
     // hur långt personen har kommit: det sista stoppet vars datum har passerat (-1 = inte ännu)
     _mal(f, nu) { let k = -1; f.d.stopp.forEach((s, i) => { if (dat(s) <= nu + 1e-6) k = i; }); return k; },
     update(dt, t) {
       if (!scene || !figs.length) return;
       const S = V.Game.s, nu = datumNu(), dold = !!(V.Intro && V.Intro.aktiv) || S.slut || V.Game.skede() === 'strid';
       for (const f of figs) {
-        const st = f.d.stopp, intro = !L._introducerad(f.d, S.nasta), mal = (f.d.ej && S.hjalte === f.d.ej) || intro ? -1 : L._mal(f, nu);          // efter: personen syns först när steget med hans egen introduktion är klart 
+        const st = f.d.stopp, mal = f.d.ej && S.hjalte === f.d.ej ? -1 : L._mal(f, nu);
         if (f.k === undefined || mal < f.k) { f.k = mal; f.leg = null; f.vandra = null; f.pos = mal >= 0 && st[mal][2] ? punkt(st[mal][2]) : null; }      // vid start: personen står på sin plats
         else if (!f.leg && mal - f.k > 1) { f.k = mal - 1; f.vandra = null; f.pos = st[f.k][2] ? punkt(st[f.k][2]) : null; }          // tiden har hoppat: bara den sista resan syns
         if (!f.leg && f.k < mal) {          // dags att resa vidare till nästa stopp
