@@ -103,11 +103,17 @@
     hus(id) { return (S.hus && S.hus[id]) || 0; },
     iVarld(h) { const v = h.varld || 0; return Array.isArray(v) ? v.indexOf(S.varld) >= 0 : v === S.varld; },          // hör huset till världen som spelas?
     husFinns(id) { return G.husFinns0(id) && G.inford(id); },
-    husFinns0(id) { const h = D.BYGGNADER.find(q => q.id === id); return !!h && G.iVarld(h) && !S.slut && !!h.niva && S.nasta >= h.fran && !!S.bas[h.plats]; },
+    husFinns0(id) { const h = D.BYGGNADER.find(q => q.id === id); return !!h && G.iVarld(h) && !S.slut && !!h.niva && S.nasta >= h.fran && !!S.bas[h.plats] && (!h.efter || !!(S.bygg && S.bygg[h.efter])); },          // efter: en fortsättning på en byggnad som först byggs en gång (rådstugan)
+    // Byggnaderna är stadens stora utbyggnader (Johannes 2026-11-28): nästa nivå kräver att staden har vuxit HUS_STEG nivåer till, ett nytt kvarter (stegAv i varld.js).
+    // start: nivåer som byggnaden redan har när kortet kommer (rådstugan står där från början av sin fortsättning).
+    HUS_STEG: 5,
+    husNiva(id) { const h = D.BYGGNADER.find(q => q.id === id); return G.hus(id) + ((h && h.start) || 0); },
+    husKrav(id) { return G.HUS_STEG * G.husNiva(id); },          // stadens nivå som nästa nivå kräver: nivå 2 kräver 5, nivå 3 kräver 10
+    husVantar(id) { const h = D.BYGGNADER.find(q => q.id === id); return !!h && (S.bas[h.plats] || 0) < G.husKrav(id); },
     husLista() { return D.BYGGNADER.filter(h => h.niva && G.husFinns(h.id)).map(h => h.id); },
     husRes(h) { return BAS[h.plats].ger; },
     husPris(id) { const h = D.BYGGNADER.find(q => q.id === id), p = (h.c0 || P(h.plats).c0 * h.cx) * Math.pow(h.r, G.hus(id)); return p < 1000 ? Math.ceil(p) : p; },          // Gustavs hus: cx gånger platsens första pris
-    kanHus(id) { const h = D.BYGGNADER.find(q => q.id === id); return G.husFinns(id) && S.res[G.husRes(h)] >= G.husPris(id); },
+    kanHus(id) { const h = D.BYGGNADER.find(q => q.id === id); return G.husFinns(id) && !G.husVantar(id) && S.res[G.husRes(h)] >= G.husPris(id); },
     kopHus(id) { if (!G.kanHus(id)) return false; const h = D.BYGGNADER.find(q => q.id === id), res = G.husRes(h); S.res[res] -= G.husPris(id); (S.hus || (S.hus = {}))[id] = G.hus(id) + 1; G.ut('hus', { id, h, niva: S.hus[id] }); return true; },
     husX(plats) { if (!S.hus) return 1; let x = 1; for (const h of D.BYGGNADER) if (h.niva && G.iVarld(h) && (h.till || h.plats) === plats && S.hus[h.id]) x *= 1 + h.ger * S.hus[h.id]; return x; },          // till: huset ger mer åt en annan ort (hamnen i Gävle åt Kopparberget)
     kanSold() { return !!S.las.sold && !G.manFull() && S.res.mark >= G.soldPris(); },

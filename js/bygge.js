@@ -189,7 +189,7 @@
     constructor(base, p) { this.b = base; this.p = p; this.K = K; this.occ = []; this.vag = [];
       // vägarna in till platsen hålls fria, så blir det gator mellan husen
       for (const pts of (V.Rike.vagarVid ? V.Rike.vagarVid(base.id) : [])) { let last = null; for (const q of pts) { const d = Math.hypot(q[0] - p.x, q[1] - p.z); if (d > 9) break; if (last && Math.hypot(q[0] - last[0], q[1] - last[1]) < 0.5) continue; last = q; this.occ.push([(q[0] - p.x) / K, (q[1] - p.z) / K, 0.36]); this.vag.push([(q[0] - p.x) / K, (q[1] - p.z) / K]); } }
-      for (const h of V.DATA.BYGGNADER) if (h.plats === base.id && !h.niva && h.x !== undefined && h.id !== 'torn') this.occ.push([h.x, h.z, 0.75]);          // köpta byggnader har sin plats från början
+      for (const h of V.DATA.BYGGNADER) if (h.plats === base.id && !h.niva && h.x !== undefined && h.id !== 'torn') this.occ.push([h.x, h.z, h.tomt && V.Game && V.Game.s && V.Game.s.varld === (h.varld || 0) ? h.tomt : 0.75]);          // köpta byggnader har sin plats från början (tomt: rådstugan har en tom tomt runt sig att växa på, husniva.js)
       this.rnd = Geo.rng(base.id.length * 7919 + base.id.charCodeAt(0) * 131 + base.id.charCodeAt(1)); this.R = V.Rike.RADIE[base.slag] * (base.stor ? 1.35 : 1); }
     ok(x, z, r) {
       const wx = this.p.x + x * K, wz = this.p.z + z * K; if (Geo.sdAt(wx, wz) < 0.45 || Geo.riverAt(wx, wz) < 0.3) return false;
@@ -317,7 +317,7 @@
         if (b.dom) { const dp = fri(lg.dom), dx = dp ? dp[0] : b.stor ? -1.6 : -0.9, dz = dp ? dp[1] : -1.9; t.take(dx, dz, 1.5 * (b.stor ? 0.8 : 0.72)); put(dx, dz, 0, m => domkyrka(m, b.dom, b.stor ? 0.8 : 0.72)); }
         else if (b.kyrka) { t.take(-0.6, -1.8, 1.1); put(-0.6, -1.8, 0, kyrka); }
         if (b.mynt) { t.take(1.4, -0.9, 0.7); put(1.4, -0.9, 0, m => { m.box(0, 0, 0, 0.9, 0.5, 0.7, '#9a948a', { low: '#6a655d', noTop: true }); m.gable(0, 0.5, 0, 0.9, 0.4, 0.7, TAK.tegel.c, { gable: '#9a948a' }); m.box(0.25, 0.5, 0, 0.18, 0.6, 0.18, '#7a746b'); dorr(m, -0.1, 0.356, 0.3, 0.14); }); addSmoke(t, 1.65, 1.2, -0.9, 'rok'); }
-        if (b.hamn && t.p.hav) hamn(t, mb, b.stor ? 3 : 2);
+        if (b.hamn && t.p.hav && !b.ny) hamn(t, mb, b.stor ? 3 : 2);          // en nygrundad stad har ingen hamn förrän den byggs (Hamnen i D.BYGGNADER)
         t.torg(); husN(b.stor ? 11 : 6);
       } else if (s === 1) { husN(4); stand2(2); }          // ett kvarter var femte nivå: först runt torget, sedan längs gatorna och till sist förstäderna utanför muren
       else if (s === 2) { husN(4); if (b.mur) stadsmur(t, mb, put); }
@@ -375,6 +375,7 @@
 
   V.Bygge = {
     K, material, Tomt, steg, flagga, fire, smoke, talt, eld, stallning, stapel, stuga, kyrka, borg, hytta,
+    brygga, lada, mila, malm, gardsgard, dorr, fonster, harbre, TAK,          // till stadens byggnader som växer (husniva.js)
     mesh(mb) { const m = new THREE.Mesh(mb.geometry(), material()); m.castShadow = true; m.receiveShadow = true; return m; }
   };
 })();

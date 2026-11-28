@@ -184,7 +184,7 @@
       }
       for (const id in (UI._arows || {})) { const n = G.arb(id), full = G.arbMax(id); uppd(UI._arows[id], { namn: 'Gruvarbetare', niva: n, v: full ? 'armén är för liten än' : '+10 % i ' + (G.BAS[id].kort || G.BAS[id].namn), k: full ? '' : IK.man + tal(G.arbPris(id)), ok: G.kanArb(id), bar: 0 }); }
       byggRader.forEach(r => uppd(r, { namn: 'Bygg: ' + r.b.namn, v: r.b.ger, k: IK.mark + tal(r.b.kostar), ok: G.kanBygga(r.b.id), snart: true }));
-      husRader.forEach(r => { const h = r.h, L = G.hus(h.id), res = G.husRes(h); uppd(r, { namn: h.namn, niva: L || undefined, v: '+' + Math.round(h.ger * 100) + ' % ' + (res === 'man' ? 'män' : 'mark'), k: IK[res] + tal(G.husPris(h.id)), ok: G.kanHus(h.id), snart: !L }); });
+      husRader.forEach(r => { const h = r.h, L = G.husNiva(h.id), res = G.husRes(h), i = UI.husInfo(h); uppd(r, { namn: h.namn, niva: L || undefined, v: '<b class="k-ps">+' + tal(i.mer) + ' ' + i.enh + '</b> <small class="k-mer">per leverans</small>', k: i.vantar ? '<small class="k-krav">' + (G.BAS[h.plats].kort || G.BAS[h.plats].namn) + ' nivå ' + i.krav + '</small>' : IK[res] + tal(G.husPris(h.id)), ok: G.kanHus(h.id), snart: !L }); r.row.classList.toggle('last', i.vantar); });          // byggnaden: vad nästa nivå lägger till i varje leverans, och vilken nivå staden måste ha
       if (soldRad) { const L = S.sold || 0, dub = (L + 1) % 10 === 0; uppd(soldRad, { namn: S.varld === 0 ? 'Knektar i tjänst' : 'Värva soldater', niva: L, v: G.manFull() ? 'armén fylls redan på ' + G.MAN_FYLL + ' s' : '<b class="k-ps">+' + tal(G.soldProd() * 10) + ' män</b> <small class="k-mer">' + (dub ? dubKort() : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * 10)) + '</small>', k: IK.mark + tal(G.soldPris()), ok: G.kanSold(), snart: dub, bar: G.levFas('sold') * 100, mot: (L % 10) / 10 }); }
       for (const id in erows) { const r = erows[id], e = r.e, L = G.eg(id), max = L >= G.EG_MAX, vad = { man: 'Män', flotta: 'Tull per skepp', skatt: 'Skatt', mark: 'Mark', gruva: 'Gruvorna' }[e.ger] || e.namn; const f = (1 + e.steg * (L + 1)) / (1 + e.steg * L), bas = e.ger === 'man' ? G.takt('man') * 60 : e.ger === 'mark' ? G.takt('mark') * 60 : e.ger === 'skatt' ? G.skattGer() : 0, enh = e.ger === 'man' ? ' män/min' : e.ger === 'mark' ? ' mark/min' : ' mark';
         uppd(r, { namn: e.namn, niva: L + '/' + G.EG_MAX, v: max ? 'full' : '<b class="k-ps">' + vad + ' +' + Math.round(e.steg * 100) + ' %</b>' + (bas > 0 ? ' <small class="k-mer">' + tal(bas) + ' → ' + tal(bas * f) + enh + '</small>' : ''), k: max ? '' : IK.mark + tal(G.egPris(id)), ok: G.kanEg(id), bar: L / G.EG_MAX * 100 }); }
@@ -256,7 +256,9 @@
       const konstUnder = (s, f) => { D.KONSTER.filter(k => k.flik0 === f && (S.varld !== 0 || !k.bygg0) && G.harKonst(k.id)).forEach(k => konstKort(s, k)); };          // förspelet: förmågorna ligger under männen och marken
       const soldKort = s => { soldRad = kort(s, 'sold', IK.man, () => { const L = S.sold || 0, fx = S.full ? G.fullX() : 1, dub = (L + 1) % 10 === 0; return (S.varld === 0 ? '<b>Ta knektar i tjänst</b><span class="kort-n">nivå ' + L + '</span><p>Knektar som får lön stannar hos dig. De bor i huset vid slottet.</p>' : '<b>Värva soldater</b><span class="kort-n">nivå ' + L + '</span><p>Soldater som får lön stannar hos dig. Det är därför du gör egna mynt i Hedemora.</p>') + '<p class="kort-g">Ger ' + tal(G.soldProd() * fx) + ' män i sekunden.</p><p class="kort-x">Nästa nivå: ' + (dub ? dubOrd() + ' män' : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx) + ' män i sekunden') + '.</p><p class="kort-p">Kostar ' + IK.mark + tal(G.soldPris()) + ' mark</p>'; }, row => { if (G.kopSold()) V.Ljud && V.Ljud.spela(G.s.sold % 10 === 0 ? 'dubbel' : 'kop'); else UI._nej(row); }); soldRad.row.id = 'sold'; };
       // ett av stadens hus: nivå, vad nästa nivå ger staden, och priset i det staden ger
-      const husKort = (s, h) => { const r = kort(s, 'hus', IK.pil, () => { const L = G.hus(h.id), res = G.husRes(h), enh = res === 'man' ? 'män' : 'mark', mer = h.till ? (G.BAS[h.till].ger === 'man' ? 'män' : 'mark') : enh; return '<b>' + h.namn + '</b><span class="kort-n">nivå ' + L + '</span><p>' + h.vad + '</p><p class="kort-g">Nu: ' + (L ? G.BAS[h.till || h.plats].namn + ' ger ' + Math.round(h.ger * L * 100) + ' % mer ' + mer : 'inte byggt än') + '.</p><p class="kort-x">Nästa nivå: ' + Math.round(h.ger * 100) + ' % mer ' + mer + ' till.</p><p class="kort-p">Kostar ' + IK[res] + tal(G.husPris(h.id)) + ' ' + enh + '</p>'; }, row => { if (G.kopHus(h.id)) V.Ljud && V.Ljud.spela(G.hus(h.id) === 1 ? 'hammare' : 'kop'); else UI._nej(row); }); r.h = h; r.row.id = 'hus-' + h.id; husRader.push(r); };
+      const husKort = (s, h) => { const r = kort(s, 'hus', IK.pil, () => { const L = G.husNiva(h.id), n = G.hus(h.id), res = G.husRes(h), enh = res === 'man' ? 'män' : 'mark', i = UI.husInfo(h), ort = G.BAS[h.till || h.plats].namn, plats = G.BAS[h.plats].namn;
+        return '<b>' + h.namn + '</b><span class="kort-n">nivå ' + L + '</span><p>' + h.vad + '</p>' + (n ? '<p class="kort-g">Nu: varje leverans från ' + ort + ' är ' + Math.round(h.ger * n * 100) + ' % större, +' + tal(i.nu) + ' ' + i.enh + '.</p>' : L ? '' : '<p class="kort-g">Inte byggt än.</p>') + '<p class="kort-x">Nästa nivå: +' + tal(i.mer) + ' ' + i.enh + ' i varje leverans från ' + ort + '.</p>' +
+          (i.vantar ? '<p class="kort-f">Kräver att ' + plats + ' har nivå ' + i.krav + '. Nu har ' + plats + ' nivå ' + (G.s.bas[h.plats] || 0) + '.</p>' : '<p class="kort-p">Kostar ' + IK[res] + tal(G.husPris(h.id)) + ' ' + enh + '</p>'); }, row => { if (G.kopHus(h.id)) V.Ljud && V.Ljud.spela(G.hus(h.id) === 1 ? 'hammare' : 'kop'); else UI._nej(row); }); r.h = h; r.row.id = 'hus-' + h.id; husRader.push(r); };
       const man = () => {
         const m = ids.filter(id => G.BAS[id].ger === 'man'); if (!m.length) return;
         const ksMan = '<div class="ks ks-man">' + IK.man + '<b></b><span></span><i></i><u><u></u></u></div>', ksMark = '<div class="ks ks-mark">' + IK.mark + '<b></b><span>mark</span><i></i><u><u></u></u></div>';          // flikarna Män och Mark är själva tillgångsrutorna (Johannes 2026-11-28 03:48)
@@ -354,11 +356,14 @@
     // Husen i världen (Johannes 2026-11-28: "Man ska kunna trycka direkt på rådstugan för att uppgradera den, det gäller alla byggnader som hamnar osv ... som man gör med städerna nu").
     // Som med städerna: första trycket väljer huset, dess kort lyser i sin flik och kameran går dit. Nästa tryck bygger ut det, precis som ett tryck på kortet.
     // Stadens hus bygger ut sig själva, huset för knektar knektarna i tjänst, rådstugan Sigillet (där breven beseglas), Kungsladugården Hästar och skeppet på stapeln varvet.
+    // Vad en byggnad ger: nu (det den lägger till i varje leverans), nästa nivå, och vilken nivå staden måste ha för nästa nivå
+    husInfo(h) { const n = G.hus(h.id), ort = h.till || h.plats, lev = G.s.bas[ort] ? G.levStorlek(ort) : 0, x = 1 + h.ger * n; return { nu: lev * (1 - 1 / x), mer: lev * h.ger / x, enh: G.BAS[ort].ger === 'man' ? 'män' : 'mark', krav: G.husKrav(h.id), vantar: G.husVantar(h.id) }; },
     husMal(id) {
+      { const f = D.BYGGNADER.find(q => q.efter === id && G.husFinns(q.id)); if (f) return UI.husMal(f.id); }          // rådstugan: dess nivåer
       const S = G.s, h = D.BYGGNADER.find(q => q.id === id), fattas = (pris, res) => { const f = pris - S.res[res]; return f > 0 ? 'Fattas ' + tal(Math.ceil(f)) + (res === 'man' ? ' män' : ' mark') : null; };
       if (id === 'varv') return G.harVarv() ? { flik: 'man', rad: () => varvRad, niva: () => G.varvMan(), nej: () => G.flottanFull() ? 'Flottan är full' : G.varvFullt() ? 'Varvet är fullt' : fattas(G.varvLag(), 'man') } : null;
       if (!h) return null;
-      if (h.niva) return G.husFinns(id) ? { flik: 'stad', stad: h.plats, rad: () => husRader.find(r => r.h.id === id), niva: () => G.hus(id), nej: () => fattas(G.husPris(id), G.husRes(h)) } : null;
+      if (h.niva) return G.husFinns(id) ? { flik: 'stad', stad: h.plats, rad: () => husRader.find(r => r.h.id === id), niva: () => G.hus(id), nej: () => G.husVantar(id) ? (G.BAS[h.plats].kort || G.BAS[h.plats].namn) + ' behöver nivå ' + G.husKrav(id) : fattas(G.husPris(id), G.husRes(h)) } : null;
       if (id === 'knektar') return S.varld === 0 && S.las.sold ? { flik: 'stad', stad: 'stockholm', rad: () => soldRad, niva: () => S.sold || 0, nej: () => G.manFull() ? 'Armén fylls redan på' : fattas(G.soldPris(), 'mark') } : null;
       const k = D.KONSTER.find(q => q.bygg0 === id && G.harKonst(q.id));
       return k ? { flik: 'kung', rad: () => krows[k.id], niva: () => S.konst[k.id], nej: () => S.konst[k.id] >= G.KONST_MAX ? UI.konst(k.id)[0] + ' kan inte bli bättre' : fattas(G.konstPris(k.id), 'mark') } : null;
@@ -374,6 +379,8 @@
       return true;
     },
     // Nästa tryck på huset: samma som ett tryck på dess kort (ljudet, och kortet skakar om det inte går). Svar: true, eller vad som fattas.
+    // pilen över en byggnad: bygger ut direkt, som städernas pilar
+    husPil(id) { V.Ljud && V.Ljud.vakna && V.Ljud.vakna(); if (G.kopHus(id)) V.Ljud && V.Ljud.spela(G.hus(id) === 1 ? 'hammare' : 'kop'); UI.tick(); },
     husKop(id) { const m = UI.husMal(id), e = m && UI._husRad(id); if (!e) return null; const fore = m.niva(); e.click(); return m.niva() !== fore ? true : m.nej(); },
     visaStad(id) { const S = G.s; if (!S.bas[id]) return; S.stad = id; flik = 'stad'; S.flik = 'stad'; S.stadSett = 1; valdBas = id; valtHus = null; sistaBaser = ''; UI.tick(true); },
     // Menyn med alla städerna, ovanför stadens flik: namn, nivå och vad de ger. on = true visar, false stänger, inget = växlar.
@@ -429,13 +436,21 @@
 
     // ---- varje bildruta: pilar över baser som går att bygga ut -----------------------------------
     frame() {
-      const S = G.s, box = $('pilar'), spel = root.classList.contains('spel'), golv = innerHeight - ($('konsol').offsetHeight || 0) - 30;
+      const S = G.s, box = $('pilar'), spel = root.classList.contains('spel'), golv = innerHeight - ($('konsol').offsetHeight || 0) - 30, synliga = [];
       for (const b of D.BASER) {
         const id = b.id, can = spel && S.bas[id] && G.kanKopa(id) && !G.stoppad(id) && !(S.marknad && S.marknad.bas === id); let p = pilar[id];
         if (!can) { if (p) p.style.display = 'none'; continue; }
         if (!p) { p = pilar[id] = el('button', 'pil', IK.pil); p.title = 'Bygg ut ' + b.namn; box.appendChild(p); p.addEventListener('click', e => { e.stopPropagation(); UI.kop(id); }); }
         const w = V.Varld.pos(id), sp = V.Scene.screenPoint(w.x, w.y + 3.6, w.z), dold = sp.behind || sp.x < 20 || sp.x > innerWidth - 40 || sp.y < 60 || sp.y > golv || UI._skymd(sp);
-        p.style.display = dold ? 'none' : ''; p.style.transform = 'translate(' + (sp.x - 13) + 'px,' + (sp.y - 26) + 'px)'; p.classList.toggle('dubbel', G.rad(id));
+        p.style.display = dold ? 'none' : ''; p.style.transform = 'translate(' + (sp.x - 13) + 'px,' + (sp.y - 26) + 'px)'; p.classList.toggle('dubbel', G.rad(id)); if (!dold) synliga.push(sp);
+      }
+      // en lugn pil över varje byggnad som går att bygga ut, där den står (Johannes 2026-11-28: "Det finns inget som indikerar på kartan att jag kan uppgradera bryggan")
+      for (const h of D.BYGGNADER) {
+        if (!h.niva) continue; const id = h.id, nyckel = 'hus:' + id, can = spel && !S.slut && (G.hus(id) > 0 || !!h.start) && G.kanHus(id); let p = pilar[nyckel];
+        const w = can ? V.Varld.husPos(id) : null; if (!w) { if (p) p.style.display = 'none'; continue; }
+        if (!p) { p = pilar[nyckel] = el('button', 'pil hus', IK.pil); p.setAttribute('aria-label', 'Bygg ut ' + h.namn); box.appendChild(p); p.addEventListener('click', e => { e.stopPropagation(); UI.husPil(id); }); }
+        const sp = V.Scene.screenPoint(w.x, w.y + 1.9, w.z), dold = sp.behind || sp.x < 20 || sp.x > innerWidth - 40 || sp.y < 60 || sp.y > golv || UI._skymd(sp) || synliga.some(q => Math.hypot(q.x - sp.x, q.y - sp.y) < 30);          // inte ovanpå stadens egen pil
+        p.style.display = dold ? 'none' : ''; p.style.transform = 'translate(' + (sp.x - 11) + 'px,' + (sp.y - 22) + 'px)'; if (!dold) synliga.push(sp);
       }
       // ortnamnen vid varje ort (förspelet, Johannes 2026-11-26: "deras namn ska synas på nåt sätt så man ser vid orten vilken det är")
       { const lista = spel ? V.Varld.ortnamn() : [], sett = {}; if (spel && V.Levande) { const upp = {}; for (const o of lista) { upp[o.id] = 1; upp['_' + Math.round(o.x / 2.2) + ',' + Math.round(o.z / 2.2)] = 1; } lista.push(...V.Levande.orter(upp)); } const rekt = [];          // och de orter som texterna nämner (levande.js)          // i ett slag: vem som är vem

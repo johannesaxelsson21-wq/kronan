@@ -31,7 +31,7 @@
     // Se till att världen stämmer med spelets läge (vid start, efter laddning och efter varje uppdrag).
     sync(tyst) {
       const S = G.s; if (!S.bas[sistaBas]) sistaBas = Object.keys(S.bas)[0];
-      if (S.husPos) for (const id in S.husPos) { const h = D.BYGGNADER.find(q => q.id === id), t = h && tomt[h.plats]; if (t && !(t._hus && t._hus[id])) { t.take(S.husPos[id][0], S.husPos[id][1], 0.9); (t._hus || (t._hus = {}))[id] = 1; } } if (V.Gustav.klad) V.Gustav.klad(S.titel);          // stadens hus står kvar där de byggdes, och inga andra hus på dem
+      if (S.husPos2) for (const id in S.husPos2) { const h = D.BYGGNADER.find(q => q.id === id); if (h) W._husTa(h, S.husPos2[id]); } if (V.Gustav.klad) V.Gustav.klad(S.titel);          // stadens byggnader står kvar där de byggdes, och inga andra hus på deras platser
       for (const b of D.BASER) {
         // det som byggdes i förspelet står kvar, också i Kristians händer
         if (b.varld && b.varld.indexOf(S.varld) < 0) continue;          // platser som bara hör till en annan värld
@@ -60,7 +60,7 @@
       W._dekor('staket', f0 && S.nasta <= idx('sRiv'), () => { const mb = new V.MB(); B.borg(mb, 'liten', 0); const m = B.mesh(mb), p = R.P.staket; m.position.set(p.x, p.y, p.z); m.scale.setScalar(B.K); return m; });
       W._dekor('staketLager', f0 && S.nasta > idx('sStaket') && S.nasta <= idx('sRiv'), () => { const q = R.P.staket, c = [[4.6, 2.4], [4.8, 0.4], [3.6, -3], [0, -5]].find(o => Geo.sdAt(q.x + o[0], q.z + o[1]) > 1.6) || [4.6, 2.4]; return lager({ x: q.x + c[0], z: q.z + c[1] }, 7); });
       if (f0 && S.bygg) for (const id in S.bygg) W._byggnad(id, true);
-      if (S.hus) for (const id in S.hus) if (S.hus[id]) W._byggnad(id, true);          // och stadens hus          // byggnaderna man har köpt (se D.BYGGNADER)
+      if (S.hus) for (const id in S.hus) if (S.hus[id]) W._husNiva(id, true);          // och stadens hus          // byggnaderna man har köpt (se D.BYGGNADER)
       // sjön Åsunden finns inte i kartans vatten: den målas dit där slaget står, långsmal längs vägen in mot Bogesund
       if (f0 && S.nasta >= idx('sAsunden') - 1 && !dekor.asunden) { const v = R.path('skara', 'bogesund'), e = v[v.length - 1], q = v[Math.max(0, v.length - 6)], L = Math.hypot(e[0] - q[0], e[1] - q[1]) || 1, dx = (e[0] - q[0]) / L, dz = (e[1] - q[1]) / L;
         World.Paint.river([[e[0] - dx * 6.5, e[1] - dz * 6.5], [e[0] + dx * 8, e[1] + dz * 8]], 10.5); dekor.asunden = { sjo: { x: e[0] + dx * 0.7, z: e[1] + dz * 0.7, r: 8.2 } }; paintDirty = true; W._isAsunden(e, dx, dz); }
@@ -83,9 +83,9 @@
       const mb = new V.MB(); B.borg(mb, sort, 3); const m = B.mesh(mb); m.position.set(q[0], tomt[id].y(q[0], q[1]), q[1]); grp[id].add(m); if (!tyst) W._pop(m, id);
     },
     // En köpt byggnad reses vid sin plats: huset, och två knektar på vakt utanför.
-    byggPlats(id) { const b = D.BYGGNADER.find(q => q.id === id), p = b && R.P[b.plats || b.vid]; if (b && b.niva && p) { const q = W._husPlats(b); return q ? { x: p.x + q[0] * B.K, z: p.z + q[1] * B.K } : null; } return p ? (b.vid ? { x: p.x + b.x, z: p.z + b.z } : { x: p.x + b.x * B.K, z: p.z + b.z * B.K }) : null; },          // vid = står för sig själv utanför en plats (världens mått)
+    byggPlats(id) { const b = D.BYGGNADER.find(q => q.id === id), p = b && R.P[b.plats || b.vid]; if (b && b.niva && p) return W._husMitt(b); return p ? (b.vid ? { x: p.x + b.x, z: p.z + b.z } : { x: p.x + b.x * B.K, z: p.z + b.z * B.K }) : null; },          // vid = står för sig själv utanför en plats (världens mått)
     _byggnad(id, tyst) {
-      if (W._byggda[id]) return; const b = D.BYGGNADER.find(q => q.id === id); if (!b) return; const t = b.plats && tomt[b.plats], w = W.byggPlats(id), K = B.K, mb = new V.MB(); let folk = [], m;
+      if (W._byggda[id]) return; const b = D.BYGGNADER.find(q => q.id === id); if (!b) return; if (b.niva) return W._husNiva(id, tyst); const t = b.plats && tomt[b.plats], w = W.byggPlats(id), K = B.K, mb = new V.MB(); let folk = [], m;
       const vakt = (q, slag, pik) => Folk.add(w.x + q[0] * K, w.z + q[1] * K, slag, { pike: pik, ang: 0 });
       if (id === 'knektar') {
         B.stuga(mb, 1.2, 0.62, 0.48, 'span', { skorsten: 1, ljus: 1 });
@@ -105,34 +105,11 @@
         const p0 = R.P[b.plats], lagen = []; for (let k = 0; k < 12 && lagen.length < 3; k++) { const a = 2.0 + k * 0.52, x = Math.cos(a) * 6.0, z = Math.sin(a) * 6.0 * 0.9; if (Geo.sdAt(p0.x + x * K, p0.z + z * K) > 0.8 && !lagen.some(q => Math.hypot(q[0] - x, q[1] - z) < 2.6)) lagen.push([x, z]); }
         lagen.forEach(q => { mb.push().move(q[0], t.y(q[0], q[1]), q[1]); mb.cyl(0, 0, 0, 0.34, 0.38, 1.15, 8, '#9a948a', { low: '#6a655d' }); mb.cyl(0, 1.15, 0, 0.4, 0.4, 0.12, 8, '#8a8479', { cap: '#8a8479' }); mb.cone(0, 1.27, 0, 0.36, 0.5, 8, '#4a3e34', {}); mb.pop(); });
         W._tornLagen = lagen.map(q => ({ x: p0.x + q[0] * K, z: p0.z + q[1] * K }));
-      } else if (b.modell === 'hamn') {          // sjöbodar och lådor vid stranden, och ett skepp som ligger ute i vattnet
-        B.stuga(mb, 0.8, 0.5, 0.42, 'span', {}); mb.push().move(0.75, 0, 0.1).rotY(0.3); B.stuga(mb, 0.6, 0.45, 0.4, 'span', {}); mb.pop();
-        for (let k = 0; k < 4; k++) mb.box(-0.5 + k * 0.32, 0, 0.55, 0.22, 0.2, 0.22, '#7a5a3a');
-        folk = [vakt([0.2, 0.8], 'borgare', false)];
-        const p0 = R.P[b.plats], dx = w.x - p0.x, dz = w.z - p0.z, L = Math.hypot(dx, dz) || 1; let sx = w.x, sz = w.z; for (let k = 0; k < 40 && Geo.sdAt(sx, sz) > -0.6; k++) { sx += dx / L * 0.2; sz += dz / L * 0.2; }
-        if (Geo.sdAt(sx, sz) <= -0.6) { const s = V.skepp('sverige'); s.scale.setScalar(1.6); s.position.set(sx, 0.02, sz); s.rotation.y = Math.atan2(dx, dz) + 1.57; scene.add(s); dekor['skepp' + id] = { userData: { skepp: [s] } }; }
-      } else if (b.modell === 'hytta') {          // en hytta med rök, och malm i högar
-        B.hytta(mb, true); for (let k = 0; k < 2; k++) mb.box(-0.45 + k * 0.9, 0, 0.55, 0.3, 0.16, 0.24, b.plats === 'sala' ? '#9a9da3' : '#8a4f33');
-        folk = [vakt([0.1, 0.8], 'bergsman', false)];
-      } else if (b.modell === 'bod') {          // ett lagerhus av sten vid hamnen, med en stång och flagga
-        B.stuga(mb, 0.8, 0.55, 0.55, 'tegel', { vagg: '#b9ad98', vaggLag: '#8f8473', gavel: '#b9ad98', ljus: 1 }); mb.box(0.52, 0, 0.3, 0.05, 0.7, 0.05, '#5a4630'); mb.box(0.52, 0.56, 0.3, 0.3, 0.18, 0.02, '#c9a24a');
-        for (let k = 0; k < 3; k++) mb.box(-0.3 + k * 0.3, 0, 0.55, 0.22, 0.2, 0.22, '#6a4a2a');          // järn och koppar i lådor
-        folk = [vakt([0, 0.75], 'bergsman', false)];
-      } else if (b.modell === 'disting') {          // marknadsstånd med tyg i olika färger
-        ['#b8312a', '#2f4f8a', '#c9a24a', '#5d7a3a'].forEach((c, k) => { const x = (k % 2) * 0.7 - 0.35, z = Math.floor(k / 2) * 0.7 - 0.35; for (const q of [[-0.2, -0.15], [0.2, -0.15], [-0.2, 0.15], [0.2, 0.15]]) mb.box(x + q[0], 0, z + q[1], 0.03, 0.34, 0.03, '#5a4630'); mb.box(x, 0.34, z, 0.48, 0.05, 0.38, c); mb.box(x, 0.12, z + 0.05, 0.4, 0.12, 0.22, '#8a6a42'); });
-        folk = [vakt([-0.6, 0.5], 'borgare', false), vakt([0.55, -0.4], 'by', false)];
-      } else if (b.modell === 'garnison') {          // tält för knektarna och ett baner
-        [[-0.5, 0], [0.45, -0.15], [0, 0.55]].forEach(q => { mb.push().move(q[0], 0, q[1]); B.talt(mb); mb.pop(); }); mb.box(0.75, 0, 0.5, 0.05, 0.75, 0.05, '#5a4630'); mb.box(0.75, 0.62, 0.5, 0.3, 0.2, 0.02, '#b8312a');
-        folk = [[-0.2, 0.95], [0.4, 0.9]].map(q => vakt(q, 'knekt', true));
-      } else if (b.modell === 'gardar') {          // två gårdar med halmtak och en gärdsgård
-        B.stuga(mb, 0.85, 0.5, 0.45, 'halm', { skorsten: 1, ljus: 1 }); mb.push().move(0.95, 0, 0.35).rotY(1.3); B.stuga(mb, 0.7, 0.45, 0.4, 'halm', {}); mb.pop();
-        for (let k = 0; k < 7; k++) { mb.box(-0.6 + k * 0.3, 0, 0.75, 0.04, 0.18, 0.04, '#6b5743'); if (k < 6) mb.box(-0.45 + k * 0.3, 0.12, 0.75, 0.3, 0.03, 0.02, '#7a6650'); }
-        folk = [vakt([0.3, 1.0], 'by', false)];
       }
       m = B.mesh(mb);
       if (b.vid) { m.position.set(w.x, Geo.groundAt(w.x, w.z), w.z); m.scale.setScalar(K); scene.add(m); }
       else if (id === 'torn') grp[b.plats].add(m);
-      else { if (!t || !grp[b.plats]) return; const q = b.niva ? W._husPlats(b) : [b.x, b.z]; m.position.set(q[0], t.y(q[0], q[1]), q[1]); grp[b.plats].add(m); }
+      else { if (!t || !grp[b.plats]) return; const q = [b.x, b.z]; m.position.set(q[0], t.y(q[0], q[1]), q[1]); grp[b.plats].add(m); }
       W._byggda[id] = { m, folk }; if (!tyst) { if (b.vid) { m.scale.setScalar(0.01); pops.push({ m, t: 0, fran: 0.01, till: K }); } else W._pop(m, b.plats); Fx.damm(w.x, Geo.groundAt(w.x, w.z) + 0.1, w.z, 14); }
     },
     // Orterna som stegen handlar om står på kartan, också när de inte är baser: en liten by eller ett slott (skylten sätter levande.js).
@@ -186,33 +163,59 @@
       for (const id in W._byggda) {
         const o = W._byggda[id], b = D.BYGGNADER.find(q => q.id === id); if (!o || !o.m || !o.m.parent || !b) continue;
         agare.set(o.m, id); mal.add(b.vid || !grp[b.plats] ? o.m : grp[b.plats]);          // ett hus i en stad prövas ihop med stadens egna hus
-        const sk = dekor['skepp' + id]; if (sk && sk.userData.skepp) sk.userData.skepp.forEach(s => { agare.set(s, id); mal.add(s); });
       }
       if (dekor.stapelSkepp) { agare.set(dekor.stapelSkepp, 'varv'); mal.add(dekor.stapelSkepp); }
       if (!mal.size) return null;
       const r = Scene.renderer.domElement.getBoundingClientRect(), rc = W._rc || (W._rc = new THREE.Raycaster());
       rc.setFromCamera({ x: (sx - r.left) / r.width * 2 - 1, y: -((sy - r.top) / r.height) * 2 + 1 }, Scene.camera);
       const t = rc.intersectObjects([...mal], true)[0]; if (!t) return null;
-      for (let o = t.object; o; o = o.parent) if (agare.has(o)) return agare.get(o);
+      for (let o = t.object; o; o = o.parent) if (agare.has(o)) { const id = agare.get(o), f = D.BYGGNADER.find(q => q.efter === id && G.husFinns(q.id)); return f ? f.id : id; }          // rådstugan: ett tryck bygger ut dess nivåer
       return null;
     },
-    husPos(id) { const w = id === 'varv' ? (dekor.stapelSkepp ? W.varvPlats() : null) : W._byggda[id] ? W.byggPlats(id) : null; return w ? { x: w.x, y: Geo.groundAt(w.x, w.z), z: w.z } : null; },
+    husPos(id) { const f = D.BYGGNADER.find(q => q.id === id); if (f && f.efter && !(W._byggda[id] && W._byggda[id].delar.length)) return W.husPos(f.efter); const w = id === 'varv' ? (dekor.stapelSkepp ? W.varvPlats() : null) : W._byggda[id] ? W.byggPlats(id) : null; return w ? { x: w.x, y: w.vatten ? 0 : Geo.groundAt(w.x, w.z), z: w.z } : null; },
     foljHus(id) { const w = W.husPos(id); if (!V.tyst && w) W._foljer = { t: performance.now(), pos: () => w }; },          // kameran står vid huset tills man drar eller väljer något annat
     // Ett köp syns på huset: det ger till ett litet hopp och glimmar, som städerna gör
     husHopp(id) {
-      const o = id === 'varv' ? { m: dekor.stapelSkepp } : W._byggda[id], w = W.husPos(id); if (!o || !o.m || !w) return;
+      let o = id === 'varv' ? { m: dekor.stapelSkepp } : W._byggda[id], w = W.husPos(id); if (o && o.delar) { const m = o.delar[o.delar.length - 1]; if (!m) return; o = { m }; w = m.getWorldPosition(new THREE.Vector3()); w = { x: w.x, y: Geo.groundAt(w.x, w.z), z: w.z }; } if (!o || !o.m || !w) return;
       const b = D.BYGGNADER.find(q => q.id === id), till = id === 'varv' ? 1.8 : b && b.vid ? B.K : 1;
       if (!pops.some(p => p.m === o.m)) pops.push({ m: o.m, t: 0, fran: till * 0.86, till });
       Fx.guld(w.x, w.y + 0.3, w.z, 22, 0.8);
     },
-    // Var ett av stadens hus står (förspelet): en ledig plats på land i utkanten av staden. Bryggorna står vid stranden. Platsen sparas.
-    _husPlats(b) {
-      const S = G.s, P = S.husPos || (S.husPos = {}); if (P[b.id]) return P[b.id]; const tm = tomt[b.plats]; if (!tm) return null; const K = B.K, p = tm.p;
-      for (let varv = 0; varv < 2; varv++) for (let k = 0; k < 240; k++) {          // först vid stranden om det är bryggor, sedan var som helst på land
-        const a = 0.9 + k * 0.61, r = 1.3 + (k % 16) * 0.4, x = Math.cos(a) * r, z = Math.sin(a) * r * 0.85 + 0.3, sd = Geo.sdAt(p.x + x * K, p.z + z * K);
-        if (sd < 0.6 || (b.modell === 'hamn' && !varv && sd > 2.6) || !tm.ok(x, z, 0.9)) continue; tm.take(x, z, 0.9); (tm._hus || (tm._hus = {}))[b.id] = 1; return (P[b.id] = [x, z]);
+    // Stadens byggnader med nivåer (husniva.js): platserna räknas ut första gången och sparas, så står de kvar när spelet laddas.
+    // Platserna på land tas i tomten, så att inga andra hus byggs där. Bitarna i vattnet (bryggor och skutor) tar ingen mark.
+    _husTa(h, q) { const t = tomt[h.plats]; if (!t || (t._hus && t._hus[h.id])) return; (t._hus || (t._hus = {}))[h.id] = 1; const r = V.HusNiva.RAD[V.HusNiva.typ(h)] || 0.5; for (const p of q) if (!p[3]) t.take(p[0], p[1], r); else if (p[4] === 'b') t.take(p[0], p[1], 0.3); },
+    _husPlatser(h) {
+      const S = G.s, P = S.husPos2 || (S.husPos2 = {}); if (P[h.id]) return P[h.id]; const t = tomt[h.plats]; if (!t) return [];
+      const q = V.HusNiva.platser(h, t, { varvPlats: W.varvPlats }); P[h.id] = q; W._husTa(h, q); return q;
+    },
+    // var byggnaden står (världens mått): den bit som står närmast mitten av alla bitar, eller där den första biten kommer
+    _husMitt(h) {
+      const p = R.P[h.plats], o = W._byggda[h.id], q = W._husPlatser(h), n = Math.max(1, Math.min(q.length, o && o.delar ? o.delar.length : 0)); if (!p || !q.length) return p ? { x: p.x, z: p.z } : null;
+      let x = 0, z = 0; for (let k = 0; k < n; k++) { x += q[k][0]; z += q[k][1]; } x /= n; z /= n; let b = q[0]; for (let k = 1; k < n; k++) if (Math.hypot(q[k][0] - x, q[k][1] - z) < Math.hypot(b[0] - x, b[1] - z)) b = q[k];
+      return { x: p.x + b[0] * B.K, z: p.z + b[1] * B.K, vatten: !!b[3] };
+    },
+    // träden ger plats åt en ny bit (skogen ritas en gång, med gläntor bara kring städerna)
+    _rojTrad(x, z, r) {
+      const f = World.forest; if (!f) return; const m4 = new THREE.Matrix4(), v = new THREE.Vector3(), noll = new THREE.Vector3(0, 0, 0);
+      for (const mesh of f.children) { if (!mesh.isInstancedMesh) continue; const bs = mesh.geometry.boundingSphere; if (bs && Math.hypot(bs.center.x - x, bs.center.z - z) > bs.radius + r) continue; let n = 0;
+        for (let k = 0; k < mesh.count; k++) { mesh.getMatrixAt(k, m4); v.setFromMatrixPosition(m4); if ((v.x - x) * (v.x - x) + (v.z - z) * (v.z - z) < r * r) { m4.scale(noll); mesh.setMatrixAt(k, m4); n++; } }
+        if (n) mesh.instanceMatrix.needsUpdate = true; }
+    },
+    // en bit för varje nivå, upp till det som får plats. Står alla bitar redan ger den nyaste till ett hopp.
+    _husNiva(id, tyst) {
+      const h = D.BYGGNADER.find(q => q.id === id); if (!h || !h.niva) return; const t = tomt[h.plats], g0 = grp[h.plats], L = G.hus(id); if (!t || !g0 || !L) return;
+      let o = W._byggda[id]; if (!o) { const g = new THREE.Group(); g0.add(g); o = W._byggda[id] = { m: g, folk: [], delar: [] }; }
+      const q = W._husPlatser(h), n = Math.min(L, q.length, V.HusNiva.max(h)), K = B.K, p = t.p; let ny = false;
+      while (o.delar.length < n) {
+        const k = o.delar.length, s = q[k], r = V.HusNiva.bit(h, k, s, t), m = B.mesh(r.mb), c = Math.cos(s[2]), si = Math.sin(s[2]);
+        m.position.set(s[0], s[3] ? -p.y / K : t.y(s[0], s[1]), s[1]); m.rotation.y = s[2]; o.m.add(m); o.delar.push(m); ny = true;
+        const varld = (dx, dz) => [p.x + (s[0] + dx * c + dz * si) * K, p.z + (s[1] - dx * si + dz * c) * K];
+        if (!s[3]) { const w = varld(0, 0); W._rojTrad(w[0], w[1], (V.HusNiva.RAD[V.HusNiva.typ(h)] || 0.5) * K + 0.45); }          // inga träd i huset
+        for (const e of r.rok) { const w = varld(e[0], e[2]); B.smoke.push({ x: w[0], y: p.y + (m.position.y + e[1]) * K, z: w[1], slag: 'rok', bas: h.plats }); }
+        if (r.falt) { const w = varld(r.falt[0], r.falt[1]); if (Geo.sdAt(w[0], w[1]) > 0.6) { World.Paint.field(w[0], w[1], r.falt[2] * K, r.falt[3] * K, -s[2]); paintDirty = true; W._rojTrad(w[0], w[1], r.falt[2] * K * 0.6); } }          // och inga träd på åkern
+        if (!tyst) { m.scale.setScalar(0.01); pops.push({ m, t: 0, fran: 0.01 }); const w = varld(0, 0); Fx.damm(w[0], Geo.groundAt(w[0], w[1]) + 0.1, w[1], 12); Fx.guld(w[0], Geo.groundAt(w[0], w[1]) + 0.3, w[1], 18, 0.7); }
       }
-      const q = tm.find(1.2, 8, 0.9) || [2.0, 1.4]; (tm._hus || (tm._hus = {}))[b.id] = 1; return (P[b.id] = q);
+      if (!tyst && !ny) W.husHopp(id);
     },
     basVid(g) { if (!g) return null; let best = null, bd = 1e9; for (const b of D.BASER) { if (!steg[b.id].length) continue; const p = R.P[b.id], d = Math.hypot(p.x - g.x, p.z - g.z); if (d < tomt[b.id].R + 0.6 && d < bd) { bd = d; best = b.id; } } return best; },
 
@@ -482,7 +485,7 @@
       else if (typ === 'byggnad') W._byggnad(d.id, false);
       else if (typ === 'skepp') { W.sync(false); const q = W.varvPlats(); Fx.guld(q.x, 0.3, q.z, 40, 1.4); }
       else if (typ === 'stapel') { W.sync(false); const q = W.varvPlats(); Fx.damm(q.x, Geo.groundAt(q.x, q.z) + 0.1, q.z, 10); }
-      else if (typ === 'hus') { if (d.niva === 1) W._byggnad(d.id, false); else W.husHopp(d.id); }          // stadens hus: byggs första gången, ger sedan till ett hopp och glimmar
+      else if (typ === 'hus') W._husNiva(d.id, false);          // stadens byggnader: varje nivå sätter ut en ny bit (husniva.js), eller ger till ett hopp när alla bitar står
       else if (typ === 'slagTryck' && vis) { const nu = performance.now(); if (nu - (W._klickT || 0) > 120 && nu > (W._slagT || 0)) { W._slagT = nu + (vis.noll || vis.u.slag === 'flotta' ? 60 : 280); W._slagTryck(d.o); } }          // förspelets slag: trycken syns i slaget
       else if (typ === 'hugg' && vis && vis.u.belagring) { if (d.traff) W._belBild(d.o && d.o.bild, true, 'hugg'); }          // belägringen: varje tryck i takt syns på vallen eller i tornen
       else if (typ === 'hugg' && vis && d.traff) { const q = W.malPunkt(); if (q) Fx.damm(q.x, Geo.groundAt(q.x, q.z), q.z, 5); vis.stot = 1; Scene.shake(0.08); V.Ljud && V.Ljud.spela('svard'); const e = vis.enh[Math.floor(Math.random() * Math.min(vis.enh.length, vis.bredd || 6))]; if (e) Fx.damm(e.x, Geo.groundAt(e.x, e.z), e.z, 3); }          // ett hugg i takt: leden trycker på
