@@ -137,6 +137,7 @@
       UI._kassaPlats();
       { const k = $('kassa'); if (k) {          // kassan: byggs en gång, sedan skrivs bara siffrorna (så att den kan lysa till när en leverans kommer)
         const sk = G.harVarv() || G.skepp() > 0, nyck = sk ? 3 : 2;
+        if (!k._klick) { k._klick = 1; k.addEventListener('click', e => { const ks = e.target.closest('.ks'); if (!ks) return; const f = ks.classList.contains('ks-mark') ? 'mark' : 'man'; if (!flikar[f]) return; flik = f; G.s.flik = f; V.Ljud && V.Ljud.vakna(); UI.tick(); if (ks.classList.contains('ks-skepp')) { const v = $('varv'); if (v) { v.classList.remove('glod-ny'); void v.offsetWidth; v.classList.add('glod-ny'); setTimeout(() => v.classList.remove('glod-ny'), 2500); } } }); }          // ett tryck på män eller mark öppnar dess flik, skeppen visar varvet
         if (k._n !== nyck) { k._n = nyck; k.innerHTML = '<div class="ks ks-man" title="Män: din armé. Stapeln visar hur full den är.">' + IK.man + '<b></b><span></span><i></i><u><u></u></u></div><div class="ks ks-mark" title="Mark: rikets pengar. Stapeln visar hur långt du har kvar till nästa steg.">' + IK.mark + '<b></b><span>mark</span><i></i><u><u></u></u></div>' + (sk ? '<div class="ks ks-skepp" title="Skepp byggs av männen du sätter på varvet vid Björkenäs (kortet Varvet under Män). Flottan tar tull av fartygen på Östersjön.">' + IK.skepp + '<b></b><span>skepp</span><i></i></div>' : ''); }
         const sv = (sel, txt) => { const e = k.querySelector(sel); if (e && e._t !== txt) { e._t = txt; e.textContent = txt; } }, bv = (sel, p) => { const e = k.querySelector(sel); if (e) e.style.width = p.toFixed(1) + '%'; };
         sv('.ks-man b', tal(Math.floor(S.res.man))); sv('.ks-man span', 'av ' + tal(tak) + ' män'); sv('.ks-man i', '+' + tal(G.takt('man')) + ' i sekunden'); bv('.ks-man u u', Math.min(100, S.res.man / tak * 100)); k.querySelector('.ks-man').classList.toggle('fullt', S.res.man >= tak * 0.999);
@@ -271,6 +272,7 @@
       let rader = 2, bredd = 196; for (; rader < 5; rader++) { const kol = Math.ceil(flest / rader); if (kol * (bredd + 5) <= fri) break; if (kol * 181 <= fri) { bredd = 176; break; } }
       if (innerWidth < 720) { rader = flest <= 2 ? 1 : 2; bredd = Math.floor((innerWidth - 12 - 14 - 5) / 2); } else if (innerHeight < 520) { rader = 2; bredd = 176; }          // telefon: två rader, resten bläddrar man fram i sidled
       box.style.setProperty('--rader', rader); box.style.setProperty('--bredd', bredd + 'px');
+      { const kol = Math.max(1, Math.ceil(flest / rader)); box.style.setProperty('--sidabredd', innerWidth < 720 ? 'auto' : (kol * bredd + (kol - 1) * 5 + 16) + 'px'); }          // alla flikar lika breda, så att flikarna och kassan står still när man byter (Johannes 2026-11-28)
     },
     // När ska rutan om en knapp visas? Med mus: när pekaren är över knappen. På pekskärm: bara när fingret hålls kvar en stund,
     // och då räknas trycket inte som ett köp. Ett vanligt tryck på telefon köper utan att någon ruta kommer upp.
@@ -585,6 +587,7 @@
       const k = $('kassa'), bx = $('baser'), fl = $('flikar'); if (!k || !bx || !fl || !bx.offsetParent) return;
       if (innerWidth < 720) { if (k._plats) { k._plats = ''; k.style.right = k.style.bottom = ''; } return; }          // telefon: kassan står uppe under datumet, där finns plats
       const br = bx.getBoundingClientRect(), fr = fl.getBoundingClientRect(), kw = k.offsetWidth; let sista = 0; for (const c of fl.children) sista = Math.max(sista, c.getBoundingClientRect().right);
+      { const kb = bx.querySelector('.sida:not(.dold) .bas'), kh = kb ? kb.offsetHeight : 0; if (kh > 20 && bx._kh !== kh) { bx._kh = kh; bx.style.setProperty('--korth', kh + 'px'); } }          // alla flikar lika höga: raderna är minst ett korts höjd
       const bredvid = br.right - sista - 10 >= kw, hoger = Math.max(6, innerWidth - br.right), kt = Math.min(fr.top, $('konsol').getBoundingClientRect().top), botten = bredvid ? innerHeight - fr.bottom : innerHeight - kt + 6;
       const nyck = hoger + '|' + botten; if (k._plats !== nyck) { k._plats = nyck; k.style.right = hoger + 'px'; k.style.bottom = botten + 'px'; }
     },
