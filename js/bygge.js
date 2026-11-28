@@ -218,6 +218,7 @@
       let ux = 1, uz = 0;
       if (p.hav) { const dx = p.hav.x - p.x, dz = p.hav.z - p.z, L = Math.hypot(dx, dz) || 1; ux = -dz / L; uz = dx / L; }
       else if (vagar[0]) { const q = vagar[0].find(q => Math.hypot(q[0], q[1]) > 2) || vagar[0][vagar[0].length - 1], L = Math.hypot(q[0], q[1]) || 1; ux = q[0] / L; uz = q[1] / L; }
+      const sp = V.Stadsplan ? V.Stadsplan(b.id, p) : null; if (sp && sp.u) { ux = sp.u[0]; uz = sp.u[1]; }          // stadens egen plan efter verkligheten (orter.js): gatorna längs ån eller stranden
       const vx = -uz, vz = ux, TU = 0.9 * k, TV = 0.7 * k, cz = 0.2, T = P.torg = { x: 0, z: cz, ux, uz, vx, vz, TU, TV, a: Math.atan2(ux, uz) };
       const UV = (u, v) => [u * ux + v * vx, cz + u * uz + v * vz];
       T.stand = [[-0.6, -0.45], [0.6, 0.45], [0.6, -0.45], [-0.6, 0.45]].map(q => UV(q[0] * TU, q[1] * TV));
@@ -252,7 +253,7 @@
       // rutnätet fyller ut mellan vägarna: gator i torgets riktning med hus på båda sidor, och gränder tvärs över var 2,6 längdenhet
       const GS = 2.1, AL = 2.6;
       for (let j = -4; j <= 4; j++) for (const s of [-1, 1]) for (let i = -13; i <= 13; i++) {
-        const u = i * 0.66, v = j * GS + s * 0.62, m = ((u % AL) + AL) % AL; if (Math.abs(m - AL / 2) < 0.4 || (j === 0 && Math.abs(u) < TU + 0.5)) continue;
+        const u = i * 0.66, v = j * GS + s * 0.62 + (sp && sp.oregelbunden ? 0.22 * Math.sin(u * 0.45 + j * 1.9) * (1 + Math.abs(j) * 0.35) : 0), m = ((u % AL) + AL) % AL; if (sp && sp.oregelbunden && rnd() < 0.12) continue;          // medeltida städer: gatorna slingrar och kvarteren är ojämna if (Math.abs(m - AL / 2) < 0.4 || (j === 0 && Math.abs(u) < TU + 0.5)) continue;
         const q = UV(u, v); lot(q[0], q[1], -s * vx, -s * vz, Math.hypot(u, v) + 0.5 + (b.mur && ell(q[0], q[1]) > Rw ? 6 : 0), [UV(u - 0.36, j * GS), UV(u + 0.36, j * GS)]);
       }
       P.hus.sort((a, c) => a.d - c.d);

@@ -320,5 +320,13 @@
       return ut;
     };
   }
+  // Spelets stora städer (Tomt.plan i bygge.js frågar här): gatorna längs ån för städer vid en å, och slingrande gator i medeltida städer.
+  // Planlagda städer (rutnät i STAD) behåller sina raka kvarter.
+  V.Stadsplan = function (id, p) {
+    const d = STAD[id]; if (!d) return null;
+    const ut = { oregelbunden: d.f !== 'rutnat' };
+    if (d.f === 'a' || (d.x || []).indexOf('a') >= 0) { const r = aRiktning(p.x, p.z); if (r) ut.u = r; }
+    return ut;
+  };
   V.Orter = { STADER, lage, lagg: () => lagg(), rita };
 })();
