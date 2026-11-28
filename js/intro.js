@@ -608,7 +608,7 @@
         text('Tryck för att slå läger runt borgen');
         await tryckN('Slå läger', 6, k => { for (let j = 0; j < per; j++) talt(); L.spela('hammare'); L.spela('trumma'); if (k === 2) text(''); }, 18);
         while (satta < ring.length) talt();
-        text('Ingen kommer in och ingen ut. Nu är det bara att vänta.'); await vanta(6);
+        text('Ärkebiskopen sitter instängd i sin borg vid Stäksundet. Striden gäller om Stäkets län ska höra till kyrkan eller till riket, och ärkebiskopen vägrar svära Sten Sture trohet.'); await vanta(8);
         text('Från Danmark kommer rykten: kungen tänker skicka soldater till hans hjälp.'); await vanta(6);
       },
       // November 1517. Riksmötet har avsatt ärkebiskopen, och alla sätter sitt sigill under brevet. Biskop Brask ska ha lagt en lapp under sitt.

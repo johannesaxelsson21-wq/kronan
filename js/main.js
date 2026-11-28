@@ -64,7 +64,7 @@
     else if (typ === 'klart') {
       const u = d.u; V.Ljud.spela(u.strid === 'nederlag' ? 'nej' : 'klart'); if (V.Musik) V.Musik.spar(V.Musik.grund()); UI.textBort();
       if (!V.tyst && Scene.cam.d < UTSIKT - 2 && !Scene.cam.locked) Scene.flyTo(Scene.cam.x, Scene.cam.z, UTSIKT, 1.8);
-      if (!V.tyst) { if (u.scen && V.Intro && V.Intro.scener[u.scen]) setTimeout(() => V.Intro.scen(u.scen, () => UI.klart(u)), 1800 / Math.min(snabb, 10)); else UI.klart(u); }          // först scenen, sedan rutan som säger vad som hände
+      if (!V.tyst) { if (u.scen && V.Intro && V.Intro.scener[u.scen]) setTimeout(() => V.Intro.scen(u.scen, () => UI.klart(u)), (u.slag === 'tag' ? 250 : 1800) / Math.min(snabb, 10)); else UI.klart(u); }          // först scenen, sedan rutan som säger vad som hände
       if (u.ger && u.ger.titel && !V.tyst) setTimeout(() => UI.skylt(u.ger.titel === 'Kung' ? 'Sveriges kung' : u.ger.titel), 900);
       if (u.ger && u.ger.slut) setTimeout(() => UI.slut(), 5000);
       spara();
@@ -134,7 +134,7 @@
     UI.onTestVarld = v => { byter = true; const lj = G.s.ljud, mu = G.s.musik; G.ny(); G.s.ljud = lj; G.s.musik = mu; G.s.arv = (D.VARLDAR[v] || {}).arvTest || 0; G.nyVarld(v); skriv(); laddaOm(); };          // testläget: vilken värld som helst från början, med dess film (Eriks värld är vägd för ungefär 40 arv från Gustav)
     UI.onIgen = arv => { byter = true; G.s.arv += arv; G.s.varv++; const s = G.ny(true); s.intro = true; skriv(); laddaOm(); };
     Scene.onClick = (e, g) => {
-      if (spelar && G.skede() === 'strid' && (G.uppdrag() || {}).order) { Varld.foljUppdraget(); const tr = Varld.slagKlick(e.clientX, e.clientY); if (tr === 'traff') { tryck(false, 'ring'); return; } if (tr === 'ring') { tryck(false, 'ring'); return; } tryck(false, 'karta'); return; }          // slagen 2026-11-28: man trycker direkt på fienden (belägringarna har kvar sina ringar)          // ett tryck på ringen räknas, annars inte          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget
+      if (spelar && G.skede() === 'strid' && (G.uppdrag() || {}).order) { Varld.foljUppdraget(); const tr = Varld.slagKlick(e.clientX, e.clientY); if (tr === 'traff') { tryck(false, 'ring'); return; } if (tr === 'ring') { tryck(false, 'ring'); return; } if (tr === 'miss') return; tryck(false, 'karta'); return; }          // slagen 2026-11-28: man trycker direkt på fienden (belägringarna har kvar sina ringar)          // ett tryck på ringen räknas, annars inte          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget
       if (spelar && !G.skede() && Varld.hjalteVid && Varld.hjalteVid(e.clientX, e.clientY) && UI.kung()) { V.Ljud.vakna(); return; }          // kungen går före staden han står i
       const id = Varld.basVid(g) || Varld.byggVid(g), egen = !!(id && spelar && G.s.bas[id]);
       if (egen && !(G.s.marknad && G.s.marknad.bas === id) && !UI.stadVald(id)) { V.Ljud.vakna(); UI.visaStad(id); Varld.foljPlats(id); return; }          // ett tryck på en egen stad öppnar alltid dess flik först, också när hjälten står mitt i den (Johannes 2026-11-27); nästa tryck bygger ut den

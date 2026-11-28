@@ -353,7 +353,7 @@
       return p;
     },
     // Går det ingen väg dit samlas tåget strax utanför platsen där hjälten står, på den sida som vetter mot målet (annars går det rakt genom husen)
-    _utanfor(id, mal) { const p = R.P[id], dx = mal.x - p.x, dz = mal.z - p.z, L = Math.hypot(dx, dz) || 1, r = Math.max(1.5, Math.min((tomt[id] ? tomt[id].R * 0.8 : 2) + 0.6, L - 2.4)); return [p.x + dx / L * r, p.z + dz / L * r]; },
+    _utanfor(id, mal) { const p = R.P[id], dx = mal.x - p.x, dz = mal.z - p.z, L = Math.hypot(dx, dz) || 1, r = Math.max(1.5, Math.min((tomt[id] ? tomt[id].R * 0.8 : 2) + 0.6, L - 6)); return [p.x + dx / L * r, p.z + dz / L * r]; },
     _startVis(u, pts, fran, man) {
       W._slutVis(); const p = R.P[u.plats];
       vis = { u, pts, len: pts ? R.length(pts) : 0, enh: [], fi: [], skepp: [], t0: V.U.uTime.value, start: performance.now() };
@@ -698,9 +698,10 @@
         else if (u.typ === 'overfall' && vis.of) l = /skatt/i.test(o.ord || '') && vis.kista ? [{ x: vis.kista.position.x, z: vis.kista.position.z, kista: 1 }] : vis.fi.filter(q => !q.bunden && !q.mal && (o.mal === 'bak' ? q.gard : !q.gard));
         else l = vis.fi.filter(q => !q.dod && !q.gett && !q.bunden && q.fall < 0.3);
       } else return 'ring';
-      let best = null, bd = 1e9;          // varje tryck räknas: det som står närmast trycket (Johannes 2026-11-28: "det hände inget när jag tryckte")
-      for (const q of l) { const p = Scene.screenPoint(q.x, (q.y !== undefined ? q.y : gy(q.x, q.z) + 0.3), q.z); if (p.behind) continue; const d = Math.hypot(p.x - cx, p.y - cy); if (d < bd) { bd = d; best = q; } }
-      if (best) W._tapMal = best.obj || best; return 'traff';          // också när alla redan är tagna räknas trycket för ordern
+      // Bara den man trycker på (Johannes 2026-11-28: "just den man markerar ska ta skada"): gubben vars kropp ligger under trycket, med lite marginal för fingret
+      let best = null, bd = 1e9;
+      for (const q of l) { const y0 = q.obj ? q.y : gy(q.x, q.z) + 0.3,          /* gubbarnas egna y är bara hoppet */ p = Scene.screenPoint(q.x, y0, q.z); if (p.behind) continue; const h = Math.abs(Scene.screenPoint(q.x, y0 + (q.obj ? 0.8 : 0.35), q.z).y - p.y), d = Math.hypot(p.x - cx, p.y - cy); if (d < Math.max(Scene.mobil ? 26 : 16, h * (q.obj ? 2 : 1.3)) && d < bd) { bd = d; best = q; } }
+      if (best) { W._tapMal = best.obj || best; return 'traff'; } return l.length ? 'miss' : 'traff';          // bredvid: ingen tar skada
     },
     // Den order som gäller just nu, också i pauserna mellan orderna (då den senaste), och före den första (då den första man trycker i)
     _ordNu() { const a = G.s.aktivt, m = a && a.mom, u = vis && vis.u; if (!u || !u.order) return null; if (m && u.order[m.i]) return u.order[m.i]; return u.order.find(o => !o.vanta) || u.order[0]; },
