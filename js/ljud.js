@@ -46,6 +46,7 @@
       else if (namn === 'trumma') { L.ton(82, t, 0.25, 'sine', 0.3, 48); L.sus(t, 0.12, 900, 300, 0.05, 0.7); }
       else if (namn === 'sorl') L.sus(t, 1.6, 420, 520, 0.1, 0.5);
       else if (namn === 'pil') { L.sus(t, 0.28, 2600, 900, 0.07, 2); L.sus(t + 0.07, 0.25, 2200, 800, 0.05, 2); }
+      else if (namn === 'fall') { L.ton(110, t, 0.22, 'sine', 0.22, 55); L.sus(t, 0.18, 700, 250, 0.07, 0.8); }          // en fiende faller i slaget: en mjuk duns
       else if (namn === 'svard') { L.ton(1900, t, 0.12, 'triangle', 0.05, 1400); L.sus(t, 0.1, 3200, 1500, 0.06, 1.5); L.ton(95, t, 0.12, 'sine', 0.2, 60); }
       else if (namn === 'vag') L.sus(t, 0.55, 300, 760, 0.08, 0.6);
       else if (namn === 'hammare') { L.ton(620, t, 0.05, 'square', 0.05, 300); L.sus(t, 0.06, 2000, 800, 0.07, 0.8); }
