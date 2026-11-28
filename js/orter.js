@@ -345,9 +345,15 @@
   }
   // Spelets stora städer (Tomt.plan i bygge.js frågar här): gatorna längs ån för städer vid en å, och slingrande gator i medeltida städer.
   // Planlagda städer (rutnät i STAD) behåller sina raka kvarter.
+  // Slottets och domkyrkans lägen i spelets stora städer, i tomtens enheter (x österut, z söderut, staden är ungefär 4,5 i radie).
+  // Uppsala: domkyrkan och slottet väster om Fyrisån, slottet söder om domkyrkan på åsen, staden öster om ån. Stockholm: slottet på Stadsholmens norra del,
+  // Storkyrkan strax söder om det. Västerås: slottet i söder vid Mälaren, domkyrkan i norr. Kalmar: slottet söder om staden. Viborg: slottet på holmen i väster.
+  // Reval: Domberget med slottet i väster, nedre staden österut. Narva: slottet vid ån i öster. (sv. Wikipedia om städerna och slotten; avstånden är förenklade.)
+  const LAGE = { uppsala: { dom: [-1.7, -0.3], borg: [-2.0, 1.7] }, stockholm: { borg: [0.3, -2.5], dom: [1.2, -0.7] }, vasteras: { borg: [0.4, 2.1], dom: [-0.4, -1.9] },
+    kalmar: { borg: [0.3, 2.3] }, viborg: { borg: [-2.3, -0.6] }, reval: { borg: [-2.4, 0.2] }, narva: { borg: [2.2, 0.2] } };
   V.Stadsplan = function (id, p) {
     const d = STAD[id]; if (!d) return null;
-    const ut = { oregelbunden: d.f !== 'rutnat' };
+    const ut = { oregelbunden: d.f !== 'rutnat' }, lg = LAGE[id]; if (lg) { ut.borg = lg.borg; ut.dom = lg.dom; }
     if (d.f === 'a' || (d.x || []).indexOf('a') >= 0) { const r = aRiktning(p.x, p.z); if (r) ut.u = r; }
     return ut;
   };

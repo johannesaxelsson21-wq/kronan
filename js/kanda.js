@@ -449,7 +449,7 @@
     K.plats = t && t.b ? t.b.id : null; if (K.plats) K._ritad[K.plats] = 1; K._tom = !!(t && t.b && t.b.slag === 'slott' && s > 0 && BORG[t.b.id]);
     try {
       const mb = stegFore.call(this, t, s, paint);
-      if (s === 0 && K._flagga && t.b.borg && BORG[t.b.id] && t.b.slag === 'stad') { const bx = t.b.stor ? 2.6 : 2.4, bz = t.b.stor ? -2.2 : -1.5, f = K._flagga; t.flag = [bx + f[0], f[1], bz + f[2]]; }
+      if (s === 0 && K._flagga && t.b.borg && BORG[t.b.id] && t.b.slag === 'stad') { const bx = t.borgPos ? t.borgPos[0] : t.b.stor ? 2.6 : 2.4, bz = t.borgPos ? t.borgPos[1] : t.b.stor ? -2.2 : -1.5, f = K._flagga; t.flag = [bx + f[0], f[1], bz + f[2]]; }
       return mb;
     } finally { K.plats = null; K._flagga = null; K._tom = false; }
   };
