@@ -153,23 +153,26 @@
     _varv(dt) { const s = S.stapel; if (s && s.man && !S.varvMan) { S.varvMan = s.man; s.t = Math.min(0.99, s.t / 30); delete s.man; } if (!G.varvMan() || G.flottanFull()) return; const q = S.stapel || (S.stapel = { t: 0 }); q.t += dt * G.varvMan() / G.skeppArbete(); while (q.t >= 1 && !G.flottanFull()) { q.t -= 1; S.skepp = G.skepp() + 1; G.ut('skepp', { n: S.skepp }); } },          // äldre sparfiler: ett skepp på stapeln blir ett lag på varvet
     // ---- kungens egenskaper (Johannes 2026-11-28): tryck på kungen, så öppnas hans sida. Dyra nivåer som gör en sak mer givande, aldrig en resa kortare.
     // Varje värld har sina egna (D.EGENSKAPER[varld]), med grund i det källorna säger om regenten (docs/historia.md).
-    egLista() { return (D.EGENSKAPER && D.EGENSKAPER[S.varld]) || []; },
+    egAlla() { return (D.EGENSKAPER && D.EGENSKAPER[S.varld]) || []; },
+    egOpen(e) { if (!e.fran) return true; const i = D.UPPDRAG.findIndex(u => u.id === e.fran); return i >= 0 && S.nasta > i; },          // fran: först efter det steget
+    egLista() { return G.egAlla().filter(e => G.eg(e.id) > 0 || (G.egOpen(e) && S.egNy && S.egNy[e.id])); },          // de som finns och har kommit fram
     eg(id) { return (S.eg && S.eg[id]) || 0; },
     EG_MAX: 10,
     egPris(id) { const e = G.egLista().find(q => q.id === id); return e ? e.c0 * Math.pow(e.r, G.eg(id)) : Infinity; },
     kanEg(id) { const e = G.egLista().find(q => q.id === id); return !!e && !S.slut && G.eg(id) < G.EG_MAX && S.res.mark >= G.egPris(id); },
     kopEg(id) { if (!G.kanEg(id)) return false; S.res.mark -= G.egPris(id); if (!S.eg) S.eg = {}; S.eg[id] = G.eg(id) + 1; G.ut('egenskap', { id, niva: S.eg[id] }); return true; },
-    egX(vad) { let x = 1; for (const e of G.egLista()) if (e.ger === vad) x *= 1 + e.steg * G.eg(e.id); return x; },          // vad = 'man' (all produktion av män) eller 'skatt'
+    egX(vad) { let x = 1; for (const e of G.egAlla()) if (e.ger === vad) x *= 1 + e.steg * G.eg(e.id); return x; },          // vad = 'man' (all produktion av män) eller 'skatt'
     // ---- kungens förmågor ---------------------------------------------------------------------
     konstPris(id) { const k = KONST[id], p = k.c0 * Math.pow(k.r, S.konst[id]); return p < 1000 ? Math.ceil(p) : p; },
     // I förspelet kommer varje förmåga från en byggnad eller ett steg (KONSTER bygg0 och steg0). I Gustavs värld låses alla upp på en gång.
     harKonst(id) { return G.harKonst0(id) && (S.varld !== 0 ? !!(S.konstNy && S.konstNy[id]) || S.konst[id] > 0 : (!KONST[id].steg0 || G.inford('k:' + id))); },
     // Förmågorna kommer en i taget även efter förspelet (Johannes 2026-11-28: "de ska introduceras en och en i spelet så man inte blir overwhelmed"): minst 90 sekunder mellan dem.
     _konstInfor() {
-      if (S.varld === 0 || S.slut || G.skede() || !S.las.konster) return; const ny = S.konstNy || (S.konstNy = {});
-      if (S.t - (S.konstNyT === undefined ? -60 : S.konstNyT) < 90) return; const k = D.KONSTER.find(q => G.harKonst0(q.id) && !ny[q.id] && !(S.konst[q.id] > 0)); if (!k) return;
-      ny[k.id] = 1; S.konstNyT = S.t; const vem = (D.KUNGINFO && D.KUNGINFO[S.varld] || {}).namn || 'kungen';
-      G.ut('infor', { id: 'k:' + k.id, text: 'Ny förmåga på ' + vem + 's sida: ' + k.namn + '. ' + k.vad + ' Tryck på ' + vem + '.' });
+      if (S.slut || G.skede()) return; if (S.t - (S.konstNyT === undefined ? -60 : S.konstNyT) < 90) return; const vem = (D.KUNGINFO && D.KUNGINFO[S.varld] || {}).namn || 'kungen';
+      { const en = S.egNy || (S.egNy = {}), e = G.egAlla().find(q => G.egOpen(q) && !en[q.id]); if (e) { en[e.id] = 1; S.konstNyT = S.t; G.ut('infor', { id: 'k:eg', text: 'Ny egenskap under fliken ' + vem + ': ' + e.namn + '. ' + e.vad }); return; } }          // egenskaperna kommer också en i taget
+      if (S.varld === 0 || !S.las.konster) return; const ny = S.konstNy || (S.konstNy = {}); const k = D.KONSTER.find(q => G.harKonst0(q.id) && !ny[q.id] && !(S.konst[q.id] > 0)); if (!k) return;
+      ny[k.id] = 1; S.konstNyT = S.t;
+      G.ut('infor', { id: 'k:' + k.id, text: 'Ny förmåga under fliken ' + vem + ': ' + k.namn + '. ' + (k.vad1 || k.vad) });
     },
     harKonst0(id) {
       if (id === 'langd' && !G.harSkatt()) return false;          // skattelistor först när det finns skatt att driva in

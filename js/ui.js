@@ -137,7 +137,7 @@
         }
       }
       // flikarna med tillgångarna, och korten under dem
-      const ids = Object.keys(S.bas).filter(id => S.bas[id] && G.BAS[id]), key = ids.join(',') + '|' + (S.las.fogdar ? 1 : 0) + (S.las.konster ? 1 : 0) + (G.harSkatt() ? 1 : 0) + (S.las.sold ? 1 : 0) + (G.harKonst('langd') ? 1 : 0) + '|' + G.byggnader().map(b => b.id).join(',') + '|' + D.KONSTER.filter(k => G.harKonst(k.id)).map(k => k.id).join(',') + '|' + (S.varld === 0 ? UI.stadNu(ids) + ':' + G.husLista().join(',') : '');
+      const ids = Object.keys(S.bas).filter(id => S.bas[id] && G.BAS[id]), key = ids.join(',') + '|' + (S.las.fogdar ? 1 : 0) + (S.las.konster ? 1 : 0) + (G.harSkatt() ? 1 : 0) + (S.las.sold ? 1 : 0) + (G.harKonst('langd') ? 1 : 0) + '|' + G.byggnader().map(b => b.id).join(',') + '|' + D.KONSTER.filter(k => G.harKonst(k.id)).map(k => k.id).join(',') + '|' + G.egLista().map(e => e.id).join(',') + '|' + (S.varld === 0 ? UI.stadNu(ids) + ':' + G.husLista().join(',') : '');
       if (key !== sistaBaser || force) { sistaBaser = key; UI._byggBaser(ids); }
       const fx = S.full ? G.fullX() : 1, tak = G.tak(), satt = (id, f) => { const e = $(id); if (e) f(e); };
       satt('man-v', e => { e.textContent = tal(Math.floor(S.res.man)); }); satt('man-tak', e => { e.textContent = 'av ' + tal(tak) + ' män'; }); satt('man-t', e => { e.textContent = '+' + tal(G.takt('man')) + '/s'; });

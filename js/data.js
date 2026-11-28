@@ -153,31 +153,31 @@
   // steg = hur mycket mer per nivå. Grunden står i docs/historia.md (sv. Wikipedia, Erik XIV och Nordiska sjuårskriget).
   const EGENSKAPER = {
     0: [
-      { id: 'bonder', namn: 'Bönderna', ikon: 'man', ger: 'man', steg: 0.05, c0: 10000, r: 10, vad: 'Sten Sture har bönderna på sin sida när rådet vill ha en annan.', nar: 'Allt som ger män ger 5 % mer.' },
-      { id: 'slotten', namn: 'Slotten', ikon: 'mark', ger: 'mark', steg: 0.05, c0: 10000, r: 10, vad: 'Den som har sin fars slott har makten, och slotten tar in skatt.', nar: 'All mark 5 % mer.' }
+      { id: 'bonder', fran: 'sAllmoge', namn: 'Bönderna', ikon: 'man', ger: 'man', steg: 0.05, c0: 10000, r: 10, vad: 'Sten Sture har bönderna på sin sida när rådet vill ha en annan.', nar: 'Allt som ger män ger 5 % mer.' },
+      { id: 'slotten', fran: 'sVasteras', namn: 'Slotten', ikon: 'mark', ger: 'mark', steg: 0.05, c0: 10000, r: 10, vad: 'Den som har sin fars slott har makten, och slotten tar in skatt.', nar: 'All mark 5 % mer.' }
     ],
     1: [
-      { id: 'krigsfolk', namn: 'Krigsfolket', ikon: 'man', ger: 'man', steg: 0.05, c0: 1000000, r: 10, vad: 'Gustav vill ha ett eget svenskt fotfolk i stället för dyra legoknektar.', nar: 'Allt som ger män ger 5 % mer.' },
-      { id: 'forvaltning', namn: 'Förvaltningen', ikon: 'mark', ger: 'skatt', steg: 0.08, c0: 1000000, r: 10, vad: 'Gustav tar in kunniga tyskar för att ordna rikets förvaltning.', nar: 'Driv in skatt ger 8 % mer.' },
-      { id: 'bergsbruk', namn: 'Bergsbruket', ikon: 'mark', ger: 'gruva', steg: 0.08, c0: 1000000, r: 10, vad: 'Kronan tar över gruvbrytningen, och Sala blir rikets skattkammare.', nar: 'Gruvorna ger 8 % mer.' }
+      { id: 'krigsfolk', fran: 'fotfolk', namn: 'Krigsfolket', ikon: 'man', ger: 'man', steg: 0.05, c0: 1000000, r: 10, vad: 'Gustav vill ha ett eget svenskt fotfolk i stället för dyra legoknektar.', nar: 'Allt som ger män ger 5 % mer.' },
+      { id: 'forvaltning', fran: 'pyhy', namn: 'Förvaltningen', ikon: 'mark', ger: 'skatt', steg: 0.08, c0: 1000000, r: 10, vad: 'Gustav tar in kunniga tyskar för att ordna rikets förvaltning.', nar: 'Driv in skatt ger 8 % mer.' },
+      { id: 'bergsbruk', fran: 'sala', namn: 'Bergsbruket', ikon: 'mark', ger: 'gruva', steg: 0.08, c0: 1000000, r: 10, vad: 'Kronan tar över gruvbrytningen, och Sala blir rikets skattkammare.', nar: 'Gruvorna ger 8 % mer.' }
     ],
     2: [
-      { id: 'krig', namn: 'Krigskonst', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Erik läser och tänker mycket om krigskonsten och vill ha ett modernare fotfolk.', nar: 'Allt som ger män ger 5 % mer.' },
-      { id: 'flotta', namn: 'Flottan', ikon: 'skepp', ger: 'flotta', steg: 0.1, c0: 500000, r: 10, vad: 'Erik vill ha större krigsskepp än någon har haft förut.', nar: 'Varje skepp tar en tiondel mer tull.' },
+      { id: 'krig', fran: 'eResan', namn: 'Krigskonst', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Erik läser och tänker mycket om krigskonsten och vill ha ett modernare fotfolk.', nar: 'Allt som ger män ger 5 % mer.' },
+      { id: 'flotta', fran: 'eMars', namn: 'Flottan', ikon: 'skepp', ger: 'flotta', steg: 0.1, c0: 500000, r: 10, vad: 'Erik vill ha större krigsskepp än någon har haft förut.', nar: 'Varje skepp tar en tiondel mer tull.' },
       { id: 'lardom', namn: 'Lärdom', ikon: 'mark', ger: 'skatt', steg: 0.08, c0: 500000, r: 10, vad: 'Erik kan främmande språk, matematik och historia, och han vet hur ett rike räknas.', nar: 'Driv in skatt ger 8 % mer.' }
     ],
     3: [
-      { id: 'krigsfolk', namn: 'Krigsfolket', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Johan sätter Pontus De la Gardie att leda kriget i öster.', nar: 'Allt som ger män ger 5 % mer.' },
+      { id: 'krigsfolk', fran: 'jPontus', namn: 'Krigsfolket', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Johan sätter Pontus De la Gardie att leda kriget i öster.', nar: 'Allt som ger män ger 5 % mer.' },
       { id: 'lardom', namn: 'Lärdom', ikon: 'mark', ger: 'skatt', steg: 0.08, c0: 500000, r: 10, vad: 'Johan är bokligt lagd och läser teologi och historia.', nar: 'Driv in skatt ger 8 % mer.' },
-      { id: 'slott', namn: 'Byggnadskonsten', ikon: 'mark', ger: 'mark', steg: 0.05, c0: 500000, r: 10, vad: 'Johan låter bygga slott, som Drottningholm åt drottningen.', nar: 'All mark 5 % mer.' }
+      { id: 'slott', fran: 'jDrottningholm', namn: 'Byggnadskonsten', ikon: 'mark', ger: 'mark', steg: 0.05, c0: 500000, r: 10, vad: 'Johan låter bygga slott, som Drottningholm åt drottningen.', nar: 'All mark 5 % mer.' }
     ],
     4: [
       { id: 'polen', namn: 'Polens krigsfolk', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Som kung i Polen har Sigismund ett stort rike och dess krigsfolk bakom sig.', nar: 'Allt som ger män ger 5 % mer.' },
       { id: 'handel', namn: 'Östersjöhandeln', ikon: 'mark', ger: 'mark', steg: 0.05, c0: 500000, r: 10, vad: 'Danzig är Östersjöns rikaste hamn, och den ligger i hans rike.', nar: 'All mark 5 % mer.' }
     ],
     5: [
-      { id: 'bergsfolk', namn: 'Bergsfolket', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Karl besöker bergsfolket, äter av deras mat och talar med dem som deras like.', nar: 'Allt som ger män ger 5 % mer.' },
-      { id: 'stader', namn: 'Städerna', ikon: 'mark', ger: 'mark', steg: 0.05, c0: 500000, r: 10, vad: 'Karl grundar städer: Karlstad, Filipstad och Göteborg på Hisingen.', nar: 'All mark 5 % mer.' }
+      { id: 'bergsfolk', fran: 'kFilipstad', namn: 'Bergsfolket', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Karl besöker bergsfolket, äter av deras mat och talar med dem som deras like.', nar: 'Allt som ger män ger 5 % mer.' },
+      { id: 'stader', fran: 'kGoteborg', namn: 'Städerna', ikon: 'mark', ger: 'mark', steg: 0.05, c0: 500000, r: 10, vad: 'Karl grundar städer: Karlstad, Filipstad och Göteborg på Hisingen.', nar: 'All mark 5 % mer.' }
     ]
   };
   const KUNGINFO = {
