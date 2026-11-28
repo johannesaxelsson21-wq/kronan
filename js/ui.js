@@ -491,7 +491,7 @@
     tryckt(f) {
       const a = $('ak'), b = a.getBoundingClientRect(); let k = 0;
       for (const r of ['mark', 'man']) if (f[r] >= 0.05) { const e = el('div', 'flyt tr ' + r, '+' + tal(f[r]) + IK[r]); e.style.left = (b.left + b.width / 2 + (Math.random() - 0.5) * 80 + (k++ ? 30 : -6)) + 'px'; e.style.top = (b.top - 4 - Math.random() * 16) + 'px'; $('flyt').appendChild(e); setTimeout(() => e.remove(), 950); }
-      a.classList.remove('puls'); void a.offsetWidth; a.classList.add('puls');
+      if (!a.classList.contains('tryckt')) { a.classList.remove('puls'); void a.offsetWidth; a.classList.add('puls'); clearTimeout(a._pt); a._pt = setTimeout(() => a.classList.remove('puls'), 200); }          // en studs per tryck: trycket på själva knappen studsar redan (tryck.js), och pulsen tas bort när den är klar så att den inte spelas en gång till (Johannes 2026-11-28)
     },
     // En plats levererar sin klump: den flyger från kortet upp till fliken, och en dubbel leverans får sitt namn (Johannes 2026-11-28).
     leverans(d) { const r = d.bas === 'sold' ? soldRad : rows[d.bas]; if (d.bas === 'sold') { if (r) UI._klump(null, r.row, d.n, 'man'); return; } if (r) UI._klump(d.bas, r.row, d.n, d.res); else UI._klump(d.bas, { offsetParent: null }, d.n, d.res);
