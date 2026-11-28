@@ -527,8 +527,8 @@
       if (!spel) { e.innerHTML = ''; tips.nu = null; return; }
       const forst = (D.VARLDAR[S.varld] || D.VARLDAR[1]).hem, synlig = sel => { const m = document.querySelector(sel); return !!(m && m.offsetParent); };
       const steg = [
-        ['ak', '#ak', 'Tryck här. Det är det du gör just nu.' + (V.pek ? '' : ' Mellanslag går också, ett tryck i taget.'), S.tryck < 5, S.tryck >= 5],
-        ['full', '#ak', 'Fortsätt trycka. Full mätare ger dubbelt av allt och håller i sig en stund.', S.tryck >= 5 && !S.full && S.nasta < 2, S.full],
+        ['ak', '#ak', 'Tryck här. Varje tryck ger mark och fyller ringen runt knappen.' + (V.pek ? '' : ' Mellanslag går också, ett tryck i taget.'), S.tryck < 5, S.tryck >= 5],
+        ['full', '#ak', 'Fortsätt trycka. När ringen är full ger allt dubbelt en stund.', S.tryck >= 5 && !S.full && S.nasta < 2, S.full],
         ['kop', '#baser .bas:not(.skatt)', 'Bygg ut ' + G.BAS[forst].namn + ' här, eller ' + KLICKA + ' på den på kartan.', G.kanKopa(forst) && S.bas[forst] === 1, S.bas[forst] > 1],
         ['upp', '#uppdrag', 'Nästa steg i historien. Tryck på knappen när du har råd.', S.nasta === 0 && G.kanSkicka(), S.nasta > 0 || !!S.aktivt],
         ['driv', '#ak', 'Striden har börjat. Tryck så anfaller dina män.', !!G.skede(), !!(S.aktivt && S.aktivt.slag >= 3)],
