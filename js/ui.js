@@ -95,8 +95,12 @@
         <div id="film"><div class="rand upp"></div><div class="rand ner"></div><div id="film-plats"></div><div id="film-text"></div><div id="film-tal"></div><div id="film-knapp"></div><div id="film-svart"></div></div>
         <div id="ruta" style="display:none"></div>`;
       $('ak').addEventListener('pointerdown', e => { e.preventDefault(); UI.onTryck && UI.onTryck(); });
-      $('uppdrag').addEventListener('click', e => { if (e.target.closest && e.target.closest('#upp-knapp')) return; const u = G.uppdrag(); if (u && u.mer) UI.merInfo(u); });          // ett tryck på steget: läs mer om varför
-      $('upp-knapp').addEventListener('click', () => { const a = G.s.aktivt; if (a && a.val) { G.valj(); V.Ljud && V.Ljud.spela('klocka'); } else UI.onSkicka && UI.onSkicka(); });
+      const uppGor = () => { const a = G.s.aktivt; if (a && a.val) { G.valj(); V.Ljud && V.Ljud.spela('klocka'); } else UI.onSkicka && UI.onSkicka(); };          // stegets knapp: skicka, eller välj
+      const uppNere = e => $('upp-knapp').style.display !== 'none' && e.clientY >= $('upp-titel').getBoundingClientRect().bottom;          // stegets nedre del (vägen, priset, mätaren och knappen) är knappen, den övre delen är Läs mer (Johannes 2026-11-28)
+      $('uppdrag').addEventListener('click', e => { if (e.target.closest && e.target.closest('#upp-knapp')) return; const ko = $('upp-kost'); if (ko._hallen && e.target.closest('#upp-kost')) { ko._hallen = false; return; } if (uppNere(e)) { const kn = $('upp-knapp'); if (kn.disabled) UI._nej(kn); else uppGor(); return; } const u = G.uppdrag(); if (u && u.mer) UI.merInfo(u); });          // ett tryck högt upp på steget: läs mer om varför
+      $('upp-knapp').addEventListener('click', uppGor);
+      { const bx = $('uppdrag'), zon = e => { const z = uppNere(e) ? 'nere' : 'uppe'; if (bx.dataset.zon !== z) bx.dataset.zon = z; }; bx.addEventListener('pointermove', zon); bx.addEventListener('pointerdown', e => { zon(e); bx.dataset.tryck = bx.dataset.zon === 'nere' ? '1' : ''; }); ['pointerup', 'pointercancel'].forEach(n => bx.addEventListener(n, () => { bx.dataset.tryck = ''; })); bx.addEventListener('pointerleave', () => { bx.dataset.zon = ''; bx.dataset.tryck = ''; }); }          // den del man pekar på lyser, så att man ser vad trycket gör
+      UI._svava($('upp-kost'), () => { if (!UI._kostKort()) return; kortNu = { row: $('upp-kost'), kort: UI._kostKort, t: performance.now() }; UI._kort(); }, () => { if (kortNu && kortNu.row === $('upp-kost')) { kortNu = null; UI._kort(); } });          // vad priset betyder: samma ruta som på korten, först efter en stund
       $('datum').addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); if (flikar.kung) { flik = 'kung'; G.s.flik = 'kung'; UI.tick(); } else UI.kung(); });
       $('hitta').addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); UI.onHitta && UI.onHitta(); });
       $('m-bok').addEventListener('click', UI.kronika); $('m-krona').addEventListener('click', UI.regenter); $('m-kugg').addEventListener('click', UI.installningar); $('m-fraga').addEventListener('click', () => UI.forklara(G.s.varld, true));
@@ -121,21 +125,22 @@
       $('m-ljud').classList.toggle('av', !S.ljud);
       // uppdraget
       const u = G.uppdrag(), box = $('uppdrag'); { const m = $('upp-mer'), visa = !!(u && u.mer && !S.slut) ? '' : 'none'; if (m.style.display !== visa) m.style.display = visa; }
-      if (!u || S.slut) { box.className = 'slut'; $('upp-akt').textContent = ''; $('upp-titel').textContent = S.varld === 0 ? 'Portarna är öppna' : S.varld >= 2 ? D.VARLDAR[S.varld].slutRubrik : 'Kronan går i arv'; $('upp-vag').style.display = 'none'; $('upp-kost').innerHTML = ''; $('upp-knapp').style.display = 'none'; $('upp-fyll').style.width = '100%'; }
+      if (!u || S.slut) { box.className = 'slut'; $('upp-akt').textContent = ''; $('upp-titel').textContent = S.varld === 0 ? 'Portarna är öppna' : S.varld >= 2 ? D.VARLDAR[S.varld].slutRubrik : 'Kronan går i arv'; $('upp-vag').style.display = 'none'; UI._uppKost(''); $('upp-knapp').style.display = 'none'; $('upp-fyll').style.width = '100%'; }
       else {
         const a = S.aktivt, k = G.kostnad(u);
         $('upp-akt').textContent = 'Steg ' + (S.nasta + 1) + ' av ' + D.UPPDRAG.length + ' · ' + D.AKTER[u.akt]; $('upp-titel').textContent = u.titel;
         { const v = UI.vagText(u), e = $('upp-vag'); if (e.textContent !== v) e.textContent = v; const d = v ? '' : 'none'; if (e.style.display !== d) e.style.display = d; }          // varifrån och vart
         if (a) {
-          box.className = a.val ? 'val' : 'pagar'; $('upp-kost').innerHTML = a.val ? '' : '<span class="plats">' + UI.platsnamn(u.plats) + ' ' + u.ar + '</span>' + (G.skede() === 'strid' ? '<span class="chip strid">strid</span>' : '');
+          box.className = a.val ? 'val' : 'pagar'; UI._uppKost(a.val ? '' : '<span class="plats">' + UI.platsnamn(u.plats) + ' ' + u.ar + '</span>' + (G.skede() === 'strid' ? '<span class="chip strid">strid</span>' : ''));
           $('upp-fyll').style.width = Math.min(100, a.t / a.dur * 100) + '%'; $('upp-knapp').textContent = a.val ? u.val : ''; $('upp-knapp').style.display = a.val ? '' : 'none'; $('upp-knapp').disabled = false;
         } else {
-          let h = ''; for (const r of ['man', 'mark']) if (k[r] > 0) { const ok = S.res[r] >= k[r]; h += '<span class="chip' + (ok ? ' ok' : '') + '" title="' + (r === 'man' ? (u.slag === 'bygg' ? 'Män som gör dagsverken på bygget' : 'Män som skickas iväg') : 'Mark som det kostar') + '">' + IK[r] + tal(k[r]) + (r === 'man' ? (u.slag === 'bygg' ? ' dagsverken' : ' män') : ' mark') + '</span>'; }
+          let h = ''; for (const r of ['man', 'mark']) if (k[r] > 0) { const ok = S.res[r] >= k[r]; h += '<span class="chip' + (ok ? ' ok' : '') + '">' + IK[r] + tal(k[r]) + (r === 'man' ? (u.slag === 'bygg' ? ' dagsverken' : ' män') : ' mark') + '</span>'; }
           if (u.lan) h = '<span class="chip ok">' + IK.skuld + 'på kredit</span>'; if (!h) h = '<span class="chip ok">' + IK.krona + 'ditt ord' + '</span>';
-          const ok = G.kanSkicka(); box.className = ok ? 'redo' : ''; $('upp-kost').innerHTML = h; $('upp-fyll').style.width = G.framsteg(u) * 100 + '%';
+          const ok = G.kanSkicka(); box.className = ok ? 'redo' : ''; UI._uppKost(h); $('upp-fyll').style.width = G.framsteg(u) * 100 + '%';
           $('upp-knapp').style.display = ''; $('upp-knapp').textContent = u.titel.split(' ')[0]; $('upp-knapp').disabled = !ok;
         }
       }
+      if (kortNu && kortNu.row === $('upp-kost') && !UI._kostKort()) kortNu = null;          // steget har börjat: rutan om priset går bort
       // flikarna med tillgångarna, och korten under dem
       const ids = Object.keys(S.bas).filter(id => S.bas[id] && G.BAS[id]), key = ids.join(',') + '|' + (S.las.fogdar ? 1 : 0) + (S.las.konster ? 1 : 0) + (G.harSkatt() ? 1 : 0) + (S.las.sold ? 1 : 0) + (G.harKonst('langd') ? 1 : 0) + '|' + G.byggnader().map(b => b.id).join(',') + '|' + D.KONSTER.filter(k => G.harKonst(k.id)).map(k => k.id).join(',') + '|' + G.egLista().map(e => e.id).join(',') + '|' + (S.varld === 0 ? UI.stadNu(ids) + ':' + G.husLista().join(',') : '');
       if (key !== sistaBaser || force) { sistaBaser = key; UI._byggBaser(ids); }
@@ -328,6 +333,10 @@
     // Förmågornas namn och vad de gör, i den värld som spelas.
     konst(id) { const k = G.KONST[id], f = G.s.varld === 0; return [f && k.sture ? k.sture : k.namn, f ? k.vad0 || k.vad : k.vad1 || k.vad]; },          // hjälten rider själv i båda världarna
     _nej(e) { e.classList.remove('skaka'); void e.offsetWidth; e.classList.add('skaka'); V.Ljud && V.Ljud.spela('trumma'); },
+    _uppKost(h) { const e = $('upp-kost'); if (e._h !== h) { e._h = h; e.innerHTML = h; } },
+    _kostKort() { const S = G.s, u = G.uppdrag(); if (!u || S.aktivt || S.slut || u.lan) return ''; const k = G.kostnad(u), a = [], b = [];          // det som förr stod i webbläsarens lilla ruta över priset
+      for (const r of ['man', 'mark']) if (k[r] > 0) { a.push(tal(k[r]) + (r === 'man' ? (u.slag === 'bygg' ? ' dagsverken' : ' män') : ' mark')); b.push(r === 'man' ? (u.slag === 'bygg' ? 'Män som gör dagsverken på bygget.' : 'Män som skickas iväg.') : 'Mark som det kostar.'); }
+      return a.length ? '<b>' + a.join(' och ') + '</b><p>' + b.join(' ') + '</p>' : ''; },
     kop(id) { if (G.kop(id)) { V.Ljud && V.Ljud.spela(G.s.bas[id] % 10 === 0 ? 'dubbel' : 'kop'); UI.tick(); return true; } return false; },
     valj(id) { valdBas = id; },
     // Läs mer om ett steg: varför det händer. Spelet står still medan rutan är uppe.

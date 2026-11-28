@@ -537,6 +537,11 @@ button { font-family: inherit; cursor: pointer; }
 #upp-mer svg { width: 15px; height: 15px; }
 #upp-mer:hover { background: linear-gradient(180deg, #fff6dc, #ecd8a0); }
 #uppdrag #upp-akt { padding-right: 82px; }
+/* stegets nedre del är knappen, den övre är Läs mer (Johannes 2026-11-28) */
+#upp-knapp:disabled { pointer-events: none; }
+#uppdrag[data-zon="nere"] #upp-knapp:not(:disabled) { filter: brightness(1.1); }
+#uppdrag[data-tryck="1"] #upp-knapp:not(:disabled) { transform: translateY(2px); box-shadow: none; }
+#uppdrag[data-zon="uppe"] #upp-mer { background: linear-gradient(180deg, #fff6dc, #ecd8a0); }
 #berattar .ber-mer { padding: 5px 13px 5px 8px; font-style: normal; font-weight: 600; color: #3a2510; background: linear-gradient(180deg, #f6e7bd, #dcc285); border: 1px solid #8a6a1f; border-radius: 16px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5); }
 #berattar .ber-mer:hover { background: linear-gradient(180deg, #fbf0cf, #e6cf94); color: #2b1c08; }
 .ber-mer { padding: 4px 12px; color: #2b1c08; background: linear-gradient(180deg, #fbf0cf, #e3cc8e); border: 1px solid #8a6a1f; border-radius: 14px; }
