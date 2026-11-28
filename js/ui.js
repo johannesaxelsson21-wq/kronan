@@ -539,7 +539,7 @@
         ['bygg', '#bygg-knektar', 'Bygg huset här. Det kostar mark.', G.kanBygga('knektar'), !!(S.bygg && S.bygg.knektar)],
         ['knekt', '#sold', 'Ta en knekt i tjänst här. Mark blir män.', S.varld === 0 && G.kanSold() && !S.sold, S.sold > 0],
         ['stad', '#flik-stad', 'Varje stad har en egen flik med sina hus. Tryck på en stad på kartan, så öppnas den.', G.husLista().length > 0 && !S.stadSett, !!S.stadSett],
-        ['stadByt', '#flik-stad', 'Tryck på fliken igen för att välja en annan stad.', flik === 'stad' && Object.keys(S.bas).length > 1 && !S.stadMenyN, !!S.stadMenyN],
+        ['stadByt', '#flik-stad', 'Tryck på fliken igen för att byta stad.', flik === 'stad' && Object.keys(S.bas).length > 1 && !S.stadMenyN, !!S.stadMenyN],
         ['skattFlik', '#res-man', 'Här under finns kortet Driv in skatt. Med det blir män till mark.', G.kanSkatt() && !S.skattN && !synlig('#skatt'), S.skattN > 0 || synlig('#skatt')],
         ['skatt', '#skatt', 'Skicka ut män här. De kommer hem med mark.', G.kanSkatt() && !S.skattN, !!S.skatt || S.skattN > 0],
         ['tak', '#res-man', 'Armén är full. Driv in skatt (det gröna kortet) så blir männen till mark.', S.res.man >= G.tak() * 0.999 && S.nasta >= 2 && !S.aktivt, S.res.man < G.tak() * 0.9]
@@ -547,14 +547,21 @@
       // Nytt sedan förra rutan (S.nytt): en glödande pekbubbla i taget. Den går bort när man trycker på saken, eller efter en stund.
       const nyttSteg = UI._nyttSteg(); if (nyttSteg) steg.unshift(nyttSteg);
       if (tips.nu) { const s = steg.find(q => q[0] === tips.nu); if (!s || s[4]) { T[tips.nu] = 1; tips.nu = null; e.innerHTML = ''; } else if (!s[3] || !synlig(s[1])) { tips.nu = null; e.innerHTML = ''; } }
-      if (!tips.nu) { const s = steg.find(q => !T[q[0]] && q[3] && synlig(q[1])); if (s) { tips.nu = s[0]; tips.t0 = performance.now(); e.innerHTML = '<div class="tip' + (s[5] ? ' nytt' : '') + '">' + (s[5] ? '<span class="tip-ny">Nytt</span>' : '') + s[2] + '</div>'; } }
+      if (tips.nu === 'stadByt' && performance.now() - tips.t0 > 6000) { tips.nu = null; e.innerHTML = ''; }          // flik-tipset visas en gång, en kort stund (Johannes 2026-11-28: "nu blir man bara irriterad")
+      if (!tips.nu) { const s = steg.find(q => !T[q[0]] && q[3] && synlig(q[1])); if (s) { tips.nu = s[0]; tips.t0 = performance.now(); if (s[0] === 'stadByt') T.stadByt = 1; e.innerHTML = '<div class="tip' + (s[5] ? ' nytt' : '') + '">' + (s[5] ? '<span class="tip-ny">Nytt</span>' : '') + s[2] + '</div>'; } }
       if (tips.nu && tips.nu === (nyttSteg && nyttSteg[0])) { const m0 = document.querySelector(nyttSteg[1]); document.querySelectorAll('.glod-ny').forEach(x => { if (x !== m0) x.classList.remove('glod-ny'); }); if (m0) m0.classList.add('glod-ny'); } else document.querySelectorAll('.glod-ny').forEach(x => x.classList.remove('glod-ny'));
       if (tips.nu) {            // håll rutan ovanför det den pekar på
         const s = steg.find(q => q[0] === tips.nu), mal = document.querySelector(s[1]), t = e.firstChild; tips.malSel = s[1]; if (!mal || !t) return;
         // ett tryck på det bubblan pekar på tar bort den direkt (Johannes 2026-11-28: "rutorna ska försvinna när man trycker på knappen den visar till direkt")
         if (!tips.allm) { tips.allm = ev => { const k = tips.nu; if (!k || !tips.malSel) return; const m = document.querySelector(tips.malSel); if (!m || !m.contains(ev.target)) return; if (k.slice(0, 5) === 'nytt:') { if (G.s.nytt) G.s.nytt.shift(); } else G.s.tips[k] = 1; tips.nu = null; tips.malSel = null; $('tips').innerHTML = ''; document.querySelectorAll('.glod-ny').forEach(x => x.classList.remove('glod-ny')); }; document.addEventListener('pointerdown', tips.allm, true); } t.style.visibility = mal.offsetParent ? '' : 'hidden';
-        const r = mal.getBoundingClientRect(), w = t.offsetWidth; t.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; t.style.top = (r.top - t.offsetHeight - (mal.closest('.sida') ? 50 : 14)) + 'px';
-        t.style.setProperty('--pil', Math.max(14, Math.min(w - 14, r.left + r.width / 2 - parseFloat(t.style.left))) + 'px');
+        const r = mal.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight, pan = mal.closest('#baser'), pr = pan && pan.getBoundingClientRect();
+        if (pr && pr.left - w - 16 >= 8) {          // pekar den på något i panelen står rutan bredvid panelen, inte över korten (Johannes 2026-11-28)
+          t.classList.add('vid'); t.style.left = (pr.left - w - 14) + 'px'; t.style.top = Math.max(8, Math.min(innerHeight - h - 8, r.top + r.height / 2 - h / 2)) + 'px';
+          t.style.setProperty('--pilY', Math.max(10, Math.min(h - 10, r.top + r.height / 2 - parseFloat(t.style.top))) + 'px');
+        } else {
+          t.classList.remove('vid'); t.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; t.style.top = (r.top - h - (mal.closest('.sida') ? 50 : 14)) + 'px';
+          t.style.setProperty('--pil', Math.max(14, Math.min(w - 14, r.left + r.width / 2 - parseFloat(t.style.left))) + 'px');
+        }
       }
     },
 
