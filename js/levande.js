@@ -494,7 +494,7 @@
     mer(f) {
       const st = f.d.stopp, s = f.leg ? st[f.k + 1] : st[Math.max(0, f.k)], o = (s && s[3]) || {}, d = V.Game.datum();
       const var_ = f.leg ? 'På väg till ' + platsNamn(s[2]) : platsNamn(s[2]);
-      V.UI.ruta('<h2>' + f.d.namn + '</h2><p class="mal">' + var_ + ', ' + d.ar + '</p><p>' + (o.mer || '') + '</p>' + (f.d.kalla ? '<p class="svag">Källa: ' + f.d.kalla + '.</p>' : '') + '<button class="stang">Stäng</button>', false); V.UI._paus = true;
+      V.UI.ruta('<h2>' + f.d.namn + '</h2><p class="mal">' + var_ + ', ' + d.ar + '</p><p>' + (o.mer || '') + '</p><button class="stang">Stäng</button>', false); V.UI._paus = true;
     },
     // ortsskyltarna: platser som den här världens texter nämner, och platser där personerna är, som inte redan har ett namn på kartan
     orter(upptagna) {

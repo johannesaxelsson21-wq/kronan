@@ -198,12 +198,12 @@
   function visa(namn, el) {
     stang(); const t = text(namn), id = egenId(namn); if (!t && !id) return;
     ruta = document.createElement('div'); ruta.className = 'ortfakta';
-    ruta.innerHTML = '<b></b><p class="lage"></p><div></div><small>Källa: svenska Wikipedia om orten</small>';
+    ruta.innerHTML = '<b></b><p class="lage"></p><div></div>';
     ruta.querySelector('b').textContent = namn + ', ' + ar(); ruta.querySelector('div').textContent = t || '';
     const lp = ruta.querySelector('.lage');
     const fyll = () => { if (!lp.isConnected) return; try { lp.textContent = lage(id).join(' '); } catch (e) { lp.textContent = ''; } setTimeout(fyll, 1000); };
     if (!id) lp.remove();
-    if (!t) ruta.querySelector('small').remove();
+    if (!t && ruta.querySelector('small')) ruta.querySelector('small').remove();          // källan visas inte i spelet (Johannes 2026-11-28: bryter inlevelsen), den står i docs/ortfakta.md
     document.body.appendChild(ruta); if (id) fyll();
     // Rutan står kvar vid orten: den följer namnskylten när kartan dras (Johannes 2026-11-28: "så ska den stanna där den spawnade, vid orten").
     const r0 = el.getBoundingClientRect(), under = r0.bottom + 6 + ruta.offsetHeight <= innerHeight - 8, me = ruta;
