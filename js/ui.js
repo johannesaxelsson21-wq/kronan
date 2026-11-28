@@ -554,7 +554,7 @@
       if (tips.nu) {            // håll rutan ovanför det den pekar på
         const s = steg.find(q => q[0] === tips.nu), mal = document.querySelector(s[1]), t = e.firstChild; tips.malSel = s[1]; if (!mal || !t) return;
         // ett tryck på det bubblan pekar på tar bort den direkt (Johannes 2026-11-28: "rutorna ska försvinna när man trycker på knappen den visar till direkt")
-        if (!tips.allm) { tips.allm = ev => { const k = tips.nu; if (!k || !tips.malSel) return; const m = document.querySelector(tips.malSel); if (!m || !m.contains(ev.target)) return; if (k.slice(0, 5) === 'nytt:') { if (G.s.nytt) G.s.nytt.shift(); } else G.s.tips[k] = 1; tips.nu = null; tips.malSel = null; $('tips').innerHTML = ''; document.querySelectorAll('.glod-ny').forEach(x => x.classList.remove('glod-ny')); }; document.addEventListener('pointerdown', tips.allm, true); } t.style.visibility = mal.offsetParent ? '' : 'hidden';
+        if (!tips.allm) { tips.allm = ev => { const k = tips.nu; if (!k || !tips.malSel) return; const m = document.querySelector(tips.malSel); if ((!m || !m.contains(ev.target)) && k.slice(0, 5) !== 'nytt:') return; if (k.slice(0, 5) === 'nytt:') { if (G.s.nytt) G.s.nytt.shift(); } else G.s.tips[k] = 1; tips.nu = null; tips.malSel = null; $('tips').innerHTML = ''; document.querySelectorAll('.glod-ny').forEach(x => x.classList.remove('glod-ny')); }; document.addEventListener('pointerdown', tips.allm, true); } t.style.visibility = mal.offsetParent ? '' : 'hidden';
         const r = mal.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight, pan = mal.closest('#baser'), pr = pan && pan.getBoundingClientRect();
         if (pr && pr.left - w - 16 >= 8) {          // pekar den på något i panelen står rutan bredvid panelen, inte över korten (Johannes 2026-11-28)
           t.classList.add('vid'); t.style.left = (pr.left - w - 14) + 'px'; t.style.top = Math.max(8, Math.min(innerHeight - h - 8, r.top + r.height / 2 - h / 2)) + 'px';
@@ -586,8 +586,8 @@
       const har = synlig(sel), mal = har ? sel : alt && synlig(alt) ? alt : sel;
       if (!har && !(alt && synlig(alt))) { const nu = performance.now(); if (tips.osyn !== k) { tips.osyn = k; tips.osynT = nu; } else if (nu - tips.osynT > 8000) { S.nytt.shift(); tips.osyn = null; } return null; }          // syns inte alls: släpp den efter en stund, så att kön inte fastnar
       tips.osyn = null;
-      const klar = () => { S.nytt.shift(); tips.nu = null; if (tips.klick) document.removeEventListener('pointerdown', tips.klick, true); tips.klick = null; };
-      if (tips.nu === 'nytt:' + k && har && performance.now() - tips.t0 > 9000) { klar(); return null; }          // har stått en stund vid saken: nog sett
+      const klar = () => { S.nytt.shift(); tips.nu = null; $('tips').innerHTML = ''; document.querySelectorAll('.glod-ny').forEach(x => x.classList.remove('glod-ny')); if (tips.klick) document.removeEventListener('pointerdown', tips.klick, true); tips.klick = null; };
+      if (tips.nu && tips.nu.indexOf('nytt:' + k) === 0 && performance.now() - tips.t0 > 6000) { klar(); return null; }          // har stått en stund: nog sett, och rutan tas bort (Johannes 2026-11-28: "nyhet texten försvinner inte")
       return ['nytt:' + k + (mal === sel ? '' : ':alt'), mal, txt, true, false, true];
     },
 

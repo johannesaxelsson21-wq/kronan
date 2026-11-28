@@ -452,9 +452,9 @@ button { font-family: inherit; cursor: pointer; }
 .flyt.stor { font-size: 27px; font-weight: bold; color: #fff7df; display: flex; align-items: center; gap: 4px; animation-duration: 2.6s; }
 .flyt.stor svg { width: 28px; height: 28px; }
 /* pekbubblan för det som är nytt, och saken den pekar på glöder */
-.tip.nytt { display: flex; align-items: center; gap: 8px; padding: 7px 13px 7px 8px; background: linear-gradient(180deg, #fbf0cf, #ecd9a6); border: 2px solid #5a4634; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(201, 162, 74, 0.6) inset; }
-.tip.nytt::after { border-top-color: #5a4634; bottom: -10px; }
-.tip-ny { background: #b8312a; color: #fff3d6; font-size: 10.5px; letter-spacing: 0.15em; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; }
+.tip.nytt { display: flex; align-items: center; gap: 7px; padding: 5px 11px 6px 6px; }
+.tip.nytt::after { border-top-color: #5a4634; }
+.tip-ny { flex: none; background: #6b4a22; color: #f6e7bd; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; padding: 2px 5px; border-radius: 3px; box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.6) inset; }
 .glod-ny { box-shadow: 0 0 0 2px var(--guld2), 0 0 22px 4px rgba(242, 207, 90, 0.85) !important; border-radius: 9px; }
 .hk.glod-ny { box-shadow: none !important; } .hk.glod-ny .hk-b { box-shadow: 0 0 0 2px var(--guld2) inset, 0 0 24px 5px rgba(242, 207, 90, 0.9); }
 @media (max-width: 720px) {
