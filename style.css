@@ -7,7 +7,8 @@ button { font-family: inherit; cursor: pointer; }
 #ui { position: fixed; inset: 0; pointer-events: none; }
 #ui > * { pointer-events: none; }
 #datum, #konsol, #meny { opacity: 0; transition: opacity 0.9s; }
-#ui.spel #datum, #ui.spel #konsol, #ui.spel #meny { opacity: 1; pointer-events: auto; }
+#ui.spel #datum, #ui.spel #konsol, #ui.spel #meny, #ui.spel #kassa { opacity: 1; pointer-events: auto; }
+#datum { cursor: pointer; }
 #datum, #meny button { background: linear-gradient(180deg, var(--tra2), var(--tra)); border: 1px solid #1a130d; box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.55) inset, 0 3px 12px rgba(0, 0, 0, 0.5); border-radius: 8px; }
 
 /* datum och titel uppe till vänster, menyn uppe till höger */
@@ -497,19 +498,36 @@ button { font-family: inherit; cursor: pointer; }
 .vem.annan { background: #e6ddc6; color: #3a2a14; border-color: #6a5a3a; font-style: italic; pointer-events: auto; cursor: pointer; opacity: 0.94; }
 .ortnamn.liten { font-size: 11.5px; padding: 0 6px 1px; background: rgba(32, 23, 15, 0.5); border-color: rgba(201, 162, 74, 0.35); color: #f1e4c0; opacity: 0.88; }
 
-/* introt steg för steg (ui.js _introStart): en bubbla i taget, ovanför hjälten eller vid nästa steg */
-#intro { position: fixed; inset: 0; pointer-events: none; z-index: 7; }
-.tip.intro { pointer-events: auto; cursor: pointer; white-space: normal; width: min(330px, calc(100vw - 24px)); padding: 11px 15px 9px; font-size: 15px; line-height: 1.42; animation: introIn 0.5s ease-out; background: linear-gradient(180deg, #fbf0cf, #ecd9a6); border: 2px solid #5a4634; box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(201, 162, 74, 0.6) inset; }
-.tip.intro::after { border-top-color: #5a4634; bottom: -10px; }
-.tip.intro p { margin: 0 0 8px; }
-.intro-ar { display: inline-block; margin-bottom: 6px; padding: 1px 9px; font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #fff3d6; background: #b8312a; border-radius: 3px; }
-.intro-fot { display: flex; align-items: center; justify-content: space-between; }
-.intro-prick { display: flex; gap: 5px; }
-.intro-prick i { width: 7px; height: 7px; border-radius: 50%; background: rgba(90, 70, 52, 0.3); }
-.intro-prick i.nu { background: #8a6a1f; }
-.tip.intro button { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; font: inherit; font-size: 14px; color: #fff3d6; background: #5a4634; border: 1px solid #3a2a1c; border-radius: 4px; cursor: pointer; }
-.tip.intro button svg { width: 10px; height: 10px; fill: currentColor; }
-@keyframes introIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* Kassan högst upp i mitten (Johannes 2026-11-28: "dålig koll på sina resources"): män av taket, mark, och skepp i Eriks värld. */
+#kassa { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); display: flex; gap: 8px; opacity: 0; transition: opacity 0.9s; pointer-events: none; }
+#kassa .ks { position: relative; display: grid; grid-template-columns: 26px auto 1fr; grid-template-rows: auto auto; column-gap: 6px; align-items: baseline; padding: 5px 14px 9px 10px; min-width: 132px; background: linear-gradient(180deg, var(--tra2), var(--tra)); border: 1px solid #1a130d; box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.55) inset, 0 3px 12px rgba(0, 0, 0, 0.5); border-radius: 8px; }
+#kassa .ks > svg { grid-column: 1; grid-row: 1 / 3; width: 26px; height: 26px; align-self: center; }
+#kassa .ks > b { grid-column: 2; grid-row: 1; font-size: 22px; font-weight: normal; color: var(--guld2); text-shadow: 0 1px 0 #000; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+#kassa .ks > span { grid-column: 3; grid-row: 1; font-size: 13px; color: #cdbf9f; white-space: nowrap; }
+#kassa .ks > i { grid-column: 2 / 4; grid-row: 2; font-style: normal; font-size: 11.5px; color: var(--svag); white-space: nowrap; }
+#kassa .ks > u { position: absolute; left: 10px; right: 10px; bottom: 3px; height: 3px; background: rgba(0, 0, 0, 0.45); border-radius: 2px; text-decoration: none; overflow: hidden; }
+#kassa .ks > u > u { position: absolute; left: 0; top: 0; bottom: 0; background: #c9a24a; transition: width 0.6s; }
+#kassa .ks.fullt > u > u { background: #e8c040; }
+#kassa .ks.fullt > span { color: #f2cf5a; }
+@media (max-width: 720px) {
+  #kassa { left: 8px; right: 8px; transform: none; top: calc(86px + env(safe-area-inset-top)); justify-content: center; gap: 5px; }
+  #kassa .ks { min-width: 0; padding: 4px 8px 6px 6px; column-gap: 5px; grid-template-columns: 18px auto auto; }
+  #kassa .ks svg { width: 18px; height: 18px; }
+  #kassa .ks b { font-size: 16px; } #kassa .ks span { font-size: 11px; } #kassa .ks i { font-size: 10px; }
+}
+/* Kungens sida: egenskaperna som kort */
+.eg-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 6px; }
+.eg { border: 1px solid #b59b6c; border-radius: 7px; padding: 9px 11px 10px; background: #f6eedb; opacity: 0.8; }
+.eg.ok { opacity: 1; border-color: #8a6a1f; box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.7) inset; }
+.eg-topp { display: flex; align-items: center; gap: 7px; }
+.eg-topp svg { width: 22px; height: 22px; flex: none; }
+.eg-topp b { font-size: 17px; font-weight: normal; }
+.eg-topp span { margin-left: auto; font-size: 12px; color: #8a6a45; }
+.ruta-in .eg p { font-size: 14px; line-height: 1.4; margin: 6px 0; }
+.ruta-in .eg p.eg-ger { color: #4a6a2a; }
+.ruta-in .eg button.eg-kop { width: 100%; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; }
+.eg-kop svg { width: 16px; height: 16px; }
+.eg:not(.ok) .eg-kop { filter: grayscale(0.7); opacity: 0.7; }
 
 /* Läs mer syns tydligt (Johannes 2026-11-28): en riktig liten knapp med en bok, i spelets stil */
 #upp-mer { display: inline-flex; align-items: center; gap: 4px; right: 6px; top: 5px; padding: 2px 8px 2px 5px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.03em; color: #2b1c08; background: linear-gradient(180deg, #fbf0cf, #e3cc8e); border: 1px solid #8a6a1f; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45); cursor: pointer; }
@@ -528,3 +546,12 @@ button { font-family: inherit; cursor: pointer; }
 .text.kan:hover { background: linear-gradient(180deg, #fff6dc, #f0dfb0); }
 .text-ga { display: inline-flex; align-items: center; gap: 5px; margin-left: 10px; padding: 2px 10px; font-size: 14px; vertical-align: 2px; color: #fff3d6; background: #5a4634; border-radius: 4px; white-space: nowrap; }
 .text-ga svg { width: 9px; height: 9px; fill: currentColor; }
+
+/* Korten: det platsen ger i sekunden står stort, vad nästa nivå lägger till står litet efter (Johannes 2026-11-28) */
+.k-ger .k-ps { font-weight: normal; color: #a6d47a; }
+.k-ger .k-mer { font-size: 0.82em; color: var(--svag); margin-left: 3px; }
+.bas.ej .k-ger .k-ps { color: #8fae6e; }
+
+.flyt.tr.flyg { animation: none; z-index: 30; }
+#kassa .ks.puls { animation: kassapuls 0.5s ease-out; }
+@keyframes kassapuls { 0% { box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.55) inset, 0 0 0 0 rgba(242, 207, 90, 0.9); } 100% { box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.55) inset, 0 0 0 10px rgba(242, 207, 90, 0); } }

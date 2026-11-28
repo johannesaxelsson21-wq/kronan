@@ -67,6 +67,8 @@
       W._dekor('blockad', S.nasta > idx('blockad') && S.nasta <= idx('intag'), () => W._flotta('stockholm', 3, 'lubeck'));
       W._dekor('lybska', S.nasta > idx('lubeck') && S.nasta <= idx('blockad'), () => W._flotta('soderkoping', 4, 'lubeck'));
       W._dekor('salen', S.varld === 1, () => { const p = R.P.salen, mb = new V.MB(); B.stuga(mb, 0.95, 0.62, 0.34, 'torv', { skorsten: 1, ljus: 1 }); mb.push().move(1.4, 0, 0.6).rotY(0.5); B.stuga(mb, 1.1, 0.66, 0.38, 'span', {}); mb.pop(); mb.push().move(-1.3, 0, 0.9).rotY(-0.4); B.stuga(mb, 0.9, 0.6, 0.33, 'torv', { skorsten: 1 }); mb.pop(); const m = B.mesh(mb), x = p.x + 1.2, z = p.z - 1.1; m.position.set(x, Geo.groundAt(x, z), z); m.scale.setScalar(B.K); return m; });          // Sälen, där skidlöparna hann upp Gustav
+      if (S.varld >= 2) W._orter();
+      { const n = S.varld === 2 && G.skepp ? Math.min(6, G.skepp()) : 0; if (W._varvN !== n) { W._dekor('varvFlotta', false); W._varvN = n; } if (R.P.kalmar && R.P.kalmar.hav) W._dekor('varvFlotta', n > 0, () => W._flotta('kalmar', n, 'sverige')); }          // Eriks skepp från Björkenäs ligger vid Kalmar
       W._dekor('kravelen', S.nasta > idx('kravelen'), () => W._flotta('stockholm', 1, 'sverige', true));
       for (const b of D.BASER) if (S.bas[b.id] && !dekor['gard' + b.id]) { World.Paint.yard(R.P[b.id].x, R.P[b.id].z, tomt[b.id].R * 0.8); dekor['gard' + b.id] = 1; paintDirty = true; }
       for (const b of D.BASER) if (!S.bas[b.id] && finns(b) && !dekor['gard0' + b.id]) { World.Paint.yard(R.P[b.id].x, R.P[b.id].z, tomt[b.id].R * 0.55); dekor['gard0' + b.id] = 1; paintDirty = true; }
@@ -127,6 +129,18 @@
       else if (id === 'torn') grp[b.plats].add(m);
       else { if (!t || !grp[b.plats]) return; const q = b.niva ? W._husPlats(b) : [b.x, b.z]; m.position.set(q[0], t.y(q[0], q[1]), q[1]); grp[b.plats].add(m); }
       W._byggda[id] = { m, folk }; if (!tyst) { if (b.vid) { m.scale.setScalar(0.01); pops.push({ m, t: 0, fran: 0.01, till: K }); } else W._pop(m, b.plats); Fx.damm(w.x, Geo.groundAt(w.x, w.z) + 0.1, w.z, 14); }
+    },
+    // Orterna som stegen handlar om står på kartan, också när de inte är baser: en liten by eller ett slott (skylten sätter levande.js).
+    // En ort som bara nämns i en text står i VARLDAR[v].orter. Orter ute till sjöss får inget hus.
+    _orter() {
+      const S = G.s, L = D.UPPDRAG, Vd = D.VARLDAR[S.varld] || {}, syns = {}, BORG = { orbyhus: 1, borgholm: 1, drottningholm: 1, kexholm: 1, wesenberg: 1, wenden: 1, linkoping: 1, varberg: 1, alvsborg: 1, stegeborg: 1, kronoberg: 1 };
+      for (const u of L) [u.plats, u.fran].forEach(id => { if (id) syns[id] = 1; });
+      for (const id in (Vd.orter || {})) syns[id] = 1;
+      for (const id in syns) {
+        const p = R.P[id], b = G.BAS[id]; if (!p || (b && finns(b) && S.bas[id])) continue;          // en egen bas har redan sitt namn
+        const hav = Geo.sdAt(p.x, p.z) < 0.3;
+        if (!(b && finns(b)) && !hav) W._dekor('ort' + id, true, () => { const mb = new V.MB(); if (BORG[id]) B.borg(mb, 'liten', 0); else { B.stuga(mb, 0.95, 0.62, 0.34, 'torv', { skorsten: 1, ljus: 1 }); mb.push().move(1.3, 0, 0.6).rotY(0.5); B.stuga(mb, 1.0, 0.64, 0.36, 'span', {}); mb.pop(); } const m = B.mesh(mb); m.position.set(p.x, Geo.groundAt(p.x, p.z), p.z); m.scale.setScalar(B.K * (BORG[id] ? 0.8 : 1)); return m; });
+      }
     },
     _dekor(key, on, make) { if (on && !dekor[key]) { dekor[key] = make(); scene.add(dekor[key]); } else if (!on && dekor[key]) { scene.remove(dekor[key]); dekor[key] = null; } },
     _flotta(plats, n, sort, stor) {
@@ -379,9 +393,10 @@
       const prova = (x, z, h, mal) => { const p = Scene.screenPoint(x, Geo.groundAt(x, z) + h, z); if (p.behind) return; const d = Math.hypot(p.x - sx, p.y - sy); if (d < bd) { bd = d; best = mal; } };
       if (vis) { const mal = W._malUppdrag(); vis.skepp.forEach(s => prova(s.position.x, s.position.z, 0.6, mal));
         const st = l => Math.max(1, Math.floor(l.length / 40)); for (let k = 0; k < vis.enh.length; k += st(vis.enh)) { const e = vis.enh[k]; if (e.vis !== false) prova(e.x, e.z, 0.4, mal); } for (let k = 0; k < vis.fi.length; k += st(vis.fi)) prova(vis.fi[k].x, vis.fi[k].z, 0.4, mal); }
-      if (Gu.g && Gu.g.visible) prova(Gu.x, Gu.z, 0.7, W._malHjalten());
+      const hj = W._malHjalten(); if (Gu.g && Gu.g.visible) prova(Gu.x, Gu.z, 0.7, hj);
       if (Bu.g && Bu.g.visible) prova(Bu.x, Bu.z, 0.7, { pos: () => Bu.g.visible ? { x: Bu.x, z: Bu.z } : null });
       (skattVis || []).forEach(v => { const e = v.enh[0]; if (e) prova(e.x, e.z, 0.4, { pos: () => skattVis && skattVis.indexOf(v) >= 0 && v.enh[0] ? { x: v.enh[0].x, z: v.enh[0].z } : null }); });
+      W.valdHjalte = best === hj;          // trycket var på kungen: då öppnas hans sida (main.js)
       if (!best) return false; W._foljer = Object.assign({ t: performance.now() }, best); return true;
     },
     _malUppdrag() { return { pos: () => vis && W._foljVis ? { x: W._foljVis.x, z: W._foljVis.z, d: G.skede() === 'strid' ? W._foljVis.d : 0 } : null }; },
@@ -415,6 +430,8 @@
         while (steg[d.bas].length <= s) W.byggSteg(d.bas, false);
       } else if (typ === 'samling') { const p = R.P[d.bas]; if (!d.lopare) Fx.guld(p.x, p.y + 0.2, p.z, 10, 1.0); (vandrare[d.bas] || []).forEach(v => { v.hopp = 0.5; }); }
       else if (typ === 'byggnad') W._byggnad(d.id, false);
+      else if (typ === 'skepp') { W.sync(false); const h = R.P.kalmar && R.P.kalmar.hav; if (h) Fx.guld(h.x, 0.3, h.z, 40, 1.4); }
+      else if (typ === 'stapel') { const p = R.P.kalmar; if (p) Fx.damm(p.x, p.y + 0.1, p.z, 8); }
       else if (typ === 'hus') { if (d.niva === 1) W._byggnad(d.id, false); else { const w = W.byggPlats(d.id); if (w) Fx.guld(w.x, Geo.groundAt(w.x, w.z) + 0.3, w.z, 25, 0.8); } }          // stadens hus: byggs första gången, glimmar sedan
       else if (typ === 'slagTryck' && vis) { const nu = performance.now(); if (nu > (W._slagT || 0)) { W._slagT = nu + 280; W._slagTryck(d.o); } }          // förspelets slag: trycken syns i slaget
       else if (typ === 'hugg' && vis && vis.u.belagring) { if (d.traff) W._belBild(d.o && d.o.bild, true, 'hugg'); }          // belägringen: varje tryck i takt syns på vallen eller i tornen

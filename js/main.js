@@ -45,6 +45,9 @@
     else if (typ === 'skatt') { UI.skattKlar(d.mark); const p = Varld.skattTill && Varld.pos(Varld.skattTill); if (p) UI.flyt(p.x, p.y + 1.8, p.z, 'Skatt +' + V.tal(d.mark) + ' mark', 'mark'); if (!d.auto) V.Ljud.spela('samling'); }
     else if (typ === 'samling' && !d.lopare) { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 1.8, p.z, d.res === 'mark' ? 'Skatt +' + V.tal(d.antal) + ' mark' : '+' + V.tal(d.antal) + ' män går med', d.res); V.Ljud.spela('samling'); }
     else if (typ === 'niva' && d.dubbel) UI.skylt(UI.byggnad(d.bas, d.niva));
+    else if (typ === 'stapel') { const p = Varld.pos('kalmar'); if (p) UI.flyt(p.x, p.y + 2.4, p.z, d.man + ' män på varvet', 'man'); }
+    else if (typ === 'skepp') { UI.skylt(d.n === 1 ? 'Det första skeppet är sjösatt' : 'Ett skepp till är sjösatt: ' + d.n + ' i flottan'); V.Ljud.spela('dubbel'); }
+    else if (typ === 'egenskap') { const e = G.egLista().find(q => q.id === d.id); if (e) UI.skylt(e.namn + ', nivå ' + d.niva); }
     else if (typ === 'arbetare') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.4, p.z, d.antal + ' lag i gruvan', 'mark'); V.Fx.damm(p.x, p.y + 0.2, p.z, 10); }
     else if (typ === 'konst' && d.dubbel) UI.skylt(UI.konst(d.id)[0] + ': dubbelt upp');
     else if (typ === 'full') V.Ljud.spela('full');
@@ -129,7 +132,7 @@
       if (spelar && G.skede() === 'strid' && (G.uppdrag() || {}).order) { Varld.foljUppdraget(); const q = Varld.malSkarm(); tryck(false, q && Math.hypot(q.x - e.clientX, q.y - e.clientY) <= q.r + 12 ? 'ring' : 'karta'); return; }          // ett tryck på ringen räknas, annars inte          // i ett slag i förspelet är varje tryck på kartan en order, och kameran går tillbaka till slaget
       const id = Varld.basVid(g) || Varld.byggVid(g), egen = !!(id && spelar && G.s.bas[id]);
       if (egen && !(G.s.marknad && G.s.marknad.bas === id) && !UI.stadVald(id)) { V.Ljud.vakna(); UI.visaStad(id); Varld.foljPlats(id); return; }          // ett tryck på en egen stad öppnar alltid dess flik först, också när hjälten står mitt i den (Johannes 2026-11-27); nästa tryck bygger ut den
-      if (spelar && Varld.valjVid(e.clientX, e.clientY, egen)) { V.Ljud.vakna(); return; }          // förspelet: det man trycker på följs (Johannes 2026-11-26)
+      if (spelar && Varld.valjVid(e.clientX, e.clientY, egen)) { V.Ljud.vakna(); if (Varld.valdHjalte && !G.skede()) UI.kung(); return; }          // ett tryck på kungen öppnar hans sida (Johannes 2026-11-28)          // förspelet: det man trycker på följs (Johannes 2026-11-26)
       if (!egen) { tryck(); return; }
       if (G.s.marknad && G.s.marknad.bas === id) { V.Ljud.vakna(); G.marknadTa(); UI.tick(); return; }
       UI.valj(id); V.Ljud.vakna();

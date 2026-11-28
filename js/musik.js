@@ -44,7 +44,7 @@
     grund() {
       const S = V.Game.s, D = V.DATA;
       if (S.varld === 0) return S.hjalte === 'kristina' && S.nasta >= D.UPPDRAG.length - 1 ? 'krig' : 'bygget';          // Stockholm belägras
-      if (S.varld === 2) return S.slut ? 'fange' : 'bygget';                                                                 // Erik: hovet, och fångenskapen när portarna öppnats 1568
+      if (S.varld >= 2) return S.slut && M.har('fange') ? 'fange' : 'bygget';                                                                 // Erik och de följande: hovet, och slutspåret när världen är klar
       return S.nasta < 3 ? 'vinter' : 'bygget';                                                                              // Dalarna vintern 1521
     },
     vakna() { if (vaken) return; vaken = true; if (!vill) vill = egen(M.grund()); skaffa(vill); ga(); },

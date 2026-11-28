@@ -43,6 +43,12 @@
   // Johan III i sina scener, krönt
   let JE = null;
   function johanE() { if (!JE) { JE = Object.create(V.Gustav); JE.init(Scene.scene, 'johan'); } JE.klad('Kung'); JE.g.visible = true; JE.utanRing = false; return JE; }
+  // Hertig Karl i scenerna (samma dräkt som på kartan)
+  let KE = null;
+  function karlE() { if (!KE) { KE = Object.create(V.Gustav); KE.init(Scene.scene, 'karl'); } KE.klad('Hertig'); KE.g.visible = true; KE.utanRing = false; return KE; }
+  // Sigismund i sina scener, krönt
+  let SE = null;
+  function sigE() { if (!SE) { SE = Object.create(V.Gustav); SE.init(Scene.scene, 'sigismund'); } SE.klad('Kung'); SE.g.visible = true; SE.utanRing = false; return SE; }
   function gustavE() { if (!GE) { GE = Object.create(V.Gustav); GE.init(Scene.scene, 'gustav'); } GE.g.visible = true; GE.utanRing = false; return GE; }
   // Spelaren trycker n gånger på knappen (eller väntar ut tiden). vid(k) körs för varje tryck. Löfte som blir klart när det är gjort.
   function tryckN(knapp, n, vid, sek) {
@@ -265,6 +271,49 @@
         await tryckN('Övertala', 3, k => { L.spela('sorl'); sig.y = 0.06; setTimeout(() => { sig.y = 0; }, 160); if (k === 1) text(''); }, 15);
         L.spela('nej'); text('Råden i båda länderna sätter stopp. Sigismund stannar i Polen.'); await vanta(6.5);
       },
+      // 30 september 1593. Sigismund kommer till Stockholm med drottning Anna.
+      async ankomst() {
+        const p = R.P.stockholm, K = B.K, st = V.Varld.tomt.stockholm, T = st && st.plan ? st.plan().torg : { x: 0, z: 0.2 }, cx = p.x + T.x * K, cz = p.z + T.z * K; Scene.setSeason(0.72);
+        const in_ = R.seaPath('danzig', 'stockholm'), L0 = R.length(in_), d0 = Math.max(0, L0 - 15), d1 = Math.max(d0 + 2, L0 - 1.2);
+        const skepp = V.skepp('sverige', true); skepp.scale.setScalar(2.1); const a0 = R.along(in_, d0); skepp.position.set(a0.x, 0.02, a0.z); skepp.rotation.y = a0.ang; Scene.scene.add(skepp); tempM.push(skepp);
+        skylt('Sigismund och Anna', () => ({ x: skepp.position.x, z: skepp.position.z }), 1.7);
+        for (let i = 0; i < 7; i++) temp.push(Folk.add(cx + (i - 3) * 0.34, cz + 0.9 + (i % 2) * 0.22, 'borgare'));
+        Scene.jump(a0.x, a0.z + 2, 22); plats('Stockholm, 30 september 1593');
+        await vanta(2); text('Sigismund är 27 år och kung av Polen. Nu kommer han för att ta Sveriges krona.'); await vanta(6);
+        text('Med honom reser drottning Anna och påvens sändebud Germanico Malaspina.'); await vanta(6);
+        await akFard(in_, d0, d1, 0.7, 'Segla', 'Tryck för att segla in till Stockholm', { kd: 24, ljud: 'vag', sikt: [cx, cz], satt: (a) => { skepp.position.set(a.x, 0.02 + Math.sin(tid * 1.4) * 0.03, a.z); skepp.rotation.y = a.ang; } });
+        UI.film.knapp(null); I.tar = null; L.spela('klocka'); text('Kungen är framme i sitt arvrike.'); await vanta(5);
+      },
+      // Februari 1594. Sigismund lovar att hålla fast vid Uppsala mötes beslut, och kröns i Uppsala domkyrka.
+      async forsakran() {
+        const p = R.P.uppsala, K = B.K, st = V.Varld.tomt.uppsala, T = st && st.plan ? st.plan().torg : { x: 0, z: 0.2 }, cx = p.x + T.x * K, cz = p.z + T.z * K; Scene.setSeason(0.12);
+        const mb = new V.MB(); mb.snow = 0; mb.box(0, 0, 0, 0.7, 0.32, 0.36, '#6b4a2c', { low: '#4f3620' }); mb.box(0, 0.32, 0, 0.74, 0.04, 0.4, '#8a6a44'); mb.box(0, 0.36, 0, 0.26, 0.012, 0.18, '#f4ead0');
+        const bord = B.mesh(mb); bord.position.set(cx, Geo.groundAt(cx, cz), cz - 0.2); bord.scale.setScalar(K); Scene.scene.add(bord); tempM.push(bord);
+        const ek = sigE(), g = { x: cx - 0.1, z: cz - 0.75 }; hooks.push(dt => ek.place(g.x, g.z, 0, 0, tid, dt, false, true)); skylt('Kung Sigismund', () => g, 1.8);
+        const ka = karlE(), kg = { x: cx + 0.75, z: cz + 0.25 }; hooks.push(dt => ka.place(kg.x, kg.z, -2.4, 0, tid, dt, false, true)); skylt('Hertig Karl', () => kg, 1.8);
+        for (let i = 0; i < 8; i++) temp.push(Folk.add(cx + (i - 3.5) * 0.36, cz + 0.85 + (i % 2) * 0.25, 'borgare', { ang: Math.PI }));
+        Scene.cam.lut = 60; Scene.jump(cx, cz + 1.1, 13); plats('Uppsala, februari 1594');
+        await vanta(2); text('Ständerna kröner inte Sigismund förrän han lovar att hålla fast vid Uppsala mötes beslut.'); await vanta(7);
+        text('Tryck för att skriva under');
+        await tryckN('Skriv under', 3, k => { L.spela('sorl'); if (k === 1) text(''); }, 15);
+        L.spela('klocka'); text('Den 19 februari kröns Sigismund och Anna i Uppsala domkyrka.'); await vanta(6);
+        text('I hemlighet har kungen skrivit en protest till påven.'); await vanta(6);
+      },
+      // Slutet av september 1598. Efter Stångebro skriver kungen under i Linköping, och sedan äter han middag med hertig Karl på slottet.
+      async linkoping() {
+        const p = R.P.linkoping, K = B.K, cx = p.x + 0.3, cz = p.z + 2.5; Scene.setSeason(0.74);
+        const mb = new V.MB(); mb.snow = 0; mb.box(0, 0, 0, 1.1, 0.3, 0.42, '#6b4a2c', { low: '#4f3620' }); mb.box(0, 0.3, 0, 1.16, 0.04, 0.48, '#f2eee2');
+        const bord = B.mesh(mb); bord.position.set(cx, Geo.groundAt(cx, cz), cz); bord.scale.setScalar(K); Scene.scene.add(bord); tempM.push(bord);
+        const ek = sigE(), g = { x: cx - 0.85, z: cz }; hooks.push(dt => ek.place(g.x, g.z, Math.PI / 2, 0, tid, dt, false, true)); skylt('Kung Sigismund', () => g, 1.8);
+        const ka = karlE(), kg = { x: cx + 0.85, z: cz }; hooks.push(dt => ka.place(kg.x, kg.z, -Math.PI / 2, 0, tid, dt, false, true)); skylt('Hertig Karl', () => kg, 1.8);
+        for (let i = 0; i < 4; i++) temp.push(Folk.add(cx + (i - 1.5) * 0.4, cz + (i % 2 ? 0.55 : -0.55), 'borgare', { ang: i % 2 ? Math.PI : 0 }));
+        Scene.cam.lut = 58; Scene.jump(cx, cz + 1.2, 13); plats('Linköping, september 1598');
+        await vanta(2); text('Kungen har förlorat vid Stångebro. Hertig Karl ställer sina villkor.'); await vanta(6.5);
+        text('Tryck för att skriva under');
+        await tryckN('Skriv under', 3, k => { L.spela('sorl'); if (k === 1) text(''); }, 15);
+        text('Hären ska skickas hem, och kungen ska regera efter lag och ed.'); await vanta(6);
+        L.spela('klart'); text('Sedan äter kungen och hertigen middag på Linköpings slott.'); await vanta(6.5);
+      },
       // 29 juni 1561. Erik går från Uppsala slott till domkyrkan på en röd matta, och man bär själv fram de nya regalierna.
       async kroning() {
         const p = R.P.uppsala, K = B.K; Scene.setSeason(0.47);
@@ -429,7 +478,7 @@
       const Bu = V.Bud, budSyns = Bu.g.visible; if (namn !== 'isen') Bu.g.visible = false; const Hj = V.Gustav, hjSyns = Hj.g.visible; if (V.Game.s.varld >= 2) Hj.g.visible = false; V.Varld.scenDolj(true);          // budet hör inte hemma i scenen (på isen är det hästen som drar släden)
       try { await I.scener[namn](); } catch (e) { console.error(e); }
       UI.film.knapp(null); I.tar = null; text(''); plats(''); await new Promise(r => setTimeout(r, 950));          // sista raden tonar bort innan rutan kommer (i riktig tid, också i snabbspolning)
-      Bu.g.visible = budSyns; if (V.Game.s.varld >= 2) V.Gustav.g.visible = hjSyns; V.Varld.scenDolj(false); c.lut = 0; hooks = []; waits = []; aka = null; I.tar = null; I.nu = null; UI.film.knapp(null); if (GE) GE.g.visible = false; if (V.Musik) V.Musik.spar(V.Musik.grund()); rensa(); text(''); plats(''); UI.film.svart(0, 0.6); UI.film.pa(false); UI.visa(true); c.locked = false; c.fri = false; Scene.jump(hem.x, hem.z, Math.max(hem.d, 32)); I.aktiv = false; I.scenFart = 1; if (klar) klar();
+      Bu.g.visible = budSyns; if (V.Game.s.varld >= 2) V.Gustav.g.visible = hjSyns; V.Varld.scenDolj(false); c.lut = 0; hooks = []; waits = []; aka = null; I.tar = null; I.nu = null; UI.film.knapp(null); [GE, EE, JE, SE, KE].forEach(e => { if (e) e.g.visible = false; }); if (V.Musik) V.Musik.spar(V.Musik.grund()); rensa(); text(''); plats(''); UI.film.svart(0, 0.6); UI.film.pa(false); UI.visa(true); c.locked = false; c.fri = false; Scene.jump(hem.x, hem.z, Math.max(hem.d, 32)); I.aktiv = false; I.scenFart = 1; if (klar) klar();
     },
     slut(klar) { hooks = []; waits = []; rensa(); aka = null; I.tar = null; regn = false; UI.film.knapp(null); UI.film.tal(null); UI.film.text(''); UI.film.plats(''); UI.film.svart(0, 1); UI.film.pa(false); Fx.sno = true; V.Varld._ruttKlar = false; V.Varld._ruttKey = null; klar(); },
     update(dt, t) {

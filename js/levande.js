@@ -21,7 +21,8 @@
     soderkoping: 'Söderköping', storatuna: 'Stora Tuna', kisa: 'Kisa', virserum: 'Virserum', skara: 'Skara', strangnas: 'Strängnäs', stegeborg: 'Stegeborg', orebro: 'Örebro', arboga: 'Arboga',
     halmstad: 'Halmstad', varberg: 'Varberg', axtorna: 'Axtorna', mared: 'Mared', visby: 'Visby', getaryggen: 'Getaryggen', wenden: 'Wenden', wesenberg: 'Wesenberg', kexholm: 'Kexholm',
     orbyhus: 'Örbyhus', borgholm: 'Borgholm', drottningholm: 'Drottningholm', staket: 'Stäket', brunkeberg: 'Brunkeberg', brunnback: 'Brunnbäck', kronoberg: 'Kronoberg', bornholm: 'Bornholm',
-    smaland: 'Småland', halsingland: 'Hälsingland', lima: 'Lima', salen: 'Sälen', kivinebb: 'Kivinebb', olandsudde: 'Ölands norra udde', narva: 'Narva', reval: 'Reval', nykoping: 'Nyköping' };
+    smaland: 'Småland', halsingland: 'Hälsingland', lima: 'Lima', salen: 'Sälen', kivinebb: 'Kivinebb', olandsudde: 'Ölands norra udde', narva: 'Narva', reval: 'Reval', nykoping: 'Nyköping',
+    linkoping: 'Linköping', teusina: 'Teusina', nokia: 'Nokia' };
   const KALLA = 'sv. Wikipedia';
 
   // Personerna, per värld. stopp: [år, månad, plats, { sjo: flagga på skeppet, via: [platser på vägen], mer: vad personen gör där }].
@@ -103,6 +104,33 @@
         [1565, 1, 'stockholm', { mer: 'Karin Månsdotter, dotter till en knekt, lever vid Eriks hov.' }],
         [1567, 5, 'uppsala', { mer: 'Karin Månsdotter är med kungen i Uppsala.' }],
         [1567, 9, 'stockholm', { mer: 'Karin Månsdotter är i Stockholm.' }]] }
+    ],
+    4: [
+      { id: 'karl', namn: 'Hertig Karl', sort: 'karl', kalla: 'sv. Wikipedia, Avsättningskriget mot Sigismund och Uppsala möte', stopp: [
+        [1592, 11, 'stockholm', { mer: 'Hertig Karl, kungens farbror, är den förnämste i regeringen medan kungen är i Polen.' }],
+        [1593, 2.8, 'uppsala', { mer: 'Hertig Karl har kallat rikets präster till Uppsala möte.' }],
+        [1593, 4, 'nykoping', { mer: 'Hertig Karl är hemma på Nyköpings slott, i sitt hertigdöme.' }],
+        [1593, 9.9, 'stockholm', { mer: 'Hertig Karl väntar på kungen i Stockholm.' }],
+        [1594, 8, 'nykoping', { mer: 'Hertig Karl styr riket tillsammans med rådet.' }],
+        [1595, 9, 'soderkoping', { mer: 'Hertig Karl har kallat till riksdag i Söderköping, trots kungens förbud.' }],
+        [1595, 11, 'nykoping', { mer: 'Hertig Karl är hemma på Nyköpings slott.' }],
+        [1597, 3, 'arboga', { mer: 'Hertig Karl håller riksdag i Arboga, mot kungens förbud.' }],
+        [1597, 9, 'abo', { sjo: 'sverige', mer: 'Hertig Karl belägrar Åbo slott. Klas Flemings änka Ebba Stenbock håller det.' }],
+        [1597, 11, 'stockholm', { sjo: 'sverige', mer: 'Det sägs att kungen ska komma med en här. Hertig Karl återvänder till Stockholm.' }],
+        [1598, 2.2, 'uppsala', { mer: 'Hertig Karl håller riksdag i Uppsala.' }],
+        [1598, 6, 'nykoping', { mer: 'Hertig Karl tar emot kungens sändebud Samuel Laski i Nyköping.' }],
+        [1598, 8.7, 'linkoping', { via: ['soderkoping'], mer: 'Hertig Karl och hans här står i Linköping och spärrar vägen för kungens folk.' }],
+        [1598, 9.1, 'stegeborg', { via: ['soderkoping'], mer: 'Hertig Karl ligger i läger vid Mem, nära Stegeborg.' }],
+        [1598, 9.7, 'linkoping', { via: ['soderkoping'], mer: 'Hertig Karl följer efter kungens här mot Linköping.' }],
+        [1598, 11, 'stockholm', { via: ['soderkoping', 'nykoping'], mer: 'Hertig Karl tar Stockholm.' }],
+        [1599, 2.9, 'kalmar', { mer: 'Hertig Karl leder själv anfallet mot Kalmars västra port.' }],
+        [1599, 7.6, 'stockholm', { sjo: 'sverige', mer: 'Riksdagen i Stockholm avsätter kungen.' }],
+        [1599, 8.6, 'abo', { sjo: 'sverige', mer: 'Hertig Karl tar själv befälet i Finland.' }]] },
+      { id: 'fleming', namn: 'Klas Fleming', sort: 'fleming', kalla: 'sv. Wikipedia, Klubbekriget', stopp: [
+        [1592, 11, 'abo', { mer: 'Riksmarsken Klas Fleming styr Finland från Åbo slott. Han är trogen kungen.' }],
+        [1596, 12.8, 'nokia', { mer: 'Klas Fleming slår ner böndernas uppror vid Nokia.' }],
+        [1597, 1.5, 'abo', { mer: 'Klas Fleming är tillbaka på Åbo slott.' }],
+        [1597, 4.3, null, {}]] }
     ],
     3: [
       { id: 'erik', namn: 'Erik', sort: 'erik', kalla: 'sv. Wikipedia, Erik XIV', stopp: [

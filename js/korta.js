@@ -4,6 +4,31 @@
   'use strict';
   const V = window.VASA = window.VASA || {};
   V.KORT = {
+    // ---- Sigismund ----
+    siSejm: 'Sejmen låter kungen resa till Sverige, men bara för en tid.',
+    siUppsala: 'Uppsala möte: Sverige blir lutherskt, och Röda boken avskaffas.',
+    siSegla: 'Sigismund och drottning Anna kommer till Stockholm.',
+    siForsakran: 'Sigismund lovar, och kröns i Uppsala domkyrka.',
+    siAnna: 'Anna får Stegeborg, Söderköping och Linköpings slott.',
+    siFullmakt: 'Karl och rådet ska styra, men får inte kalla till riksdag.',
+    siHem: 'Sigismund och Anna seglar tillbaka till Polen.',
+    siTeusina: 'Fred med Ryssland. Estland blir kvar under Sverige.',
+    siSoderkoping: 'Karl samlar riksdagen i Söderköping, trots kungens förbud.',
+    siFleming: 'Finland håller på kungen.',
+    siBeskickning: 'En stor polsk beskickning talar för kungens rätt.',
+    siKlubbor: 'Klubbekriget: Fleming slår ner böndernas uppror.',
+    siRadet: 'Karl säger upp sig. Kungen ger makten till rådet.',
+    siFlykt: 'Rådsherrarna flyr till kungen.',
+    siLaski: 'Laski talar i Uppsala, men ständerna håller med Karl.',
+    siFlottan: 'Hundra skepp och 5 000 man ligger redo i Danzig.',
+    siKorv: 'Korvtåget: finnarna vänder, och bönderna tar deras korv.',
+    siKalmar: 'Sigismund tågar in i Kalmar.',
+    siStegeborg: 'Seger vid Stegeborg. Kungen låter Karl dra sig undan.',
+    siStangebro: 'Nederlag vid Stångebro. Karl har vunnit.',
+    siLinkoping: 'Kungen och hertigen äter middag på Linköpings slott.',
+    siAvfard: 'Sigismund seglar till Danzig. Kalmar ska hållas tills han kommer.',
+    siKalmarSlott: 'Kalmar slott ger upp.',
+    siSlut: 'Sigismund skickar inte Vladislav. Sverige styrs av hertig Karl.',
     // ---- Johan III ----
     jRiksdag: 'Riksdagen erkänner Johan som kung. Erik är avsatt.',
     jKroning: 'Johan och Katarina kröns i Uppsala domkyrka.',

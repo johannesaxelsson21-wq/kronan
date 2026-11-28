@@ -5,6 +5,7 @@
   const V = window.VASA, D = V.DATA, G = V.Game, tal = V.tal;
   const $ = id => document.getElementById(id), el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
   const IK = {
+    skepp: '<svg viewBox="0 0 24 24"><path d="M3 15h18l-3 5H6z" fill="#8a5a32" stroke="#3a2614" stroke-width="1.2" stroke-linejoin="round"/><path d="M12 3v12" stroke="#3a2614" stroke-width="1.4"/><path d="M12.6 4.5c3.4 1.4 5 4 5 8.3h-5z" fill="#efe3c6" stroke="#5a4634" stroke-width="1"/><path d="M11.4 6c-2.6 1.3-3.8 3.4-3.8 6.8h3.8z" fill="#efe3c6" stroke="#5a4634" stroke-width="1"/></svg>',
     man: '<svg viewBox="0 0 24 24"><path d="M12 2.5c3.3 0 5.6 2.3 5.6 5.4v1.6h1.2v1.8H5.2V9.5h1.2V7.9c0-3.1 2.3-5.4 5.6-5.4z" fill="#b9c0c8"/><path d="M8.2 11.3h7.6v2.2c0 2.2-1.6 3.9-3.8 3.9s-3.8-1.7-3.8-3.9z" fill="#e2b48e"/><path d="M4.5 22c0-3.6 3.2-5.6 7.5-5.6s7.5 2 7.5 5.6z" fill="#7d766a"/><path d="M20.2 3v19" stroke="#8a6a45" stroke-width="1.3"/><path d="M20.2 1.2l1.3 3h-2.6z" fill="#c8ccd0"/></svg>',
     mark: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2" fill="#d9dde2" stroke="#8f979f" stroke-width="1.4"/><circle cx="12" cy="12" r="6.6" fill="none" stroke="#a3abb3" stroke-width="0.9"/><path d="M8 14.6V9.8l2 1.9 2-2.9 2 2.9 2-1.9v4.8z" fill="#8f979f"/></svg>',
     skuld: '<svg viewBox="0 0 24 24"><path d="M6 3h10l3 3v15H6z" fill="#e9dcc0" stroke="#8a6a45" stroke-width="1.2"/><path d="M9 9h7M9 12.5h7M9 16h4" stroke="#8a6a45" stroke-width="1.2"/><circle cx="16" cy="17.5" r="2.6" fill="#b8312a"/></svg>',
@@ -32,7 +33,7 @@
     gruva: '<svg viewBox="0 0 24 24"><path d="M4 7c5-4 11-4 16 0-5-1.6-11-1.6-16 0z" fill="currentColor"/><path d="M12 5.5V21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>',
     slott: '<svg viewBox="0 0 24 24"><path d="M3 20V6h3v2.5h2.5V6h3v2.5H14V6h3v2.5h1V6h3v14z" fill="currentColor"/></svg>'
   };
-  let root, rows = {}, krows = {}, skattRad = null, soldRad = null, byggRader = [], fogdeKnappar = [], kortNu = null, hrows = {}, sistaHandl = '?', flikar = {}, flik = '', pilar = {}, ortEl = {}, rows2 = {}, husRader = [], sistaBaser = '', caption = null, capT = 0, tips = { nu: null }, valdBas = null;
+  let root, rows = {}, krows = {}, skattRad = null, varvRad = null, soldRad = null, byggRader = [], fogdeKnappar = [], kortNu = null, hrows = {}, sistaHandl = '?', flikar = {}, flik = '', pilar = {}, ortEl = {}, rows2 = {}, husRader = [], sistaBaser = '', caption = null, capT = 0, tips = { nu: null }, valdBas = null;
   const sek = n => (Math.round(n * 100) / 100).toString().replace('.', ',');
   V.pek = /[?&]mobil=1/.test(location.search) || !!(window.matchMedia && matchMedia('(hover: none)').matches);          // pekskärm: inget mellanslag, ingen muspekare som svävar
   // Testläge (Johannes 2026-11-27): i Regentlängden (kronan uppe till höger) kan man börja vilken byggd värld som helst direkt.
@@ -47,7 +48,7 @@
     const nf = o.mot === undefined ? -1 : Math.round(o.mot * 100); if (r._nf !== nf) { r._nf = nf; r.l.style.background = nf < 0 ? '' : 'linear-gradient(90deg, rgba(242, 207, 90, 0.5) ' + nf + '%, rgba(0, 0, 0, 0.35) ' + nf + '%)'; }
   }
   // Varje plats arbetar i varv på några sekunder. När varvet är fullt syns klumpen den gav. (Inkomsten rinner in hela tiden, varvet gör den synlig.)
-  const varv = id => 3 + (D.BASER.findIndex(b => b.id === id) % 5) * 0.6;
+  const varv = id => 8 + (D.BASER.findIndex(b => b.id === id) % 5) * 1.0;          // så ofta en plats lämnar en klump (Johannes 2026-11-28: staplarna gick för fort)
   // Vad en förmåga ger nu och på nästa nivå, i klartext.
   function konstInfo(id) {
     const L = G.s.konst[id], N = L + 1, dub = N % 10 === 0;
@@ -68,6 +69,7 @@
       root.innerHTML = `
         <div id="datum"><div id="dat-ar"></div><div id="dat-titel"></div><div id="dat-tron"></div></div>
         <div id="meny"><button id="m-fraga" title="Så fungerar det">${IK.fraga}</button><button id="m-bok" title="Krönikan">${IK.bok}</button><button id="m-krona" title="Regentlängden">${IK.krona}</button><button id="m-ljud" title="Ljud">${IK.ljud}</button><button id="m-kugg" title="Inställningar">${IK.kugg}</button></div>
+        <div id="kassa"></div>
         <div id="konsol">
           <div id="uppdrag"><span id="upp-mer" style="display:none">${IK.bok}Läs mer</span><div id="upp-akt"></div><div id="upp-titel"></div><div id="upp-vag" style="display:none"></div><div id="upp-kost"></div><div id="upp-bar"><div id="upp-fyll"></div></div><button id="upp-knapp"></button></div>
           <div id="akwrap"><i id="ak-order" style="display:none"></i><button id="ak"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" class="spar"/><circle cx="60" cy="60" r="54" id="ak-ring" class="ring"/></svg><span id="ak-txt">Skicka<br>bud</span><span id="fullx"></span></button><div id="ak-hint">${HALL}</div></div>
@@ -83,6 +85,7 @@
       $('ak').addEventListener('pointerdown', e => { e.preventDefault(); UI.onTryck && UI.onTryck(); });
       $('uppdrag').addEventListener('click', e => { if (e.target.closest && e.target.closest('#upp-knapp')) return; const u = G.uppdrag(); if (u && u.mer) UI.merInfo(u); });          // ett tryck på steget: läs mer om varför
       $('upp-knapp').addEventListener('click', () => { const a = G.s.aktivt; if (a && a.val) { G.valj(); V.Ljud && V.Ljud.spela('klocka'); } else UI.onSkicka && UI.onSkicka(); });
+      $('datum').addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); UI.kung(); });
       $('hitta').addEventListener('click', () => { V.Ljud && V.Ljud.vakna(); UI.onHitta && UI.onHitta(); });
       $('m-bok').addEventListener('click', UI.kronika); $('m-krona').addEventListener('click', UI.regenter); $('m-kugg').addEventListener('click', UI.installningar); $('m-fraga').addEventListener('click', () => UI.forklara(G.s.varld, true));
       $('m-ljud').addEventListener('click', () => { G.s.ljud = !G.s.ljud; V.Ljud && V.Ljud.pa(G.s.ljud); V.Musik && V.Musik.satt(G.s.ljud && G.s.musik !== false); UI.tick(true); });
@@ -130,6 +133,21 @@
       { const nu = D.UPPDRAG[S.nasta], km = nu && !S.aktivt ? (G.kostnad(nu).mark || 0) : 0; satt('mark-m', e => { e.style.width = (km > 0 ? Math.min(100, S.res.mark / km * 100) : 0) + '%'; }); }
       satt('mark-v', e => { e.textContent = tal(Math.floor(S.res.mark)); }); satt('mark-t', e => { e.textContent = '+' + tal(G.takt('mark')) + '/s'; });
       satt('res-skuld', e => { e.style.display = S.skuld > 0 ? '' : 'none'; }); satt('skuld-v', e => { e.textContent = tal(S.skuld); });
+      if (varvRad) { const st = S.stapel, mx = G.skeppMax(); uppd(varvRad, { namn: 'Bygg skepp', niva: G.skepp() || undefined, v: st ? 'på stapeln' : mx ? 'armén är för liten än' : '+' + Math.round(G.TULL * 100 * (1 + 0.1 * G.eg('flotta'))) + ' % mark', k: st || mx ? '' : IK.man + tal(G.skeppPris()), ok: G.kanSkepp(), bar: st ? Math.min(100, st.t / G.VARV_TID * 100) : 0 }); varvRad.row.classList.toggle('pagar', !!st); }
+      { const k = $('kassa'); if (k) {          // kassan: byggs en gång, sedan skrivs bara siffrorna (så att den kan lysa till när en leverans kommer)
+        const sk = G.harVarv() || G.skepp() > 0, nyck = sk ? 3 : 2;
+        if (k._n !== nyck) { k._n = nyck; k.innerHTML = '<div class="ks ks-man" title="Män: din armé. Stapeln visar hur full den är.">' + IK.man + '<b></b><span></span><i></i><u><u></u></u></div><div class="ks ks-mark" title="Mark: rikets pengar. Stapeln visar hur långt du har kvar till nästa steg.">' + IK.mark + '<b></b><span>mark</span><i></i><u><u></u></u></div>' + (sk ? '<div class="ks ks-skepp" title="Flottans skepp tar tull av fartygen på Östersjön.">' + IK.skepp + '<b></b><span>skepp</span><i></i></div>' : ''); }
+        const sv = (sel, txt) => { const e = k.querySelector(sel); if (e && e._t !== txt) { e._t = txt; e.textContent = txt; } }, bv = (sel, p) => { const e = k.querySelector(sel); if (e) e.style.width = p.toFixed(1) + '%'; };
+        sv('.ks-man b', tal(Math.floor(S.res.man))); sv('.ks-man span', 'av ' + tal(tak) + ' män'); sv('.ks-man i', '+' + tal(G.takt('man')) + ' i sekunden'); bv('.ks-man u u', Math.min(100, S.res.man / tak * 100)); k.querySelector('.ks-man').classList.toggle('fullt', S.res.man >= tak * 0.999);
+        const nu = D.UPPDRAG[S.nasta], km = nu && !S.aktivt ? (G.kostnad(nu).mark || 0) : 0;
+        sv('.ks-mark b', tal(Math.floor(S.res.mark))); sv('.ks-mark i', '+' + tal(G.takt('mark')) + ' i sekunden'); bv('.ks-mark u u', km > 1 ? Math.min(100, S.res.mark / km * 100) : 0);
+        if (sk) { sv('.ks-skepp b', String(G.skepp())); sv('.ks-skepp i', S.stapel ? 'ett på stapeln' : '+' + Math.round((G.tullX() - 1) * 100) + ' % mark'); }
+      } }
+      if (UI._kungOppen) { if ($('ruta').style.display === 'none') UI._kungOppen = false; else document.querySelectorAll('#ruta .eg').forEach(e => e.classList.toggle('ok', G.kanEg(e.dataset.eg))); }
+      if (S.t > 25 && !S.aktivt && !G.skede() && root.classList.contains('spel')) {          // en ny sak i taget, med en lugn rad
+        if (G.harVarv() && !S.varvSagt) { S.varvSagt = 1; UI.text('På skeppsgården vid Björkenäs kan män bygga skepp. Kortet ligger under Män.', 10); }
+        else if (G.egLista().length && S.varvSagt && !S.kungSagt && S.t > 70) { S.kungSagt = 1; UI.text('Tryck på ' + ((D.KUNGINFO[S.varld] || {}).namn || 'kungen') + ', så ser du vem han är och vad han kan bli bättre på.', 10); }
+      }
       if (skattRad) {            // driv in skatt: män ut, mark hem
         const sk = S.skatt, ute = G.skattUte(), fullt = ute >= G.skattMax();
         uppd(skattRad, { namn: 'Driv in skatt', niva: ute ? ute + ' ute' : undefined, v: fullt ? 'alla lag är ute' : 'ger ' + IK.mark + tal(G.skattGer()), k: fullt ? '' : IK.man + tal(G.skattPris()), ok: G.kanSkatt(), bar: sk ? Math.min(100, sk.t / sk.dur * 100) : 0 });
@@ -137,7 +155,7 @@
       }
       for (const id of ids) for (const r of [rows[id], rows2[id]]) { if (!r) continue;          // staden står både under männen eller marken och i sin egen flik
         const L = S.bas[id], res = G.prisRes(id), pris = G.pris(id), max = G.maxad(id), stopp = G.stoppad(id), dub = G.rad(id), dv = G.dagsverke(id), mk = !!S.marknad && S.marknad.bas === id;
-        uppd(r, { namn: G.BAS[id].kort || G.BAS[id].namn, niva: L, v: mk ? 'Marknad! Tryck här' : stopp ? D.UPPROR[stopp].namn : max ? 'kan inte växa just nu' : dub ? 'dubbelt på nästa nivå' : '+' + tal((G.prod(id, L + 1) - G.prod(id, L)) * fx) + ' ' + ger(id) + '/s',
+        uppd(r, { namn: G.BAS[id].kort || G.BAS[id].namn, niva: L, v: mk ? 'Marknad! Tryck här' : stopp ? D.UPPROR[stopp].namn : '<b class="k-ps">' + tal(G.prod(id) * fx) + ' ' + ger(id) + '/s</b>' + (max ? ' <small class="k-mer">full</small>' : ' <small class="k-mer">' + (dub ? '×2' : '+' + tal((G.prod(id, L + 1) - G.prod(id, L)) * fx)) + '</small>'),
           k: mk || max || stopp ? '' : IK[res] + tal(pris) + (dv ? ' ' + IK.man + tal(dv) : ''), ok: mk || (S.res[res] >= pris && S.res.man >= dv && !max && !stopp), snart: dub && !max && !stopp && !mk, bar: stopp ? 0 : (S.t / varv(id)) % 1 * 100, mot: (L % 10) / 10 });
         const fas = stopp ? 0 : (S.t / varv(id)) % 1; if (r === rows[id] && r._fas !== undefined && fas < r._fas - 0.5 && !stopp) UI._klump(id, r.row, G.prod(id) * fx * varv(id), ger(id) === 'män' ? 'man' : 'mark'); r._fas = fas;
         r.row.classList.toggle('dags', dv > 0 && !mk && !stopp); r.row.classList.toggle('stopp', !!stopp); r.row.classList.toggle('vald', valdBas === id); r.row.classList.toggle('marknad', mk); r.row.classList.toggle('fogde', !!S.fogde[id]); r.row.classList.toggle('last', max && !mk);
@@ -145,7 +163,8 @@
       for (const id in (UI._arows || {})) { const n = G.arb(id), full = G.arbMax(id); uppd(UI._arows[id], { namn: 'Gruvarbetare', niva: n, v: full ? 'armén är för liten än' : '+10 % i ' + (G.BAS[id].kort || G.BAS[id].namn), k: full ? '' : IK.man + tal(G.arbPris(id)), ok: G.kanArb(id), bar: 0 }); }
       byggRader.forEach(r => uppd(r, { namn: 'Bygg: ' + r.b.namn, v: r.b.ger, k: IK.mark + tal(r.b.kostar), ok: G.kanBygga(r.b.id), snart: true }));
       husRader.forEach(r => { const h = r.h, L = G.hus(h.id), res = G.husRes(h); uppd(r, { namn: h.namn, niva: L || undefined, v: '+' + Math.round(h.ger * 100) + ' % ' + (res === 'man' ? 'män' : 'mark'), k: IK[res] + tal(G.husPris(h.id)), ok: G.kanHus(h.id), snart: !L }); });
-      if (soldRad) { const L = S.sold || 0, dub = (L + 1) % 10 === 0; uppd(soldRad, { namn: S.varld === 0 ? 'Knektar i tjänst' : 'Värva soldater', niva: L, v: dub ? 'dubbelt på nästa nivå' : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx) + ' män/s', k: IK.mark + tal(G.soldPris()), ok: G.kanSold(), snart: dub, bar: L ? (S.t / 4) % 1 * 100 : 0, mot: (L % 10) / 10 }); }
+      if (soldRad && S.sold) { const fas = (S.t / 9) % 1; if (soldRad._fas !== undefined && fas < soldRad._fas - 0.5) UI._klump(null, soldRad.row, G.soldProd() * fx * 9, 'man'); soldRad._fas = fas; }
+      if (soldRad) { const L = S.sold || 0, dub = (L + 1) % 10 === 0; uppd(soldRad, { namn: S.varld === 0 ? 'Knektar i tjänst' : 'Värva soldater', niva: L, v: '<b class="k-ps">' + tal(G.soldProd() * fx) + ' män/s</b> <small class="k-mer">' + (dub ? '×2' : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx)) + '</small>', k: IK.mark + tal(G.soldPris()), ok: G.kanSold(), snart: dub, bar: L ? (S.t / 9) % 1 * 100 : 0, mot: (L % 10) / 10 }); }
       for (const id in krows) { const L = S.konst[id], max = L >= G.KONST_MAX, dub = (L + 1) % 10 === 0; uppd(krows[id], { namn: UI.konst(id)[0], niva: L, v: max ? 'kan inte bli bättre' : konstInfo(id).kort, k: max ? '' : IK.mark + tal(G.konstPris(id)), ok: G.kanKonst(id), snart: dub && !max, bar: 0, mot: (L % 10) / 10 }); }
       // en fogde i taget: kortet sätter en fogde på den plats där det är billigast
       for (const f of fogdeKnappar) { const utan = f.ids().filter(id => !S.fogde[id]); let b = null; for (const id of utan) if (!b || G.fogdePris(id) < G.fogdePris(b)) b = id; f.mal = b; f.r.row.style.display = b ? '' : 'none'; if (b) uppd(f.r, { namn: 'Sätt en fogde', v: 'bygger ut ' + G.BAS[b].namn + ' åt dig', k: IK.mark + tal(G.fogdePris(b)), ok: S.res.mark >= G.fogdePris(b) }); }
@@ -180,7 +199,7 @@
     },
     // Tre flikar: män, mark och egna förmågor. Tillgången står i själva fliken. Under dem ligger den valda flikens kort.
     _byggBaser(ids) {
-      const S = G.s, box = $('baser'); box.innerHTML = '<div id="flikar"></div>'; UI._arows = {}; rows = {}; rows2 = {}; husRader = []; krows = {}; skattRad = null; soldRad = null; byggRader = []; fogdeKnappar = []; kortNu = null; flikar = {};
+      const S = G.s, box = $('baser'); box.innerHTML = '<div id="flikar"></div>'; UI._arows = {}; rows = {}; rows2 = {}; husRader = []; krows = {}; skattRad = null; varvRad = null; soldRad = null; byggRader = []; fogdeKnappar = []; kortNu = null; flikar = {};
       const nyFlik = (f, id, huvud, titel) => {
         const knapp = el('button', 'flik', huvud + '<u class="prick"></u>'); if (id) knapp.id = id; knapp.title = titel; box.firstChild.appendChild(knapp);
         const sida = el('div', 'sida'); box.appendChild(sida); knapp.addEventListener('click', () => { if (f === 'stad' && flik === 'stad') { UI.stadMeny(); return; } flik = f; S.flik = f; if (f === 'stad') S.stadSett = 1; UI.stadMeny(false); UI.tick(); });          // stadens flik: ett tryck till visar alla städerna
@@ -215,15 +234,16 @@
       const husKort = (s, h) => { const r = kort(s, 'hus', IK.pil, () => { const L = G.hus(h.id), res = G.husRes(h), enh = res === 'man' ? 'män' : 'mark'; return '<b>' + h.namn + '</b><span class="kort-n">nivå ' + L + '</span><p>' + h.vad + '</p><p class="kort-g">Nu: ' + (L ? G.BAS[h.plats].namn + ' ger ' + Math.round(h.ger * L * 100) + ' % mer ' + enh : 'inte byggt än') + '.</p><p class="kort-x">Nästa nivå: ' + Math.round(h.ger * 100) + ' % mer ' + enh + ' till.</p><p class="kort-p">Kostar ' + IK[res] + tal(G.husPris(h.id)) + ' ' + enh + '</p>'; }, row => { if (G.kopHus(h.id)) V.Ljud && V.Ljud.spela(G.hus(h.id) === 1 ? 'hammare' : 'kop'); else UI._nej(row); }); r.h = h; r.row.id = 'hus-' + h.id; husRader.push(r); };
       const man = () => {
         const m = ids.filter(id => G.BAS[id].ger === 'man'); if (!m.length) return;
-        const s = nyFlik('man', 'res-man', IK.man + '<b id="man-v"></b><span class="fl-s" id="man-tak"></span><i id="man-t"></i><u class="fl-m"><u id="man-m"></u></u>', RES.man.rad + ' Mätaren visar hur full armén är.');
+        const s = nyFlik('man', 'res-man', IK.man + '<b class="fl-n">Män</b>', RES.man.rad + ' Mätaren visar hur full armén är.');
         if (G.harSkatt()) { skattRad = kort(s, 'skatt', IK.mark, () => '<b>Driv in skatt</b><p>Skicka ut män för att samla in skatten. Efter tolv sekunder kommer de hem med mark. Upp till tre lag kan vara ute samtidigt, så en full armé behöver aldrig stå stilla.</p><p class="kort-g">Ger ' + IK.mark + tal(G.skattGer()) + ' mark</p><p class="kort-p">Kostar ' + IK.man + tal(G.skattPris()) + ' män</p>', row => { if (!(UI.onSkatt && UI.onSkatt())) UI._nej(row); }); skattRad.row.id = 'skatt'; }
+        if (G.harVarv()) { varvRad = kort(s, 'varv', IK.skepp, () => { const per = Math.round(G.TULL * 100 * (1 + 0.1 * G.eg('flotta'))); return '<b>Bygg skepp vid Björkenäs</b><span class="kort-n">' + G.skepp() + ' skepp</span><p>Skeppsgården norr om Kalmar, där kungens örlogsskepp byggs. Männen du sätter i arbete lämnar armén och bygger ett skepp på trettio sekunder.</p><p class="kort-g">Flottan tar tull av fartygen på Östersjön. Varje skepp ger ' + per + ' % mer mark. Nu: +' + Math.round((G.tullX() - 1) * 100) + ' %.</p>' + (S.stapel ? '<p class="kort-x">Ett skepp står på stapeln.</p>' : G.skeppMax() ? '<p class="kort-x">Nästa skepp kräver fler män än armén rymmer. Armén växer längre fram i historien.</p>' : '<p class="kort-p">Nästa skepp: ' + IK.man + tal(G.skeppPris()) + ' män</p>'); }, row => { if (G.kopSkepp()) V.Ljud && V.Ljud.spela('hammare'); else UI._nej(row); }); varvRad.row.id = 'varv'; }
         m.forEach(id => bas(s, id));
         if (S.las.sold && S.varld !== 0) soldKort(s);
         konstUnder(s, 'man'); fogde(s, () => m);
       };
       const mark = () => {
         const m = ids.filter(id => G.BAS[id].ger !== 'man'); if (!m.length) return;
-        const s = nyFlik('mark', 'res-mark', IK.mark + '<b id="mark-v"></b><span class="fl-s">mark</span><i id="mark-t"></i><em id="res-skuld" title="Det du är skyldig Lübeck för skeppen och soldaterna.">skuld <b id="skuld-v"></b></em><u class="fl-m"><u id="mark-m"></u></u>', RES.mark.rad + ' Mätaren visar hur långt du har kvar till nästa steg.');
+        const s = nyFlik('mark', 'res-mark', IK.mark + '<b class="fl-n">Mark</b><em id="res-skuld" title="Det du är skyldig Lübeck för skeppen och soldaterna.">skuld <b id="skuld-v"></b></em>', RES.mark.rad + ' Mätaren visar hur långt du har kvar till nästa steg.');
         m.forEach(id => {
           bas(s, id); if (G.BAS[id].slag !== 'gruva') return;          // en gruva har också ett kort för att sätta män i arbete där
           UI._arows[id] = kort(s, 'arb', IK.man, () => '<b>Gruvarbetare i ' + G.BAS[id].namn + '</b><span class="kort-n">' + G.arb(id) + ' lag</span><p>Du sätter män i arbete i gruvan. De lämnar armén och bryter malm i stället.</p><p class="kort-g">Varje lag ger gruvan en tiondel mer. Nu: +' + G.arb(id) * 10 + ' %.</p>' + (G.arbMax(id) ? '<p class="kort-x">Nästa lag är större än armén rymmer. Armén växer längre fram i historien.</p>' : '<p class="kort-p">Nästa lag: ' + IK.man + tal(G.arbPris(id)) + ' män</p>'),
@@ -309,7 +329,7 @@
       if (!u || ['bud', 'flotta', 'tag', 'rid'].indexOf(u.slag) < 0) return ''; if (u.vag) return u.vag;
       const f = G.s.varld !== 0 && !u.fran && !u.med && u.slag !== 'rid' ? null : V.Varld.franId(u); return f && f !== u.plats ? 'Från ' + UI.platsnamn(f) + ' till ' + UI.platsnamn(u.plats) : 'Till ' + UI.platsnamn(u.plats);
     },
-    platsnamn(id) { const b = G.BAS[id]; if (b) return b.namn; return ({ brunnback: 'Brunnbäcks färja', brunkeberg: 'Brunkeberg', stegeborg: 'Stegeborg', orebro: 'Örebro', strangnas: 'Strängnäs', soderkoping: 'Söderköping', malmo: 'Malmö', lubeck: 'Lübeck', storatuna: 'Stora Tuna', skara: 'Västergötland', smaland: 'Småland', kisa: 'Kisa', virserum: 'Virserum', bornholm: 'Bornholm', staket: 'Stäket', vadla: 'Vädla', brannkyrka: 'Brännkyrka', bogesund: 'Åsundens is', alvsborg: 'Älvsborg', wesenberg: 'Wesenberg', wenden: 'Wenden', kexholm: 'Kexholm', orbyhus: 'Örbyhus', borgholm: 'Borgholm', drottningholm: 'Drottningholm', olandsudde: 'Ölands norra udde', getaryggen: 'Getaryggen', arboga: 'Arboga', halmstad: 'Halmstad', varberg: 'Varberg', axtorna: 'Axtorna', mared: 'Mared', visby: 'Visby', kopenhamn: 'Köpenhamn', rafsnas: 'Räfsnäs', nykoping: 'Nyköping' })[id] || id; },
+    platsnamn(id) { const b = G.BAS[id]; if (b) return b.namn; return ({ brunnback: 'Brunnbäcks färja', brunkeberg: 'Brunkeberg', stegeborg: 'Stegeborg', orebro: 'Örebro', strangnas: 'Strängnäs', soderkoping: 'Söderköping', malmo: 'Malmö', lubeck: 'Lübeck', storatuna: 'Stora Tuna', skara: 'Västergötland', smaland: 'Småland', kisa: 'Kisa', virserum: 'Virserum', bornholm: 'Bornholm', staket: 'Stäket', vadla: 'Vädla', brannkyrka: 'Brännkyrka', bogesund: 'Åsundens is', alvsborg: 'Älvsborg', wesenberg: 'Wesenberg', wenden: 'Wenden', kexholm: 'Kexholm', orbyhus: 'Örbyhus', borgholm: 'Borgholm', drottningholm: 'Drottningholm', linkoping: 'Linköping', teusina: 'Teusina', nokia: 'Nokia', olandsudde: 'Ölands norra udde', getaryggen: 'Getaryggen', arboga: 'Arboga', halmstad: 'Halmstad', varberg: 'Varberg', axtorna: 'Axtorna', mared: 'Mared', visby: 'Visby', kopenhamn: 'Köpenhamn', rafsnas: 'Räfsnäs', nykoping: 'Nyköping' })[id] || id; },
 
     // ---- varje bildruta: pilar över baser som går att bygga ut -----------------------------------
     frame() {
@@ -379,8 +399,12 @@
     },
     _klump(id, row, n, res) {
       if (!root.classList.contains('spel') || n < 0.05) return;
-      if (row.offsetParent) { const b = row.getBoundingClientRect(), e = el('div', 'flyt tr liten ' + res, '+' + tal(n)); e.style.left = (b.right - 34) + 'px'; e.style.top = (b.top + 8) + 'px'; $('flyt').appendChild(e); setTimeout(() => e.remove(), 950); }
-      const w = V.Varld.pos(id); if (w && !V.lugn && $('flyt').children.length < 26) UI.flyt(w.x, w.y + 2.6, w.z, '+' + tal(n), res + ' liten');
+      if (row.offsetParent) {          // leveransen flyger från kortet upp till kassan, som lyser till (Johannes 2026-11-28: man ska se vad man får)
+        const b = row.getBoundingClientRect(), mal = document.querySelector('#kassa .ks-' + res), e = el('div', 'flyt tr liten flyg ' + res, IK[res] + '+' + tal(n)); e.style.left = (b.right - 34) + 'px'; e.style.top = (b.top + 8) + 'px'; $('flyt').appendChild(e);
+        if (mal && e.animate) { const m = mal.getBoundingClientRect(), dx = m.left + 40 - (b.right - 34), dy = m.top + m.height / 2 - (b.top + 8); e.animate([{ transform: 'translate(-50%,-50%) scale(1)', opacity: 0 }, { transform: 'translate(-50%,-50%) translateY(-14px) scale(1.15)', opacity: 1, offset: 0.2 }, { transform: 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px)) scale(0.8)', opacity: 0.9 }], { duration: 1100, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' }); setTimeout(() => { e.remove(); mal.classList.remove('puls'); void mal.offsetWidth; mal.classList.add('puls'); }, 1100); }
+        else setTimeout(() => e.remove(), 950);
+      }
+      const w = id && V.Varld.pos(id); if (w && !V.lugn && $('flyt').children.length < 26) UI.flyt(w.x, w.y + 2.6, w.z, '+' + tal(n), res + ' liten');
     },
     // Skatten kom hem: summan stiger upp ur knappen.
     skattKlar(m) {
@@ -424,7 +448,7 @@
     berattarUppe() { return $('berattar').style.display !== 'none' || !!(V.Intro && V.Intro.aktiv); },
     textBort() { if (caption) { caption.remove(); caption = null; } },          // raden mitt på skärmen (valets fråga) ska inte ligga kvar över en scen
     // Tiden står still medan rutan i början läses.
-    pausar() { return !!UI._intro || (!!UI._paus && $('ruta').style.display !== 'none'); },          // och medan introt visar sina bubblor
+    pausar() { return !!UI._paus && $('ruta').style.display !== 'none'; },
     // Vad en handling gör, med några få ord (till pekbubblan när den dyker upp).
     handlKort(h) {
       if (h.direkt) return 'en tredjedel av armén på en gång';
@@ -478,7 +502,6 @@
     },
     // Rutan i början: vem du är, hur läget ser ut och vad du ska göra. Går att ta fram igen med frågetecknet.
     forklara(varld, igen) {
-      if (!igen) return UI._introStart(varld);          // första gången: en sak i taget, med bubblor i världen (Johannes 2026-11-28). Frågetecknet visar hela rutan.
       // Kort: vem du är, målet, och tre bilder för hur man spelar. Resten visar pekbubblorna i spelet (Johannes 2026-11-27).
       const M = V.MED || {}, knapp = varld >= 2 ? 'Rid' : 'Bud';
       const hur = [['<span class="knapp">' + knapp + '</span>', 'Tryck', 'den runda knappen'], [M[varld === 1 ? 'man' : 'mark'], varld === 1 ? 'Män' : 'Mark', varld === 1 ? 'samla folk' : 'rikets pengar'], [M[varld === 1 ? 'bygd' : 'stad'], 'Bygg ut', KLICKA + ' på en ' + (varld === 1 ? 'by' : 'stad')], [M.krona, 'Nästa steg', 'när du har råd']];
@@ -491,47 +514,9 @@
       UI._paus = !igen; if (!igen && V.Musik) V.Musik.spar('titel');
     },
 
-    // Introt steg för steg: först vem hjälten är (en bubbla ovanför honom på kartan), sedan läget, sedan målet (vid nästa steg i historien).
-    // En bubbla i taget, i lugn takt. Spelet står still så länge. Sedan tar pekbubblorna i _tips över: tryck på den runda knappen, och så vidare.
-    _introDelar(varld) {
-      const D0 = D.VARLDAR[varld] || {};
-      if (varld === 0) return [{ ar: 'Sverige 1512', text: 'Det här är <b>Sten Sture</b>, nitton år.' }, { text: 'Hans far styrde riket i kungens ställe, och nu är han död. Rådet vill ge hans plats åt en vän till Danmark.' }, { vid: '#uppdrag', text: 'Bygg upp dina städer, vinn folket och håll riket.' }];
-      if (varld === 1) return [{ ar: 'Dalarna 1521', text: 'Det här är <b>Gustav Eriksson</b>, 24 år.' }, { text: 'Kristian II av Danmark lät halshugga hans far i Stockholm. Nu har dalkarlarna valt honom till ledare.' }, { vid: '#uppdrag', text: 'Samla folk, ta Kopparberget och driv ut danskarna.' }];
-      const t = D0.startText || '', h2 = (t.match(/<h2>(.*?)<\/h2>/) || [])[1] || '', ps = [...t.matchAll(/<p( class="mal")?>(.*?)<\/p>/g)], ut = [];
-      for (const m of ps) {
-        if (m[1]) { ut.push({ vid: '#uppdrag', text: m[2] }); continue; }
-        const txt = m[2].replace(/^Du är /, 'Det här är '), i = txt.indexOf('. ');
-        if (!ut.length && i > 0) { ut.push({ ar: h2, text: txt.slice(0, i + 1) }); ut.push({ text: txt.slice(i + 2) }); } else ut.push({ ar: ut.length ? '' : h2, text: txt });
-      }
-      return ut;
-    },
-    _introStart(varld) {
-      const delar = UI._introDelar(varld); if (!delar.length) return;
-      let e = $('intro'); if (!e) { e = el('div', '', ''); e.id = 'intro'; root.appendChild(e); }
-      UI._intro = { delar, i: 0, t0: performance.now() }; if (V.Musik) V.Musik.spar('titel');
-      const visa = () => {
-        const I = UI._intro, d = I.delar[I.i], prickar = I.delar.map((_, k) => '<i' + (k === I.i ? ' class="nu"' : '') + '></i>').join('');
-        e.innerHTML = '<div class="tip intro">' + (d.ar ? '<div class="intro-ar">' + d.ar + '</div>' : '') + '<p>' + d.text + '</p><div class="intro-fot"><span class="intro-prick">' + prickar + '</span><button>' + (I.i === I.delar.length - 1 ? 'Börja' : 'Nästa') + ' <svg viewBox="0 0 14 14"><path d="M3 2l8 5-8 5z"/></svg></button></div></div>';
-        e.firstChild.addEventListener('click', ev => { ev.stopPropagation(); V.Ljud && V.Ljud.vakna(); if (I.i < I.delar.length - 1) { I.i++; visa(); } else UI._introSlut(); });
-      };
-      visa();
-      const flytta = () => {
-        const I = UI._intro; if (!I) return; const t = e.firstChild; if (t) {
-          const d = I.delar[I.i], w = t.offsetWidth, h = t.offsetHeight; let x = innerWidth / 2, y = innerHeight * 0.42;
-          const m = d.vid && document.querySelector(d.vid);
-          if (m && m.offsetParent) { const r = m.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top - 14; }
-          else { const Hj = V.Gustav; if (Hj && Hj.g && Hj.g.visible) { const sp = V.Scene.screenPoint(Hj.x, V.Geo.groundAt(Hj.x, Hj.z) + 2.45, Hj.z); if (!sp.behind && sp.y > h + 60 && sp.y < innerHeight - 40) { x = sp.x; y = sp.y - 36; } } }
-          const L0 = Math.max(10, Math.min(innerWidth - w - 10, x - w / 2)); t.style.left = L0 + 'px'; t.style.top = Math.max(10, y - h) + 'px'; t.style.setProperty('--pil', Math.max(16, Math.min(w - 16, x - L0)) + 'px');
-        }
-        requestAnimationFrame(flytta);
-      };
-      requestAnimationFrame(flytta);
-    },
-    _introSlut() { const e = $('intro'); if (e) e.innerHTML = ''; UI._intro = null; if (V.Musik) V.Musik.spar(V.Musik.grund()); },
-
     // ---- första stegen: en pekande ruta i taget, som står kvar tills steget är gjort ------------------
     _tips() {
-      const S = G.s, T = S.tips, e = $('tips'), spel = !UI._intro && root.classList.contains('spel') && $('ruta').style.display === 'none' && $('berattar').style.display === 'none' && !root.classList.contains('slag');          // ingen ruta som pekar medan berättelsen står uppe (Johannes 2026-11-26: "Rutan ligger ovanpå här och stör")
+      const S = G.s, T = S.tips, e = $('tips'), spel = root.classList.contains('spel') && $('ruta').style.display === 'none' && $('berattar').style.display === 'none' && !root.classList.contains('slag');          // ingen ruta som pekar medan berättelsen står uppe (Johannes 2026-11-26: "Rutan ligger ovanpå här och stör")
       if (!spel) { e.innerHTML = ''; tips.nu = null; return; }
       const forst = (D.VARLDAR[S.varld] || D.VARLDAR[1]).hem, synlig = sel => { const m = document.querySelector(sel); return !!(m && m.offsetParent); };
       const steg = [
@@ -590,6 +575,15 @@
     },
 
     // ---- rutor --------------------------------------------------------------------------------
+    // Kungens sida (Johannes 2026-11-28): vem han är, och dyra egenskaper som gör en sak mer givande. Öppnas med ett tryck på kungen eller på rutan uppe till vänster.
+    kung() {
+      const S = G.s, ki = D.KUNGINFO && D.KUNGINFO[S.varld], eg = G.egLista(); if (!ki && !eg.length) return false;
+      const ar = G.datum().ar; let h = '<h2>' + $('dat-titel').textContent + '</h2>' + (ki ? '<p class="svag">' + ar + '. ' + ki.namn + ' är ' + (ar - ki.fodd - (ki.sent ? 1 : 0)) + ' år.</p>' + ki.rader.map(r => '<p>' + r + '</p>').join('') : '');
+      if (eg.length) { h += '<h3>Det han kan bli bättre på</h3><div class="eg-lista">'; eg.forEach(e => { const L = G.eg(e.id), max = L >= G.EG_MAX; h += '<div class="eg' + (G.kanEg(e.id) ? ' ok' : '') + '" data-eg="' + e.id + '"><div class="eg-topp">' + (IK[e.ikon] || IK.krona) + '<b>' + e.namn + '</b><span>nivå ' + L + '</span></div><p>' + e.vad + '</p><p class="eg-ger">' + e.nar + (L ? ' Nu: +' + Math.round(e.steg * L * 100) + ' %.' : '') + '</p>' + (max ? '<p class="svag">Kan inte bli bättre.</p>' : '<button class="eg-kop">' + IK.mark + tal(G.egPris(e.id)) + ' mark</button>') + '</div>'; }); h += '</div>'; }
+      h += '<button class="stang">Tillbaka</button>';
+      const r = UI.ruta(h); r.querySelectorAll('.eg-kop').forEach(b => b.addEventListener('click', () => { const id = b.closest('.eg').dataset.eg; if (G.kopEg(id)) { V.Ljud && V.Ljud.spela('dubbel'); UI.kung(); UI.tick(); } else UI._nej(b.closest('.eg')); }));
+      UI._kungOppen = true; return true;
+    },
     ruta(html, last) { const r = $('ruta'); r.innerHTML = '<div class="ruta-in">' + html + '</div>'; r.style.display = ''; UI._last = !!last; const x = r.querySelector('.stang'); if (x) x.addEventListener('click', UI.stang); return r; },
     stang() { if (UI._paus && V.Musik) V.Musik.spar(V.Musik.grund()); $('ruta').style.display = 'none'; UI._last = false; UI._paus = false; },
     kronika() {

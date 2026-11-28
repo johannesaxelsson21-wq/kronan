@@ -137,6 +137,9 @@
   const DRAKT = {
     gustav: [{ rock: '#7b8690', rock2: '#59636d', hatt: '#b0352c', mantel: null }, { rock: '#2f4a7a', rock2: '#22375c', hatt: '#1e1c22', mantel: '#5a4030', kedja: 1, fjader: 1 }, { rock: '#8a1f24', rock2: '#641519', hatt: '#1e1c22', mantel: '#f2eee2', kedja: 1, krona: 1 }],
     bud: [{ rock: '#7a6a52', rock2: '#5c4f3d', hatt: '#8a3a2a', mantel: null }],
+    sigismund: [{ rock: '#1f1d24', rock2: '#141218', hatt: '#18161c', mantel: '#7a1f2a', kedja: 1, fjader: 1 }, { rock: '#1f1d24', rock2: '#141218', hatt: '#18161c', mantel: '#7a1f2a', kedja: 1, fjader: 1 }, { rock: '#1f1d24', rock2: '#141218', hatt: '#18161c', mantel: '#7a1f2a', kedja: 1, krona: 1 }],
+    karl: [{ rock: '#2f3a2a', rock2: '#1f281c', hatt: '#1c2218', mantel: '#2f4f3a', kedja: 1, fjader: 1 }, { rock: '#2f3a2a', rock2: '#1f281c', hatt: '#1c2218', mantel: '#2f4f3a', kedja: 1, fjader: 1 }, { rock: '#2f3a2a', rock2: '#1f281c', hatt: '#1c2218', mantel: '#f2eee2', kedja: 1, krona: 1 }],
+    fleming: [{ rock: '#6a7078', rock2: '#4a5058', hatt: '#3a3f46', mantel: '#2a3550', kedja: 1 }, { rock: '#6a7078', rock2: '#4a5058', hatt: '#3a3f46', mantel: '#2a3550', kedja: 1 }, { rock: '#6a7078', rock2: '#4a5058', hatt: '#3a3f46', mantel: '#2a3550', kedja: 1 }],
     johan: [{ rock: '#2a2630', rock2: '#1c1920', hatt: '#1e1c22', mantel: '#4a3a6a', kedja: 1, fjader: 1 }, { rock: '#2a2630', rock2: '#1c1920', hatt: '#1e1c22', mantel: '#4a3a6a', kedja: 1, fjader: 1 }, { rock: '#2a2630', rock2: '#1c1920', hatt: '#1e1c22', mantel: '#f2eee2', kedja: 1, krona: 1 }],
     erik: [{ rock: '#2a6a5a', rock2: '#1e4d42', hatt: '#1e1c22', mantel: '#8a1f24', kedja: 1, fjader: 1 }, { rock: '#2a6a5a', rock2: '#1e4d42', hatt: '#1e1c22', mantel: '#8a1f24', kedja: 1, fjader: 1 }, { rock: '#8a1f24', rock2: '#641519', hatt: '#1e1c22', mantel: '#f2eee2', kedja: 1, krona: 1 }],
     // de andra personerna på den levande kartan (levande.js)
@@ -194,7 +197,7 @@
     g.userData = { kropp, bal, huvud, armV, armH, stavV, stavH, svH, benV, benH, skV, skH, hast, hb, svans, ring };
     return g;
   }
-  const RANG = { Riddare: 0, 'Hövitsman': 0, 'Riksföreståndare': 1, Hertig: 1, Kung: 2, Kristina: 1 };
+  const RANG = { Riddare: 0, 'Hövitsman': 0, 'Riksföreståndare': 1, Hertig: 1, Kung: 2, Polen: 2, Kristina: 1 };
   V.Gustav = {
     init(scene, sort) { this.scene = scene; this.sort = sort || 'gustav'; this.kanSkida = this.sort === 'gustav'; this.rang = 0; this.g = hjalteModell(this.sort, 0); this.g.scale.setScalar(SKALA * (this.sort === 'bud' ? 1.0 : 1.18)); this.g.visible = false; scene.add(this.g); this.x = 0; this.z = 0; this.ang = 0; this.fart = 0; this.steg = 0; this.spar = []; this.initSpar(scene); },
     // Byt kläder när titeln ändras.
