@@ -26,10 +26,10 @@
   const KALLA = 'sv. Wikipedia';
 
   // Personerna, per värld. stopp: [år, månad, plats, { sjo: flagga på skeppet, via: [platser på vägen], mer: vad personen gör där }].
-  // Plats null = personen lämnar kartan. Datumen följer historien. Namnskyltarna säger bara vem det är, aldrig vad som ska hända.
+  // efter = id på steget som introducerar personen; före det syns han inte. Plats null = personen lämnar kartan. Datumen följer historien. Namnskyltarna säger bara vem det är, aldrig vad som ska hända.
   const FIG = {
     0: [
-      { id: 'gustavE', namn: 'Gustav Eriksson', sort: 'gustav', kalla: 'sv. Wikipedia, Gustav Vasa och Kalø', stopp: [
+      { id: 'gustavE', namn: 'Gustav Eriksson', sort: 'gustav', efter: 'sBrannkyrka', kalla: 'sv. Wikipedia, Gustav Vasa och Kalø', stopp: [
         [1512, 1, 'uppsala', { mer: 'Gustav Eriksson är en ung adelsman, son till riksrådet Erik Johansson. Han har gått i skola i Uppsala.' }],
         [1514, 6, 'stockholm', { mer: 'Gustav Eriksson tjänar vid Sten Stures hov i Stockholm, som många unga adelsmän.' }],
         [1518, 7.4, 'brannkyrka', { via: ['nykoping'], mer: 'Gustav Eriksson rider med Sten Stures här. Vid Brännkyrka bär han rikets fana.' }],
@@ -40,12 +40,12 @@
         [1520, 5.95, 'kalmar', { sjo: 'lubeck', mer: 'Med ett lybskt skepp kommer Gustav Eriksson hem. Den 31 maj går han i land vid Stensö strax söder om Kalmar.' }],
         [1520, 6.8, 'smaland', { mer: 'Kalmar vill inte resa sig. Gustav Eriksson tar sig upp genom Småland och söker stöd hos bönderna, men få lyssnar.' }],
         [1520, 8.4, 'rafsnas', { via: ['soderkoping', 'nykoping'], mer: 'Gustav Eriksson kommer till sin fars gård Räfsnäs i Södermanland, vid Mälaren. Där väntar han på vad som ska hända med Stockholm.' }]] },
-      { id: 'kristian', namn: 'Kristian II', sort: 'kristian', kalla: 'sv. Wikipedia, Kristian II och Slaget vid Brännkyrka', stopp: [
+      { id: 'kristian', namn: 'Kristian II', sort: 'kristian', efter: 'sStaket', kalla: 'sv. Wikipedia, Kristian II och Slaget vid Brännkyrka', stopp: [
         [1512, 1, 'kopenhamn', { mer: 'Kristian är son till kung Hans av Danmark. Från 1513 är han själv kung i Danmark och Norge, och han vill ha Sverige tillbaka i unionen.' }],
         [1518, 5.8, 'stockholm', { sjo: 'danmark', mer: 'Kristian II kommer själv med flotta och här och belägrar Stockholm från midsommar.' }],
         [1518, 9.5, 'kopenhamn', { sjo: 'danmark', mer: 'Belägringen har misslyckats. Kristian seglar hem till Köpenhamn med sex svenska gisslan ombord.' }],
         [1520, 5.5, 'stockholm', { sjo: 'danmark', mer: 'Kristian II kommer med sin flotta i slutet av maj, och Stockholm stängs in till lands och sjöss.' }]] },
-      { id: 'trolle', namn: 'Gustav Trolle', sort: 'trolle', kalla: 'sv. Wikipedia, Gustav Trolle och Almarestäkets borg', stopp: [
+      { id: 'trolle', namn: 'Gustav Trolle', sort: 'trolle', efter: 'sAllmoge', kalla: 'sv. Wikipedia, Gustav Trolle och Almarestäkets borg', stopp: [
         [1515, 6, 'uppsala', { mer: 'Gustav Trolle kommer hem från Rom som ny ärkebiskop i Uppsala, kyrkans högste man i Sverige.' }],
         [1516, 9, 'staket', { mer: 'Ärkebiskopen sitter på sin borg Stäket vid Mälaren. Han håller på unionen och Danmarks kung.' }],
         [1517, 12, 'stockholm', { mer: 'Gustav Trolle är avsatt och hålls fången.' }],
@@ -186,7 +186,7 @@
       if (!scene || !figs.length) return;
       const S = V.Game.s, nu = datumNu(), dold = !!(V.Intro && V.Intro.aktiv) || S.slut || V.Game.skede() === 'strid';
       for (const f of figs) {
-        const st = f.d.stopp, mal = f.d.ej && S.hjalte === f.d.ej ? -1 : L._mal(f, nu);
+        const st = f.d.stopp, intro = f.d.efter && S.nasta <= D.UPPDRAG.findIndex(u => u.id === f.d.efter), mal = (f.d.ej && S.hjalte === f.d.ej) || intro ? -1 : L._mal(f, nu);          // efter: personen syns först när steget med hans egen introduktion är klart (Gustav Eriksson på skeppet med gisslan)
         if (f.k === undefined || mal < f.k) { f.k = mal; f.leg = null; f.vandra = null; f.pos = mal >= 0 && st[mal][2] ? punkt(st[mal][2]) : null; }      // vid start: personen står på sin plats
         else if (!f.leg && mal - f.k > 1) { f.k = mal - 1; f.vandra = null; f.pos = st[f.k][2] ? punkt(st[f.k][2]) : null; }          // tiden har hoppat: bara den sista resan syns
         if (!f.leg && f.k < mal) {          // dags att resa vidare till nästa stopp
