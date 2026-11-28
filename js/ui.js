@@ -38,7 +38,7 @@
   // Testläge (Johannes 2026-11-27): i Regentlängden (kronan uppe till höger) kan man börja vilken byggd värld som helst direkt.
   // Sätt till false inför Steam-släppet, så försvinner knapparna.
   V.TESTLAGE = true;
-  const HALL = V.pek ? 'håll in' : 'håll in mellanslag', KLICKA = V.pek ? 'tryck' : 'klicka';
+  const HALL = V.pek ? '' : 'eller mellanslag', KLICKA = V.pek ? 'tryck' : 'klicka';
   // Skriv bara i sidan när något har ändrats. Ett kort är namn och nivå överst, och under det vad nästa köp ger och vad det kostar.
   function uppd(r, o) {
     if (r._n !== o.namn) { r._n = o.namn; r.n.textContent = o.namn; } const nv = o.niva === undefined ? '' : String(o.niva); if (r._l !== nv) { r._l = nv; r.l.textContent = nv; r.l.style.display = nv === '' ? 'none' : ''; }
@@ -518,8 +518,8 @@
       if (!spel) { e.innerHTML = ''; tips.nu = null; return; }
       const forst = (D.VARLDAR[S.varld] || D.VARLDAR[1]).hem, synlig = sel => { const m = document.querySelector(sel); return !!(m && m.offsetParent); };
       const steg = [
-        ['ak', '#ak', 'Tryck här. Det är det du gör just nu.' + (V.pek ? '' : ' Mellanslag går också.'), S.tryck < 5, S.tryck >= 5],
-        ['full', '#ak', 'Fortsätt trycka, eller håll in. Full mätare ger dubbelt av allt och håller i sig en stund.', S.tryck >= 5 && !S.full && S.nasta < 2, S.full],
+        ['ak', '#ak', 'Tryck här. Det är det du gör just nu.' + (V.pek ? '' : ' Mellanslag går också, ett tryck i taget.'), S.tryck < 5, S.tryck >= 5],
+        ['full', '#ak', 'Fortsätt trycka. Full mätare ger dubbelt av allt och håller i sig en stund.', S.tryck >= 5 && !S.full && S.nasta < 2, S.full],
         ['kop', '#baser .bas:not(.skatt)', 'Bygg ut ' + G.BAS[forst].namn + ' här, eller ' + KLICKA + ' på den på kartan.', G.kanKopa(forst) && S.bas[forst] === 1, S.bas[forst] > 1],
         ['upp', '#uppdrag', 'Nästa steg i historien. Tryck på knappen när du har råd.', S.nasta === 0 && G.kanSkicka(), S.nasta > 0 || !!S.aktivt],
         ['driv', '#ak', 'Striden har börjat. Tryck så anfaller dina män.', !!G.skede(), !!(S.aktivt && S.aktivt.slag >= 3)],

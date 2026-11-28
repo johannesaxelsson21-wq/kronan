@@ -153,7 +153,7 @@
   function frame(now) {
     let dt = Math.min(0.1, (now - (last || now)) / 1000); last = now; const t = (V.U.uTime.value += dt);
     if (spelar && !(V.Intro && V.Intro.aktiv)) {
-      if (haller && !UI.pausar() && !(V.Intro && V.Intro.tar) && (hallT += dt) > 0.2) { hallT = 0; tryck(true); }
+      // att hålla in knappen eller mellanslag trycker inte längre av sig själv: varje tryck räknas en gång (Johannes 2026-11-28: "Man ska inte kunna hålla in, man måste trycka")
       if (!UI.pausar()) {                                 // tiden står still medan rutan i början läses
         for (let k = 0; k < snabb; k++) G.steg(dt);
         // (förspelet startade förr nästa steg av sig själv. Johannes 2026-11-27: "Inget startar förrän man har alla resurser".)
