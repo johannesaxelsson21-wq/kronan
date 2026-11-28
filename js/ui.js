@@ -137,7 +137,7 @@
       UI._kassaPlats();
       { const k = $('kassa'); if (k) {          // kassan: byggs en gång, sedan skrivs bara siffrorna (så att den kan lysa till när en leverans kommer)
         const sk = G.harVarv() || G.skepp() > 0, nyck = sk ? 3 : 2;
-        if (k._n !== nyck) { k._n = nyck; k.innerHTML = '<div class="ks ks-man" title="Män: din armé. Stapeln visar hur full den är.">' + IK.man + '<b></b><span></span><i></i><u><u></u></u></div><div class="ks ks-mark" title="Mark: rikets pengar. Stapeln visar hur långt du har kvar till nästa steg.">' + IK.mark + '<b></b><span>mark</span><i></i><u><u></u></u></div>' + (sk ? '<div class="ks ks-skepp" title="Flottans skepp tar tull av fartygen på Östersjön.">' + IK.skepp + '<b></b><span>skepp</span><i></i></div>' : ''); }
+        if (k._n !== nyck) { k._n = nyck; k.innerHTML = '<div class="ks ks-man" title="Män: din armé. Stapeln visar hur full den är.">' + IK.man + '<b></b><span></span><i></i><u><u></u></u></div><div class="ks ks-mark" title="Mark: rikets pengar. Stapeln visar hur långt du har kvar till nästa steg.">' + IK.mark + '<b></b><span>mark</span><i></i><u><u></u></u></div>' + (sk ? '<div class="ks ks-skepp" title="Skepp byggs bara när du trycker på kortet Bygg skepp under Män, ett i taget vid Björkenäs. Flottan tar tull av fartygen på Östersjön.">' + IK.skepp + '<b></b><span>skepp</span><i></i></div>' : ''); }
         const sv = (sel, txt) => { const e = k.querySelector(sel); if (e && e._t !== txt) { e._t = txt; e.textContent = txt; } }, bv = (sel, p) => { const e = k.querySelector(sel); if (e) e.style.width = p.toFixed(1) + '%'; };
         sv('.ks-man b', tal(Math.floor(S.res.man))); sv('.ks-man span', 'av ' + tal(tak) + ' män'); sv('.ks-man i', '+' + tal(G.takt('man')) + ' i sekunden'); bv('.ks-man u u', Math.min(100, S.res.man / tak * 100)); k.querySelector('.ks-man').classList.toggle('fullt', S.res.man >= tak * 0.999);
         const nu = D.UPPDRAG[S.nasta], km = nu && !S.aktivt ? (G.kostnad(nu).mark || 0) : 0;
@@ -146,7 +146,8 @@
       } }
       if (UI._kungOppen) { if ($('ruta').style.display === 'none') UI._kungOppen = false; else document.querySelectorAll('#ruta .eg').forEach(e => e.classList.toggle('ok', G.kanEg(e.dataset.eg))); }
       if (S.t > 25 && !S.aktivt && !G.skede() && root.classList.contains('spel')) {          // en ny sak i taget, med en lugn rad
-        if (G.harVarv() && !S.varvSagt) { S.varvSagt = 1; UI.text('På skeppsgården vid Björkenäs kan män bygga skepp. Kortet ligger under Män.', 10); }
+        if ((D.VARLDAR[S.varld] || {}).takKung && S.titel === 'Kung' && !S.takSagt) { S.takSagt = 1; UI.text('Som kung har ' + ((D.KUNGINFO[S.varld] || {}).namn || 'kungen') + ' rikets stående armé av svenskt fotfolk. Armén rymmer nu ' + tal(G.tak()) + ' män.', 10); }
+        else if (G.harVarv() && !S.varvSagt) { S.varvSagt = 1; UI.text('På skeppsgården vid Björkenäs kan män bygga skepp. Kortet ligger under Män.', 10); }
         else if (G.egLista().length && S.varvSagt && !S.kungSagt && S.t > 70) { S.kungSagt = 1; UI.text('Tryck på ' + ((D.KUNGINFO[S.varld] || {}).namn || 'kungen') + ', så ser du vem han är och vad han kan bli bättre på.', 10); }
       }
       if (skattRad) {            // driv in skatt: män ut, mark hem

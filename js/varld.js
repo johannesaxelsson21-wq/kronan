@@ -68,7 +68,8 @@
       W._dekor('lybska', S.nasta > idx('lubeck') && S.nasta <= idx('blockad'), () => W._flotta('soderkoping', 4, 'lubeck'));
       W._dekor('salen', S.varld === 1, () => { const p = R.P.salen, mb = new V.MB(); B.stuga(mb, 0.95, 0.62, 0.34, 'torv', { skorsten: 1, ljus: 1 }); mb.push().move(1.4, 0, 0.6).rotY(0.5); B.stuga(mb, 1.1, 0.66, 0.38, 'span', {}); mb.pop(); mb.push().move(-1.3, 0, 0.9).rotY(-0.4); B.stuga(mb, 0.9, 0.6, 0.33, 'torv', { skorsten: 1 }); mb.pop(); const m = B.mesh(mb), x = p.x + 1.2, z = p.z - 1.1; m.position.set(x, Geo.groundAt(x, z), z); m.scale.setScalar(B.K); return m; });          // Sälen, där skidlöparna hann upp Gustav
       if (S.varld >= 2) W._orter();
-      { const n = S.varld === 2 && G.skepp ? Math.min(6, G.skepp()) : 0; if (W._varvN !== n) { W._dekor('varvFlotta', false); W._varvN = n; } if (R.P.kalmar && R.P.kalmar.hav) W._dekor('varvFlotta', n > 0, () => W._flotta('kalmar', n, 'sverige')); }          // Eriks skepp från Björkenäs ligger vid Kalmar
+      { const n = S.varld === 2 && G.skepp ? Math.min(6, G.skepp()) : 0; if (W._varvN !== n) { W._dekor('varvFlotta', false); W._varvN = n; } if (R.P.kalmar && R.P.kalmar.hav) W._dekor('varvFlotta', n > 0, () => W._flotta('kalmar', n, 'sverige')); }
+      W._dekor('stapelSkepp', S.varld === 2 && !!S.stapel, () => { const q = W.varvPlats(), sk = V.skepp('sverige'); sk.scale.setScalar(1.8); sk.position.set(q.x, Geo.groundAt(q.x, q.z) + 0.05, q.z); sk.rotation.y = q.ang; return sk; });          // skeppet på stapeln vid Björkenäs, tills det sjösätts          // Eriks skepp från Björkenäs ligger vid Kalmar
       W._dekor('kravelen', S.nasta > idx('kravelen'), () => W._flotta('stockholm', 1, 'sverige', true));
       for (const b of D.BASER) if (S.bas[b.id] && !dekor['gard' + b.id]) { World.Paint.yard(R.P[b.id].x, R.P[b.id].z, tomt[b.id].R * 0.8); dekor['gard' + b.id] = 1; paintDirty = true; }
       for (const b of D.BASER) if (!S.bas[b.id] && finns(b) && !dekor['gard0' + b.id]) { World.Paint.yard(R.P[b.id].x, R.P[b.id].z, tomt[b.id].R * 0.55); dekor['gard0' + b.id] = 1; paintDirty = true; }
@@ -143,6 +144,10 @@
       }
     },
     _dekor(key, on, make) { if (on && !dekor[key]) { dekor[key] = make(); scene.add(dekor[key]); } else if (!on && dekor[key]) { scene.remove(dekor[key]); dekor[key] = null; } },
+    // Skeppsgården vid Björkenäs norr om Kalmar (där Mars byggdes): på stranden närmast platsen, vänd mot vattnet
+    varvPlats() { if (W._varvP) return W._varvP; const k = R.P.kalmar, h = k.hav || { x: k.x + 4, z: k.z }, ux = (h.x - k.x), uz = (h.z - k.z), L = Math.hypot(ux, uz) || 1;          // stranden norr om staden (Björkenäs), vänd mot vattnet
+      let x = h.x + 3, z = h.z - 6; for (let n = 0; n < 200 && Geo.sdAt(x, z) < -0.2; n++) x -= 0.15;          // ute i vattnet norr om hamnen, sedan västerut till stranden
+      return (W._varvP = { x, z, ang: Math.atan2(ux, uz) + 1.57 }); },
     _flotta(plats, n, sort, stor) {
       const g = new THREE.Group(), p = R.P[plats].hav; g.userData.skepp = [];
       for (let k = 0; k < n; k++) { const s = V.skepp(sort, stor); s.scale.setScalar(2.1); let x = p.x + (k - (n - 1) / 2) * 1.5, z = p.z + (k % 2) * 1.2, t = 0; while (Geo.sdAt(x, z) > -0.9 && t++ < 12) { x += (p.x - R.P[plats].x) * 0.15; z += (p.z - R.P[plats].z) * 0.15; } s.position.set(x, 0.02, z); s.rotation.y = 0.6 + k; g.add(s); g.userData.skepp.push(s); }
@@ -430,8 +435,8 @@
         while (steg[d.bas].length <= s) W.byggSteg(d.bas, false);
       } else if (typ === 'samling') { const p = R.P[d.bas]; if (!d.lopare) Fx.guld(p.x, p.y + 0.2, p.z, 10, 1.0); (vandrare[d.bas] || []).forEach(v => { v.hopp = 0.5; }); }
       else if (typ === 'byggnad') W._byggnad(d.id, false);
-      else if (typ === 'skepp') { W.sync(false); const h = R.P.kalmar && R.P.kalmar.hav; if (h) Fx.guld(h.x, 0.3, h.z, 40, 1.4); }
-      else if (typ === 'stapel') { const p = R.P.kalmar; if (p) Fx.damm(p.x, p.y + 0.1, p.z, 8); }
+      else if (typ === 'skepp') { W.sync(false); const q = W.varvPlats(); Fx.guld(q.x, 0.3, q.z, 40, 1.4); }
+      else if (typ === 'stapel') { W.sync(false); const q = W.varvPlats(); Fx.damm(q.x, Geo.groundAt(q.x, q.z) + 0.1, q.z, 10); }
       else if (typ === 'hus') { if (d.niva === 1) W._byggnad(d.id, false); else { const w = W.byggPlats(d.id); if (w) Fx.guld(w.x, Geo.groundAt(w.x, w.z) + 0.3, w.z, 25, 0.8); } }          // stadens hus: byggs första gången, glimmar sedan
       else if (typ === 'slagTryck' && vis) { const nu = performance.now(); if (nu > (W._slagT || 0)) { W._slagT = nu + 280; W._slagTryck(d.o); } }          // förspelets slag: trycken syns i slaget
       else if (typ === 'hugg' && vis && vis.u.belagring) { if (d.traff) W._belBild(d.o && d.o.bild, true, 'hugg'); }          // belägringen: varje tryck i takt syns på vallen eller i tornen

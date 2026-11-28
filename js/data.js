@@ -450,7 +450,7 @@
   const VARLDAR = [
     { lista: 'STURE', start: { stockholm: 1 }, hem: 'stockholm', hjalte: 'sten', titel: 'Riddare', ar0: 1512, las: { mark: true } },
     { lista: 'VASA', start: { mora: 1 }, hem: 'mora', hjalte: 'gustav', titel: 'Hövitsman', ar0: 1521, las: {} },
-    { lista: 'ERIK', start: { kalmar: 1, kronoberg: 1 }, hem: 'kalmar', hjalte: 'erik', titel: 'Hertig', ar0: 1560, man0: 8, las: { mark: true, sold: true }, basVarden: 'ERIK_BAS', arvTest: 40,
+    { lista: 'ERIK', start: { kalmar: 1, kronoberg: 1 }, hem: 'kalmar', hjalte: 'erik', titel: 'Hertig', ar0: 1560, man0: 8, takKung: 2500, las: { mark: true, sold: true }, basVarden: 'ERIK_BAS', arvTest: 40,
       namn: 'Erik', kung: 'Erik XIV', titlar: { Hertig: 'Erik, hertig av Kalmar', Kung: 'Erik XIV, Sveriges kung' }, tron: 'Kung: Gustav Vasa, hans far', sate: ['kalmar', 'stockholm'], utanFlagga: ['reval'],
       startText: '<h2>Kalmar 1560</h2><p>Du är <b>Erik</b>, 26 år, Gustav Vasas äldste son och hertig i Kalmar. Han ska ärva kronan, men först vill han gifta sig med drottningen av England.</p><p class="mal">Bygg upp ditt län, ta över riket och håll det samman.</p>',
       slutRubrik: 'Kronan går till Johan', slut: 'Den 29 september 1568 öppnades Stockholms portar för hertigarna. Erik togs till fånga, och hans bror Johan blev kung. Erik dog i fångenskap på Örbyhus 1577.' },

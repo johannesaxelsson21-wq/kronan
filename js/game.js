@@ -57,7 +57,7 @@
     // Män är alltså en mätare som fylls på, inte en hög som växer: de används till fälttåg, till att bygga ut bygderna och till att driva in skatt.
     tak() {
       let n = 0; for (let k = S.nasta; k < D.UPPDRAG.length && !n; k++) n = D.UPPDRAG[k].kostar.man || 0;
-      const lg = S.varld === 0 && S.bygg && S.bygg.ladugard ? 1.25 : 1, t = Math.max(30, Math.ceil(n * 1.25 * lg / 10) * 10); if (!(S.tak >= t)) S.tak = t; return S.tak;          // kungsladugården föder fler
+      const lg = S.varld === 0 && S.bygg && S.bygg.ladugard ? 1.25 : 1, tk = S.titel === 'Kung' && (D.VARLDAR[S.varld] || {}).takKung || 0, t = Math.max(30, tk, Math.ceil(n * 1.25 * lg / 10) * 10); if (!(S.tak >= t)) S.tak = t; return S.tak;          // kungsladugården föder fler; takKung: som kung har man rikets stående armé (Eriks värld, Johannes 2026-11-28)
     },
     // En bygd kan inte bli större än hären tillåter: kostar nästa nivå fler män än hären rymmer får den vänta tills hären har vuxit.
     maxad(id) { return G.prisRes(id) === 'man' && !!S.bas[id] && G.pris(id) > G.tak(); },
