@@ -73,7 +73,7 @@
     stoppad(id) { for (const u in S.uppror) if (S.uppror[u] && D.UPPROR[u].baser.indexOf(id) >= 0) return u; return null; },
     // Hur mycket var tionde nivå ger (Johannes 2026-11-28: summorna ska passa verkligheten, samma tempo). 2 = dubbelt, som förut. Världen sätter sin egen i D.VARLDAR (dubbel).
     dub() { return (D.VARLDAR[S.varld] || {}).dubbel || 2; },
-    arvX() { return 1 + S.arv * 0.25; },
+    arvX() { return 1 + S.arv * (S.varld >= 2 ? 0.05 : 0.25); },          // från Eriks värld väger arvet mindre, så att summorna förblir historiska (Johannes 2026-11-28)
     // produktion per sekund för en bas, utan fartbonus
     prod(id, niva) {
       const b = P(id), L = niva === undefined ? (S.bas[id] || 0) : niva; if (!L) return 0;
