@@ -88,12 +88,8 @@
     },
     _slapp() { if (!I._hf) return; Object.assign(UI.film, I._hf); I._hf = null; UI.film.tal && UI.film.tal(null); },
     tar: null, fart: +new URLSearchParams(location.search).get('introfart') || 1,          // ?introfart=4 spolar filmen (för prov)
-    // Titelskärmen för ett helt nytt spel. Sedan börjar förspelet direkt.
-    titel(klar) {
-      UI = V.UI; L = V.Ljud; Scene.cam.locked = true; UI.visa(false); UI.film.svart(1, 0);
-      UI.film.text('<span class="titel">Kronan</span><span class="under">Sveriges regenter, en värld i taget</span>'); document.getElementById('film-text').classList.add('mitt');
-      UI.film.knapp('Börja', () => { UI.film.knapp(null); document.getElementById('film-text').classList.remove('mitt'); text(''); UI.film.svart(0, 2.5); Scene.cam.locked = false; klar(); });
-    },
+    // Ett helt nytt spel börjar med trailern och titelskärmen Kronan (js/titel.js). Sedan börjar förspelet direkt.
+    titel(klar) { UI = V.UI; L = V.Ljud; V.Titel.kor(klar); },
     // Gustavs värld börjar med flykten från Räfsnäs (blodbadet sägs med en rad där).
     kor(klar) {
       UI = V.UI; L = V.Ljud; Scene.cam.locked = true; UI.visa(false); UI.film.svart(1, 0);
