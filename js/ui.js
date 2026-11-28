@@ -622,7 +622,7 @@
       const S = G.s, ki = D.KUNGINFO && D.KUNGINFO[S.varld], eg = G.egLista(); if (!ki && !eg.length) return false;
       const ar = G.datum().ar, alder = ki ? ar - ki.fodd - (ki.sent ? 1 : 0) : 0;
       let h = '<div class="kung-topp"><div class="kung-fig"><canvas width="260" height="330"></canvas><i class="kung-vrid">dra för att vrida</i></div><div class="kung-om"><div class="kung-krona">' + IK.krona + '</div><h2>' + $('dat-titel').textContent + '</h2>' + (ki ? '<p class="kung-ar">' + ar + ' · ' + alder + ' år</p><ul>' + ki.rader.map(r => '<li>' + r + '</li>').join('') + '</ul>' : '') + '</div></div>';
-      if (eg.length) h += '<div class="kung-eg-rubrik">Kungens egenskaper</div><div class="kung-eg">' + eg.map(e => '<div class="bas eg-kort" data-eg="' + e.id + '"><div class="k-topp"><i class="k-ikon">' + (IK[e.ikon] || IK.krona) + '</i><span class="k-namn">' + e.namn + '</span><b class="k-niva"></b></div><p class="eg-vad">' + e.vad + '</p><div class="k-rad"><span class="k-ger"></span><span class="k-pris"></span></div><i class="bas-bar"><i></i></i></div>').join('') + '</div>';
+      if (eg.length) h += '<div class="kung-eg-rubrik">Egenskaper</div><div class="kung-eg">' + eg.map(e => '<div class="bas eg-kort" data-eg="' + e.id + '"><div class="k-topp"><i class="k-ikon">' + (IK[e.ikon] || IK.krona) + '</i><span class="k-namn">' + e.namn + '</span><b class="k-niva"></b></div><p class="eg-vad">' + e.vad + '</p><div class="k-rad"><span class="k-ger"></span><span class="k-pris"></span></div><i class="bas-bar"><i></i></i></div>').join('') + '</div>';
       h += '<button class="stang kung-stang">Tillbaka</button>';
       const r = UI.ruta(h); r.firstChild.classList.add('kung-in');
       r.querySelectorAll('.eg-kort').forEach(k => k.addEventListener('click', () => { if (G.kopEg(k.dataset.eg)) { V.Ljud && V.Ljud.spela('dubbel'); UI._kungKort(); UI.tick(); } else UI._nej(k); }));
@@ -632,7 +632,7 @@
     _kungKort() {
       document.querySelectorAll('#ruta .eg-kort').forEach(k => { const e = G.egLista().find(q => q.id === k.dataset.eg); if (!e) return; const L = G.eg(e.id), max = L >= G.EG_MAX, ok = G.kanEg(e.id);
         k.classList.toggle('ej', !ok); k.querySelector('.k-niva').textContent = L + ' / ' + G.EG_MAX;
-        const vad = { man: 'Män', flotta: 'Tull per skepp', skatt: 'Skatt' }[e.ger] || e.namn, v = max ? 'full' : '<b class="k-ps">' + vad + ' +' + Math.round(e.steg * 100) + ' %</b>' + (L ? ' <small class="k-mer">nu +' + Math.round(e.steg * L * 100) + ' %</small>' : ''); if (k._v !== v) { k._v = v; k.querySelector('.k-ger').innerHTML = v; }
+        const vad = { man: 'Män', flotta: 'Tull per skepp', skatt: 'Skatt', mark: 'Mark', gruva: 'Gruvorna' }[e.ger] || e.namn, v = max ? 'full' : '<b class="k-ps">' + vad + ' +' + Math.round(e.steg * 100) + ' %</b>' + (L ? ' <small class="k-mer">nu +' + Math.round(e.steg * L * 100) + ' %</small>' : ''); if (k._v !== v) { k._v = v; k.querySelector('.k-ger').innerHTML = v; }
         const p = max ? '' : IK.mark + tal(G.egPris(e.id)); if (k._p !== p) { k._p = p; const pe = k.querySelector('.k-pris'); pe.innerHTML = p; pe.style.display = p ? '' : 'none'; }
         k.querySelector('.bas-bar i').style.width = (L / G.EG_MAX * 100) + '%'; });
     },

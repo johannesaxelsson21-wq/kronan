@@ -393,6 +393,8 @@
     },
     // Det man trycker på i världen följer kameran, tills man själv flyttar kartan (Johannes 2026-11-26: "man följer det man klickar på"):
     // hjälten, tåget och fienden, flottan, budet och skattelagen. Städerna är kvar som förut: ett tryck på en stad bygger ut den.
+    // Träffar trycket kungen själv? Då går han före staden han står i (kungens sida, Johannes 2026-11-28: "när jag trycker på gustav så får jag inte upp någon karaktärsskärm")
+    hjalteVid(sx, sy) { const Gu = V.Gustav; if (!Gu.g || !Gu.g.visible || (vis && vis.gustav)) return false; const p = Scene.screenPoint(Gu.x, Geo.groundAt(Gu.x, Gu.z) + 0.7, Gu.z); return !p.behind && Math.hypot(p.x - sx, p.y - sy) < (Scene.mobil ? 40 : 30); },
     valjVid(sx, sy, iStad) {          // iStad: trycket är på en stad, då måste man träffa nästan precis för att följa i stället för att bygga
       const Gu = V.Gustav, Bu = V.Bud; let best = null, bd = iStad ? (Scene.mobil ? 24 : 18) : Scene.mobil ? 46 : 34;
       const prova = (x, z, h, mal) => { const p = Scene.screenPoint(x, Geo.groundAt(x, z) + h, z); if (p.behind) return; const d = Math.hypot(p.x - sx, p.y - sy); if (d < bd) { bd = d; best = mal; } };

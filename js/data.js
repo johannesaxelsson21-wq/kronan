@@ -152,13 +152,40 @@
   // EGENSKAPER: dyra nivåer (c0, r) som gör en sak mer givande, aldrig en resa kortare. ger: 'man' = allt som ger män, 'skatt' = Driv in skatt, 'flotta' = skeppens tull.
   // steg = hur mycket mer per nivå. Grunden står i docs/historia.md (sv. Wikipedia, Erik XIV och Nordiska sjuårskriget).
   const EGENSKAPER = {
+    0: [
+      { id: 'bonder', namn: 'Bönderna', ikon: 'man', ger: 'man', steg: 0.05, c0: 10000, r: 10, vad: 'Sten Sture har bönderna på sin sida när rådet vill ha en annan.', nar: 'Allt som ger män ger 5 % mer.' },
+      { id: 'slotten', namn: 'Slotten', ikon: 'mark', ger: 'mark', steg: 0.05, c0: 10000, r: 10, vad: 'Den som har sin fars slott har makten, och slotten tar in skatt.', nar: 'All mark 5 % mer.' }
+    ],
+    1: [
+      { id: 'krigsfolk', namn: 'Krigsfolket', ikon: 'man', ger: 'man', steg: 0.05, c0: 1000000, r: 10, vad: 'Gustav vill ha ett eget svenskt fotfolk i stället för dyra legoknektar.', nar: 'Allt som ger män ger 5 % mer.' },
+      { id: 'forvaltning', namn: 'Förvaltningen', ikon: 'mark', ger: 'skatt', steg: 0.08, c0: 1000000, r: 10, vad: 'Gustav tar in kunniga tyskar för att ordna rikets förvaltning.', nar: 'Driv in skatt ger 8 % mer.' },
+      { id: 'bergsbruk', namn: 'Bergsbruket', ikon: 'mark', ger: 'gruva', steg: 0.08, c0: 1000000, r: 10, vad: 'Kronan tar över gruvbrytningen, och Sala blir rikets skattkammare.', nar: 'Gruvorna ger 8 % mer.' }
+    ],
     2: [
-      { id: 'krig', namn: 'Krigskonst', ikon: 'man', ger: 'man', steg: 0.1, c0: 5e4, r: 4, vad: 'Erik läser och tänker mycket om krigskonsten och vill ha ett modernare fotfolk.', nar: 'Allt som ger män ger 10 % mer.' },
-      { id: 'flotta', namn: 'Flottan', ikon: 'skepp', ger: 'flotta', steg: 0.1, c0: 8e4, r: 4, vad: 'Erik vill ha större krigsskepp än någon har haft förut.', nar: 'Varje skepp tar en tiondel mer tull.' },
-      { id: 'lardom', namn: 'Lärdom', ikon: 'mark', ger: 'skatt', steg: 0.15, c0: 6e4, r: 4, vad: 'Erik kan främmande språk, matematik och historia, och han vet hur ett rike räknas.', nar: 'Driv in skatt ger 15 % mer.' }
+      { id: 'krig', namn: 'Krigskonst', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Erik läser och tänker mycket om krigskonsten och vill ha ett modernare fotfolk.', nar: 'Allt som ger män ger 5 % mer.' },
+      { id: 'flotta', namn: 'Flottan', ikon: 'skepp', ger: 'flotta', steg: 0.1, c0: 500000, r: 10, vad: 'Erik vill ha större krigsskepp än någon har haft förut.', nar: 'Varje skepp tar en tiondel mer tull.' },
+      { id: 'lardom', namn: 'Lärdom', ikon: 'mark', ger: 'skatt', steg: 0.08, c0: 500000, r: 10, vad: 'Erik kan främmande språk, matematik och historia, och han vet hur ett rike räknas.', nar: 'Driv in skatt ger 8 % mer.' }
+    ],
+    3: [
+      { id: 'krigsfolk', namn: 'Krigsfolket', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Johan sätter Pontus De la Gardie att leda kriget i öster.', nar: 'Allt som ger män ger 5 % mer.' },
+      { id: 'lardom', namn: 'Lärdom', ikon: 'mark', ger: 'skatt', steg: 0.08, c0: 500000, r: 10, vad: 'Johan är bokligt lagd och läser teologi och historia.', nar: 'Driv in skatt ger 8 % mer.' },
+      { id: 'slott', namn: 'Byggnadskonsten', ikon: 'mark', ger: 'mark', steg: 0.05, c0: 500000, r: 10, vad: 'Johan låter bygga slott, som Drottningholm åt drottningen.', nar: 'All mark 5 % mer.' }
+    ],
+    4: [
+      { id: 'polen', namn: 'Polens krigsfolk', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Som kung i Polen har Sigismund ett stort rike och dess krigsfolk bakom sig.', nar: 'Allt som ger män ger 5 % mer.' },
+      { id: 'handel', namn: 'Östersjöhandeln', ikon: 'mark', ger: 'mark', steg: 0.05, c0: 500000, r: 10, vad: 'Danzig är Östersjöns rikaste hamn, och den ligger i hans rike.', nar: 'All mark 5 % mer.' }
+    ],
+    5: [
+      { id: 'bergsfolk', namn: 'Bergsfolket', ikon: 'man', ger: 'man', steg: 0.05, c0: 500000, r: 10, vad: 'Karl besöker bergsfolket, äter av deras mat och talar med dem som deras like.', nar: 'Allt som ger män ger 5 % mer.' },
+      { id: 'stader', namn: 'Städerna', ikon: 'mark', ger: 'mark', steg: 0.05, c0: 500000, r: 10, vad: 'Karl grundar städer: Karlstad, Filipstad och Göteborg på Hisingen.', nar: 'All mark 5 % mer.' }
     ]
   };
   const KUNGINFO = {
+    0: { namn: 'Sten Sture', fodd: 1492, rader: ['Född omkring 1492, son till riksföreståndaren Svante Nilsson.', 'Gift 1511 med Kristina Gyllenstierna.'] },
+    1: { namn: 'Gustav', fodd: 1496, rader: ['Född troligen den 12 maj 1496 på Lindholmen i Uppland, son till Erik Johansson (Vasa) och Cecilia Månsdotter.', 'Togs som gisslan till Kalø 1518 och flydde till Lübeck 1519.'] },
+    3: { namn: 'Johan', fodd: 1537, sent: 1, rader: ['Född den 20 december 1537 på Stegeborg, Gustav Vasas andre son.', 'Bokligt lagd: han läste teologi i fångenskapen på Gripsholm.', 'Valspråk: Deus protector noster, Gud vårt beskydd.'] },
+    4: { namn: 'Sigismund', fodd: 1566, rader: ['Född den 20 juni 1566 på Gripsholm, son till Johan III och Katarina Jagellonica.', 'Uppfostrad katolsk, kung i Polen sedan 1587.'] },
+    5: { namn: 'Karl', fodd: 1550, sent: 1, rader: ['Född den 4 oktober 1550 på slottet i Stockholm, Gustav Vasas yngste son.', 'Hertig över Södermanland, Närke och Värmland från 1560.', 'Gav Karlstad stadsprivilegier 1584.'] },
     2: { namn: 'Erik', fodd: 1533, sent: 1, rader: ['Född den 13 december 1533 på slottet i Stockholm, Gustav Vasas äldste son.', 'Kan främmande språk och matematik, och läser historia och astrologi.', 'Sjunger och spelar luta, tecknar skickligt och är en mästare i ridderliga idrotter.'] }
   };
 

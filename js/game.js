@@ -82,7 +82,7 @@
       p *= G.husX(id);          // stadens hus
       if (b.slag === 'stad' && S.las.privilegier) p *= 0.5;                         // Lübeck tar handeln
       if (b.slag === 'gruva') p *= 1 + 0.1 * G.arb(id);                             // gruvarbetare: en tiondel mer för varje lag
-      p *= b.ger === 'mark' ? G.tullX() : G.egX('man');                              // skeppens tull och kungens krigskonst (Eriks värld)
+      p *= b.ger === 'mark' ? G.tullX() * G.egX('mark') * (b.slag === 'gruva' ? G.egX('gruva') : 1) : G.egX('man');          // kungens egenskaper: män, all mark, gruvorna                              // skeppens tull och kungens krigskonst (Eriks värld)
       return p;
     },
     fullX() { return 2 + Math.floor(S.konst.skidor / 10); },                       // så mycket ger full fart
