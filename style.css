@@ -632,3 +632,39 @@ button { font-family: inherit; cursor: pointer; }
 .flik-res .ks > u > u { position: absolute; left: 0; top: 0; bottom: 0; background: #c9a24a; transition: width 0.6s; }
 .flik-res:not(.vald) .ks > b { color: #d9c48a; }
 @media (max-width: 720px) { .flik.flik-res { min-height: 40px; padding: 0 8px 0 4px; } .flik-res .ks > b { font-size: 16px; } .flik-res .ks > span { font-size: 11px; } .flik-res .ks > i { font-size: 11px; } .flik-res .ks > svg { width: 18px; height: 18px; } }
+
+/* Stadslistan till höger (dator): alla orter, deras nivå och takt, och om de går att bygga ut nu. Johannes 2026-11-28. */
+#stadlista { position: absolute; right: 12px; top: 58px; width: 238px; z-index: 4; display: flex; flex-direction: column; box-sizing: border-box; padding: 0 5px 6px; background: linear-gradient(180deg, rgba(60, 46, 33, 0.96), rgba(43, 32, 23, 0.96)); border: 1px solid #1a130d; box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.55) inset, 0 3px 12px rgba(0, 0, 0, 0.5); border-radius: 8px; opacity: 0; transition: opacity 0.9s; }
+#ui.spel #stadlista { opacity: 1; pointer-events: auto; }
+#ui.slag #stadlista { opacity: 0; pointer-events: none !important; }
+#stadlista::before, #stadlista::after { content: ''; position: absolute; top: -3px; width: 9px; height: 9px; background: radial-gradient(circle at 40% 35%, #fff3b8, #c9a24a 60%, #6b4a12); border-radius: 50%; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
+#stadlista::before { left: -3px; } #stadlista::after { right: -3px; }
+.sl-rubrik { flex: none; display: flex; align-items: baseline; justify-content: space-between; gap: 6px; padding: 6px 4px 5px; margin-bottom: 4px; border-bottom: 1px solid rgba(201, 162, 74, 0.35); }
+.sl-rubrik span { font-size: 10.5px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--svag); }
+.sl-antal { font-size: 11px; font-style: italic; color: var(--guld2); }
+.sl-rader { display: flex; flex-direction: column; gap: 3px; overflow-y: auto; overflow-x: hidden; min-height: 0; scrollbar-width: thin; scrollbar-color: rgba(201, 162, 74, 0.5) transparent; }
+.sl-rad { display: flex; align-items: center; gap: 6px; padding: 4px 5px; border-radius: 6px; border: 1px solid rgba(0, 0, 0, 0.5); background: rgba(0, 0, 0, 0.22); color: #a99b7f; cursor: pointer; transition: background 0.12s; }
+.sl-in { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.sl-r1, .sl-r2 { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.sl-rad:hover { background: rgba(255, 240, 200, 0.07); }
+.sl-rad.vald { border-color: rgba(242, 207, 90, 0.75); background: rgba(242, 207, 90, 0.1); }
+.sl-ikon { flex: none; width: 18px; height: 18px; color: #b3a482; }
+.sl-ikon svg { width: 100%; height: 100%; display: block; }
+.sl-namn { flex: 1; min-width: 0; font-size: 14px; color: #f4e9cd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sl-niva { flex: none; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: rgba(0, 0, 0, 0.4); font-size: 11.5px; font-weight: normal; line-height: 18px; text-align: center; color: #fff7df; }
+.sl-ger { flex: 1; min-width: 0; font-size: 11.5px; color: #b3a482; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sl-kop { flex: none; display: inline-flex; align-items: center; gap: 2px; height: 19px; padding: 0 6px 0 3px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(0, 0, 0, 0.35); color: #9d907a; font-size: 11.5px; white-space: nowrap; touch-action: manipulation; }
+.sl-kop svg { width: 13px; height: 13px; flex: none; }
+.sl-kop svg:first-child { display: none; }
+.sl-rad.kan { background: linear-gradient(180deg, rgba(84, 65, 44, 0.95), rgba(69, 53, 36, 0.95)); color: #f4e9cd; box-shadow: 0 0 0 1px rgba(242, 207, 90, 0.35) inset; }
+.sl-rad.kan .sl-ikon { color: var(--guld2); }
+.sl-rad.kan .sl-ger { color: #b9d58a; }
+.sl-rad.kan .sl-kop { background: linear-gradient(180deg, #f7dc7a, #c9992e); color: #2b1c08; border-color: #5d430f; box-shadow: 0 1px 0 #5d430f; animation: sl-glod 2.2s ease-in-out infinite; }
+.sl-rad.kan .sl-kop svg:first-child { display: block; }
+.sl-rad.kan .sl-kop:hover { filter: brightness(1.1); }
+.sl-rad.kan .sl-kop:active { transform: translateY(1px); box-shadow: none; }
+@keyframes sl-glod { 50% { box-shadow: 0 1px 0 #5d430f, 0 0 9px rgba(242, 207, 90, 0.75); } }
+.sl-rad.dubbel .sl-niva { background: linear-gradient(180deg, #f7dc7a, #c9992e); color: #2b1c08; text-shadow: none; }
+.sl-rad.full .sl-kop { font-style: italic; }
+.sl-rad.stopp .sl-ger { color: #ff9c8c; }
+.sl-kop.skaka { animation: skaka 0.3s; }

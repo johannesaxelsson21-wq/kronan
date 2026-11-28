@@ -81,7 +81,7 @@
         </div>
         <div id="kort" style="display:none"></div>
         <div id="berattar" style="display:none"></div>
-        <div id="ortnamn"></div><div id="pilar"></div><div id="slag-mal" style="display:none"><i></i><b></b></div><div id="stadmeny" style="display:none"></div><div id="slag-bar" style="display:none"><span class="sb-egen"></span><div class="sb-spar"><i class="sb-fyll"></i></div><span class="sb-fiende"></span></div><div id="vem-du" class="vem" style="display:none">Du</div><div id="vem-bud" class="vem" style="display:none">Ditt bud</div><div id="flyt"></div><div id="text"></div><div id="tips"></div>
+        <div id="ortnamn"></div><div id="pilar"></div><div id="slag-mal" style="display:none"><i></i><b></b></div><div id="stadmeny" style="display:none"></div><div id="stadlista" style="display:none"></div><div id="slag-bar" style="display:none"><span class="sb-egen"></span><div class="sb-spar"><i class="sb-fyll"></i></div><span class="sb-fiende"></span></div><div id="vem-du" class="vem" style="display:none">Du</div><div id="vem-bud" class="vem" style="display:none">Ditt bud</div><div id="flyt"></div><div id="text"></div><div id="tips"></div>
         <div id="film"><div class="rand upp"></div><div class="rand ner"></div><div id="film-plats"></div><div id="film-text"></div><div id="film-tal"></div><div id="film-knapp"></div><div id="film-svart"></div></div>
         <div id="ruta" style="display:none"></div>`;
       $('ak').addEventListener('pointerdown', e => { e.preventDefault(); UI.onTryck && UI.onTryck(); });
@@ -162,7 +162,7 @@
       for (const id of ids) for (const r of [rows[id], rows2[id]]) { if (!r) continue;          // staden står både under männen eller marken och i sin egen flik
         const L = S.bas[id], res = G.prisRes(id), pris = G.pris(id), max = G.maxad(id), stopp = G.stoppad(id), dub = G.rad(id), dv = G.dagsverke(id), mk = !!S.marknad && S.marknad.bas === id;
         uppd(r, { namn: G.BAS[id].kort || G.BAS[id].namn, niva: L, v: mk ? 'Marknad! Tryck här' : stopp ? D.UPPROR[stopp].namn : '<b class="k-ps">' + tal(G.prod(id) * fx) + ' ' + ger(id) + '/s</b>' + (max ? ' <small class="k-mer">full</small>' : ' <small class="k-mer">' + (dub ? dubKort() : '+' + tal((G.prod(id, L + 1) - G.prod(id, L)) * fx)) + '</small>'),
-          k: mk || max || stopp ? '' : IK[res] + tal(pris) + (dv ? ' ' + IK.man + tal(dv) : ''), ok: mk || (S.res[res] >= pris && S.res.man >= dv && !max && !stopp), snart: dub && !max && !stopp && !mk, bar: stopp ? 0 : (S.t / varv(id)) % 1 * 100, mot: (L % 10) / 10 });
+          k: mk || max || stopp ? '' : IK[res] + tal(pris) + (dv ? ' ' + IK.man + tal(dv) : ''), ok: mk || (S.res[res] >= pris && S.res.man >= dv && !max && !stopp), snart: dub && !max && !stopp && !mk, bar: 0, mot: (L % 10) / 10 });
         const fas = stopp ? 0 : (S.t / varv(id)) % 1; if (r === rows[id] && r._fas !== undefined && fas < r._fas - 0.5 && !stopp) UI._klump(id, r.row, G.prod(id) * fx * varv(id), ger(id) === 'män' ? 'man' : 'mark'); r._fas = fas;
         r.row.classList.toggle('dags', dv > 0 && !mk && !stopp); r.row.classList.toggle('stopp', !!stopp); r.row.classList.toggle('vald', valdBas === id); r.row.classList.toggle('marknad', mk); r.row.classList.toggle('fogde', !!S.fogde[id]); r.row.classList.toggle('last', max && !mk);
       }
@@ -170,12 +170,13 @@
       byggRader.forEach(r => uppd(r, { namn: 'Bygg: ' + r.b.namn, v: r.b.ger, k: IK.mark + tal(r.b.kostar), ok: G.kanBygga(r.b.id), snart: true }));
       husRader.forEach(r => { const h = r.h, L = G.hus(h.id), res = G.husRes(h); uppd(r, { namn: h.namn, niva: L || undefined, v: '+' + Math.round(h.ger * 100) + ' % ' + (res === 'man' ? 'män' : 'mark'), k: IK[res] + tal(G.husPris(h.id)), ok: G.kanHus(h.id), snart: !L }); });
       if (soldRad && S.sold) { const fas = (S.t / 9) % 1; if (soldRad._fas !== undefined && fas < soldRad._fas - 0.5) UI._klump(null, soldRad.row, G.soldProd() * fx * 9, 'man'); soldRad._fas = fas; }
-      if (soldRad) { const L = S.sold || 0, dub = (L + 1) % 10 === 0; uppd(soldRad, { namn: S.varld === 0 ? 'Knektar i tjänst' : 'Värva soldater', niva: L, v: G.manFull() ? 'armén fylls redan på ' + G.MAN_FYLL + ' s' : '<b class="k-ps">' + tal(G.soldProd() * fx) + ' män/s</b> <small class="k-mer">' + (dub ? dubKort() : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx)) + '</small>', k: IK.mark + tal(G.soldPris()), ok: G.kanSold(), snart: dub, bar: L ? (S.t / 9) % 1 * 100 : 0, mot: (L % 10) / 10 }); }
+      if (soldRad) { const L = S.sold || 0, dub = (L + 1) % 10 === 0; uppd(soldRad, { namn: S.varld === 0 ? 'Knektar i tjänst' : 'Värva soldater', niva: L, v: G.manFull() ? 'armén fylls redan på ' + G.MAN_FYLL + ' s' : '<b class="k-ps">' + tal(G.soldProd() * fx) + ' män/s</b> <small class="k-mer">' + (dub ? dubKort() : '+' + tal((G.soldProd(L + 1) - G.soldProd(L)) * fx)) + '</small>', k: IK.mark + tal(G.soldPris()), ok: G.kanSold(), snart: dub, bar: 0, mot: (L % 10) / 10 }); }
       for (const id in krows) { const L = S.konst[id], max = L >= G.KONST_MAX, dub = (L + 1) % 10 === 0; uppd(krows[id], { namn: UI.konst(id)[0], niva: L, v: max ? 'kan inte bli bättre' : konstInfo(id).kort, k: max ? '' : IK.mark + tal(G.konstPris(id)), ok: G.kanKonst(id), snart: dub && !max, bar: 0, mot: (L % 10) / 10 }); }
       // en fogde i taget: kortet sätter en fogde på den plats där det är billigast
       for (const f of fogdeKnappar) { const utan = f.ids().filter(id => !S.fogde[id]); let b = null; for (const id of utan) if (!b || G.fogdePris(id) < G.fogdePris(b)) b = id; f.mal = b; f.r.row.style.display = b ? '' : 'none'; if (b) uppd(f.r, { namn: 'Sätt en fogde', v: 'bygger ut ' + G.BAS[b].namn + ' åt dig', k: IK.mark + tal(G.fogdePris(b)), ok: S.res.mark >= G.fogdePris(b) }); }
       // en prick på fliken när något där går att köpa
       for (const f in flikar) { const fl = flikar[f]; fl.knapp.classList.toggle('vald', f === flik); fl.sida.classList.toggle('dold', f !== flik); fl.knapp.classList.toggle('kan', f !== flik && !!fl.sida.querySelector('.bas:not(.ej):not(.pagar)')); }
+      UI._stadLista(ids);
       UI._kort();
       // egna handlingar: tre stora knappar bredvid den runda, med vila emellan
       const hl = G.handlingar(), hk = hl.map(h => h.id).join(',') + S.hjalte;
@@ -319,7 +320,7 @@
     djupInfo(u) { UI.ruta('<h2>' + u.titel + '</h2><p class="mal">' + (UI.vagText(u) || UI.platsnamn(u.plats)) + ', ' + u.ar + '</p><p>' + V.DJUP[u.id] + '</p>' + (u.merKalla ? '<p class="svag">Källa: ' + u.merKalla + '.</p>' : '') + '<button class="stang">Stäng</button>', false); UI._paus = true; },
     merInfo(u) { UI.ruta('<h2>' + u.titel + '</h2><p class="mal">' + (UI.vagText(u) || UI.platsnamn(u.plats)) + ', ' + u.ar + '</p><p>' + u.mer + '</p>' + (u.merKalla ? '<p class="svag">Källa: ' + u.merKalla + '.</p>' : '') + '<button class="stang">Stäng</button>', false); UI._paus = true; },
     // Ligger punkten på skärmen under en av knapparna? Då ska ingen skylt stå där.
-    _skymd(sp) { for (const id of ['handl', 'hitta', 'akwrap']) { const e = $(id); if (!e || !e.offsetParent) continue; const r = e.getBoundingClientRect(); if (sp.x > r.left - 12 && sp.x < r.right + 12 && sp.y > r.top - 14 && sp.y < r.bottom + 8) return true; } return false; },
+    _skymd(sp) { for (const id of ['handl', 'hitta', 'akwrap', 'stadlista']) { const e = $(id); if (!e || !e.offsetParent) continue; const r = e.getBoundingClientRect(); if (sp.x > r.left - 12 && sp.x < r.right + 12 && sp.y > r.top - 14 && sp.y < r.bottom + 8) return true; } return false; },
     // Stadens flik (förspelet): vilken stad den visar, och att byta
     stadNu(ids) { const S = G.s; ids = ids || Object.keys(S.bas).filter(id => S.bas[id] && G.BAS[id]); return S.stad && S.bas[S.stad] ? S.stad : ids.indexOf('stockholm') >= 0 ? 'stockholm' : ids[0]; },
     stadVald(id) { return flik === 'stad' && UI.stadNu() === id; },
@@ -332,6 +333,45 @@
       e.querySelectorAll('button').forEach(b => b.addEventListener('click', ev => { ev.stopPropagation(); e.style.display = 'none'; UI.visaStad(b.dataset.id); if (UI.onVisaBas) UI.onVisaBas(b.dataset.id); }));
       e.style.display = ''; const r = $('flik-stad').getBoundingClientRect(); e.style.left = Math.max(8, Math.min(innerWidth - e.offsetWidth - 8, r.left + r.width / 2 - e.offsetWidth / 2)) + 'px'; e.style.bottom = (innerHeight - r.top + 6) + 'px';
       setTimeout(() => document.addEventListener('pointerdown', function st(ev) { if (e.contains(ev.target) || (ev.target.closest && ev.target.closest('#flik-stad'))) return; e.style.display = 'none'; document.removeEventListener('pointerdown', st); }), 0);          // ett tryck någon annanstans stänger den
+    },
+    // Stadslistan till höger (Johannes 2026-11-28: "man ser denna listan hela tiden ... så man lättare ser vilka städer man har och kan uppgradera").
+    // Bara på dator; på telefon finns menyn bakom stadens flik. Ett tryck på raden visar staden, ett tryck på priset bygger ut den.
+    _stadLista(ids) {
+      const e = $('stadlista'), S = G.s; if (!e) return;
+      const syns = !V.pek && innerWidth >= 1200 && innerHeight >= 640 && root.classList.contains('spel') && !S.slut && ids.length > 0;
+      if (!syns) { if (e.style.display !== 'none') e.style.display = 'none'; return; }
+      if (e.style.display === 'none') e.style.display = '';
+      if (e._ids !== ids.join(',')) {
+        e._ids = ids.join(','); e._r = {};
+        e.innerHTML = '<div class="sl-rubrik"><span>Dina orter</span><i class="sl-antal"></i></div><div class="sl-rader"></div>';
+        const box = e.querySelector('.sl-rader');
+        for (const id of ids) {
+          const b = G.BAS[id], r = el('div', 'sl-rad', '<i class="sl-ikon">' + SLAG[b.slag] + '</i><div class="sl-in"><div class="sl-r1"><span class="sl-namn">' + (b.kort || b.namn) + '</span><b class="sl-niva"></b></div><div class="sl-r2"><span class="sl-ger"></span><button class="sl-kop"></button></div></div>');
+          r.dataset.id = id; box.appendChild(r);
+          r.addEventListener('click', ev => { ev.stopPropagation(); V.Ljud && V.Ljud.vakna(); UI.visaStad(id); if (UI.onVisaBas) UI.onVisaBas(id); });
+          const k = r.querySelector('.sl-kop');
+          k.addEventListener('click', ev => { ev.stopPropagation(); V.Ljud && V.Ljud.vakna(); if (G.s.marknad && G.s.marknad.bas === id) { G.marknadTa(); UI.tick(); return; } if (!UI.kop(id)) UI._nej(k); });
+          e._r[id] = { r, niva: r.querySelector('.sl-niva'), ger: r.querySelector('.sl-ger'), kop: k };
+        }
+      }
+      const fx = S.full ? G.fullX() : 1; let kan = 0;
+      for (const id of ids) {
+        const o = e._r[id]; if (!o) continue;
+        const L = S.bas[id], res = G.prisRes(id), max = G.maxad(id), stopp = G.stoppad(id), mk = !!S.marknad && S.marknad.bas === id, dv = G.dagsverke(id), ok = !max && !stopp && !mk && G.kanKopa(id), dub = G.rad(id) && !max && !stopp;
+        if (ok) kan++;
+        const nv = String(L), gv = stopp ? D.UPPROR[stopp].namn : tal(G.prod(id) * fx) + ' ' + (G.BAS[id].ger === 'man' ? 'män' : 'mark') + '/s';
+        const kv = mk ? 'Marknad!' : stopp ? '' : max ? 'full' : IK.pil + IK[res] + tal(G.pris(id)) + (dv ? ' ' + IK.man + tal(dv) : '');
+        if (o._n !== nv) { o._n = nv; o.niva.textContent = nv; }
+        if (o._g !== gv) { o._g = gv; o.ger.textContent = gv; }
+        if (o._k !== kv) { o._k = kv; o.kop.innerHTML = kv; o.kop.style.display = kv ? '' : 'none'; }
+        o.r.classList.toggle('kan', ok || mk); o.r.classList.toggle('dubbel', dub); o.r.classList.toggle('stopp', !!stopp); o.r.classList.toggle('full', !!max && !mk); o.r.classList.toggle('vald', UI.stadVald(id) || (flik !== 'stad' && valdBas === id));
+        o.kop.title = mk ? 'Marknadsdag i ' + G.BAS[id].namn : max ? 'Kan inte bli större förrän armén har vuxit' : dub ? 'Nästa nivå fördubblar vad orten ger' : '';
+      }
+      { const a = e.querySelector('.sl-antal'), t = kan ? kan + ' kan byggas ut' : ''; if (a._t !== t) { a._t = t; a.textContent = t; } }
+      // aldrig över konsolen: listan slutar ovanför det som står nertill på hennes sida av skärmen
+      const top = e.offsetTop, vk = innerWidth - e.offsetWidth - 20; let golv = innerHeight - 10;
+      for (const q of [...($('konsol').children), $('kassa'), $('hitta')]) { if (!q || !q.offsetParent) continue; const rr = q.getBoundingClientRect(); if (rr.width && rr.right > vk && rr.top > top) golv = Math.min(golv, rr.top - 10); }
+      const mh = Math.max(120, Math.round(golv - top)) + 'px'; if (e.style.maxHeight !== mh) e.style.maxHeight = mh;
     },
     nastaStad() { const S = G.s, ids = Object.keys(S.bas).filter(id => S.bas[id] && G.BAS[id]), i = ids.indexOf(UI.stadNu(ids)); S.stad = ids[(i + 1) % ids.length]; sistaBaser = ''; if (UI.onVisaBas) UI.onVisaBas(S.stad); },
     // "Från Stockholm till Vädla" för ett steg där någon ger sig av (Johannes 2026-11-27: tydligt varifrån och vart)
