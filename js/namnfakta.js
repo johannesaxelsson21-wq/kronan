@@ -187,7 +187,10 @@
   };
   N['Brunnbäcks färja'] = N['Brunnbäck']; N['Åsundens is'] = N['Åsunden'];
   // lägg bara till där ortfakta.js inte redan har något
-  for (const k in N) if (!V.OrtFakta.F[k]) V.OrtFakta.F[k] = N[k];
+  // Bara texter som är kontrollerade mot en källa visas (Johannes 2026-11-28: "Du får ALDRIG gissa något i detta spelet"). Listan KOLLAD fylls när varje
+  // text har jämförts med källan (docs/namnfakta.md); de andra står kvar här tills de är kontrollerade, men visas inte.
+  const KOLLAD = {};
+  for (const k in N) if (KOLLAD[k] && !V.OrtFakta.F[k]) V.OrtFakta.F[k] = N[k];
 })();
 
 // ---- läget just nu, efter spelets steg (Johannes 2026-11-28: "är uppsala danskt här? Jag vill att inforutorna ska ändras med vad som händer ...
@@ -277,7 +280,8 @@
   };
   function ar() { try { return V.kalender ? V.kalender().ar : 1520; } catch (e) { return 1520; } }
   function tid() { try { const d = V.Game.datum(); return d.ar + (d.man - 1) / 12; } catch (e) { return ar(); } }
-  function text(id) { const p = P[id]; if (!p) return null; const Y = tid(); let r = p.b.find(q => Y >= q[0] && Y < (q[1] === Math.floor(q[1]) ? q[1] + 1 : q[1] + 0.01)); if (!r) { const f = p.b.filter(q => q[0] <= Y); r = f[f.length - 1]; } return [p.vem, r ? r[2] : '']; }
+  const PKOLLAD = {};          // personer vars text är kontrollerad mot källan; bara de får Läs mer
+  function text(id) { const p = P[id]; if (!p || !PKOLLAD[id]) return null; const Y = tid(); let r = p.b.find(q => Y >= q[0] && Y < (q[1] === Math.floor(q[1]) ? q[1] + 1 : q[1] + 0.01)); if (!r) { const f = p.b.filter(q => q[0] <= Y); r = f[f.length - 1]; } return [p.vem, r ? r[2] : '']; }
   function koppla() {
     const L = V.Levande; if (!L || !L.mer || L._merOm) return; L._merOm = 1;
     const fore = L.mer;
