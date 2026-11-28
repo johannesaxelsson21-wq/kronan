@@ -8,8 +8,8 @@
   const vanta = s => new Promise(r => waits.push({ t: s, r }));
   const text = t => UI.film.text(t), plats = t => UI.film.plats(t);
   function gubbar(n, cx, cz, slag, rad) { const list = []; for (let k = 0; k < n; k++) { const a = Math.random() * 6.283, d = 0.5 + Math.random() * (rad || 2); const u = Folk.add(cx + Math.cos(a) * d, cz + Math.sin(a) * d * 0.8, slag); list.push(u); temp.push(u); } return list; }
-  let skyltar = [];
-  function rensa() { temp.forEach(u => Folk.remove(u)); temp = []; tempM.forEach(m => Scene.scene.remove(m)); tempM = []; skyltar.forEach(s => s.e.remove()); skyltar = []; }
+  let skyltar = [], stader = [];          // stader: städer byggda för en scen (filmstad.js), rivs i rensa()
+  function rensa() { stader.forEach(s => s.bort()); stader = []; temp.forEach(u => Folk.remove(u)); temp = []; tempM.forEach(m => Scene.scene.remove(m)); tempM = []; skyltar.forEach(s => s.e.remove()); skyltar = []; }
   // En namnskylt över någon i en scen, så att man ser vem det är. var_() ger platsen ({ x, z }) varje bildruta, h är höjden över marken.
   function skylt(t, var_, h) {
     const e = document.createElement('div'), film = document.getElementById('film'); e.className = 'filmnamn'; e.textContent = t; e.style.display = 'none'; film.insertBefore(e, document.getElementById('film-svart'));
@@ -195,7 +195,7 @@
         let vag = null, bz = -1e9; for (const l of V.Rike.vagarVid('stockholm')) { const q = l.find(q => Math.hypot(q[0] - p.x, q[1] - p.z) > 9) || l[l.length - 1]; if (q[1] > bz) { bz = q[1]; vag = l; } }
         const ut = (vag || [[p.x, p.z], [p.x, p.z + 10]]).filter(q => Math.hypot(q[0] - p.x, q[1] - p.z) < 11).reverse(), mal = [p.x + T.x * K, p.z + T.z * K], pts = ut.concat([mal]);
         const L0 = V.Rike.length(pts), folk = [];
-        for (let s = L0 * 0.45; s < L0 - 0.8; s += 0.55) { const a = V.Rike.along(pts, s); for (const sd of [-1, 1]) { const x = a.x + Math.cos(a.ang) * 0.75 * sd, z = a.z - Math.sin(a.ang) * 0.75 * sd; if (Geo.sdAt(x, z) > 0.4) { const u = Folk.add(x, z, folk.length % 4 === 3 ? 'kvinna' : 'borgare', { ang: a.ang + sd * 1.571 }); folk.push(u); temp.push(u); } } }
+        for (let s = L0 * 0.45; s < L0 - 0.8; s += 0.55) { const a = V.Rike.along(pts, s); for (const sd of [-1, 1]) { const x = a.x + Math.cos(a.ang) * 0.36 * sd, z = a.z - Math.sin(a.ang) * 0.36 * sd; if (Geo.sdAt(x, z) > 0.4 && !V.Filmstad.iHus(st, x, z)) {          /* längs gatan, framför husen och aldrig inne i ett */ const u = Folk.add(x, z, folk.length % 4 === 3 ? 'kvinna' : 'borgare', { ang: a.ang + sd * 1.571 }); folk.push(u); temp.push(u); } } }
         const ge = gustavE(), g = { x: pts[0][0], z: pts[0][1], ang: 0, v: 0 }; hooks.push(dt => ge.place(g.x, g.z, g.ang, g.v, tid, dt, false, false));          // till häst skylt('Gustav', () => g, 1.8);
         Scene.jump(pts[0][0], pts[0][1] + 2, 24); plats('Stockholm, midsommar 1523');
         await vanta(2); text('Stockholm har gett upp efter två års belägring. Portarna står öppna.'); await vanta(7);
@@ -390,29 +390,52 @@
         text('Det berättas att biskop Brask gömmer en lapp under sitt sigill: "Härtill är jag nödd och tvungen."'); await vanta(8); brask.bort();
         text('Den som har sitt sigill under brevet har varit med om att avsätta en ärkebiskop.'); await vanta(7);
       },
-      // September 1519: flykten från Kalø till Lübeck
+      // September 1519: flykten från Kalø till Lübeck. Båda orterna är byggda som spelets egna städer (filmstad.js): torg, gator, mur och hamn,
+      // och den som går följer gatorna runt husen (Johannes 2026-11-28: han gick genom husen).
       async kalo() {
-        const K = B.K, k = Geo.place(10.48, 56.3), lb = R.P.lubeck; Scene.setSeason(0.71);
+        const K = B.K, Fs = V.Filmstad, k = Geo.place(10.48, 56.3), lb = R.P.lubeck; Scene.setSeason(0.71);
+        // ---- Kalø: slottet vid viken och byn norr om det ----
+        const by = [k.x + 2.4, k.z - 6.0], ut = [k.x - 1.2, k.z - 9.2], port = [k.x, k.z + 1.5];
+        const SK = Fs.bygg({ id: 'kalo', x: by[0], z: by[1], hamn: 1, steg: 3, vagar: [[by, [k.x + 0.4, k.z - 2.0]], [by, ut]], upptaget: [[k.x, k.z, 1.75 * K], [k.x + 2.2, k.z + 0.6, 0.5]], extraHinder: [{ x: k.x, z: k.z, w: 2.3 * K, d: 1.95 * K, a: 0 }, { x: k.x + 2.2, z: k.z + 0.6, r: 0.25 }] }); stader.push(SK);
         const mb = new V.MB(); B.borg(mb, 'liten', 0); const borg = B.mesh(mb); borg.position.set(k.x, Geo.groundAt(k.x, k.z), k.z); borg.scale.setScalar(K); Scene.scene.add(borg); tempM.push(borg);
         const fl = B.flagga('danmark'); fl.position.set(k.x + 2.2, Geo.groundAt(k.x + 2.2, k.z + 0.6), k.z + 0.6); fl.scale.setScalar(1.7); Scene.scene.add(fl); tempM.push(fl);
-        const ge = gustavE(), g = { x: k.x - 1.7, z: k.z + 0.9, ang: -1.4, v: 0 }, visa = dt => ge.place(g.x, g.z, g.ang, g.v, tid, dt, false, true); ge.ang = g.ang; hooks.push(visa); skylt('Gustav Eriksson', () => g, 1.8);
-        [[k.x - 0.45, k.z + 1.3], [k.x + 0.55, k.z + 1.3]].forEach(q => temp.push(Folk.add(q[0], q[1], 'dansk', { pike: true, ang: 0 })));          // vakterna vid porten ser åt andra hållet
-        const pts = [[k.x - 1.7, k.z + 0.9], [k.x - 3.6, k.z + 1.1], [k.x - 6, k.z + 2.2], [k.x - 8.5, k.z + 3.8]];
-        Scene.jump(k.x - 0.8, k.z + 2.4, 21); plats('Kalø slott i Danmark, september 1519');
+        SK.vandrare(7, ['bonde', 'kvinna', 'bonde', 'borgare'], [by[0], by[1], 6]);
+        const ge = gustavE(), g = { x: port[0] - 0.25, z: port[1], ang: Math.PI, v: 0 }, visa = dt => ge.place(g.x, g.z, g.ang, g.v, tid, dt, false, true); ge.ang = g.ang; hooks.push(visa); skylt('Gustav Eriksson', () => g, 1.8);
+        [[k.x + 0.35, k.z + 1.45], [k.x + 0.95, k.z + 1.4]].forEach(q => temp.push(Folk.add(q[0], q[1], 'dansk', { pike: true, ang: 0 })));          // vakterna vid porten ser ut över viken
+        const flykt = SK.vag([g.x, g.z], ut);
+        Scene.jump(k.x + 0.4, k.z + 1.6, 20); plats('Kalø slott i Danmark, september 1519');
         await vanta(2); text('Gustav Eriksson har suttit fången här i ett år.'); await vanta(6);
-        await akFard(pts, 0, R.length(pts) - 0.2, 0.8, 'Rym', 'Tryck för att rymma', { kd: 17, ljud: 'steg', satt: (a, v) => { g.x = a.x; g.z = a.z; g.ang = a.ang; g.v = v; } });
+        await akFard(flykt, 0, R.length(flykt) - 0.2, 0.8, 'Rym', 'Tryck för att rymma', { kd: 17, ljud: 'steg', satt: (a, v) => { g.x = a.x; g.z = a.z; g.ang = a.ang; g.v = v; } });
         UI.film.knapp(null); I.tar = null; g.v = 0; text('Han tar sig till Lübeck, en fri och rik handelsstad i Tyskland.'); await vanta(5.5);
-        UI.film.svart(1, 0.8); text(''); plats(''); await vanta(1.1); hooks = [];
-        // Lübeck: kyrka, köpmanshus och stadens vita och röda flagga
-        const mb2 = new V.MB(); B.kyrka(mb2); for (let i = 0; i < 6; i++) { mb2.push().move(-2.2 + i * 0.95, 0, 1.3 + (i % 2) * 0.9).rotY((i % 3 - 1) * 0.25); B.stuga(mb2, 0.7, 0.6, 0.62, 'tegel', { vagg: '#b85f44', vaggLag: '#8a4533', gavel: '#b85f44', brant: 0.8 }); mb2.pop(); }
-        const stad = B.mesh(mb2); stad.position.set(lb.x, Geo.groundAt(lb.x, lb.z), lb.z); stad.scale.setScalar(K); Scene.scene.add(stad); tempM.push(stad);
-        const fl2 = B.flagga('lubeck'); fl2.position.set(lb.x + 2.6, Geo.groundAt(lb.x + 2.6, lb.z + 0.5), lb.z + 0.5); fl2.scale.setScalar(1.7); Scene.scene.add(fl2); tempM.push(fl2);
-        gubbar(7, lb.x, lb.z + 2.4, 'borgare', 2.2);
-        g.x = lb.x - 3.4; g.z = lb.z + 5.2; g.ang = 2.4; g.v = 0.45; ge.ang = 2.4; hooks.push(dt => { if (g.z > lb.z + 2.6) { g.z -= dt * 0.42; g.x += dt * 0.38; } else g.v = 0; visa(dt); });
-        Scene.jump(lb.x - 0.3, lb.z + 2.2, 22); UI.film.svart(0, 1.2); plats('Lübeck');
-        await vanta(5); text('Slottsherren från Kalø kommer efter och kräver att få honom tillbaka.');
-        const jagare = Folk.add(lb.x - 6, lb.z + 5.8, 'dansk', { pike: true, gar: true, ang: 1.95 }); temp.push(jagare); skylt('Slottsherren', () => jagare, 1.35); hooks.push(dt => { if (jagare.x < lb.x - 3.2) { jagare.x += dt * 0.5; jagare.z -= dt * 0.2; } else jagare.gar = false; });
-        await vanta(7); L.spela('klart'); text('Lübecks råd svarar nej. Gustav får stanna i staden.'); await vanta(7);
+        UI.film.svart(1, 0.8); text(''); plats(''); await vanta(1.1); hooks = []; rensa();
+        // ---- Lübeck: muren, porten i norr, torget med rådhuset och Marienkirche, hamnen ----
+        let radP = null, kyrkP = null;
+        const SL = Fs.bygg({ id: 'lubeck', x: lb.x, z: lb.z, hav: lb.hav, stor: 1, mur: 1, hamn: 1, steg: 9, utanStand: 1, port: -Math.PI / 2, vagar: [[[lb.x, lb.z], [lb.x, lb.z - 15]]],
+          landmarken: (m, st) => {
+            const T = st.T, lagg = (u, v, th, fn, w, d) => { const [x, z] = st.UV(u, v); m.push().move(x, st.t.y(x, z), z).rotY(th); fn(m); m.pop(); const W = st.world(x, z); st.hinder.push({ x: W[0], z: W[1], w: w * K, d: d * K, a: th }); const r = Math.max(w, d) / 2; for (let f = -1; f <= 1; f++) { const ax = Math.cos(th) * f * (w / 2 - Math.min(w, d) / 2), az = -Math.sin(th) * f * (w / 2 - Math.min(w, d) / 2); st.t.take(x + ax, z + az, Math.min(w, d) / 2 + 0.25); } return W; };
+            kyrkP = lagg(-(T.TU + 1.35), 0, Math.atan2(T.vz, -T.vx), Fs.marienkirche, 3.6, 1.8);
+            radP = lagg(0, -(T.TV + 0.8), Math.atan2(T.vx, T.vz), Fs.radhus, 1.75, 0.95);
+          } }); stader.push(SL);
+        const Tg = SL.torg(), vx = Tg.vx, vz = Tg.vz;
+        { const h = lb.hav, dl = Math.hypot(h.x - lb.x, h.z - lb.z) || 1, ux = (h.x - lb.x) / dl, uz = (h.z - lb.z) / dl; for (let i = 0; i < 3; i++) { const s = V.skepp('lubeck'); s.scale.setScalar(2.1); const f = 2.2 + i * 1.6, sd = (i - 1) * 2.2; s.position.set(h.x + ux * f - uz * sd, 0.02, h.z + uz * f + ux * sd); s.rotation.y = Math.atan2(-uz, ux) + i * 0.3; Scene.scene.add(s); tempM.push(s); } }          // skepp på redden utanför hamnen
+        // rådet står framför rådhuset, vänt mot torget
+        const radV = -Tg.TV * 0.35, rad = []; for (let i = 0; i < 5; i++) { const [x, z] = SL.UV((i - 2) * 0.32, radV / K); const u = Folk.add(x, z, 'borgare', { ang: Math.atan2(vx, vz), col: i === 2 ? '#2a2a2a' : undefined }); rad.push(u); temp.push(u); }
+        SL.undvik = [[(rad[2].x + SL.UV(0, radV / K + 1.0)[0]) / 2, (rad[2].z + SL.UV(0, radV / K + 1.0)[1]) / 2, 2.2]];          // folket går runt mötet, inte genom det
+        SL.vandrare(10, ['borgare', 'kvinna', 'borgare', 'bonde'], [Tg.x, Tg.z, 7.5]);
+        const fram = SL.UV(0, radV / K + 1.0), pt = SL.port, inv = SL.vag([pt.ute[0], pt.ute[1]], fram);
+        g.x = pt.ute[0]; g.z = pt.ute[1]; g.ang = Math.PI; g.v = 0; ge.ang = g.ang; hooks.push(visa);
+        Scene.jump(pt.x, pt.z + 1.6, 19); UI.film.svart(0, 1.2); plats('Lübeck, hösten 1519');
+        await vanta(1.5);
+        await akFard(inv, 0, R.length(inv) - 0.1, 0.9, 'Gå', 'Tryck för att gå in i staden', { kd: 17, ljud: 'steg', satt: (a, v) => { g.x = a.x; g.z = a.z; g.ang = a.ang; g.v = v; } });
+        UI.film.knapp(null); I.tar = null; g.v = 0; g.ang = Math.atan2(-vx, -vz); const radSkylt = skylt('Lübecks råd', () => rad[2], 1.35);
+        Scene.cam.lut = 58; Scene.flyTo((g.x + rad[2].x) / 2, (g.z + rad[2].z) / 2 + 0.4, 15, 2.5);          // brantare, så att husen framför torget inte skymmer
+        await vanta(2.5); text('Slottsherren från Kalø kommer efter och kräver att få honom tillbaka.');
+        const jagare = Folk.add(pt.ute[0], pt.ute[1], 'dansk', { pike: true, gar: true }); temp.push(jagare); skylt('Slottsherren', () => jagare, 1.35);
+        const jv = SL.vag(pt.ute, SL.UV(0.75, radV / K + 1.05)), jL = R.length(jv); let jd = 0;
+        hooks.push(dt => { if (jd < jL) { jd = Math.min(jL, jd + dt * 1.1); const a = R.along(jv, jd); jagare.x = a.x; jagare.z = a.z; jagare.ang = a.ang; } else { jagare.gar = false; jagare.ang = Math.atan2(-vx, -vz); } });
+        await new Promise(r => { const h = () => { if (jd >= jL) { hooks = hooks.filter(q => q !== hh); r(); } }, hh = dt => h(); hooks.push(hh); vanta(14).then(() => { jd = jL; r(); }); });
+        await vanta(4.5); L.spela('klart'); rad.forEach((u, i) => setTimeout(() => { u.y = 0.08; setTimeout(() => { u.y = 0; }, 180); }, i * 90)); text('Lübecks råd svarar nej. Gustav får stanna i staden.'); await vanta(7);
+        radSkylt.bort();
       },
       // Februari 1520. Sten Sture körs hem i släde över Mälarens is och dör på vägen.
       async isen() {
@@ -485,7 +508,7 @@
       skyltar.forEach(s => { const p = s.var_(), sp = p ? Scene.screenPoint(p.x, (p.gy !== undefined ? p.gy : Geo.groundAt(p.x, p.z)) + s.h, p.z) : null; if (!sp || sp.behind) { s.e.style.display = 'none'; return; } s.e.style.display = ''; const w = s.e.offsetWidth / 2 + 6, x = Math.max(w, Math.min(innerWidth - w, sp.x)); s.e.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(sp.y) + 'px) translate(-50%, -100%)'; });
       tid = t; const fart = I.aktiv ? (I.scenFart || 1) : (I.fart || 1);
       for (let k = waits.length - 1; k >= 0; k--) { waits[k].t -= dt * fart; if (waits[k].t <= 0) { const w = waits.splice(k, 1)[0]; w.r(); } }
-      hooks.slice().forEach(h => h(I.aktiv ? dt * fart : dt));
+      hooks.slice().forEach(h => h(I.aktiv ? dt * fart : dt)); stader.forEach(s => s.update(I.aktiv ? dt * fart : dt));
       if (regn) { const c = Scene.cam, n = Math.round(dt * 240); for (let k = 0; k < n; k++) Fx.spawn({ x: c.x + (Math.random() - 0.5) * c.d * 1.6, y: c.gy + 3 + Math.random() * 6, z: c.z + (Math.random() - 0.7) * c.d * 1.2, vx: 1.2, vy: -11, vz: 0.4, size: 0.03 + c.d * 0.0012, r: 0.7, gr: 0.76, b: 0.86, a: 0.5, max: 0.9, golv: 1, fade: 0 }); }
       if (I.aktiv && fart > 1 && I.tar) { autoT += dt; if (autoT > 0.08) { autoT = 0; I.tar(); } }          // i snabbspolning (provet) trycker scenen själv
       if (aka) {
