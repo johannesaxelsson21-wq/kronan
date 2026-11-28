@@ -263,6 +263,7 @@
   }
   // Står punkten (världskoordinater) i ett hus i en av spelets egna städer? t = Varld.tomt[id]. För scener i städer som redan finns.
   function iHus(t, x, z, marg) {
+    if (V.Hinder && !V.Hinder.fri(x, z, Math.max(0.1, marg || 0.06))) return true;          // husen som de faktiskt är ritade (js/hinder.js)
     if (!t || !t._plan) return false; const K = B.K, ux = (x - t.p.x) / K, uz = (z - t.p.z) / K, m = (marg || 0.06) / K;
     for (const q of t._plan.hus) { if (!q.tagen) continue; const dx = ux - q.x, dz = uz - q.z; if (Math.abs(dx) > 0.7 || Math.abs(dz) > 0.7) continue; const ca = Math.cos(q.a), sa = Math.sin(q.a), lx = dx * ca - dz * sa, lz = dx * sa + dz * ca; if (Math.abs(lx) < 0.32 + m && Math.abs(lz) < 0.42 + m) return true; }
     for (let i = t.vag.length; i < t.occ.length; i++) { const o = t.occ[i]; if (o[2] >= 0.6 && Math.hypot(ux - o[0], uz - o[1]) < o[2] * 0.9 + m) return true; }

@@ -846,7 +846,7 @@
       const f0 = fil === undefined ? 0.16 : fil; return f0 + (mal - f0) * Math.min(1, dt * 3);
     },
     // Står punkten i ett hus eller i vattnet (i en plats med hus)?
-    _iHus(tm, x, z) { const K = B.K, lx = (x - tm.p.x) / K, lz = (z - tm.p.z) / K; return Geo.sdAt(x, z) <= 0.4 || tm.occ.some(o => Math.hypot(o[0] - lx, o[1] - lz) < o[2] * 0.75); },
+    _iHus(tm, x, z) { const K = B.K, lx = (x - tm.p.x) / K, lz = (z - tm.p.z) / K; return Geo.sdAt(x, z) <= 0.4 || (V.Hinder ? !V.Hinder.fri(x, z, 0.14) : tm.occ.some(o => Math.hypot(o[0] - lx, o[1] - lz) < o[2] * 0.75)); },          // husen som de faktiskt är ritade (js/hinder.js)
     // En ledig fläck att gå till, dit vägen inte går genom något hus
     _ledigVag(tm, x0, z0) {
       const inne = W._iHus(tm, x0, z0);          // står man redan i ett hus (staden har vuxit runt en) får man gå ut åt vilket håll som helst
@@ -880,10 +880,10 @@
     // En plats kring elden där ingen annan redan står (förspelet; i Gustavs värld som förut)
     _hopPlats(cx, cz) {
       let x = cx, z = cz;
-      for (let k = 0; k < 8; k++) { const a = Math.random() * 6.283, d = 0.6 + Math.random() * 1.5; x = cx + Math.cos(a) * d; z = cz + Math.sin(a) * d * 0.8; if (!hop.some(h => Math.hypot(h.x - x, h.z - z) < 0.24)) break; }
+      for (let k = 0; k < 8; k++) { const a = Math.random() * 6.283, d = 0.6 + Math.random() * 1.5; x = cx + Math.cos(a) * d; z = cz + Math.sin(a) * d * 0.8; if (!hop.some(h => Math.hypot(h.x - x, h.z - z) < 0.24) && !(V.Hinder && k < 7 && !V.Hinder.bra(x, z, 0.16))) break; }          // inte i ett hus (js/hinder.js)
       return [x, z];
     },
-    _ledig(tm) { const K = B.K; for (let k = 0; k < 12; k++) { const a = Math.random() * 6.283, d = Math.random() * tm.R / K * 0.75, x = Math.cos(a) * d, z = Math.sin(a) * d * 0.85 + 0.3; if (Geo.sdAt(tm.p.x + x * K, tm.p.z + z * K) > 0.4) { let ok = true; for (const o of tm.occ) if (Math.hypot(o[0] - x, o[1] - z) < o[2] * 0.75) { ok = false; break; } if (ok) return [x * K, z * K]; } } return [0, 0.6 * K]; },
+    _ledig(tm) { const K = B.K, Hi = V.Hinder; for (let k = 0; k < 12; k++) { const a = Math.random() * 6.283, d = Math.random() * tm.R / K * 0.75, x = Math.cos(a) * d, z = Math.sin(a) * d * 0.85 + 0.3; if (Geo.sdAt(tm.p.x + x * K, tm.p.z + z * K) > 0.4) { let ok = true; if (Hi) ok = k < 9 ? Hi.bra(tm.p.x + x * K, tm.p.z + z * K, 0.16) : Hi.fri(tm.p.x + x * K, tm.p.z + z * K, 0.16); else for (const o of tm.occ) if (Math.hypot(o[0] - x, o[1] - z) < o[2] * 0.75) { ok = false; break; } if (ok) return [x * K, z * K]; } } if (Hi) { const q = Hi.plats(tm.p.x, tm.p.z + 0.6 * K, 0.16); return [q[0] - tm.p.x, q[1] - tm.p.z]; } return [0, 0.6 * K]; },          // på gatan där man syns, aldrig i ett hus (js/hinder.js)
     // ---- förspelets fälttåg och slag (Johannes 2026-11-26) ----
     // Så många som de var (D.STURE folk: en figur för ungefär fyrtio man där antalet är känt). På vägen går de i kolonn, led för led.
     // I slaget ställer de upp i bredd mot fienden, och leden möts utan att gå in i varandra. Du rider mitt i främsta leden och hugger själv.

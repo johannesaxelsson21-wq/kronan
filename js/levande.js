@@ -382,9 +382,10 @@
           if (lg.d >= lg.len) { f.leg = null; f.k++; f.pos = punkt(st[f.k][2]); f.vandra = null; }
         } else if (f.pos && (f.d.har || f.d.flotta)) { x = f.pos.x; z = f.pos.z; ang = f.vila === undefined ? 0 : f.vila; }          // en här ligger i läger, en flotta för ankar
         else if (f.pos) {          // går runt i staden, stannar en stund, går vidare
-          const c = punkt(st[f.k][2]), v = f.vandra || (f.vandra = { x: f.pos.x, z: f.pos.z, tx: f.pos.x, tz: f.pos.z, vila: 1 + Math.random() * 2, ang: Math.random() * 6 });
-          if (v.vila > 0) { v.vila -= dt; if (v.vila <= 0) { for (let k = 0; k < 12; k++) { const a = Math.random() * 6.283, r = 0.5 + Math.random() * 1.6, px = c.x + Math.cos(a) * r, pz = c.z + Math.sin(a) * r; if (V.Geo.sdAt(px, pz) > 0.6) { v.tx = px; v.tz = pz; break; } } } }
-          else { const dx = v.tx - v.x, dz = v.tz - v.z, l = Math.hypot(dx, dz); if (l < 0.05) v.vila = 2 + Math.random() * 5; else { const s = Math.min(l, dt * 0.45); v.x += dx / l * s; v.z += dz / l * s; v.ang = Math.atan2(dx, dz); fart = 0.3; } }
+          const Hi = V.Hinder, q0 = !f.vandra && Hi ? Hi.plats(f.pos.x, f.pos.z, 0.25) : [f.pos.x, f.pos.z];          // inte i ett hus (js/hinder.js)
+          const c = punkt(st[f.k][2]), v = f.vandra || (f.vandra = { x: q0[0], z: q0[1], tx: q0[0], tz: q0[1], vila: 1 + Math.random() * 2, ang: Math.random() * 6 });
+          if (v.vila > 0) { v.vila -= dt; if (v.vila <= 0) { for (let k = 0; k < 12; k++) { const a = Math.random() * 6.283, r = 0.5 + Math.random() * 1.6, px = c.x + Math.cos(a) * r, pz = c.z + Math.sin(a) * r; if (V.Geo.sdAt(px, pz) > 0.6) { const vg = !Hi ? [[v.x, v.z], [px, pz]] : Hi.bra(px, pz, 0.25) ? Hi.vag([v.x, v.z], [px, pz], 0.22, true) : null; if (!vg) continue; v.vag = vg; v.vi = 1; v.tx = px; v.tz = pz; break; } } if (v.vila <= 0 && !v.vag) v.vila = 1; } }          // bara dit man kan gå runt husen och där man syns
+          else { const m = (v.vag && v.vag[v.vi]) || [v.tx, v.tz], dx = m[0] - v.x, dz = m[1] - v.z, l = Math.hypot(dx, dz); if (l < 0.05) { if (v.vag && v.vi < v.vag.length - 1) v.vi++; else { v.vag = null; v.vila = 2 + Math.random() * 5; } } else { const s = Math.min(l, dt * 0.45); v.x += dx / l * s; v.z += dz / l * s; v.ang = Math.atan2(dx, dz); fart = 0.3; } }
           x = v.x; z = v.z; ang = v.ang; f.pos = { x, z };
         }
         if (f.us) { if (!L._har(f, x, z, ang, syns, sjo, t)) syns = false; const ak = f.d.flotta && !f.leg && f.ankar && f.ankar[0]; f.syns = syns; f.sx = ak ? ak.x : x; f.sz = ak ? ak.z : z; f.till = ak ? 2.6 : 2.4; if (f.leg) f.vila = ang; continue; }

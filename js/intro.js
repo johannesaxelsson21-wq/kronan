@@ -214,7 +214,7 @@
         const p = R.P.vasteras, K = B.K, st = V.Varld.tomt.vasteras, T = st && st.plan ? st.plan().torg : { x: 0, z: 0.2 }, cx = p.x + T.x * K, cz = p.z + T.z * K; Scene.setSeason(0.45);
         const ge = gustavE(), g = { x: cx, z: cz - 0.9 }; hooks.push(dt => ge.place(g.x, g.z, 0, 0, tid, dt, false, true)); skylt('Kungen', () => g, 1.8);
         const stand = [['Rådet', 'borgare', '#5a2f2f'], ['Adeln', 'borgare', '#2f4f8a'], ['Borgarna', 'borgare', null], ['Bergsmännen', 'bergsman', null], ['Bönderna', 'bonde', null]], skyltar0 = [];
-        const kallaIn = k => { const s = stand[k]; if (!s) return; const rz = cz + 0.1 + k * 0.42; for (let i = 0; i < 5; i++) { const x = cx + (i - 2) * 0.38, u = Folk.add(x, rz, s[1], s[2] ? { col: s[2], ang: Math.PI } : { ang: Math.PI }); temp.push(u); u.y = 0.1; setTimeout(() => { u.y = 0; }, 160); } skyltar0.push(skylt(s[0], () => ({ x: cx + 1.25, z: rz }), 0.9)); Fx.damm(cx, Geo.groundAt(cx, rz), rz, 4); };
+        const kallaIn = k => { const s = stand[k]; if (!s) return; const rz = cz + 0.1 + k * 0.42; for (let i = 0; i < 5; i++) { const x = cx + (i - 2) * 0.38; if (V.Hinder && !V.Hinder.bra(x, rz, 0.15)) continue;          /* inte i eller bakom torgets hus (js/hinder.js) */ const u = Folk.add(x, rz, s[1], s[2] ? { col: s[2], ang: Math.PI } : { ang: Math.PI }); temp.push(u); u.y = 0.1; setTimeout(() => { u.y = 0; }, 160); } skyltar0.push(skylt(s[0], () => ({ x: cx + 1.25, z: rz }), 0.9)); Fx.damm(cx, Geo.groundAt(cx, rz), rz, 4); };
         Scene.cam.lut = 60; Scene.jump(cx, cz + 1.4, 15); plats('Västerås, juni 1527');
         await vanta(2); text('Kungen har kallat riksdagen till Västerås. Den samlas i dominikanklostrets sal.'); await vanta(7);
         text('Tryck för att kalla in stånden');
@@ -545,7 +545,7 @@
         // den röda mattan längs vägen, bit för bit
         { const mb = new V.MB(); mb.snow = 0; for (let i = 1; i < vag.length; i++) { const q = vag[i - 1], r = vag[i], l = Math.hypot(r[0] - q[0], r[1] - q[1]); if (l < 1e-3) continue; mb.push().move((q[0] + r[0]) / 2, Geo.groundAt((q[0] + r[0]) / 2, (q[1] + r[1]) / 2) + 0.015, (q[1] + r[1]) / 2).rotY(Math.atan2(r[0] - q[0], r[1] - q[1])); mb.box(0, 0, 0, 0.34, 0.02, l + 0.06, '#b3262a', { low: '#8a1f24' }); mb.pop(); } const m = B.mesh(mb); Scene.scene.add(m); tempM.push(m); }
         // vakterna med sköldarna på båda sidor om mattan, bara där det är fri gata
-        for (let d = 0.9; d < L0 - 1.6; d += 1.05) { const q = R.along(vag, d); for (const s of [-1, 1]) { const x = q.x + Math.cos(q.ang) * 0.42 * s, z = q.z - Math.sin(q.ang) * 0.42 * s; if (!S || S.ledig(x, z)) temp.push(Folk.add(x, z, 'knekt', { pike: true, ang: q.ang - s * 1.571 })); } }
+        for (let d = 0.9; d < L0 - 1.6; d += 1.05) { const q = R.along(vag, d); for (const s of [-1, 1]) { const x = q.x + Math.cos(q.ang) * 0.42 * s, z = q.z - Math.sin(q.ang) * 0.42 * s; if ((!S || S.ledig(x, z)) && (!V.Hinder || V.Hinder.syns(x, z, 42))) temp.push(Folk.add(x, z, 'knekt', { pike: true, ang: q.ang - s * 1.571 })); } }          // bara där de syns, inte bakom husen (js/hinder.js)
         const ek = erikE(false), g = { x: a[0], z: a[1], ang: R.along(vag, 0).ang, v: 0 }; hooks.push(dt => ek.place(g.x, g.z, g.ang, g.v, tid, dt, false, true)); skylt('Erik', () => g, 1.8);
         Scene.jump(a[0], a[1] + 1.5, 17); plats('Uppsala, 29 juni 1561');
         await vanta(2); text('Erik går från slottet till domkyrkan på en röd matta, under en himmel av röd sammet.'); await vanta(6);
@@ -602,7 +602,8 @@
         for (let i = 0; i < 16; i++) { const a = 1.2 + i * 0.3927, x = p.x + Math.cos(a) * 3.3, z = p.z + Math.sin(a) * 2.7; if (Geo.sdAt(x, z) > 0.45) ring.push([x, z]); }          // bara på land: mot vattnet stänger sjön
         const per = Math.max(1, Math.ceil(ring.length / 6)); let satta = 0;
         const talt = () => { const q = ring[satta++]; if (!q) return; const mb = new V.MB(); B.talt(mb); const m = B.mesh(mb); m.position.set(q[0], Geo.groundAt(q[0], q[1]), q[1]); m.rotation.y = satta * 1.7; m.scale.setScalar(K); Scene.scene.add(m); tempM.push(m);
-          const u = Folk.add(q[0] + (p.x - q[0]) * 0.16, q[1] + (p.z - q[1]) * 0.16, satta % 2 ? 'knekt' : 'bonde', { pike: true, ang: Math.atan2(p.x - q[0], p.z - q[1]) }); temp.push(u); Fx.damm(q[0], Geo.groundAt(q[0], q[1]), q[1], 5); };
+          let fx = q[0] + (p.x - q[0]) * 0.16, fz = q[1] + (p.z - q[1]) * 0.16; if (V.Hinder && !V.Hinder.bra(fx, fz, 0.15)) { const l = Math.hypot(q[0] - p.x, q[1] - p.z) || 1; fx = q[0] + (q[0] - p.x) / l * 0.55; fz = q[1] + (q[1] - p.z) / l * 0.55; }          // bakom borgen syns han inte: då står han utanför sitt tält (js/hinder.js)
+          const u = Folk.add(fx, fz, satta % 2 ? 'knekt' : 'bonde', { pike: true, ang: Math.atan2(p.x - q[0], p.z - q[1]) }); temp.push(u); Fx.damm(q[0], Geo.groundAt(q[0], q[1]), q[1], 5); };
         Scene.jump(p.x, p.z + 1.6, 25); plats('Stäket vid Mälaren, 1516');
         await vanta(2); text('Ärkebiskop Gustav Trolle håller på Danmarks kung. Sten Sture stänger in honom i hans borg.'); await vanta(7);
         text('Tryck för att slå läger runt borgen');
