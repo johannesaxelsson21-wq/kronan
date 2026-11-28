@@ -334,6 +334,91 @@
         const n = await tryckN('Bygg', 6, bygg, 22); for (let k = n + 1; k <= 6; k++) bygg(k);
         L.spela('klart'); text('Staden heter Helsingfors. Den ska ta handeln från Reval.'); await vanta(7); tillbaka();
       },
+      // ---- nyckelhändelser i Eriks, Johans, Sigismunds och Karls världar --------------------------------------------------------
+      // 14 april 1561. Arboga artiklar: hertigarna Johan och Karl måste lyda kungen. Man läser själv upp artiklarna, en i taget.
+      async arboga() {
+        const tillbaka = utanHjalte(), T = torgVid('arboga'), cx = T.x, cz = T.z; Scene.setSeason(0.3);
+        const ek = erikE(true), e = { x: cx, z: cz - 0.9 }; hooks.push(dt => ek.place(e.x, e.z, 0, 0, tid, dt, false, true)); skylt('Kung Erik', () => e, 1.8);
+        const jo = johanE(); jo.klad('Hertig'); const j = { x: cx - 0.55, z: cz + 0.3 }; hooks.push(dt => jo.place(j.x, j.z, Math.PI, 0, tid, dt, false, true)); skylt('Hertig Johan', () => j, 1.7);
+        const ka = karlE(false), k = { x: cx + 0.55, z: cz + 0.3 }; hooks.push(dt => ka.place(k.x, k.z, Math.PI, 0, tid, dt, false, true)); skylt('Hertig Karl', () => k, 1.7);
+        const folk = []; for (let i = 0; i < 10; i++) { const x = cx + (i % 5 - 2) * 0.36, z = cz + 0.9 + Math.floor(i / 5) * 0.36; if (fritt(T, x, z)) { const u = Folk.add(x, z, i % 2 ? 'borgare' : 'bonde', { ang: Math.PI }); folk.push(u); temp.push(u); } }
+        Scene.cam.lut = 60; Scene.jump(cx, cz + 0.9, 12); plats('Arboga, april 1561');
+        await vanta(2); text('Erik litar inte på sina bröder. Vid riksdagen i Arboga ska hertigarna lova att lyda kungen.'); await vanta(7);
+        const art = ['Hertigarnas folk ska svära kungen trohet.', 'Deras soldater står under kungens befäl i krig.', 'De får inte sluta förbund utan kungens lov.', 'Den högsta domstolen är kungens.'];
+        text('Tryck för att läsa upp artiklarna');
+        const las = n => { text(art[n - 1]); L.spela('trumma'); folk.forEach((u, i) => { if (i % 4 === n % 4) { u.y = 0.07; setTimeout(() => { u.y = 0; }, 160); } }); };
+        const n = await tryckN('Läs upp', 4, las, 26); for (let q = n + 1; q <= 4; q++) { las(q); await vanta(3); }
+        await vanta(3.5); L.spela('nej'); text('Johan skriver under, men motvilligt.'); await vanta(6.5); tillbaka();
+      },
+      // 1561–1563. Skeppet Mars byggs vid Björkenäs norr om Kalmar. Man bygger själv skrovet, och sedan går hon av stapeln.
+      async mars() {
+        const tillbaka = utanHjalte(), p = R.P.kalmar, h = p.hav || { x: p.x + 2, z: p.z }, dx = h.x - p.x, dz = h.z - p.z, dl = Math.hypot(dx, dz) || 1, ux = dx / dl, uz = dz / dl; Scene.setSeason(0.55);
+        const nx0 = -uz, nz0 = ux, sgn = nz0 < 0 ? 1 : -1;          // en bit norr om staden (Björkenäs), på land vid stranden
+        let sx = p.x + nx0 * 3.2 * sgn, sz = p.z + nz0 * 3.2 * sgn; for (let q = 0; q < 30 && Geo.sdAt(sx, sz) < 1.2; q++) { sx -= ux * 0.25; sz -= uz * 0.25; }
+        let lx = ux, lz = uz, bast = 1e9; for (let a = 0; a < 16; a++) { const vx = Math.cos(a / 16 * 6.283), vz = Math.sin(a / 16 * 6.283); let d = 0; while (d < 5 && Geo.sdAt(sx + vx * d, sz + vz * d) > 0) d += 0.2; if (d < bast) { bast = d; lx = vx; lz = vz; } }          // sjösättningen går mot närmaste vatten
+        const vrid = Math.atan2(lx, lz), steg = [];
+        const lagg = st => { const mb = new V.MB(); mb.snow = 0; mb.box(0, 0.06, 0, 0.5, 0.06, 1.6, '#6b5743'); for (let k = -0.7; k <= 0.7; k += 0.35) mb.box(0, 0, k, 0.06, 0.2 + Math.min(st, 3) * 0.08, 0.06, '#b9935f');
+          if (st >= 1) mb.box(0, 0.12, 0, 0.18, 0.08, 1.5, '#5a4838'); if (st >= 2) for (let k = -0.6; k <= 0.6; k += 0.2) mb.box(0, 0.16, k, 0.5, 0.03, 0.05, '#7b6650');
+          if (st >= 3) { mb.box(0, 0.16, 0, 0.46, 0.22, 1.45, '#6b4a2c', { low: '#4f3620' }); } if (st >= 4) { mb.box(0, 0.38, -0.55, 0.42, 0.2, 0.35, '#7a5a3a'); mb.box(0, 0.38, 0.6, 0.38, 0.14, 0.25, '#7a5a3a'); }
+          const m = B.mesh(mb); m.position.set(sx, Geo.groundAt(sx, sz), sz); m.rotation.y = vrid; m.scale.setScalar(B.K * 1.1); Scene.scene.add(m); tempM.push(m); steg.forEach(q => { Scene.scene.remove(q); }); steg.push(m); return m; };
+        lagg(0);
+        const folk = []; for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283, x = sx + Math.cos(a) * 1.1, z = sz + Math.sin(a) * 1.1; if (Geo.sdAt(x, z) > 0.4) { const u = Folk.add(x, z, i % 2 ? 'bonde' : 'knekt', { ang: Math.atan2(sx - x, sz - z) }); folk.push(u); temp.push(u); } }
+        Scene.cam.lut = 55; Scene.jump(sx, sz + 1.2, 11); plats('Björkenäs, 1561');
+        await vanta(2); text('Erik vill ha ett krigsskepp större än något som har funnits. Vid Björkenäs norr om Kalmar sträcks kölen.'); await vanta(7);
+        text('Tryck för att bygga');
+        const bygg = q => { lagg(q); L.spela('hammare'); Fx.damm(sx, Geo.groundAt(sx, sz) + 0.1, sz, 8); folk.forEach(u => { u.y = 0.06; setTimeout(() => { u.y = 0; }, 140); }); if (q === 2) text(''); };
+        const n = await tryckN('Bygg', 4, bygg, 22); for (let q = n + 1; q <= 4; q++) bygg(q);
+        text('1563 går hon av stapeln.'); steg.forEach(q => Scene.scene.remove(q));
+        const s = V.skepp('sverige', true); s.scale.setScalar(2.6); s.rotation.y = vrid; Scene.scene.add(s); tempM.push(s); let d = 0;
+        const ut = bast + 1.4; hooks.push(dt => { d = Math.min(ut, d + dt * 0.7); s.position.set(sx + lx * d, Math.max(0.02, Geo.groundAt(sx + lx * d, sz + lz * d)), sz + lz * d); });
+        Scene.flyTo(sx + lx * ut * 0.6, sz + lz * ut * 0.6 + 1.2, 13, 3); L.spela('klart'); await vanta(4);
+        text('Skeppet heter Mars, men folk kallar henne Makalös.'); await vanta(7); tillbaka();
+      },
+      // 10 juli 1569. Johan och Katarina kröns samma dag i Uppsala domkyrka. Man bär själv fram de två kronorna.
+      async johankroning() {
+        const tillbaka = utanHjalte(), T = torgVid('uppsala'), cx = T.x, cz = T.z; Scene.setSeason(0.52);
+        const jo = johanE(); jo.klad('Hertig'); const j = { x: cx - 0.3, z: cz - 0.7 }; hooks.push(dt => jo.place(j.x, j.z, 0, 0, tid, dt, false, true)); skylt('Johan', () => j, 1.7);
+        const kat = Folk.add(cx + 0.3, cz - 0.7, 'kvinna', { col: '#8a2a3a', col2: '#f2eee2', sc: 1.35, ang: 0 }); temp.push(kat); skylt('Katarina', () => kat, 1.4);
+        for (let i = 0; i < 12; i++) { const x = cx + (i % 6 - 2.5) * 0.36, z = cz + 0.4 + Math.floor(i / 6) * 0.38; if (fritt(T, x, z)) temp.push(Folk.add(x, z, i < 6 ? 'borgare' : 'bonde', i < 6 ? { col: '#2f4f8a', ang: Math.PI } : { ang: Math.PI })); }
+        const krona = (x, z) => { const mb = new V.MB(); mb.snow = 0; mb.cyl(0, 0, 0, 0.07, 0.075, 0.045, 10, '#e8c040', { low: '#a8801e' }); for (let k = 0; k < 6; k++) { const v = k / 6 * 6.283; mb.cone(Math.cos(v) * 0.068, 0.045, Math.sin(v) * 0.068, 0.014, 0.035, 4, '#e8c040'); } const m = B.mesh(mb); m.scale.setScalar(B.K * 1.4); Scene.scene.add(m); tempM.push(m); return m; };
+        Scene.cam.lut = 64; Scene.jump(cx, cz + 0.6, 11); plats('Uppsala, 10 juli 1569');
+        await vanta(2); text('Erik är avsatt och sitter fången. Johan ska krönas i Uppsala domkyrka, och drottning Katarina med honom.'); await vanta(7.5);
+        text('Tryck för att bära fram kronorna');
+        const bar = q => { if (q === 1) { jo.klad('Kung'); Fx.guld(j.x, Geo.groundAt(j.x, j.z) + 0.75, j.z, 30, 0.3); } else { const m = krona(); m.position.set(kat.x, Geo.groundAt(kat.x, kat.z) + 0.58, kat.z); Fx.guld(kat.x, Geo.groundAt(kat.x, kat.z) + 0.7, kat.z, 30, 0.3); } L.spela('klocka'); };
+        const n = await tryckN('Bär fram', 2, bar, 18); for (let q = n + 1; q <= 2; q++) bar(q);
+        L.spela('klart'); text('Johan III och Katarina Jagellonica är krönta samma dag.'); await vanta(7); tillbaka();
+      },
+      // 18 maj 1595. Freden i Teusina vid gränsen mot Ryssland. Man skriver själv under, för kungen.
+      async teusina() {
+        const tillbaka = utanHjalte(), T = torgVid('teusina'), cx = T.x, cz = T.z; Scene.setSeason(0.38);
+        const mb = new V.MB(); B.talt(mb); mb.push().move(0.9, 0, 0); B.talt(mb); mb.pop(); mb.box(0.45, 0, 0.55, 0.6, 0.22, 0.3, '#6b4a2c', { low: '#4f3620' }); mb.box(0.45, 0.22, 0.55, 0.64, 0.02, 0.34, '#2f4f8a'); const lag = B.mesh(mb); lag.position.set(cx - 0.6, Geo.groundAt(cx, cz), cz - 0.6); lag.scale.setScalar(B.K); Scene.scene.add(lag); tempM.push(lag);
+        const bx = cx, bz = cz + 0.15, sv = [], ry = [];
+        for (let i = 0; i < 6 && sv.length < 4; i++) { const x = bx - 1.2 - (i % 2) * 0.35, z = bz + Math.floor(i / 2) * 0.35 - 0.35; if (!fritt(T, x, z)) continue; const u = Folk.add(x, z, 'borgare', { col: '#2f4f8a', ang: 1.571 }); sv.push(u); temp.push(u); }
+        for (let i = 0; i < 6 && ry.length < 4; i++) { const x = bx + 1.2 + (i % 2) * 0.35, z = bz + Math.floor(i / 2) * 0.35 - 0.35; if (!fritt(T, x, z)) continue; const u = Folk.add(x, z, 'rysk', { ang: -1.571 }); ry.push(u); temp.push(u); }
+        if (!sv.length) sv.push(Folk.add(bx - 0.6, bz + 0.4, 'borgare', { col: '#2f4f8a' })); if (!ry.length) ry.push(Folk.add(bx + 0.6, bz + 0.4, 'rysk'));
+        skylt('Sten Banér', () => sv[0], 1.35); skylt('Tsarens sändebud', () => ry[0], 1.7);
+        Scene.cam.lut = 60; Scene.jump(bx, bz + 0.8, 12); plats('Teusina, maj 1595');
+        await vanta(2); text('Kriget mot Ryssland har pågått i tjugofem år. I byn Teusina vid gränsen möts sändebuden.'); await vanta(7);
+        const pkt = ['Estland blir svenskt.', 'Kexholm går tillbaka till Ryssland.'];
+        text('Tryck för att skriva under');
+        const skriv = q => { text(pkt[q - 1]); const u = q === 1 ? sv[0] : ry[0]; u.x = bx + (q === 1 ? -0.25 : 0.25); u.z = bz + 0.4; L.spela('trumma'); Fx.guld(u.x, Geo.groundAt(u.x, u.z) + 0.4, u.z, 14, 0.2); };
+        const n = await tryckN('Skriv under', 2, skriv, 20); for (let q = n + 1; q <= 2; q++) { skriv(q); await vanta(3); }
+        await vanta(3.5); L.spela('klart'); text('Den 18 maj 1595 är det fred i Teusina.'); await vanta(6.5); tillbaka();
+      },
+      // 1604. Riksdagen i Norrköping: hertig Johan avsäger sig tronen, och Karl blir kung. Man låter stånden hylla honom.
+      async norrkoping() {
+        const tillbaka = utanHjalte(), T = torgVid('norrkoping'), cx = T.x, cz = T.z; Scene.setSeason(0.2);
+        const ka = karlE(false), k = { x: cx, z: cz - 0.8 }; hooks.push(dt => ka.place(k.x, k.z, 0, 0, tid, dt, false, true)); skylt('Karl', () => k, 1.8);
+        const hj = Folk.add(cx + 0.75, cz - 0.55, 'borgare', { col: '#5a2f2f', ang: -0.8 }); temp.push(hj); const hs = skylt('Hertig Johan, 15 år', () => hj, 1.35);
+        const rader = []; for (let r = 0; r < 4; r++) { const rad = []; for (let i = 0; i < 6; i++) { const x = cx + (i - 2.5) * 0.36, z = cz + 0.35 + r * 0.38; if (!fritt(T, x, z)) continue; const u = Folk.add(x, z, r === 3 ? 'bonde' : r === 2 ? 'bergsman' : 'borgare', r === 0 ? { col: '#2f4f8a', ang: Math.PI } : { ang: Math.PI }); rad.push(u); temp.push(u); } rader.push(rad); }
+        Scene.cam.lut = 58; Scene.jump(cx, cz + 1.0, 12); plats('Norrköping, 1604');
+        await vanta(2); text('Sigismund är avsatt. Hans halvbror hertig Johan avsäger sig sin rätt till tronen.'); await vanta(7);
+        text('Tryck för att låta stånden hylla Karl');
+        const hyll = q => { (rader[q - 1] || []).forEach((u, i) => setTimeout(() => { u.y = 0.1; setTimeout(() => { u.y = 0; }, 170); }, i * 50)); L.spela('sorl'); if (q === 2) text(''); };
+        const n = await tryckN('Hylla', 4, hyll, 20); for (let q = n + 1; q <= 4; q++) hyll(q);
+        karlE(true); Fx.guld(k.x, Geo.groundAt(k.x, k.z) + 0.7, k.z, 40, 0.4); L.spela('klart'); hs.bort();
+        text('Karl blir Sveriges kung. Kronan ska sedan gå till hans söner.'); await vanta(7); tillbaka();
+      },
       // 1571. Riksdagen har beslutat en tiondel av allt silver, all koppar och all boskap till Älvsborgs lösen. Man tar själv emot silvret.
       async silverskatt() {
         const p = R.P.stockholm, K = B.K, st = V.Varld.tomt.stockholm, T = st && st.plan ? st.plan().torg : { x: 0, z: 0.2 }, cx = p.x + T.x * K, cz = p.z + T.z * K; Scene.setSeason(0.5);
