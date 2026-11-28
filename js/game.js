@@ -73,6 +73,7 @@
     dub() { return (D.VARLDAR[S.varld] || {}).dubbel || 2; },
     varvTid(id) { return Math.max(3, 10 * Math.pow(0.9, Math.floor((S.bas[id] || 0) / 10)) * G.konstVarv()); },          // sekunder mellan leveranserna: 10 i början, en tiondel kortare var tionde nivå
     kritChans(id) { return Math.min(0.4, 0.08 + 0.02 * Math.floor((S.bas[id] || 0) / 10) + G.konstKrit()); },          // chansen att en leverans blir dubbel
+    levStorlek(id, L) { L = L === undefined ? (S.bas[id] || 0) : L; const v = Math.max(3, 10 * Math.pow(0.9, Math.floor(L / 10)) * G.konstVarv()); return G.prod(id, L) * v / (1 + G.kritChans(id)); },          // en vanlig leverans vid nivå L
     levFas(id) { const q = S.lev && S.lev[id]; return q ? Math.min(1, q.t / (id === 'sold' ? 10 : G.varvTid(id))) : 0; },
     arvX() { return 1 + S.arv * (S.varld >= 2 ? 0.05 : 0.25); },          // från Eriks värld väger arvet mindre, så att summorna förblir historiska (Johannes 2026-11-28)
     // produktion per sekund för en bas, utan fartbonus
