@@ -191,6 +191,7 @@
     taggar(spel, golv) {
       const box = document.getElementById('ortnamn'); if (!box) return;
       const satta = [];          // skyltar som redan står: flera personer i samma stad får sina namn i en liten stapel
+      for (const id of ['vem-du', 'vem-bud']) { const h = document.getElementById(id); if (h && h.style.display === 'block') { const r = h.getBoundingClientRect(); satta.push({ x: r.left + r.width / 2, y: r.bottom, w: r.width }); } }          // hjältens namn står kvar, de andra flyttar upp
       for (const f of figs) {
         let e = taggEl[f.d.id];
         if (!e) { e = taggEl[f.d.id] = document.createElement('div'); e.className = 'vem annan'; e.textContent = f.d.namn; box.appendChild(e); e.addEventListener('click', ev => { ev.stopPropagation(); L.mer(f); }); }

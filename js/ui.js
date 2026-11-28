@@ -407,7 +407,7 @@
     berattarUppe() { return $('berattar').style.display !== 'none' || !!(V.Intro && V.Intro.aktiv); },
     textBort() { if (caption) { caption.remove(); caption = null; } },          // raden mitt på skärmen (valets fråga) ska inte ligga kvar över en scen
     // Tiden står still medan rutan i början läses.
-    pausar() { return !!UI._paus && $('ruta').style.display !== 'none'; },
+    pausar() { return !!UI._intro || (!!UI._paus && $('ruta').style.display !== 'none'); },          // och medan introt visar sina bubblor
     // Vad en handling gör, med några få ord (till pekbubblan när den dyker upp).
     handlKort(h) {
       if (h.direkt) return 'en tredjedel av armén på en gång';
@@ -461,6 +461,7 @@
     },
     // Rutan i början: vem du är, hur läget ser ut och vad du ska göra. Går att ta fram igen med frågetecknet.
     forklara(varld, igen) {
+      if (!igen) return UI._introStart(varld);          // första gången: en sak i taget, med bubblor i världen (Johannes 2026-11-28). Frågetecknet visar hela rutan.
       // Kort: vem du är, målet, och tre bilder för hur man spelar. Resten visar pekbubblorna i spelet (Johannes 2026-11-27).
       const M = V.MED || {}, knapp = varld >= 2 ? 'Rid' : 'Bud';
       const hur = [['<span class="knapp">' + knapp + '</span>', 'Tryck', 'den runda knappen'], [M[varld === 1 ? 'man' : 'mark'], varld === 1 ? 'Män' : 'Mark', varld === 1 ? 'samla folk' : 'rikets pengar'], [M[varld === 1 ? 'bygd' : 'stad'], 'Bygg ut', KLICKA + ' på en ' + (varld === 1 ? 'by' : 'stad')], [M.krona, 'Nästa steg', 'när du har råd']];
@@ -473,9 +474,47 @@
       UI._paus = !igen; if (!igen && V.Musik) V.Musik.spar('titel');
     },
 
+    // Introt steg för steg: först vem hjälten är (en bubbla ovanför honom på kartan), sedan läget, sedan målet (vid nästa steg i historien).
+    // En bubbla i taget, i lugn takt. Spelet står still så länge. Sedan tar pekbubblorna i _tips över: tryck på den runda knappen, och så vidare.
+    _introDelar(varld) {
+      const D0 = D.VARLDAR[varld] || {};
+      if (varld === 0) return [{ ar: 'Sverige 1512', text: 'Det här är <b>Sten Sture</b>, nitton år.' }, { text: 'Hans far styrde riket i kungens ställe, och nu är han död. Rådet vill ge hans plats åt en vän till Danmark.' }, { vid: '#uppdrag', text: 'Bygg upp dina städer, vinn folket och håll riket.' }];
+      if (varld === 1) return [{ ar: 'Dalarna 1521', text: 'Det här är <b>Gustav Eriksson</b>, 24 år.' }, { text: 'Kristian II av Danmark lät halshugga hans far i Stockholm. Nu har dalkarlarna valt honom till ledare.' }, { vid: '#uppdrag', text: 'Samla folk, ta Kopparberget och driv ut danskarna.' }];
+      const t = D0.startText || '', h2 = (t.match(/<h2>(.*?)<\/h2>/) || [])[1] || '', ps = [...t.matchAll(/<p( class="mal")?>(.*?)<\/p>/g)], ut = [];
+      for (const m of ps) {
+        if (m[1]) { ut.push({ vid: '#uppdrag', text: m[2] }); continue; }
+        const txt = m[2].replace(/^Du är /, 'Det här är '), i = txt.indexOf('. ');
+        if (!ut.length && i > 0) { ut.push({ ar: h2, text: txt.slice(0, i + 1) }); ut.push({ text: txt.slice(i + 2) }); } else ut.push({ ar: ut.length ? '' : h2, text: txt });
+      }
+      return ut;
+    },
+    _introStart(varld) {
+      const delar = UI._introDelar(varld); if (!delar.length) return;
+      let e = $('intro'); if (!e) { e = el('div', '', ''); e.id = 'intro'; root.appendChild(e); }
+      UI._intro = { delar, i: 0, t0: performance.now() }; if (V.Musik) V.Musik.spar('titel');
+      const visa = () => {
+        const I = UI._intro, d = I.delar[I.i], prickar = I.delar.map((_, k) => '<i' + (k === I.i ? ' class="nu"' : '') + '></i>').join('');
+        e.innerHTML = '<div class="tip intro">' + (d.ar ? '<div class="intro-ar">' + d.ar + '</div>' : '') + '<p>' + d.text + '</p><div class="intro-fot"><span class="intro-prick">' + prickar + '</span><button>' + (I.i === I.delar.length - 1 ? 'Börja' : 'Nästa') + ' <svg viewBox="0 0 14 14"><path d="M3 2l8 5-8 5z"/></svg></button></div></div>';
+        e.firstChild.addEventListener('click', ev => { ev.stopPropagation(); V.Ljud && V.Ljud.vakna(); if (I.i < I.delar.length - 1) { I.i++; visa(); } else UI._introSlut(); });
+      };
+      visa();
+      const flytta = () => {
+        const I = UI._intro; if (!I) return; const t = e.firstChild; if (t) {
+          const d = I.delar[I.i], w = t.offsetWidth, h = t.offsetHeight; let x = innerWidth / 2, y = innerHeight * 0.42;
+          const m = d.vid && document.querySelector(d.vid);
+          if (m && m.offsetParent) { const r = m.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top - 14; }
+          else { const Hj = V.Gustav; if (Hj && Hj.g && Hj.g.visible) { const sp = V.Scene.screenPoint(Hj.x, V.Geo.groundAt(Hj.x, Hj.z) + 2.45, Hj.z); if (!sp.behind && sp.y > h + 60 && sp.y < innerHeight - 40) { x = sp.x; y = sp.y - 36; } } }
+          const L0 = Math.max(10, Math.min(innerWidth - w - 10, x - w / 2)); t.style.left = L0 + 'px'; t.style.top = Math.max(10, y - h) + 'px'; t.style.setProperty('--pil', Math.max(16, Math.min(w - 16, x - L0)) + 'px');
+        }
+        requestAnimationFrame(flytta);
+      };
+      requestAnimationFrame(flytta);
+    },
+    _introSlut() { const e = $('intro'); if (e) e.innerHTML = ''; UI._intro = null; if (V.Musik) V.Musik.spar(V.Musik.grund()); },
+
     // ---- första stegen: en pekande ruta i taget, som står kvar tills steget är gjort ------------------
     _tips() {
-      const S = G.s, T = S.tips, e = $('tips'), spel = root.classList.contains('spel') && $('ruta').style.display === 'none' && $('berattar').style.display === 'none' && !root.classList.contains('slag');          // ingen ruta som pekar medan berättelsen står uppe (Johannes 2026-11-26: "Rutan ligger ovanpå här och stör")
+      const S = G.s, T = S.tips, e = $('tips'), spel = !UI._intro && root.classList.contains('spel') && $('ruta').style.display === 'none' && $('berattar').style.display === 'none' && !root.classList.contains('slag');          // ingen ruta som pekar medan berättelsen står uppe (Johannes 2026-11-26: "Rutan ligger ovanpå här och stör")
       if (!spel) { e.innerHTML = ''; tips.nu = null; return; }
       const forst = (D.VARLDAR[S.varld] || D.VARLDAR[1]).hem, synlig = sel => { const m = document.querySelector(sel); return !!(m && m.offsetParent); };
       const steg = [
