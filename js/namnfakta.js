@@ -308,3 +308,47 @@
   document.addEventListener('DOMContentLoaded', koppla); setTimeout(koppla, 0);
   V.PersonFakta = { P, text };
 })();
+
+// ---- Samlade namn (Johannes 2026-11-28: "när de är många på samma plats så tar de lite mycket plats av bilden, kan vi lösa det på något sätt?") ----
+// Står flera personer och härar på samma ställe på skärmen blir deras skyltar en liten bricka ("4 här") när kartan är utzoomad.
+// Ett tryck på brickan fäller ut namnen en stund. Närzoomat visas namnen som förut.
+(function () {
+  'use strict';
+  const V = window.VASA;
+  let brickor = {}, utfalld = null, utTid = 0;
+  function koppla() {
+    const L = V.Levande; if (!L || !L.taggar || L._samlad) return; L._samlad = 1;
+    const fore = L.taggar;
+    L.taggar = function (spel, golv) {
+      const r = fore.apply(this, arguments);
+      try { samla(spel); } catch (e) { /* skyltarna står som förut */ }
+      return r;
+    };
+  }
+  function samla(spel) {
+    const L = V.Levande, box = document.getElementById('ortnamn'), c = V.Scene && V.Scene.cam; if (!box || !c) return;
+    const nara = c.d < 34;          // närzoomat: inga brickor
+    const syns = []; for (const f of L.figs || []) { const e = document.querySelector('.vem.annan[data-fig="' + f.d.id + '"]') || hitta(f); if (e && e.style.display === 'flex') { const sp = V.Scene.screenPoint(f.sx, V.Geo.groundAt(f.sx, f.sz) + (f.till || 2), f.sz); syns.push({ f, e, x: sp.x, y: sp.y }); } }
+    // grupper: skyltar vars fötter står nära varandra på skärmen
+    const grupper = []; for (const s of syns) { const g = grupper.find(q => Math.abs(q.x - s.x) < 70 && Math.abs(q.y - s.y) < 55); if (g) { g.m.push(s); g.y = Math.max(g.y, s.y); } else grupper.push({ x: s.x, y: s.y, m: [s] }); }
+    if (utfalld && performance.now() > utTid) utfalld = null;
+    const kvar = {};
+    for (const g of grupper) {
+      if (nara || !spel || g.m.length < (c.d > 90 ? 2 : 3)) continue;          // långt utzoomat räcker två
+      const nyckel = g.m.map(s => s.f.d.id).sort().join(','); if (utfalld === nyckel) continue;
+      kvar[nyckel] = 1; g.m.forEach(s => { s.e.style.display = 'none'; });
+      let b = brickor[nyckel];
+      if (!b) {
+        b = brickor[nyckel] = document.createElement('div'); b.className = 'vem annan'; b.dataset.fig = 'bricka'; b.style.fontStyle = 'normal'; box.appendChild(b);
+        b.innerHTML = '<b style="font-weight:600"></b><span></span>'; b.querySelector('b').textContent = g.m.length; const harar = g.m.filter(q => /^[hf][A-Z]/.test(q.f.d.id)).length; b.querySelector('span').textContent = harar === g.m.length ? ' härar' : harar ? ' personer och härar' : ' personer';
+        b.title = g.m.map(s => s.f.d.namn).join(', ');
+        b.addEventListener('click', ev => { ev.stopPropagation(); utfalld = nyckel; utTid = performance.now() + 9000; });
+      }
+      b.style.display = 'flex'; b.style.transform = 'translate(' + Math.round(g.x) + 'px,' + Math.round(g.y - 8) + 'px) translate(-50%, -100%)';
+    }
+    for (const k in brickor) if (!kvar[k]) brickor[k].style.display = 'none';
+  }
+  // skylten för en person: levande.js sparar dem inte utåt, så den hittas på namnet en gång och märks
+  function hitta(f) { for (const e of document.querySelectorAll('.vem.annan:not([data-fig])')) if (e.textContent.trim() === f.d.namn) { e.dataset.fig = f.d.id; return e; } return null; }
+  document.addEventListener('DOMContentLoaded', koppla); setTimeout(koppla, 0);
+})();
