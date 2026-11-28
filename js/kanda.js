@@ -419,6 +419,37 @@
   const sigtuna = (mb, Y) => hallkyrka(mb, Y, { c: TEGEL, lo: TEGELL, L: 1.9 });
   const nadendal = (mb, Y) => hallkyrka(mb, Y, { c: '#b4ad9e', L: 2.0, th: 1.0 });
 
+  // =====================================================================================
+  // Visingsö i Vättern (Johannes 2026-11-28: "Visingsö borde väl vara med på kartan"). Ön är för smal för kartans mark, så den ritas här som en egen ö.
+  // Näs: kungaborgen från 1100-talet på södra udden, bränd 1318 och ruin sedan dess (ett runt och ett fyrkantigt torn med mur emellan).
+  // Visingsborg: grunden lades på 1570-talet, fyrkantigt slott av tegel med fyra torn och förgyllda spiror, färdigt först på 1660-talet.
+  // Brahehus: Per Brahe den yngres hus på berget ovanför Gränna, byggt från 1637, brann 1708.
+  const VISINGSO = [14.335, 58.03], NAS = [14.345, 57.978], VBORG = [14.362, 58.036], BRAHEHUS = [14.49, 58.055];
+  function nasRuin(mb) {
+    const c = '#8f897d', lo = '#5e5950';
+    mb.cyl(-0.45, 0, 0, 0.42, 0.4, 0.75, 10, c, { low: lo, cap: '#7a7468' }); mb.box(0.45, 0, 0, 0.6, 1.0, 0.6, c, { low: lo, top: '#7a7468' });
+    mb.box(0, 0, 0.1, 0.7, 0.4, 0.14, c, { low: lo }); for (let k = 0; k < 6; k++) mb.blob(-0.9 + k * 0.35, 0.05, 0.6 + (k % 2) * 0.2, 0.12, 0.08, 0.1, c, { low: lo });
+  }
+  function visingsborg(mb, Y) {
+    const c = TEGEL, lo = TEGELL, spira = '#c9a24a';
+    const torn = (x, z) => { mb.box(x, 0, z, 0.45, 1.5, 0.45, c, { low: lo, noTop: true }); mb.hip(x, 1.5, z, 0.47, 0.2, 0.47, KOPPAR, 0.03); mb.cone(x, 1.66, z, 0.13, 0.75, 6, spira, { low: '#9a7a32', snowTip: 0 }); };
+    langa(mb, -0.75, 0, 1.5, 1.05, 0.5, c, lo, TAK, { rot: 1, trapp: 1 }); torn(-0.75, -0.85); torn(-0.75, 0.85);          // västra längan, Per Brahe den äldres
+    if (Y < 1590) { mb.box(-0.2, 0.3, 0, 0.04, 0.9, 1.6, '#b9935f'); mb.box(-0.2, 0.75, 0, 0.3, 0.03, 1.6, '#b9935f'); }          // byggnadsställning
+    if (Y >= 1660) { langa(mb, 0, 0.75, 1.5, 1.0, 0.45, c, lo, TAK, {}); langa(mb, 0.75, 0, 1.5, 1.0, 0.45, c, lo, TAK, { rot: 1 }); torn(0.75, -0.85); torn(0.75, 0.85); }
+    return 2.5;
+  }
+  function brahehus(mb, Y) { mb.box(0, 0, 0, 1.3, 1.15, 0.6, '#c2b597', { low: '#857a62', noTop: true }); mb.gable(0, 1.15, 0, 1.3, 0.45, 0.6, TAK, { gable: '#c2b597' }); for (const x of [-0.7, 0.7]) fyr(mb, x, 0.3, 0.42, 1.55, '#c2b597', '#857a62'); for (const x of [-0.3, 0.3]) fon(mb, x, 0.6, 0.305, 0.07, 0.16); return 2.0; }
+  function visingsoMesh(Y) {
+    const G = V.Geo, w = p => G.toWorld(p[0], p[1]), o0 = w(VISINGSO), o = o0, mb = new MB();          // lite västerut: kartans Vättern är smalare än den riktiga
+    mb.push().rotY(-0.12); mb.blob(0, -0.05, 0, 0.75, 0.2, 2.6, '#6c9440', { top: '#7fae4a', low: '#c9b98a', snow: 1 }); mb.pop();          // ön, smal i nord-sydlig riktning
+    for (const [x, z] of [[-0.25, -1.6], [0.2, -1.0], [-0.3, 0.6], [0.15, 1.3], [-0.1, 2.0]]) { mb.cone(x, 0.1, z, 0.16, 0.45, 6, '#2f6b3a', { low: '#24552e' }); }
+    const vid = (p, f, s) => { const q = w(p); mb.push().move(q[0] - o[0], 0.1, q[1] - o[1]).scale(s); f(mb, Y); mb.pop(); };
+    vid(NAS, nasRuin, 0.5);
+    if (Y >= 1575) vid(VBORG, visingsborg, 0.5);
+    const m = B.mesh(mb); m.position.set(o0[0] - 0.35, 0, o0[1]); return m;
+  }
+  const EGNA = { visingso: { lonlat: VISINGSO, namn: 'Visingsö', mesh: visingsoMesh }, brahehus: { lonlat: BRAHEHUS, namn: 'Brahehus', tid: [1637, 1708], mesh: Y => { const mb = new MB(); brahehus(mb, Y); const m = B.mesh(mb), q = V.Geo.toWorld(BRAHEHUS[0], BRAHEHUS[1]); m.position.set(q[0], V.Geo.groundAt(q[0], q[1]), q[1]); m.scale.setScalar(B.K * 0.5); return m; } } };
+
   // Orter som bara syns på kartan och inte har en borg: deras kända byggnad i stället för två stugor.
   const ORT = { strangnas: (mb, Y) => strangnasDom(mb, Y, 0.8), linkoping: (mb, Y) => linkopingDom(mb, Y, 0.8), orebro, borgholm, staket,
     helsingborg: karnan, landskrona, malmo: malmohus, lund: lundDom, visby, alvsborg, varberg, tavastehus, nyslott: olofsborg, kexholm, orbyhus, drottningholm, vastervik: stegeholm,
@@ -504,9 +535,25 @@
       W._dekor('kanda' + id, pa, () => { K._stallAr[id] = Y; const mb = stallning(id, Y), m = B.mesh(mb); m.position.set(p.x, V.Geo.groundAt(p.x, p.z), p.z); m.scale.setScalar(B.K * (p.stad ? 0.62 : 0.8)); return m; });
     }
   };
+  // Egna orter som inte finns i spelets platser (Visingsö, Brahehus): ritas och får ett namn på kartan.
+  K._egnaNamn = [];
+  K.egna = function () {
+    const W = V.Varld, Y = ar(), ut = [];
+    for (const id in EGNA) {
+      const e = EGNA[id], pa = !e.tid || (Y >= e.tid[0] && Y <= e.tid[1]);
+      if (pa && K._stallAr[id] !== undefined && K._stallAr[id] !== Y) W._dekor('kanda' + id, false);
+      W._dekor('kanda' + id, pa, () => { K._stallAr[id] = Y; return e.mesh(Y); });
+      if (pa) { const q = V.Geo.toWorld(e.lonlat[0], e.lonlat[1]); ut.push({ id: 'kanda' + id, namn: e.namn, x: q[0] + (id === 'visingso' ? 0.7 : 0.9), z: q[1] + (id === 'visingso' ? 1.0 : 0.6), y: Math.max(0.1, V.Geo.groundAt(q[0], q[1])) }); }
+    }
+    K._egnaNamn = ut;
+  };
   K._stallAr = {};
   if (V.Varld && V.Varld.sync) {
     const syncFore = V.Varld.sync;
-    V.Varld.sync = function () { const r = syncFore.apply(this, arguments); try { K.stall(); } catch (e) { console.warn('kanda', e); } return r; };
+    V.Varld.sync = function () { const r = syncFore.apply(this, arguments); try { K.stall(); K.egna(); } catch (e) { console.warn('kanda', e); } return r; };
+  }
+  if (V.Varld && V.Varld.ortnamn) {
+    const namnFore = V.Varld.ortnamn;
+    V.Varld.ortnamn = function () { const ut = namnFore.apply(this, arguments); try { if (V.Game.skede() !== 'strid') for (const o of K._egnaNamn) ut.push(o); } catch (e) { /* inget */ } return ut; };
   }
 })();

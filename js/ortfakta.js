@@ -126,7 +126,13 @@
     'Örbyhus': [[0, 1611, 'Borg i norra Uppland.']],
     'Tavastehus': [[0, 1611, 'Tegelborgen i Tavastland, ett av Finlands viktigaste fästen.']],
     'Nyslott': [[0, 1611, 'Olofsborg byggdes 1475 på en klippö för att vakta gränsen mot Ryssland.']],
-    'Nådendal': [[0, 1611, 'Birgittinernas kloster i Finland.']]
+    'Nådendal': [[0, 1611, 'Birgittinernas kloster i Finland.']],
+    'Visingsö': [
+      [0, 1560, 'Ön mitt i Vättern. På södra udden står ruinen av kungaborgen Näs, där kung Magnus Ladulås dog 1290. Borgen brann 1318.'],
+      [1561, 1574, 'Erik XIV gjorde 1561 Per Brahe till greve av Visingsborg. Ön och bygderna kring Vättern är hans grevskap.'],
+      [1575, 1611, 'Greve Per Brahe bygger ett slott av tegel på öns östra strand. Ruinen av den gamla kungaborgen Näs står kvar på södra udden.']
+    ],
+    'Brahehus': [[1637, 1708, 'Per Brahe den yngre bygger ett hus på berget ovanför Gränna, med utsikt över Vättern och Visingsö.']]
   };
   // Hjälpare så att andra namnformer också hittas
   F['Sala gruva'] = F['Sala silvergruva']; F['Falun'] = F['Kopparberget'];
