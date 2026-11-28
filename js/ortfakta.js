@@ -1,7 +1,7 @@
 // Fakta om orterna (Johannes 2026-11-28: "Man ska kunna klicka på varje ort med namn å så står de historiskt fakta om vad som skedde i den staden vid den tiden").
 // Ett tryck på ett ortnamn på kartan visar en kort ruta: vad orten är och vad som händer där det år världen står i. Inget om det som kommer senare.
 // Nyckel = namnet så som det står på kartan. Varje rad: [från år, till år, text]. Den rad gäller vars år omfattar året nu; annars den senaste före.
-// Egna baser som man äger öppnar sin flik som förut (ui.js) och får ingen ruta här. Källor: docs/ortfakta.md.
+// Egna städer visar också läget just nu (nivå, vad den ger, husen, steget som sker där). Källor: docs/ortfakta.md.
 (function () {
   'use strict';
   const V = window.VASA;
@@ -81,6 +81,8 @@
       [1520, 1520, 'Socken vid Siljan. Gustav Eriksson har kommit hit på flykt och talar till dalkarlarna vid kyrkan.'],
       [1521, 1611, 'Socken vid Siljan. Här blev Gustav Eriksson dalkarlarnas hövding vintern 1521.']
     ],
+    'Leksand': [[0, 1611, 'Socken där älven lämnar Siljan, med kyrka på udden. Bönderna här är jägare, bergsmän och skickliga skidlöpare.']],
+    'Rättvik': [[0, 1611, 'Socken vid Siljans östra strand, med kyrka nere vid sjön. Härifrån går vägen över skogen mot Bergslagen.']],
     'Kopparberget': [[0, 1611, 'Rikets koppargruva vid Falun. Kopparen säljs ut i Europa och är en av kronans största inkomster.']],
     'Sala silvergruva': [[0, 1611, 'Silvergruvan i Sala. Silvret blir mynt i kronans kistor.']],
     'Gävle': [[0, 1611, 'Handelsstad vid Gävlebukten, där Norrlands handel går ut över havet.']],
@@ -177,16 +179,32 @@
   const css = document.createElement('style');
   css.textContent = '.ortfakta{position:absolute;z-index:40;max-width:260px;padding:9px 12px 8px;background:var(--perg,#eadfc4);color:#2b2017;border:2px solid var(--guld,#c9a24a);border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);font-size:14px;line-height:1.35;pointer-events:auto}'
     + '.ortfakta b{display:block;font-weight:normal;font-size:15.5px;letter-spacing:.04em;margin-bottom:3px;color:#5a2a14}.ortfakta .ar{float:right;font-size:12px;color:#7a6440;margin-left:8px}'
-    + '.ortfakta small{display:block;margin-top:5px;font-size:11px;color:#7a6440}@media (max-width:720px){.ortfakta{max-width:220px;font-size:13px}}';
+    + '.ortfakta .lage{margin:0 0 5px;padding-bottom:5px;border-bottom:1px solid rgba(122,100,64,.35);font-style:italic;color:#3d2a17}.ortfakta small{display:block;margin-top:5px;font-size:11px;color:#7a6440}@media (max-width:720px){.ortfakta{max-width:220px;font-size:13px}}';
   document.head.appendChild(css);
   let ruta = null;
   function stang() { if (ruta) { ruta.remove(); ruta = null; } }
+  // Läget i en stad man själv har (Johannes 2026-11-28: "en statustext om vad som händer i staden nu, info om stadens dagsläge och info om staden").
+  function lage(id) {
+    const G = V.Game, D = V.DATA, S = G.s, b = G.BAS[id], tal = V.tal || (x => Math.round(x)), rader = [];
+    const L = G.niva(id), p = G.prod(id), vad = b.ger === 'man' ? 'män' : 'mark';
+    rader.push('Nivå ' + L + '. ' + (G.stoppad && G.stoppad(id) ? 'Arbetet står still just nu.' : 'Ger ' + tal(p < 10 ? Math.round(p * 10) / 10 : p) + ' ' + vad + ' i sekunden.'));
+    const hus = (D.BYGGNADER || []).filter(h => h.plats === id && G.husFinns && G.husFinns(h.id) && G.hus(h.id) > 0).map(h => h.namn);
+    if (hus.length) rader.push('Här står ' + (hus.length > 1 ? hus.slice(0, -1).join(', ') + ' och ' + hus[hus.length - 1] : hus[0]) + '.');
+    const u = D.UPPDRAG[S.nasta];
+    if (u && u.plats === id) rader.push((S.aktivt ? 'Just nu: ' : 'Snart: ') + u.titel.charAt(0).toLowerCase() + u.titel.slice(1) + '.');
+    return rader;
+  }
+  function egenId(namn) { const G = V.Game; if (!G || !G.BAS || !G.s) return null; for (const id in G.BAS) if (G.BAS[id].namn === namn && G.s.bas[id]) return id; return null; }
   function visa(namn, el) {
-    stang(); const t = text(namn); if (!t) return;
+    stang(); const t = text(namn), id = egenId(namn); if (!t && !id) return;
     ruta = document.createElement('div'); ruta.className = 'ortfakta';
-    ruta.innerHTML = '<b></b><div></div><small>Källa: svenska Wikipedia om orten</small>';
-    ruta.querySelector('b').textContent = namn + ', ' + ar(); ruta.querySelector('div').textContent = t;
-    document.body.appendChild(ruta);
+    ruta.innerHTML = '<b></b><p class="lage"></p><div></div><small>Källa: svenska Wikipedia om orten</small>';
+    ruta.querySelector('b').textContent = namn + ', ' + ar(); ruta.querySelector('div').textContent = t || '';
+    const lp = ruta.querySelector('.lage');
+    const fyll = () => { if (!lp.isConnected) return; try { lp.textContent = lage(id).join(' '); } catch (e) { lp.textContent = ''; } setTimeout(fyll, 1000); };
+    if (!id) lp.remove();
+    if (!t) ruta.querySelector('small').remove();
+    document.body.appendChild(ruta); if (id) fyll();
     // Rutan står kvar vid orten: den följer namnskylten när kartan dras (Johannes 2026-11-28: "så ska den stanna där den spawnade, vid orten").
     const r0 = el.getBoundingClientRect(), under = r0.bottom + 6 + ruta.offsetHeight <= innerHeight - 8, me = ruta;
     const folj = () => {
@@ -198,7 +216,6 @@
     folj();
     ruta.addEventListener('click', ev => { ev.stopPropagation(); stang(); });
   }
-  function egenBas(namn) { const G = V.Game; if (!G || !G.BAS || !G.s) return false; for (const id in G.BAS) if (G.BAS[id].namn === namn && G.s.bas[id]) return true; return false; }
   // Ett tryck på ett namn på kartan. Fångas innan ui.js egen lyssnare, men stoppar den inte.
   let ned = null;          // var trycket började: att dra kartan stänger inte rutan
   document.addEventListener('pointerdown', ev => { ned = [ev.clientX, ev.clientY]; }, true);
@@ -206,9 +223,10 @@
     const el = ev.target && ev.target.closest ? ev.target.closest('.ortnamn') : null;
     const drog = ned && Math.hypot(ev.clientX - ned[0], ev.clientY - ned[1]) > 8;
     if (!el) { if (ruta && !drog && !(ev.target.closest && ev.target.closest('.ortfakta'))) stang(); return; }
-    const namn = el.textContent.trim(); if (egenBas(namn)) { stang(); return; }
+    const namn = el.textContent.trim();
+    if (egenId(namn)) ev.stopPropagation();          // en egen stad: rutan med läget i stället för fliken (fliken öppnas med ett tryck på staden själv)
     if (ruta && ruta._namn === namn) { stang(); return; }
     visa(namn, el); if (ruta) ruta._namn = namn;
   }, true);
-  V.OrtFakta = { F, text, visa, stang };
+  V.OrtFakta = { F, text, visa, stang, lage };
 })();
