@@ -5,7 +5,7 @@
   'use strict';
   const V = window.VASA, Scene = V.Scene, Geo = V.Geo;
   const RADER = {
-    0: ['Sverige, 1512. Jag är Sten Sture, nitton år.', 'Min far styrde riket i kungens ställe. Nu är han död.', 'Rådet vill ge hans plats åt en vän till Danmark.', 'Jag ska bygga upp mina städer, vinna folket och hålla riket.', { t: 'Tryck på den runda knappen därnere. Varje tryck ger mark.', pek: '#ak' }]
+    0: ['Min far är död. Riket får inte gå förlorat.']          // en kort replik i rollen, inget om knappar (Johannes 2026-11-28: förklaringar bryter inlevelsen, det gör guldrutorna)
   };
   let stil = false;
   function css() {
@@ -42,7 +42,8 @@
       // sista bubblan pekar på knappen: ett tryck på knappen avslutar pratet, och trycket räknas som vanligt (visa hellre än förklara)
       window.addEventListener('pointerdown', function pk(ev) { if (!P.aktiv) { window.removeEventListener('pointerdown', pk, true); return; } const r = rader[i]; if (r && r.pek && ev.target.closest && ev.target.closest(r.pek)) { i = rader.length - 1; nasta(); window.removeEventListener('pointerdown', pk, true); } }, true);
       window.addEventListener('keydown', function k(ev) { if (!P.aktiv) { window.removeEventListener('keydown', k); return; } if (ev.code === 'Space' || ev.code === 'Enter') { ev.preventDefault(); ev.stopImmediatePropagation(); nasta(); } }, true);
-      setTimeout(() => { lagg(); nasta(); }, 1600);          // kameran hinner fram till honom först
+      setTimeout(() => { lagg(); nasta(); }, 1600);
+      setTimeout(() => { if (P.aktiv && i === rader.length - 1) nasta(); }, 1600 + 6500 * rader.length);          // går bort av sig själv om man inte trycker          // kameran hinner fram till honom först
     }
   };
   // spelet står still, och inga pekbubblor i konsolen, medan han pratar
