@@ -73,8 +73,8 @@
     stoppad(id) { for (const u in S.uppror) if (S.uppror[u] && D.UPPROR[u].baser.indexOf(id) >= 0) return u; return null; },
     // Hur mycket var tionde nivå ger (Johannes 2026-11-28: summorna ska passa verkligheten, samma tempo). 2 = dubbelt, som förut. Världen sätter sin egen i D.VARLDAR (dubbel).
     dub() { return (D.VARLDAR[S.varld] || {}).dubbel || 2; },
-    varvTid(id) { return Math.max(4, 10 * Math.pow(0.9, Math.floor((S.bas[id] || 0) / 10))); },          // sekunder mellan leveranserna: 10 i början, en tiondel kortare var tionde nivå
-    kritChans(id) { return Math.min(0.25, 0.08 + 0.02 * Math.floor((S.bas[id] || 0) / 10)); },          // chansen att en leverans blir dubbel
+    varvTid(id) { return Math.max(3, 10 * Math.pow(0.9, Math.floor((S.bas[id] || 0) / 10)) * G.konstVarv()); },          // sekunder mellan leveranserna: 10 i början, en tiondel kortare var tionde nivå
+    kritChans(id) { return Math.min(0.4, 0.08 + 0.02 * Math.floor((S.bas[id] || 0) / 10) + G.konstKrit()); },          // chansen att en leverans blir dubbel
     levFas(id) { const q = S.lev && S.lev[id]; return q ? Math.min(1, q.t / (id === 'sold' ? 10 : G.varvTid(id))) : 0; },
     arvX() { return 1 + S.arv * (S.varld >= 2 ? 0.05 : 0.25); },          // från Eriks värld väger arvet mindre, så att summorna förblir historiska (Johannes 2026-11-28)
     // produktion per sekund för en bas, utan fartbonus
@@ -85,15 +85,15 @@
       p *= G.husX(id);          // stadens hus
       if (b.slag === 'stad' && S.las.privilegier) p *= 0.5;                         // Lübeck tar handeln
       if (b.slag === 'gruva') p *= 1 + 0.1 * G.arb(id);                             // gruvarbetare: en tiondel mer för varje lag
-      p *= b.ger === 'mark' ? G.tullX() * G.egX('mark') * (b.slag === 'gruva' ? G.egX('gruva') : 1) : G.egX('man');          // kungens egenskaper: män, all mark, gruvorna                              // skeppens tull och kungens krigskonst (Eriks värld)
+      p *= G.konstLev(b.ger); p *= b.ger === 'mark' ? G.tullX() * G.egX('mark') * (b.slag === 'gruva' ? G.egX('gruva') : 1) : G.egX('man');          // kungens egenskaper: män, all mark, gruvorna                              // skeppens tull och kungens krigskonst (Eriks värld)
       return p;
     },
-    fullX() { return 2 + Math.floor(S.konst.skidor / 10); },                       // så mycket ger full fart
+    fullX() { return 2 + (S.varld === 0 ? Math.floor(S.konst.skidor / 10) : 0); },                       // så mycket ger full fart
     takt(res) { let s = res === 'man' ? G.soldProd() : 0; for (const id in S.bas) if (BAS[id].ger === res) s += G.prod(id); if (res === 'man') s *= G.manF(); return s * (S.full ? G.fullX() : 1); },
     // ---- sold: knektar som får betalt. Köps för mark och ger män, och var tionde nivå dubblar som allt annat. ----
     // Mynten i Hedemora 1521 slogs för att betala hären, och 1522 kom de första tyska legoknektarna.
     // I förspelet (SOLD0) är det knektar i Sten Stures tjänst, med förspelets små siffror. De låses upp av huset för knektar (D.BYGGNADER).
-    soldProd(L) { const So = S.varld === 0 ? SOLD0 : SOLD; L = L === undefined ? (S.sold || 0) : L; return L ? So.p0 * L * Math.pow(G.dub(), Math.floor(L / 10)) * S.x.man * G.arvX() * G.gang('man') * G.egX('man') : 0; },
+    soldProd(L) { const So = S.varld === 0 ? SOLD0 : SOLD; L = L === undefined ? (S.sold || 0) : L; return L ? So.p0 * L * Math.pow(G.dub(), Math.floor(L / 10)) * S.x.man * G.arvX() * G.gang('man') * G.egX('man') * G.konstLev('man') : 0; },
     soldPris() { const So = S.varld === 0 ? SOLD0 : SOLD, p = So.c0 * Math.pow(So.r, S.sold || 0); return p < 1000 ? Math.ceil(p) : p; },
     // ---- byggnader (förspelet): köps för mark, byggs vid platsen och låser upp något ----
     byggnader() { return G.byggnader0().filter(b => G.inford(b.id)); },
@@ -177,14 +177,19 @@
       return k.bygg0 ? !!(S.bygg && S.bygg[k.bygg0]) : S.nasta > D.STURE.findIndex(u => u.id === k.steg0);
     },
     kanKonst(id) { return G.harKonst(id) && S.konst[id] < KONST_MAX && S.res.mark >= G.konstPris(id); },
-    tryckSek() { return 0.3 * (1 + 0.05 * S.konst.sigill); },                 // så många sekunders inkomst ger ett tryck
+    tryckSek() { return 0.3 * (1 + 0.05 * G.kf('sigill')); },                 // så många sekunders inkomst ger ett tryck
     skattSek() { return 12 * (1 + 0.05 * S.konst.langd); },                    // och så många ger en skatteindrivning
     kopKonst(id) { if (!G.kanKonst(id)) return false; S.res.mark -= G.konstPris(id); S.konst[id]++; G.ut('konst', { id, niva: S.konst[id], dubbel: S.konst[id] % 10 === 0 }); return true; },
-    hastighet() { return 2.3 * (1 + Math.min(40, S.konst.skidor) * 0.045); },                                    // Gustavs toppfart i världsenheter per sekund
-    samling() { return (6 + S.konst.tal * 0.8) * Math.pow(G.dub(), Math.floor(S.konst.tal / 10)); },     // sekunders produktion per besök
-    lopare() { return S.las.konster && S.konst.bud > 0 ? Math.min(6, 1 + Math.floor(S.konst.bud / 5)) : 0; },
-    lopFart() { return 1.5 * (1 + S.konst.bud * 0.03); },
-    lopSamling() { return G.samling() * 0.15 * Math.pow(G.dub(), Math.floor(S.konst.bud / 10)); },
+    hastighet() { return 2.3 * (1 + Math.min(40, G.kf('skidor')) * 0.045); },                                    // Gustavs toppfart i världsenheter per sekund
+    samling() { return (6 + G.kf('tal') * 0.8) * Math.pow(G.dub(), Math.floor(G.kf('tal') / 10)); },     // sekunders produktion per besök
+    lopare() { return S.las.konster && G.kf('bud') > 0 ? Math.min(6, 1 + Math.floor(S.konst.bud / 5)) : 0; },
+    lopFart() { return 1.5 * (1 + G.kf('bud') * 0.03); },
+    kf(id) { return S.varld === 0 ? S.konst[id] : 0; },          // förmågornas gamla verkan (tryck, ritt, besök, löpare) gäller bara i förspelet
+    // Förmågorna efter förspelet verkar direkt på leveranserna (Johannes 2026-11-28 11:26)
+    konstLev(res) { return S.varld === 0 ? 1 : 1 + 0.03 * (res === 'mark' ? S.konst.sigill : S.konst.tal); },          // Sigillet: markleveranser, Ordets makt: leveranser av män
+    konstVarv() { return S.varld === 0 ? 1 : Math.max(0.7, 1 - 0.015 * S.konst.skidor); },          // Skidor och hästar: varven går fortare
+    konstKrit() { return S.varld === 0 ? 0 : 0.005 * S.konst.bud; },          // Fler bud: oftare dubbla leveranser
+    lopSamling() { return G.samling() * 0.15 * Math.pow(G.dub(), Math.floor(G.kf('bud') / 10)); },
 
     // ---- farten: mätaren fylls av tryck, sjunker sakta och ger dubbel produktion när den är full ----
     // ---- egna handlingar: sådant hjälten gör själv, med vila emellan ------------------------------
@@ -377,9 +382,9 @@
       // Varje plats fyller en mätare och levererar det den har samlat när mätaren är full (Johannes 2026-11-28: "få resources i en klump ... med den mätaren för varje grej").
       // I medeltal ger den lika mycket som förut. Ibland blir leveransen dubbel (god skörd, rik malmåder ...), och var tionde nivå går varvet fortare.
       const mf = G.manF(), lv = S.lev || (S.lev = {});
-      for (const id in S.bas) { const r = BAS[id].ger, p = G.prod(id) * fx * dt * (r === 'man' ? mf : 1); if (!p) continue; const q = lv[id] || (lv[id] = { t: 0, n: 0 }); q.n += p; q.t += dt;
+      for (const id in S.bas) { const r = BAS[id].ger, p = G.prod(id) * fx * dt * (r === 'man' ? mf : 1); if (!p) continue; const q = lv[id] || (lv[id] = { t: 0, n: 0 }); q.n += p; q.t += dt * fx;          // full mätare: varvet går fx gånger fortare, klumpen blir lika stor som vanligt
         const v = G.varvTid(id); if (q.t >= v) { const kc = G.kritChans(id), krit = Math.random() < kc, n = q.n * (krit ? 2 : 1) / (1 + kc); S.res[r] += n; S.tot[r] += n; q.t = q.t - v > v ? 0 : q.t - v; q.n = 0; G.ut('leverans', { bas: id, n, res: r, krit }); } }
-      if (S.sold) { const p = G.soldProd() * fx * dt * mf, q = lv.sold || (lv.sold = { t: 0, n: 0 }); q.n += p; q.t += dt; if (q.t >= 10) { S.res.man += q.n; S.tot.man += q.n; G.ut('leverans', { bas: 'sold', n: q.n, res: 'man', krit: false }); q.t = q.t - 10 > 10 ? 0 : q.t - 10; q.n = 0; } }          // soldaterna kommer också i klumpar, var tionde sekund
+      if (S.sold) { const p = G.soldProd() * fx * dt * mf, q = lv.sold || (lv.sold = { t: 0, n: 0 }); q.n += p; q.t += dt * fx; if (q.t >= 10) { S.res.man += q.n; S.tot.man += q.n; G.ut('leverans', { bas: 'sold', n: q.n, res: 'man', krit: false }); q.t = q.t - 10 > 10 ? 0 : q.t - 10; q.n = 0; } }          // soldaterna kommer också i klumpar, var tionde sekund
       const tak = G.tak(); if (S.res.man > tak) S.res.man = tak;
       if (S.aktivt && S.aktivt.val && S.varld === 0) { S.aktivt.valT = (S.aktivt.valT || 0) + dt; if (S.aktivt.valT > 30) G.valj(); }      // i förspelet väntar historien inte
       if (S.aktivt && !S.aktivt.val) {

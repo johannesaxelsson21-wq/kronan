@@ -51,6 +51,7 @@
   const varv = id => 8 + (D.BASER.findIndex(b => b.id === id) % 5) * 1.0;          // så ofta en plats lämnar en klump (Johannes 2026-11-28: staplarna gick för fort)
   // Vad en förmåga ger nu och på nästa nivå, i klartext.
   function konstInfo(id) {
+    if (G.s.varld !== 0 && id !== 'langd') return konstLev(id);          // efter förspelet: vad nästa nivå gör med leveranserna, i siffror
     const L = G.s.konst[id], N = L + 1, dub = N % 10 === 0;
     const f0 = G.s.varld === 0;
     if (id === 'sigill') return { kort: f0 ? 'tryck ger 5 % mer' : '+5 % per tryck', nu: 'Ett tryck i sekunden ger ' + sek(0.3 * (1 + 0.05 * L)) + ' sekunders inkomst.', nasta: sek(0.3 * (1 + 0.05 * N)) + ' sekunders inkomst.' };
@@ -58,6 +59,15 @@
     if (id === 'tal') { const f = l => (6 + l * 0.8) * Math.pow(2, Math.floor(l / 10)); return { kort: dub ? (f0 ? 'besök ger dubbelt' : '×2 per besök') : f0 ? 'besök ger mer' : '+' + sek(f(N) - f(L)) + ' s per besök', nu: 'Varje besök ger ' + sek(f(L)) + ' sekunders produktion från platsen.', nasta: sek(f(N)) + ' sekunder per besök.' }; }
     if (id === 'bud') { const n = l => l > 0 ? Math.min(6, 1 + Math.floor(l / 5)) : 0; return { kort: n(N) > n(L) ? '+1 löpare' : dub ? '×2 per löpare' : '+3 % fart', nu: (n(L) ? n(L) + ' löpare far runt åt dig.' : 'Inga löpare än.') + (n(L) >= 3 ? ' Mätaren står full av sig själv.' : ' Med tre löpare står mätaren full av sig själv.'), nasta: n(N) > n(L) ? n(N) + ' löpare' + (n(N) === 3 ? ', och mätaren står full av sig själv.' : '.') : dub ? 'Löparna ger dubbelt.' : 'Löparna far fortare.' }; }
     return { kort: f0 ? 'skatt ger 5 % mer' : '+5 % skatt', nu: 'Driv in skatt ger ' + sek(12 * (1 + 0.05 * L)) + ' sekunders markinkomst.', nasta: sek(12 * (1 + 0.05 * N)) + ' sekunders markinkomst.' };
+  }
+  // Förmågorna efter förspelet, i siffror på den plats som ger mest (Johannes 2026-11-28: "vet vad man får för varje grej")
+  function konstLev(id) {
+    const S = G.s, L = S.konst[id], res = id === 'tal' ? 'man' : 'mark'; let b = null; for (const q in S.bas) if (G.BAS[q].ger === (id === 'tal' ? 'man' : 'mark') && (!b || G.prod(q) > G.prod(b))) b = q;
+    if (!b) for (const q in S.bas) if (!b || G.prod(q) > G.prod(b)) b = q; const namn = b ? (G.BAS[b].kort || G.BAS[b].namn) : '';
+    if (id === 'skidor') { const v = l => b ? G.varvTid(b) / G.konstVarv() * Math.max(0.7, 1 - 0.015 * l) : 10; return { kort: 'varv ' + sek(v(L)) + ' → ' + sek(v(L + 1)) + ' s', nu: namn + ' levererar var ' + sek(v(L)) + ' sekund.', nasta: 'var ' + sek(v(L + 1)) + ' sekund.' }; }
+    if (id === 'bud') { const k = l => Math.round(Math.min(0.4, (b ? G.kritChans(b) - G.konstKrit() : 0.08) + 0.005 * l) * 100); return { kort: 'dubbelt ' + k(L) + ' → ' + k(L + 1) + ' %', nu: k(L) + ' % av leveranserna blir dubbla.', nasta: k(L + 1) + ' %.' }; }
+    const per = l => b ? G.prod(b) / G.konstLev(res) * (1 + 0.03 * l) * G.varvTid(b) : 0, enh = res === 'man' ? ' män' : ' mark';
+    return { kort: namn + ': ' + tal(per(L)) + ' → ' + tal(per(L + 1)) + enh, nu: namn + ' levererar ' + tal(per(L)) + enh + ' åt gången.', nasta: tal(per(L + 1)) + enh + ' åt gången.' };
   }
   const ger = id => G.BAS[id].ger === 'man' ? 'män' : 'mark';
   // var tionde nivå: dubbelt i de gamla världarna, mindre där summorna är historiska (G.dub, Johannes 2026-11-28)
@@ -197,7 +207,7 @@
       { const slag = G.skede() === 'strid' && !!(G.uppdrag() || {}).order; if (root.classList.contains('slag') !== slag) root.classList.toggle('slag', slag); if (root.classList.contains('forspel') !== (S.varld === 0)) root.classList.toggle('forspel', S.varld === 0); }
       // farten
       const ring = $('ak-ring'), C = 2 * Math.PI * 54; ring.style.strokeDasharray = C; const mm = S.aktivt && S.aktivt.mom, pl = mm && !mm.svar && mm.typ !== 'vanta' && u && u.order ? G._plan(u).mom[mm.i] : null; $('akwrap').classList.toggle('vantar', !!pl && S.varld === 0); const hm = pl ? Math.min(1, (mm.n || 0) / Math.max(4, pl.langd * G.ORDER.tps)) : null; ring.style.strokeDashoffset = C * (1 - (hm !== null ? hm : S.fart)); $('akwrap').classList.toggle('hugg', hm !== null);          // i ett hugg visar ringen hur många hugg som tog          // i förspelets slag trycker man på ringen, inte på knappen
-      $('akwrap').classList.toggle('full', S.full && hm === null); $('fullx').textContent = hm !== null ? 'kraft ' + Math.round(hm * 100) + ' %' : S.full ? 'allt ×' + G.fullX() : ''; $('akwrap').classList.toggle('kraft', hm !== null && hm >= 0.5);          // i ett slag: hur hårt dina män går på
+      $('akwrap').classList.toggle('full', S.full && hm === null); $('fullx').textContent = hm !== null ? 'kraft ' + Math.round(hm * 100) + ' %' : S.full ? 'fart ×' + G.fullX() : ''; $('akwrap').classList.toggle('kraft', hm !== null && hm >= 0.5);          // i ett slag: hur hårt dina män går på
       // rutan med berättelsen och textraderna ligger strax ovanför konsolen
       const h = $('konsol').offsetHeight + 22; $('berattar').style.bottom = h + 'px'; $('text').style.bottom = (h + 28) + 'px';          // ovanför knappen Hitta mig
       V.Scene.lyft = (innerWidth < 720 || innerHeight < 520) && root.classList.contains('spel') ? (h - 22) / 2 : 0;          // se scene.js: bilden lyfts så att mitten hamnar ovanför konsolen
@@ -310,7 +320,7 @@
     handlNamn(h) { const S = G.s; return S.hjalte === 'kristina' && h.kristina ? h.kristina : S.varld === 0 && h.sture ? h.sture : h.namn; },
     handla(n) { const h = G.handlingar()[n]; if (h && G.handla(h.id)) UI.tick(); },
     // Förmågornas namn och vad de gör, i den värld som spelas.
-    konst(id) { const k = G.KONST[id], f = G.s.varld === 0; return [f && k.sture ? k.sture : k.namn, k.vad0 || k.vad]; },          // hjälten rider själv i båda världarna
+    konst(id) { const k = G.KONST[id], f = G.s.varld === 0; return [f && k.sture ? k.sture : k.namn, f ? k.vad0 || k.vad : k.vad1 || k.vad]; },          // hjälten rider själv i båda världarna
     _nej(e) { e.classList.remove('skaka'); void e.offsetWidth; e.classList.add('skaka'); V.Ljud && V.Ljud.spela('trumma'); },
     kop(id) { if (G.kop(id)) { V.Ljud && V.Ljud.spela(G.s.bas[id] % 10 === 0 ? 'dubbel' : 'kop'); UI.tick(); return true; } return false; },
     valj(id) { valdBas = id; },
@@ -569,7 +579,7 @@
       const forst = (D.VARLDAR[S.varld] || D.VARLDAR[1]).hem, synlig = sel => { const m = document.querySelector(sel); return !!(m && m.offsetParent); };
       const steg = [
         ['ak', '#ak', 'Tryck här. Varje tryck ger mark och fyller ringen runt knappen.' + (V.pek ? '' : ' Mellanslag går också, ett tryck i taget.'), S.tryck < 5, S.tryck >= 5],
-        ['full', '#ak', 'Fortsätt trycka. När ringen är full ger allt dubbelt en stund.', S.tryck >= 5 && !S.full && S.nasta < 2, S.full],
+        ['full', '#ak', 'Fortsätt trycka. När ringen är full går alla mätare dubbelt så fort en stund.', S.tryck >= 5 && !S.full && S.nasta < 2, S.full],
         ['kop', '#baser .bas:not(.skatt)', 'Bygg ut ' + G.BAS[forst].namn + ' här, eller ' + KLICKA + ' på den på kartan.', G.kanKopa(forst) && S.bas[forst] === 1, S.bas[forst] > 1],
         ['upp', '#uppdrag', 'Nästa steg i historien. Tryck på knappen när du har råd.', S.nasta === 0 && G.kanSkicka(), S.nasta > 0 || !!S.aktivt],
         ['driv', '#ak', 'Striden har börjat. Tryck så anfaller dina män.', !!G.skede(), !!(S.aktivt && S.aktivt.slag >= 3)],
