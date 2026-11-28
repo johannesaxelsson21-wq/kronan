@@ -540,12 +540,21 @@
       else if (!S.kronika.length) h += '<p class="svag">Julen 1520 talade Gustav Eriksson till männen i Mora. De sade nej, och han åkte mot Norge. I Sälen hann två skidlöpare upp honom: Mora hade ändrat sig. Så berättar Peder Svarts krönika.</p>';
       UI.ruta(h + '</div><button class="stang">Stäng</button>');
     },
+    // Regentlängden: en rak tidslinje uppifrån och ner, grupperad efter kungahus (Johannes 2026-11-28: "en lista, en följd, tydligt och pedagogiskt").
     regenter() {
-      const S = G.s; let h = '<h2>Regentlängden</h2><div class="regent">'; const nu = S.varld - 1, T = V.TESTLAGE;
-      const spela = v => T && D.VARLDAR[v] ? '<button class="reg-spela" data-v="' + v + '">Spela</button>' : '';
-      h += '<div class="reg' + (nu === -1 ? ' nu' : '') + '"><div class="reg-k">' + (nu === -1 ? IK.krona : '') + '</div><b>Sten Sture den yngre</b><span>riksföreståndare 1512–1520</span><i>' + (nu === -1 ? 'pågår' : 'förspel') + '</i>' + spela(0) + '</div><div></div>';
-      D.REGENTER.forEach((r, i) => { h += '<div class="reg' + (i === nu ? ' nu' : '') + '"><div class="reg-k">' + (i === nu ? IK.krona : '') + '</div><b>' + r[0] + '</b><span>' + r[1] + '–' + (r[2] || '') + '</span>' + (i === nu ? '<i>' + (S.slut ? 'klar' : 'pågår') + '</i>' : i === nu + 1 ? '<i>nästa värld</i>' : '') + spela(i + 1) + '</div>'; });
-      UI.ruta(h + '</div><p class="svag">Varje regent blir en egen värld. Det du bygger går i arv till nästa.' + (T ? ' Testläge: Spela börjar den världen från början.' : '') + '</p><button class="stang">Stäng</button>');
+      const S = G.s, T = V.TESTLAGE, nu = S.varld;
+      const HUS = [[0, 'Sturarna', 'riksföreståndare, innan Sverige fick en egen kung'], [1, 'Vasaätten', ''], [8, 'Pfalziska huset', ''], [12, 'Hessiska huset', ''], [13, 'Holstein-Gottorpska huset', ''], [17, 'Bernadotte', '']];
+      const rad = [['Sten Sture den yngre', 1512, 1520]].concat(D.REGENTER);
+      let h = '<h2>Regentlängden</h2><p class="svag reg-in">Varje regent är en egen värld. Det du bygger går i arv till nästa. De ljusa är inte byggda än.</p><div class="tidslinje">';
+      rad.forEach((r, v) => {
+        const hus = HUS.find(q => q[0] === v); if (hus) h += '<div class="tl-hus"><b>' + hus[1] + '</b>' + (hus[2] ? '<span>' + hus[2] + '</span>' : '') + '</div>';
+        const byggd = !!D.VARLDAR[v], ar = r[1] + '–' + (r[2] || 'i dag');
+        const status = v === nu ? (S.slut ? 'klar' : 'du spelar nu') : v === nu + 1 && byggd ? 'nästa värld' : '';          // de som inte är byggda än är bara ljusare
+        h += '<div class="tl-rad' + (v === nu ? ' nu' : '') + (byggd ? ' byggd' : '') + '"><span class="tl-ar">' + ar + '</span><i class="tl-prick">' + (v === nu ? IK.krona : '') + '</i><b class="tl-namn">' + r[0] + '</b>' +
+          (status ? '<em class="tl-st">' + status + '</em>' : '') + (T && byggd ? '<button class="reg-spela" data-v="' + v + '">Spela</button>' : '') + '</div>';
+      });
+      UI.ruta(h + '</div>' + (T ? '<p class="svag">Testläge: Spela börjar den världen från början.</p>' : '') + '<button class="stang">Stäng</button>');
+      const nuRad = document.querySelector('.tl-rad.nu'); if (nuRad) nuRad.scrollIntoView({ block: 'center' });
       document.querySelectorAll('.reg-spela').forEach(b => b.addEventListener('click', () => { if (confirm('Börja ' + (b.dataset.v === '0' ? 'förspelet' : D.REGENTER[b.dataset.v - 1][0]) + ' från början? Det du har nu försvinner.')) UI.onTestVarld && UI.onTestVarld(+b.dataset.v); }));
     },
     installningar() {

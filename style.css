@@ -473,3 +473,22 @@ button { font-family: inherit; cursor: pointer; }
 .ber-med.start { gap: 6px; margin-bottom: 6px; } .ber-med.start .ber-mk { width: 120px; } .ber-med.start .ber-stor { font-size: 18px; }
 .ber-rund .knapp { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #fff7df; background: radial-gradient(circle at 50% 35%, #56412d, #2b2017 70%); box-shadow: 0 0 0 2px var(--guld2) inset; }
 @media (max-width: 720px) { .ber-med.start .ber-mk { width: 76px; } .ber-med.start .ber-stor { font-size: 15px; } .ber-rund .knapp { width: 38px; height: 38px; font-size: 13px; } }
+/* Regentlängden som tidslinje: år till vänster, en guldlinje med prickar, namnet till höger. Kungahusen som rubriker. */
+.tidslinje { max-height: 56vh; overflow-y: auto; margin: 4px -6px 8px; padding: 0 6px; }
+.reg-in { text-align: center; margin-top: -4px !important; }
+.tl-hus { margin: 14px 0 4px 112px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.16em; color: #8a6a45; }
+.tl-hus:first-child { margin-top: 4px; }
+.tl-hus span { display: block; text-transform: none; letter-spacing: 0; font-style: italic; font-size: 12.5px; color: #9a8a70; margin-top: 1px; }
+.tl-rad { position: relative; display: flex; align-items: center; gap: 10px; min-height: 30px; color: #9a8a70; }
+.tl-ar { width: 86px; flex: none; text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; }
+.tl-prick { position: relative; flex: none; width: 16px; align-self: stretch; display: flex; align-items: center; justify-content: center; }
+.tl-prick::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: #c9a24a; opacity: 0.55; }
+.tl-prick::after { content: ''; position: relative; width: 9px; height: 9px; border-radius: 50%; background: #e3d3ad; box-shadow: 0 0 0 2px #b39a6a; }
+.tl-rad.byggd .tl-prick::after { background: #f2cf5a; box-shadow: 0 0 0 2px #6b4a12; }
+.tl-rad.nu .tl-prick::after { display: none; } .tl-rad.nu .tl-prick svg { position: relative; width: 22px; height: 22px; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3)); }
+.tl-namn { font-weight: normal; font-size: 16px; }
+.tl-rad.byggd { color: #2b2017; } .tl-rad.byggd .tl-ar { color: #6a5640; }
+.tl-rad.nu { background: linear-gradient(90deg, rgba(242, 207, 90, 0), rgba(242, 207, 90, 0.35) 30%, rgba(242, 207, 90, 0)); border-radius: 6px; } .tl-rad.nu .tl-namn { font-weight: bold; font-size: 17px; }
+.tl-st { font-style: italic; font-size: 12px; color: #8a6a1f; }
+.tl-rad .reg-spela { margin-left: auto !important; }
+@media (max-width: 720px) { .tl-ar { width: 70px; font-size: 12px; } .tl-hus { margin-left: 96px; } .tl-namn { font-size: 15px; } }
