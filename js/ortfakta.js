@@ -165,17 +165,25 @@
     ruta.innerHTML = '<b></b><div></div><small>Källa: svenska Wikipedia om orten</small>';
     ruta.querySelector('b').textContent = namn + ', ' + ar(); ruta.querySelector('div').textContent = t;
     document.body.appendChild(ruta);
-    const r = el.getBoundingClientRect(), w = ruta.offsetWidth, h = ruta.offsetHeight;
-    let x = r.left + r.width / 2 - w / 2, y = r.bottom + 6; if (y + h > innerHeight - 8) y = r.top - h - 6;
-    x = Math.max(8, Math.min(innerWidth - w - 8, x)); y = Math.max(8, y);
-    ruta.style.left = x + 'px'; ruta.style.top = y + 'px';
+    // Rutan står kvar vid orten: den följer namnskylten när kartan dras (Johannes 2026-11-28: "så ska den stanna där den spawnade, vid orten").
+    const r0 = el.getBoundingClientRect(), under = r0.bottom + 6 + ruta.offsetHeight <= innerHeight - 8, me = ruta;
+    const folj = () => {
+      if (ruta !== me) return;
+      if (!el.isConnected || el.style.display === 'none') me.style.display = 'none';
+      else { const r = el.getBoundingClientRect(), w = me.offsetWidth || 240, h = me.offsetHeight; me.style.display = ''; me.style.left = (r.left + r.width / 2 - w / 2) + 'px'; me.style.top = (under ? r.bottom + 6 : r.top - h - 6) + 'px'; }
+      requestAnimationFrame(folj);
+    };
+    folj();
     ruta.addEventListener('click', ev => { ev.stopPropagation(); stang(); });
   }
   function egenBas(namn) { const G = V.Game; if (!G || !G.BAS || !G.s) return false; for (const id in G.BAS) if (G.BAS[id].namn === namn && G.s.bas[id]) return true; return false; }
   // Ett tryck på ett namn på kartan. Fångas innan ui.js egen lyssnare, men stoppar den inte.
+  let ned = null;          // var trycket började: att dra kartan stänger inte rutan
+  document.addEventListener('pointerdown', ev => { ned = [ev.clientX, ev.clientY]; }, true);
   document.addEventListener('click', ev => {
     const el = ev.target && ev.target.closest ? ev.target.closest('.ortnamn') : null;
-    if (!el) { if (ruta && !(ev.target.closest && ev.target.closest('.ortfakta'))) stang(); return; }
+    const drog = ned && Math.hypot(ev.clientX - ned[0], ev.clientY - ned[1]) > 8;
+    if (!el) { if (ruta && !drog && !(ev.target.closest && ev.target.closest('.ortfakta'))) stang(); return; }
     const namn = el.textContent.trim(); if (egenBas(namn)) { stang(); return; }
     if (ruta && ruta._namn === namn) { stang(); return; }
     visa(namn, el); if (ruta) ruta._namn = namn;
