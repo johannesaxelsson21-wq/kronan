@@ -31,8 +31,8 @@
     pa: !/[?&]efter=0/.test(location.search),
     init(renderer) {
       // eget enkelt program för djupet: det rör aldrig färgen per gubbe, så samma program duger åt träd, hus och folk
-      djupMat = new THREE.ShaderMaterial({ colorWrite: false, uniforms: { uFri: V.U.uFri, uFriR: V.U.uFriR }, fragmentShader: 'void main() { gl_FragColor = vec4(1.0); }',
-        vertexShader: 'attribute float aTrad; ' + V.World.FRI_DEKL + '\nvoid main() {\n vec3 transformed = position;\n #ifdef USE_INSTANCING\n if (aTrad > 0.5) ' + V.World.FRI_GLSL + '\n #endif\n vec4 p = vec4(transformed, 1.0);\n #ifdef USE_INSTANCING\n p = instanceMatrix * p;\n #endif\n gl_Position = projectionMatrix * modelViewMatrix * p;\n}' });
+      djupMat = new THREE.ShaderMaterial({ colorWrite: false, uniforms: { uFri: V.U.uFri, uFriR: V.U.uFriR, uTime: V.U.uTime }, fragmentShader: 'void main() { gl_FragColor = vec4(1.0); }',
+        vertexShader: 'attribute float aTrad; attribute vec2 aFx; uniform float uTime; ' + V.World.FRI_DEKL + '\nvoid main() {\n vec3 transformed = position;\n if (aFx.y > 3.5 && aFx.y < 4.5) { vec4 wp4 = modelMatrix * vec4(position, 1.0); float fwB = aFx.x, phB = uTime * 2.6 - fwB * 5.5 + wp4.x * 0.7 + wp4.z * 0.5; transformed.z += (sin(phB) * 0.07 + sin(phB * 0.6 + transformed.y * 6.0) * 0.02) * fwB; transformed.x -= (1.0 - cos(phB)) * 0.012 * fwB; }\n #ifdef USE_INSTANCING\n if (aTrad > 0.5) ' + V.World.FRI_GLSL + '\n #endif\n vec4 p = vec4(transformed, 1.0);\n #ifdef USE_INSTANCING\n p = instanceMatrix * p;\n #endif\n gl_Position = projectionMatrix * modelViewMatrix * p;\n}' });
       mat = new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: FS, depthTest: false, depthWrite: false, blending: THREE.MultiplyBlending, transparent: true,
         uniforms: { tD: { value: null }, uPx: { value: new THREE.Vector2() }, uNear: { value: 1 }, uFar: { value: 100 }, uSkala: { value: 1000 }, uAO: { value: 0.5 }, uKant: { value: 0.28 }, uVin: { value: 0.2 } } });
       scenQ = new THREE.Scene(); camQ = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
