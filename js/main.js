@@ -22,7 +22,7 @@
   let haller = false, hallT = 0;          // mellanslag eller knappen hålls in: buden går i jämn takt utan att man behöver hamra
   // Slag där man trycker direkt på fienden (Johannes 2026-11-28): fältslag, överfall, samtal och sjöslag. Belägringarna har kvar sina ringar.
   function fritt(u) { u = u || G.uppdrag(); return !!(u && u.order); }          // alla slag och händelser med order, också belägringarna (Johannes 2026-11-28: "Inga ringar i eventen")
-  function slagHur(u) { u = u || {}; return u.belagring ? 'Tryck på fienden. Varje tryck gör skada.' : u.typ === 'overfall' ? 'Tryck på fogdens män, så tas de till fånga.'.replace('fogdens män', u.id === 'kopparberget' ? 'fogdens män' : 'vakterna') : u.typ === 'samtal' ? 'Tryck på dem för att övertyga dem.' : u.slag === 'flotta' ? 'Tryck på fiendens skepp.' : 'Tryck på fiendens här. Varje tryck fäller några av dem.'; }
+  function slagHur(u) { u = u || {}; return u.belagring ? 'Tryck på fienden. Varje tryck gör skada.' : u.typ === 'overfall' ? 'Tryck på vakterna.' : u.typ === 'samtal' ? 'Tryck på dem.' : u.slag === 'flotta' ? 'Tryck på fiendens skepp.' : 'Tryck på fiendens här. Varje tryck fäller några av dem.'; }
   function handelse(typ, d) {
     Varld.handelse(typ, d);
     if (typ === 'tryck') { if (spelar && !(V.lugn && d.skede)) UI.tryckt(d); }          // i förspelets slag inga siffror från knappen: där syns trycken i slaget
