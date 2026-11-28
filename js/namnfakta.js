@@ -369,6 +369,7 @@
     L.update = function (dt, t) {
       const r = fore.apply(this, arguments);
       try { kolla(); } catch (e) { /* inga notiser */ }
+      try { enaFlotta(); } catch (e) { /* inget */ }
       return r;
     };
     const initFore = L.init; L.init = function () { start = performance.now(); for (const k in sist) delete sist[k]; ko.length = 0; return initFore.apply(this, arguments); };
@@ -385,6 +386,25 @@
       const q = ko.find(x => x.fran === fran && x.till === till && nu - x.t < 3000);
       if (q) { if (q.n.indexOf(f.d.namn) < 0) q.n.push(f.d.namn); continue; }
       ko.push({ fran, till, sjo, har, n: [f.d.namn], f, t: nu });
+    }
+  }
+
+  // Ingen flotta eller här två gånger (Johannes 2026-11-28: "lubecks flotta är dubbel nu?"): när ett steg visar sina egna skepp eller sin fiende
+  // (varld.js vis), göms samma flotta eller här i den levande kartan, och dess namn följer stegets skepp och gubbar i stället.
+  function enaFlotta() {
+    const W = V.Varld, vis = W && W.vis ? W.vis() : null, L = V.Levande; if (!vis || !vis.u || !L) return;
+    const u = vis.u, sida = u.fran === 'lubeck' || u.id === 'lubeck' ? 'lubeck' : 'sverige', P = V.Rike.P[u.plats];
+    for (const f of L.figs || []) {
+      if (!f.syns) continue;
+      const d = f.d, sammaSteg = d.steg === u.id;
+      // skeppen: stegets flotta har samma flagga, eller figuren hör till just det steget
+      if (vis.skepp && vis.skepp.length && f.skeppen && f.skeppen.some(k => k.visible) && (sammaSteg || (d.flagga || 'sverige') === sida)) {
+        f.skeppen.forEach(k => { k.visible = false; }); const s0 = vis.skepp.find(k => k.visible !== false) || vis.skepp[0]; f.sx = s0.position.x; f.sz = s0.position.z; continue;
+      }
+      // härarna: fienden i stegets slag är samma här, om den står nära platsen
+      if (vis.fi && vis.fi.length && f.us && f.us.some(q => q.vis) && P && /[Dd]ansk|Rantzau/.test(u.fiende || '') && d.flagga === 'danmark' && Math.hypot(f.sx - P.x, f.sz - P.z) < 15) {
+        f.us.forEach(q => { q.vis = false; }); if (f.fana) f.fana.visible = false; const m = vis.fi.find(q => !q.dod) || vis.fi[0]; f.sx = m.x; f.sz = m.z;
+      }
     }
   }
   function visa() {
