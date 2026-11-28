@@ -601,7 +601,6 @@ button { font-family: inherit; cursor: pointer; }
 .ruta-in.kung-in h2 { text-align: left; }
 
 /* flikarna lika breda (Johannes 2026-11-28: placeringen ska inte hoppa), och kassan går att trycka på */
-#baser .sida { min-width: var(--sidabredd, auto); }
 #kassa .ks { cursor: pointer; }
 #kassa .ks:hover { box-shadow: 0 0 0 1px rgba(242, 207, 90, 0.9) inset, 0 3px 12px rgba(0, 0, 0, 0.5); }
 #baser .sida:not(.dold) { grid-template-rows: repeat(var(--rader, 2), minmax(var(--korth, 0px), auto)); }
