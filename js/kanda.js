@@ -319,17 +319,121 @@
     return 2.4;
   }
 
+  // =====================================================================================
+  // Fler orter (Johannes 2026-11-28: "om de är en borg eller fästning där så ska den vara markerat på något sätt, med ett kloster eller vad det nu är").
+  // Varje ort på kartan med en borg, fästning, ett kloster eller en domkyrka det året. Listan med årtal står i docs/kanda.md.
+  // Kyrka utan torn (klosterkyrkor): långt skepp, brant tak, takryttare.
+  function hallkyrka(mb, Y, o) {
+    o = o || {}; const c = o.c || STEN, lo = o.lo || STENL, tak = o.tak || TAK, L = o.L || 1.9;
+    langa(mb, 0, 0, L, o.H || 0.85, o.D || 0.85, c, lo, tak, { th: o.th || 0.85, fon: false });
+    for (let k = 0; k < Math.floor(L / 0.42); k++) { const x = -L / 2 + 0.25 + k * 0.42; fon(mb, x, 0.22, (o.D || 0.85) / 2 + 0.005, 0.07, 0.4); }
+    mb.cyl(0, (o.H || 0.85) + (o.th || 0.85) - 0.1, 0, 0.07, 0.06, 0.2, 6, c); mb.cone(0, (o.H || 0.85) + (o.th || 0.85) + 0.08, 0, 0.1, 0.5, 6, tak, { low: TAKL });
+    port(mb, -L / 2 + 0.3, (o.D || 0.85) / 2 + 0.005, 0.16, 0.36); return 2.2;
+  }
+  // Helsingborg: Kärnan, det höga fyrkantiga tegeltornet på åsen ovanför sundet, inom borgens ringmur.
+  function karnan(mb, Y) {
+    mur(mb, -1.1, 0.8, 1.1, 0.8, 0.5, TEGEL, TEGELL); mur(mb, -1.1, -0.8, 1.1, -0.8, 0.5, TEGEL, TEGELL); mur(mb, -1.1, -0.8, -1.1, 0.8, 0.5, TEGEL, TEGELL); mur(mb, 1.1, -0.8, 1.1, 0.8, 0.5, TEGEL, TEGELL);
+    mb.box(0, 0, -0.1, 0.85, 2.7, 0.85, '#a95740', { low: TEGELL, noTop: true }); for (const y of [0.9, 1.5, 2.1]) fon(mb, 0, y, 0.33, 0.07, 0.16);
+    for (let k = 0; k < 4; k++) for (const s of [-1, 1]) { mb.box(-0.3 + k * 0.2, 2.7, -0.1 + s * 0.4, 0.1, 0.12, 0.08, '#a95740', { low: '#a95740' }); mb.box(s * 0.4, 2.7, -0.4 + k * 0.2, 0.08, 0.12, 0.1, '#a95740', { low: '#a95740' }); }
+    mb.hip(0, 2.7, -0.1, 0.6, 0.35, 0.6, TAK, 0.02);
+    langa(mb, 0.6, 0.35, 0.8, 0.6, 0.4, TEGEL, TEGELL, TAK, {});
+    K._flagga = [0, 3.1, -0.1]; return 3.1;
+  }
+  // Landskrona citadell: Kristian III:s kastell från 1549, fyra längor i fyrkant med runda hörntorn och vallgrav.
+  function landskrona(mb, Y) {
+    langa(mb, 0, -0.6, 1.4, 1.0, 0.42, TEGEL, TEGELL, TAK, {}); langa(mb, 0, 0.6, 1.4, 0.9, 0.42, TEGEL, TEGELL, TAK, {});
+    langa(mb, -0.6, 0, 0.8, 0.95, 0.4, TEGEL, TEGELL, TAK, { rot: 1 }); langa(mb, 0.6, 0, 0.8, 0.95, 0.4, TEGEL, TEGELL, TAK, { rot: 1 });
+    for (const [x, z] of [[-0.75, -0.75], [0.75, -0.75], [-0.75, 0.75], [0.75, 0.75]]) runt(mb, x, z, 0.32, 1.25, TEGEL, TEGELL, 'kon');
+    port(mb, 0, 0.815, 0.2, 0.36); return 1.8;
+  }
+  // Malmöhus: Kristian III:s borg från 1530-talet, en lång tegellänga med två runda kanontorn.
+  function malmohus(mb, Y) {
+    langa(mb, 0, -0.2, 1.9, 1.05, 0.6, TEGEL, TEGELL, TAK, { trapp: 1 });
+    runt(mb, -1.1, 0.2, 0.5, 0.95, TEGEL, TEGELL, 'platt'); runt(mb, 1.1, 0.2, 0.5, 0.95, TEGEL, TEGELL, 'platt');
+    mur(mb, -0.7, 0.75, 0.7, 0.75, 0.45, TEGEL, TEGELL); port(mb, 0, 0.835, 0.22, 0.36);
+    K._flagga = [0, 1.75, -0.2]; return 1.7;
+  }
+  // Lunds domkyrka: romansk sandstenskyrka med två västtorn och halvrund absid, ärkesäte i Norden.
+  function lundDom(mb, Y) {
+    const c = '#bfae8c', lo = '#7f705a';
+    langa(mb, 0.15, 0, 2.1, 1.05, 0.9, c, lo, TAK, { th: 0.7, fon: false });
+    for (let k = 0; k < 4; k++) fon(mb, -0.6 + k * 0.45, 0.55, 0.455, 0.07, 0.28);
+    mb.cyl(1.2, 0, 0, 0.44, 0.44, 0.95, 10, c, { low: lo }); mb.cone(1.2, 0.95, 0, 0.48, 0.4, 10, TAK, { low: TAKL });
+    for (const z of [-0.36, 0.36]) { mb.box(-1.15, 0, z, 0.56, 2.1, 0.56, c, { low: lo, noTop: true }); fon(mb, -1.15, 1.5, z + 0.285, 0.08, 0.18); mb.hip(-1.15, 2.1, z, 0.58, 0.6, 0.58, TAK, 0.03); }
+    port(mb, -1.15, 0.645, 0.18, 0.36); return 2.7;
+  }
+  // Visby: Sankta Maria med sitt stora västtorn och två östtorn, och bit av ringmuren med sina fyrkantiga torn.
+  function visby(mb, Y) {
+    tornkyrka(mb, { L: 1.6, H: 0.9, D: 0.9, c: '#cfc8b5', lo: KALKL, tak: TAK, tw: 0.62, th: 1.7, sp: 1.0 });
+    for (const z of [-0.35, 0.35]) { mb.box(1.15, 0, z, 0.32, 1.35, 0.32, '#cfc8b5', { low: KALKL, noTop: true }); mb.cone(1.15, 1.35, z, 0.22, 0.55, 4, TAK, { low: TAKL }); }
+    mur(mb, -2.2, -1.3, 2.0, -1.3, 0.6, KALK, KALKL); for (const x of [-1.6, -0.2, 1.2]) fyr(mb, x, -1.3, 0.36, 0.95, KALK, KALKL);
+    return 2.8;
+  }
+  // Älvsborg: fästningen på klippan vid Göta älvs mynning, rikets enda hamn mot väster.
+  function alvsborg(mb, Y) {
+    mb.blob(0, 0, 0, 1.3, 0.45, 1.0, '#7d776c', { top: '#8e877b', low: '#5a554d', snow: 0.5 });
+    mb.push().move(0, 0.3, 0); runt(mb, -0.2, -0.1, 0.48, 1.5, STEN, STENL, 'kon'); langa(mb, 0.55, 0.1, 0.9, 0.7, 0.45, STEN, STENL, TAK, { rot: 1 });
+    mur(mb, -0.9, 0.6, 0.9, 0.6, 0.45, STEN, STENL); mb.pop();
+    K._flagga = [-0.2, 2.3, -0.1]; return 2.4;
+  }
+  // Varberg: borgen vid kusten, fyra längor kring en gård och ett högt torn.
+  function varberg(mb, Y) {
+    langa(mb, 0, -0.55, 1.5, 0.9, 0.45, STEN, STENL, TAK, {}); langa(mb, -0.55, 0.15, 0.9, 0.8, 0.42, STEN, STENL, TAK, { rot: 1 });
+    fyr(mb, 0.55, 0.35, 0.55, 1.6, STEN, STENL); mur(mb, -0.8, 0.75, 0.25, 0.75, 0.5, STEN, STENL); port(mb, -0.3, 0.835, 0.22, 0.34);
+    for (const [x, z] of [[-1.0, -0.9], [1.0, -0.9]]) runt(mb, x, z, 0.32, 0.7, STEN, STENL, 'platt');
+    K._flagga = [0.55, 2.0, 0.35]; return 2.1;
+  }
+  // Kronobergs slott: Gustav Vasas borg på en holme i Helgasjön, byggd på 1540-talet.
+  function kronoberg(mb, Y) {
+    runt(mb, -0.55, -0.1, 0.48, 1.35, STEN, STENL, 'kon'); langa(mb, 0.35, -0.25, 1.1, 0.85, 0.5, STEN, STENL, TAK, {});
+    mur(mb, -0.9, 0.6, 0.9, 0.6, 0.45, STEN, STENL); port(mb, 0.3, 0.685, 0.2, 0.32);
+    K._flagga = [-0.55, 1.95, -0.1]; return 2.0;
+  }
+  // Tavastehus: tegelborgen vid sjön Vanajavesi, en tung fyrkantig huvudborg med smala hörntorn.
+  function tavastehus(mb, Y) {
+    mb.box(0, 0, -0.1, 1.3, 1.5, 1.0, TEGEL, { low: TEGELL, noTop: true }); mb.gable(0, 1.5, -0.1, 1.3, 0.55, 1.0, TAK, { gable: TEGEL });
+    for (const y of [0.5, 1.0]) for (const x of [-0.35, 0.35]) fon(mb, x, y, 0.405, 0.06, 0.14);
+    for (const [x, z] of [[-0.65, 0.4], [0.65, 0.4]]) runt(mb, x, z, 0.18, 1.75, TEGEL, TEGELL, 'kon');
+    mur(mb, -1.2, 0.85, 1.2, 0.85, 0.5, STEN, STENL); mur(mb, -1.2, -0.85, -1.2, 0.85, 0.5, STEN, STENL); mur(mb, 1.2, -0.85, 1.2, 0.85, 0.5, STEN, STENL);
+    K._flagga = [0, 2.2, -0.1]; return 2.2;
+  }
+  // Olofsborg (Nyslott): Erik Axelsson Totts borg från 1475 på en klippö, tre runda torn i rad.
+  function olofsborg(mb, Y) {
+    mb.blob(0, 0, 0, 1.4, 0.3, 0.9, '#7d776c', { top: '#8e877b', low: '#5a554d', snow: 0.5 });
+    mb.push().move(0, 0.2, 0); for (const [x, h] of [[-0.85, 1.4], [0, 1.65], [0.85, 1.3]]) runt(mb, x, -0.1, 0.36, h, STEN, STENL, 'kon');
+    mur(mb, -0.85, 0.35, 0.85, 0.35, 0.6, STEN, STENL); mb.pop();
+    K._flagga = [0, 2.4, -0.1]; return 2.5;
+  }
+  // Kexholm: borgen på holmen i Vuoksens mynning vid Ladoga, med det runda tornet.
+  function kexholm(mb, Y) { runt(mb, 0.4, -0.2, 0.5, 1.35, STEN, STENL, 'kon'); langa(mb, -0.45, 0, 1.0, 0.75, 0.45, STEN, STENL, TAK, { rot: 1 }); mur(mb, -0.9, 0.65, 0.9, 0.65, 0.45, STEN, STENL); K._flagga = [0.4, 2.0, -0.2]; return 2.0; }
+  // Örbyhus: borgen i Uppland med sitt runda torn, där Erik XIV satt fången och dog 1577.
+  function orbyhus(mb, Y) { langa(mb, 0.2, -0.2, 1.4, 0.95, 0.55, VIT, VITL, TAK, { trapp: 1 }); runt(mb, -0.75, 0.1, 0.4, 1.4, VIT, VITL, 'kon'); K._flagga = [-0.75, 2.0, 0.1]; return 2.1; }
+  // Drottningholm: Katarina Jagellonicas lustslott på Lovön, byggt från 1580.
+  function drottningholm(mb, Y) { langa(mb, 0, 0, 2.0, 1.05, 0.6, VIT, VITL, TAK, { trapp: 1 }); for (const x of [-1.15, 1.15]) fyr(mb, x, 0, 0.5, 1.5, VIT, VITL, KOPPAR, 0.45); return 2.4; }
+  // Västervik: Stegeholms slott, borgen vid inloppet (förstörd 1612).
+  function stegeholm(mb, Y) { fyr(mb, -0.3, -0.1, 0.6, 1.45, STEN, STENL); langa(mb, 0.45, 0, 0.8, 0.7, 0.42, STEN, STENL, TAK, { rot: 1 }); mur(mb, -0.8, 0.6, 0.8, 0.6, 0.45, STEN, STENL); K._flagga = [-0.3, 1.9, -0.1]; return 1.9; }
+  // Domkyrkan i Skara (stifets kyrka sedan 1000-talet) och Mariestads domkyrka (Karl IX lät bygga den från 1593).
+  const skaraDom = medSkala((mb, Y) => tornkyrka(mb, { L: 2.0, H: 1.0, D: 0.95, c: '#b8b09f', lo: STENL, tw: 0.62, th: 1.9, sp: 1.3, kor: true }));
+  const mariestadDom = medSkala((mb, Y) => tornkyrka(mb, { L: 1.8, H: 0.95, D: 0.95, c: VIT, lo: VITL, tak: TAK, tw: 0.56, th: 1.8, sp: 1.5, strav: false }));
+  // Klosterkyrkorna: Mariakyrkan i Sigtuna (dominikanernas, tegel) och Nådendals birgittinkloster.
+  const sigtuna = (mb, Y) => hallkyrka(mb, Y, { c: TEGEL, lo: TEGELL, L: 1.9 });
+  const nadendal = (mb, Y) => hallkyrka(mb, Y, { c: '#b4ad9e', L: 2.0, th: 1.0 });
+
   // Orter som bara syns på kartan och inte har en borg: deras kända byggnad i stället för två stugor.
-  const ORT = { strangnas: (mb, Y) => strangnasDom(mb, Y, 0.8), linkoping: (mb, Y) => linkopingDom(mb, Y, 0.8), orebro, borgholm, staket };
+  const ORT = { strangnas: (mb, Y) => strangnasDom(mb, Y, 0.8), linkoping: (mb, Y) => linkopingDom(mb, Y, 0.8), orebro, borgholm, staket,
+    helsingborg: karnan, landskrona, malmo: malmohus, lund: lundDom, visby, alvsborg, varberg, tavastehus, nyslott: olofsborg, kexholm, orbyhus, drottningholm, vastervik: stegeholm,
+    wenden: (mb, Y) => ordensborg(mb, Y, 2.0), wesenberg: (mb, Y) => ordensborg(mb, Y, 1.8), skara: (mb, Y) => skaraDom(mb, Y, 0.8), mariestad: (mb, Y) => mariestadDom(mb, Y, 0.8), sigtuna, nadendal };
+  // Byggnader som inte stod hela tiden: [första året, sista året]. Andra stod genom hela 1500-talet.
+  const TID = { landskrona: [1549, 9999], kronoberg: [1540, 9999], drottningholm: [1580, 9999], mariestad: [1593, 9999], vastervik: [0, 1612], alvsborg: [0, 1612], staket: [0, 1517] };
 
   // ---- uppslagen: ortens id först, sedan borgens sort ----
-  const BORG = { stockholm: treKronor, kalmar, staket, vasteras: vasterasSlott, uppsala: uppsalaSlott, abo: aboSlott, nykoping: nykopingshus, stegeborg, borgholm, orebro, viborg, vadstena: vadstenaSlott,
+  const BORG = { stockholm: treKronor, kalmar, staket, vasteras: vasterasSlott, uppsala: uppsalaSlott, abo: aboSlott, nykoping: nykopingshus, stegeborg, borgholm, orebro, viborg, vadstena: vadstenaSlott, kronoberg,
     reval: (mb, Y) => ordensborg(mb, Y, 2.4), narva: (mb, Y) => ordensborg(mb, Y, 2.7) };
   const DOM = { uppsala: uppsalaDom, vasteras: vasterasDom, stockholm: storkyrkan, abo: aboDom, strangnas: strangnasDom, linkoping: linkopingDom, danzig: danzigDom };
   const KYRKA = { mora: moraKyrka, vadstena: blakyrkan };
 
   const K = V.Kanda = {
-    plats: null, arTest: 0, _flagga: null,
+    plats: null, arTest: 0, _flagga: null, _ritad: {},
     // Svarar true om orten har en egen borg och den är ritad.
     borg(mb, sort, steg) { const f = BORG[K.plats] || (sort !== 'liten' && BORG[sort]); if (!f) return false; K._flagga = null; if (!K._tom) f(mb, ar(), steg); return true; },          // _tom: ett slott ritas en gång, inte en gång per steg
     dom(mb, torn, s) { const f = DOM[K.plats]; if (!f) return false; f(mb, ar(), s); return true; },
@@ -342,7 +446,7 @@
   // Bygge.steg vet vilken ort som byggs: tala om det för borg(), domkyrka() och kyrka(). Fanan flyttas till den nya borgens krön.
   const stegFore = B.steg;
   B.steg = function (t, s, paint) {
-    K.plats = t && t.b ? t.b.id : null; K._tom = !!(t && t.b && t.b.slag === 'slott' && s > 0 && BORG[t.b.id]);
+    K.plats = t && t.b ? t.b.id : null; if (K.plats) K._ritad[K.plats] = 1; K._tom = !!(t && t.b && t.b.slag === 'slott' && s > 0 && BORG[t.b.id]);
     try {
       const mb = stegFore.call(this, t, s, paint);
       if (s === 0 && K._flagga && t.b.borg && BORG[t.b.id] && t.b.slag === 'stad') { const bx = t.b.stor ? 2.6 : 2.4, bz = t.b.stor ? -2.2 : -1.5, f = K._flagga; t.flag = [bx + f[0], f[1], bz + f[2]]; }
@@ -376,16 +480,28 @@
     } finally { K.plats = null; K._flagga = null; }
     return mb;
   }
+  // Var orten ligger: en plats i spelet, en ort i levande.js, eller en stad i orter.js. Vid en stad står byggnaden strax norr om husen.
+  const platsCache = {};
+  function plats(id) {
+    if (platsCache[id] !== undefined) return platsCache[id];
+    const R = V.Rike, L = V.Levande; let p = null;
+    // en stad i orter.js (också spelets egna platser, som ritas där som små städer tills spelet tar över): byggnaden norr om husen
+    const q = V.Orter && V.Orter.lagg ? V.Orter.lagg().find(o => o.st[0] === id) : null;
+    if (q) { const x = q.x + 0.4, z = q.z - 2.0; p = V.Geo.sdAt(x, z) > 0.5 ? { x, z, stad: 1 } : { x: q.x + 1.9, z: q.z - 0.6, stad: 1 }; }
+    else if (R.P[id]) p = R.P[id];
+    else if (L && L.ORT && L.ORT[id]) { const w = V.Geo.toWorld(L.ORT[id][0], L.ORT[id][1]); p = { x: w[0], z: w[1] }; }
+    if (p) platsCache[id] = p; return p;
+  }
   K.stall = function () {
     const W = V.Varld, G = V.Game, D = V.DATA, R = V.Rike; if (!W || !G || !G.s || !R || !R.P) return;
     const S = G.s, Y = ar(), ort = {}; (W._ortLista || []).forEach(o => { ort[o.id] = 1; });
     const ids = {}; [BORG, DOM, KYRKA, ORT].forEach(t => Object.keys(t).forEach(id => { ids[id] = 1; }));
     for (const id in ids) {
-      if (INTE[id]) continue; const p = R.P[id]; if (!p || V.Geo.sdAt(p.x, p.z) < 0.3) continue;
-      const b = D.BASER.find(q => q.id === id), egen = b && finnsBas(b, S) && S.bas && S.bas[id];
+      if (INTE[id] || (TID[id] && (Y < TID[id][0] || Y > TID[id][1]))) continue; const p = plats(id); if (!p || V.Geo.sdAt(p.x, p.z) < 0.3) continue;
+      const egen = K._ritad[id];          // spelet har ritat orten som egen bas, med samma borg och kyrka
       const pa = !egen && !ort['ort' + id];
       if (pa && K._stallAr[id] !== undefined && K._stallAr[id] !== Y) W._dekor('kanda' + id, false);          // ett annat år: rita om
-      W._dekor('kanda' + id, pa, () => { K._stallAr[id] = Y; const mb = stallning(id, Y), m = B.mesh(mb); m.position.set(p.x, V.Geo.groundAt(p.x, p.z), p.z); m.scale.setScalar(B.K * 0.8); return m; });
+      W._dekor('kanda' + id, pa, () => { K._stallAr[id] = Y; const mb = stallning(id, Y), m = B.mesh(mb); m.position.set(p.x, V.Geo.groundAt(p.x, p.z), p.z); m.scale.setScalar(B.K * (p.stad ? 0.62 : 0.8)); return m; });
     }
   };
   K._stallAr = {};
