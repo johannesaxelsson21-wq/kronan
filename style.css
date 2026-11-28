@@ -608,3 +608,13 @@ button { font-family: inherit; cursor: pointer; }
 
 /* tipsrutan bredvid panelen, med pilen mot det den pekar på (Johannes 2026-11-28) */
 .tip.vid::after, .tip.vid.nytt::after { left: auto; right: -7px; top: var(--pilY, 50%); bottom: auto; margin: -7px 0 0 0; border: 7px solid transparent; border-left-color: #5a4634; border-right: 0; }
+
+/* kassan tydligare (Johannes 2026-11-28 03:38): det som kommer in i sekunden står i en ljus grön bricka, och +siffror stiger lugnt ur rutan */
+#kassa .ks > i { justify-self: start; margin-top: 3px; padding: 1px 8px; border-radius: 9px; font-size: 13.5px; font-weight: 600; color: #e4f7c4; background: rgba(110, 160, 60, 0.45); box-shadow: 0 0 0 1px rgba(185, 226, 124, 0.45) inset; letter-spacing: 0.01em; }
+#kassa .ks-mark > i { color: #fff1c0; background: rgba(190, 150, 50, 0.42); box-shadow: 0 0 0 1px rgba(242, 207, 90, 0.5) inset; }
+#kassa .ks.fullt > i { opacity: 0.55; }
+#kassa .ks { overflow: visible; }
+.ks-plus { position: absolute; right: 12px; top: 2px; font-size: 14px; font-weight: 600; color: #e4f7c4; text-shadow: 0 1px 2px #000; pointer-events: none; animation: ksplus 1.5s ease-out forwards; }
+.ks-mark .ks-plus { color: #fff1c0; }
+@keyframes ksplus { 0% { opacity: 0; transform: translateY(6px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-22px); } }
+@media (max-width: 720px) { #kassa .ks > i { font-size: 11px; padding: 0 6px; } .ks-plus { font-size: 12px; } }

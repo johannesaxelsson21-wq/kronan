@@ -142,9 +142,9 @@
         if (!k._klick) { k._klick = 1; k.addEventListener('click', e => { const ks = e.target.closest('.ks'); if (!ks) return; const f = ks.classList.contains('ks-mark') ? 'mark' : 'man'; if (!flikar[f]) return; flik = f; G.s.flik = f; V.Ljud && V.Ljud.vakna(); UI.tick(); if (ks.classList.contains('ks-skepp')) { const v = $('varv'); if (v) { v.classList.remove('glod-ny'); void v.offsetWidth; v.classList.add('glod-ny'); setTimeout(() => v.classList.remove('glod-ny'), 2500); } } }); }          // ett tryck på män eller mark öppnar dess flik, skeppen visar varvet
         if (k._n !== nyck) { k._n = nyck; k.innerHTML = '<div class="ks ks-man">' + IK.man + '<b></b><span></span><i></i><u><u></u></u></div><div class="ks ks-mark">' + IK.mark + '<b></b><span>mark</span><i></i><u><u></u></u></div>' + (sk ? '<div class="ks ks-skepp" title="Skepp byggs av männen du sätter på varvet vid Björkenäs (kortet Varvet under Män). Flottan tar tull av fartygen på Östersjön.">' + IK.skepp + '<b></b><span>skepp</span><i></i></div>' : ''); }
         const sv = (sel, txt) => { const e = k.querySelector(sel); if (e && e._t !== txt) { e._t = txt; e.textContent = txt; } }, bv = (sel, p) => { const e = k.querySelector(sel); if (e) e.style.width = p.toFixed(1) + '%'; };
-        sv('.ks-man b', tal(Math.floor(S.res.man))); sv('.ks-man span', 'av ' + tal(tak) + ' män'); sv('.ks-man i', '+' + tal(G.takt('man')) + ' i sekunden'); bv('.ks-man u u', Math.min(100, S.res.man / tak * 100)); k.querySelector('.ks-man').classList.toggle('fullt', S.res.man >= tak * 0.999);
+        UI._rulla('.ks-man b', S.res.man); sv('.ks-man span', 'av ' + tal(tak) + ' män'); sv('.ks-man i', '+' + tal(G.takt('man')) + ' /s'); UI._strom('man', G.takt('man'), S.res.man < tak * 0.999); bv('.ks-man u u', Math.min(100, S.res.man / tak * 100)); k.querySelector('.ks-man').classList.toggle('fullt', S.res.man >= tak * 0.999);
         const nu = D.UPPDRAG[S.nasta], km = nu && !S.aktivt ? (G.kostnad(nu).mark || 0) : 0;
-        sv('.ks-mark b', tal(Math.floor(S.res.mark))); sv('.ks-mark i', '+' + tal(G.takt('mark')) + ' i sekunden'); bv('.ks-mark u u', km > 1 ? Math.min(100, S.res.mark / km * 100) : 0);
+        UI._rulla('.ks-mark b', S.res.mark); sv('.ks-mark i', '+' + tal(G.takt('mark')) + ' /s'); UI._strom('mark', G.takt('mark'), true); bv('.ks-mark u u', km > 1 ? Math.min(100, S.res.mark / km * 100) : 0);
         if (sk) { const kv = G.skeppKvar(); sv('.ks-skepp b', String(G.skepp())); sv('.ks-skepp i', isFinite(kv) ? 'nästa om ' + (kv < 60 ? Math.ceil(kv) + ' s' : Math.ceil(kv / 60) + ' min') : '+' + Math.round((G.tullX() - 1) * 100) + ' % mark'); }
       } }
       if (UI._kungOppen) { if ($('ruta').style.display === 'none') UI._kungOppen = false; else UI._kungKort(); }
@@ -592,6 +592,19 @@
 
     // ---- rutor --------------------------------------------------------------------------------
     // Kassan står nere till höger, i raden med flikarna över korten (Johannes 2026-11-28: "lägga den här"). Får den inte plats bredvid flikarna står den ovanför dem.
+    // Kassans siffror rullar mjukt mot det man har (Johannes 2026-11-28: "det ska bli tydligare"), och det som kommer in syns som lugna +siffror.
+    _rulla(sel, mal) {
+      const e = document.querySelector('#kassa ' + sel); if (!e) return; e._mal = mal; if (e._visa === undefined || Math.abs(mal - e._visa) > Math.max(mal, e._visa) * 0.5) e._visa = mal;
+      if (UI._rullar) return; UI._rullar = true; let sist = performance.now();
+      const steg = nu => { const dt = Math.min(0.1, (nu - sist) / 1000); sist = nu; let kvar = false;
+        document.querySelectorAll('#kassa .ks > b').forEach(b => { if (b._mal === undefined) return; const d = b._mal - b._visa; if (Math.abs(d) < 0.5) b._visa = b._mal; else { b._visa += d * Math.min(1, dt * 6); kvar = true; } const t = tal(Math.floor(b._visa)); if (b._t !== t) { b._t = t; b.textContent = t; } });
+        if (kvar) requestAnimationFrame(steg); else UI._rullar = false; };
+      requestAnimationFrame(steg);
+    },
+    _strom(res, takt, pa) {
+      const k = document.querySelector('#kassa .ks-' + res); if (!k || !pa || !(takt > 0) || V.tyst) return; const nu = performance.now(); if (nu - (k._strom || 0) < 1600) return; k._strom = nu;
+      const e = document.createElement('span'); e.className = 'ks-plus'; e.textContent = '+' + tal(takt * 1.6); k.appendChild(e); setTimeout(() => e.remove(), 1500);
+    },
     _kassaPlats() {
       const k = $('kassa'), bx = $('baser'), fl = $('flikar'); if (!k || !bx || !fl || !bx.offsetParent) return;
       if (innerWidth < 720) { if (k._plats) { k._plats = ''; k.style.right = k.style.bottom = ''; } return; }          // telefon: kassan står uppe under datumet, där finns plats
