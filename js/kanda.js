@@ -420,11 +420,11 @@
   const nadendal = (mb, Y) => hallkyrka(mb, Y, { c: '#b4ad9e', L: 2.0, th: 1.0 });
 
   // =====================================================================================
-  // Visingsö i Vättern (Johannes 2026-11-28: "Visingsö borde väl vara med på kartan"). Ön är för smal för kartans mark, så den ritas här som en egen ö.
+  // Visingsö i Vättern (Johannes 2026-11-28: "Visingsö borde väl vara med på kartan").
   // Näs: kungaborgen från 1100-talet på södra udden, bränd 1318 och ruin sedan dess (ett runt och ett fyrkantigt torn med mur emellan).
   // Visingsborg: grunden lades på 1570-talet, fyrkantigt slott av tegel med fyra torn och förgyllda spiror, färdigt först på 1660-talet.
   // Brahehus: Per Brahe den yngres hus på berget ovanför Gränna, byggt från 1637, brann 1708.
-  const VISINGSO = [14.335, 58.03], NAS = [14.345, 57.978], VBORG = [14.362, 58.036], BRAHEHUS = [14.49, 58.055];
+  const VISINGSO = [14.335, 58.03], NAS = [14.343, 57.984], VBORG = [14.362, 58.036], BRAHEHUS = [14.49, 58.055];
   function nasRuin(mb) {
     const c = '#8f897d', lo = '#5e5950';
     mb.cyl(-0.45, 0, 0, 0.42, 0.4, 0.75, 10, c, { low: lo, cap: '#7a7468' }); mb.box(0.45, 0, 0, 0.6, 1.0, 0.6, c, { low: lo, top: '#7a7468' });
@@ -439,14 +439,13 @@
     return 2.5;
   }
   function brahehus(mb, Y) { mb.box(0, 0, 0, 1.3, 1.15, 0.6, '#c2b597', { low: '#857a62', noTop: true }); mb.gable(0, 1.15, 0, 1.3, 0.45, 0.6, TAK, { gable: '#c2b597' }); for (const x of [-0.7, 0.7]) fyr(mb, x, 0.3, 0.42, 1.55, '#c2b597', '#857a62'); for (const x of [-0.3, 0.3]) fon(mb, x, 0.6, 0.305, 0.07, 0.16); return 2.0; }
+  // Byggnaderna står på kartans Visingsö (geo.js har ön sedan 2026-11-28), på sina riktiga platser.
   function visingsoMesh(Y) {
-    const G = V.Geo, w = p => G.toWorld(p[0], p[1]), o0 = w(VISINGSO), o = o0, mb = new MB();          // lite västerut: kartans Vättern är smalare än den riktiga
-    mb.push().rotY(-0.12); mb.blob(0, -0.05, 0, 0.75, 0.2, 2.6, '#6c9440', { top: '#7fae4a', low: '#c9b98a', snow: 1 }); mb.pop();          // ön, smal i nord-sydlig riktning
-    for (const [x, z] of [[-0.25, -1.6], [0.2, -1.0], [-0.3, 0.6], [0.15, 1.3], [-0.1, 2.0]]) { mb.cone(x, 0.1, z, 0.16, 0.45, 6, '#2f6b3a', { low: '#24552e' }); }
-    const vid = (p, f, s) => { const q = w(p); mb.push().move(q[0] - o[0], 0.1, q[1] - o[1]).scale(s); f(mb, Y); mb.pop(); };
-    vid(NAS, nasRuin, 0.5);
-    if (Y >= 1575) vid(VBORG, visingsborg, 0.5);
-    const m = B.mesh(mb); m.position.set(o0[0] - 0.35, 0, o0[1]); return m;
+    const G = V.Geo, g = new THREE.Group();
+    const stall = (p, f) => { const q = G.toWorld(p[0], p[1]), mb = new MB(); f(mb, Y); const m = B.mesh(mb); m.position.set(q[0], Math.max(0.02, G.groundAt(q[0], q[1])), q[1]); m.scale.setScalar(B.K * 0.36); g.add(m); };
+    stall(NAS, nasRuin);
+    if (Y >= 1575) stall(VBORG, visingsborg);
+    return g;
   }
   const EGNA = { visingso: { lonlat: VISINGSO, namn: 'Visingsö', mesh: visingsoMesh }, brahehus: { lonlat: BRAHEHUS, namn: 'Brahehus', tid: [1637, 1708], mesh: Y => { const mb = new MB(); brahehus(mb, Y); const m = B.mesh(mb), q = V.Geo.toWorld(BRAHEHUS[0], BRAHEHUS[1]); m.position.set(q[0], V.Geo.groundAt(q[0], q[1]), q[1]); m.scale.setScalar(B.K * 0.5); return m; } } };
 
