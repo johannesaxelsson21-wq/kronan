@@ -352,3 +352,49 @@
   function hitta(f) { for (const e of document.querySelectorAll('.vem.annan:not([data-fig])')) if (e.textContent.trim() === f.d.namn) { e.dataset.fig = f.d.id; return e; } return null; }
   document.addEventListener('DOMContentLoaded', koppla); setTimeout(koppla, 0);
 })();
+
+// ---- Notiser när huvudpersonerna reser (Johannes 2026-11-28: "Någon notis vill jag ha när huvudkaraktärer rör sig, som när de seglar från stockholm
+// till danmark med trolle och kristina, nån notis ska man få så man kan se och följa sånna event") ----
+// När en person eller en här i historien ger sig av (levande.js) kommer en lugn rad längst ner med Visa, som för kameran dit. En rad i taget:
+// de som ger sig av samtidigt på samma väg nämns i samma rad, och raden väntar tills ingen annan rad står där.
+(function () {
+  'use strict';
+  const V = window.VASA;
+  const sist = {}, ko = []; let start = 0;
+  const namnPa = id => (V.UI && V.UI.platsnamn ? V.UI.platsnamn(id) : id);
+  const lista = n => n.length > 1 ? n.slice(0, -1).join(', ') + ' och ' + n[n.length - 1] : n[0];
+  function koppla() {
+    const L = V.Levande; if (!L || !L.update || L._notis) return; L._notis = 1;
+    const fore = L.update;
+    L.update = function (dt, t) {
+      const r = fore.apply(this, arguments);
+      try { kolla(); } catch (e) { /* inga notiser */ }
+      return r;
+    };
+    const initFore = L.init; L.init = function () { start = performance.now(); for (const k in sist) delete sist[k]; ko.length = 0; return initFore.apply(this, arguments); };
+    setInterval(visa, 1000);
+  }
+  function kolla() {
+    const L = V.Levande, nu = performance.now(); if (!start) start = nu;
+    for (const f of L.figs || []) {
+      const nyckel = f.leg ? f.k : -1, var_ = sist[f.d.id]; sist[f.d.id] = nyckel;
+      if (var_ === undefined || nu - start < 4000) continue;          // läget när världen laddas är ingen nyhet
+      if (!f.leg || var_ === nyckel || !f.syns) continue;
+      const st = f.d.stopp, fran = st[f.k] && st[f.k][2], till = st[f.k + 1] && st[f.k + 1][2]; if (!fran || !till || fran === till) continue;
+      const sjo = !!(st[f.k + 1][3] && st[f.k + 1][3].sjo), har = /^[hf][A-Z]/.test(f.d.id);
+      const q = ko.find(x => x.fran === fran && x.till === till && nu - x.t < 3000);
+      if (q) { if (q.n.indexOf(f.d.namn) < 0) q.n.push(f.d.namn); continue; }
+      ko.push({ fran, till, sjo, har, n: [f.d.namn], f, t: nu });
+    }
+  }
+  function visa() {
+    if (!ko.length || V.tyst || (V.Intro && V.Intro.aktiv) || (V.Game.skede && V.Game.skede() === 'strid')) return;
+    if (document.querySelector('#text .text')) return;          // en annan rad står redan där
+    const q = ko[0]; if (performance.now() - q.t < 2500) return;          // vänta lite så att alla som följer med hinner komma med i raden
+    ko.shift();
+    const verb = q.sjo ? 'seglar' : q.har ? 'drar' : 'reser';
+    const rad = lista(q.n) + ' ' + verb + ' från ' + namnPa(q.fran) + ' till ' + namnPa(q.till) + '.';
+    V.UI.text(rad, 9, false, () => { try { V.Levande.gaTill({ f: q.f }); } catch (e) { /* inget */ } });
+  }
+  document.addEventListener('DOMContentLoaded', koppla); setTimeout(koppla, 0);
+})();
