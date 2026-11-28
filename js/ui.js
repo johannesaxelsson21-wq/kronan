@@ -144,7 +144,7 @@
         sv('.ks-mark b', tal(Math.floor(S.res.mark))); sv('.ks-mark i', '+' + tal(G.takt('mark')) + ' i sekunden'); bv('.ks-mark u u', km > 1 ? Math.min(100, S.res.mark / km * 100) : 0);
         if (sk) { const kv = G.skeppKvar(); sv('.ks-skepp b', String(G.skepp())); sv('.ks-skepp i', isFinite(kv) ? 'nästa om ' + (kv < 60 ? Math.ceil(kv) + ' s' : Math.ceil(kv / 60) + ' min') : '+' + Math.round((G.tullX() - 1) * 100) + ' % mark'); }
       } }
-      if (UI._kungOppen) { if ($('ruta').style.display === 'none') UI._kungOppen = false; else document.querySelectorAll('#ruta .eg').forEach(e => e.classList.toggle('ok', G.kanEg(e.dataset.eg))); }
+      if (UI._kungOppen) { if ($('ruta').style.display === 'none') UI._kungOppen = false; else UI._kungKort(); }
       if (S.t > 25 && !S.aktivt && !G.skede() && root.classList.contains('spel')) {          // en ny sak i taget, med en lugn rad
         if ((D.VARLDAR[S.varld] || {}).takKung && S.titel === 'Kung' && !S.takSagt) { S.takSagt = 1; UI.text('Som kung har ' + ((D.KUNGINFO[S.varld] || {}).namn || 'kungen') + ' rikets stående armé av svenskt fotfolk. Armén rymmer nu ' + tal(G.tak()) + ' män.', 10); }
         else if (G.harVarv() && !S.varvSagt) { S.varvSagt = 1; UI.text('På skeppsgården vid Björkenäs kan män bygga skepp. Kortet ligger under Män.', 10); }
@@ -590,11 +590,45 @@
     // Kungens sida (Johannes 2026-11-28): vem han är, och dyra egenskaper som gör en sak mer givande. Öppnas med ett tryck på kungen eller på rutan uppe till vänster.
     kung() {
       const S = G.s, ki = D.KUNGINFO && D.KUNGINFO[S.varld], eg = G.egLista(); if (!ki && !eg.length) return false;
-      const ar = G.datum().ar; let h = '<h2>' + $('dat-titel').textContent + '</h2>' + (ki ? '<p class="svag">' + ar + '. ' + ki.namn + ' är ' + (ar - ki.fodd - (ki.sent ? 1 : 0)) + ' år.</p>' + ki.rader.map(r => '<p>' + r + '</p>').join('') : '');
-      if (eg.length) { h += '<h3>Det han kan bli bättre på</h3><div class="eg-lista">'; eg.forEach(e => { const L = G.eg(e.id), max = L >= G.EG_MAX; h += '<div class="eg' + (G.kanEg(e.id) ? ' ok' : '') + '" data-eg="' + e.id + '"><div class="eg-topp">' + (IK[e.ikon] || IK.krona) + '<b>' + e.namn + '</b><span>nivå ' + L + '</span></div><p>' + e.vad + '</p><p class="eg-ger">' + e.nar + (L ? ' Nu: +' + Math.round(e.steg * L * 100) + ' %.' : '') + '</p>' + (max ? '<p class="svag">Kan inte bli bättre.</p>' : '<button class="eg-kop">' + IK.mark + tal(G.egPris(e.id)) + ' mark</button>') + '</div>'; }); h += '</div>'; }
-      h += '<button class="stang">Tillbaka</button>';
-      const r = UI.ruta(h); r.querySelectorAll('.eg-kop').forEach(b => b.addEventListener('click', () => { const id = b.closest('.eg').dataset.eg; if (G.kopEg(id)) { V.Ljud && V.Ljud.spela('dubbel'); UI.kung(); UI.tick(); } else UI._nej(b.closest('.eg')); }));
-      UI._kungOppen = true; return true;
+      const ar = G.datum().ar, alder = ki ? ar - ki.fodd - (ki.sent ? 1 : 0) : 0;
+      let h = '<div class="kung-topp"><div class="kung-fig"><canvas width="260" height="330"></canvas><i class="kung-vrid">dra för att vrida</i></div><div class="kung-om"><div class="kung-krona">' + IK.krona + '</div><h2>' + $('dat-titel').textContent + '</h2>' + (ki ? '<p class="kung-ar">' + ar + ' · ' + alder + ' år</p><ul>' + ki.rader.map(r => '<li>' + r + '</li>').join('') + '</ul>' : '') + '</div></div>';
+      if (eg.length) h += '<div class="kung-eg-rubrik">Kungens egenskaper</div><div class="kung-eg">' + eg.map(e => '<div class="bas eg-kort" data-eg="' + e.id + '"><div class="k-topp"><i class="k-ikon">' + (IK[e.ikon] || IK.krona) + '</i><span class="k-namn">' + e.namn + '</span><b class="k-niva"></b></div><p class="eg-vad">' + e.vad + '</p><div class="k-rad"><span class="k-ger"></span><span class="k-pris"></span></div><i class="bas-bar"><i></i></i></div>').join('') + '</div>';
+      h += '<button class="stang kung-stang">Tillbaka</button>';
+      const r = UI.ruta(h); r.firstChild.classList.add('kung-in');
+      r.querySelectorAll('.eg-kort').forEach(k => k.addEventListener('click', () => { if (G.kopEg(k.dataset.eg)) { V.Ljud && V.Ljud.spela('dubbel'); UI._kungKort(); UI.tick(); } else UI._nej(k); }));
+      UI._kungOppen = true; UI._kungKort(); UI._kungFig(r.querySelector('.kung-fig canvas')); return true;
+    },
+    // egenskapernas kort: samma utseende som spelets andra kort (nivå, vad nästa nivå ger, pris), stapeln visar hur långt mot tio nivåer
+    _kungKort() {
+      document.querySelectorAll('#ruta .eg-kort').forEach(k => { const e = G.egLista().find(q => q.id === k.dataset.eg); if (!e) return; const L = G.eg(e.id), max = L >= G.EG_MAX, ok = G.kanEg(e.id);
+        k.classList.toggle('ej', !ok); k.querySelector('.k-niva').textContent = L + ' / ' + G.EG_MAX;
+        const vad = { man: 'Män', flotta: 'Tull per skepp', skatt: 'Skatt' }[e.ger] || e.namn, v = max ? 'full' : '<b class="k-ps">' + vad + ' +' + Math.round(e.steg * 100) + ' %</b>' + (L ? ' <small class="k-mer">nu +' + Math.round(e.steg * L * 100) + ' %</small>' : ''); if (k._v !== v) { k._v = v; k.querySelector('.k-ger').innerHTML = v; }
+        const p = max ? '' : IK.mark + tal(G.egPris(e.id)); if (k._p !== p) { k._p = p; const pe = k.querySelector('.k-pris'); pe.innerHTML = p; pe.style.display = p ? '' : 'none'; }
+        k.querySelector('.bas-bar i').style.width = (L / G.EG_MAX * 100) + '%'; });
+    },
+    // 3D-gubben ur spelet i en egen liten ruta. Han står till fots och vrider sig sakta; man kan dra för att vrida honom.
+    _kungFig(cv) {
+      if (!cv || !V.hjalteModell || !window.THREE) return; UI._kungStopp && UI._kungStopp();
+      let ren; try { ren = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }); } catch (e) { return; }
+      ren.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); ren.setSize(cv.clientWidth || 260, cv.clientHeight || 330, false);
+      const sc = new THREE.Scene(), cam = new THREE.PerspectiveCamera(28, (cv.clientWidth || 260) / (cv.clientHeight || 330), 0.1, 50);
+      sc.add(new THREE.HemisphereLight(0xfff4dc, 0x5a4634, 1.0)); const sol = new THREE.DirectionalLight(0xfff0d0, 0.9); sol.position.set(1.5, 2.5, 2.5); sc.add(sol);
+      const Gu = V.Gustav, g = V.hjalteModell(Gu.sort || G.s.hjalte, Gu.rang || 0), d = g.userData; sc.add(g);
+      if (d.hast) d.hast.visible = false; if (d.ring) d.ring.visible = false; ['skV', 'skH', 'stavV', 'stavH', 'svH'].forEach(k => { if (d[k]) d[k].visible = false; });
+      g.traverse(o => { if (o.layers) o.layers.enableAll(); });
+      const box = new THREE.Box3().setFromObject(g), mitt = box.getCenter(new THREE.Vector3()), hojd = box.max.y - box.min.y || 1;
+      cam.position.set(0, mitt.y + hojd * 0.08, hojd * 2.25); cam.lookAt(0, mitt.y, 0);
+      let vrid = 0.5, drag = null, fri = 0, t0 = performance.now(), lever = true;
+      cv.addEventListener('pointerdown', e => { drag = e.clientX; fri = performance.now(); cv.setPointerCapture(e.pointerId); });
+      cv.addEventListener('pointermove', e => { if (drag === null) return; vrid += (e.clientX - drag) * 0.012; drag = e.clientX; fri = performance.now(); });
+      cv.addEventListener('pointerup', () => { drag = null; });
+      const ruta = () => { if (!lever) return; if (!document.body.contains(cv) || $('ruta').style.display === 'none') { UI._kungStopp(); return; }
+        const t = (performance.now() - t0) / 1000; if (drag === null && performance.now() - fri > 1500) vrid += 0.006;
+        g.rotation.y = vrid; d.kropp.position.set(0, 0.02 + Math.sin(t * 1.6) * 0.006, 0); d.kropp.rotation.set(0, 0, 0);
+        d.benV.rotation.set(0, 0, 0); d.benH.rotation.set(0, 0, 0); d.armV.rotation.set(0.05, 0, 0.1); d.armH.rotation.set(-0.25 + Math.sin(t * 1.6) * 0.03, 0, -0.1);
+        ren.render(sc, cam); requestAnimationFrame(ruta); };
+      UI._kungStopp = () => { if (!lever) return; lever = false; UI._kungStopp = null; try { ren.dispose(); ren.forceContextLoss(); } catch (e) { /* redan borta */ } };
+      requestAnimationFrame(ruta);
     },
     ruta(html, last) { const r = $('ruta'); r.innerHTML = '<div class="ruta-in">' + html + '</div>'; r.style.display = ''; UI._last = !!last; const x = r.querySelector('.stang'); if (x) x.addEventListener('click', UI.stang); return r; },
     stang() { if (UI._paus && V.Musik) V.Musik.spar(V.Musik.grund()); $('ruta').style.display = 'none'; UI._last = false; UI._paus = false; },

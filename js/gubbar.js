@@ -199,6 +199,7 @@
     g.userData = { kropp, bal, huvud, armV, armH, stavV, stavH, svH, benV, benH, skV, skH, hast, hb, svans, ring };
     return g;
   }
+  V.hjalteModell = hjalteModell;          // kungens sida visar samma gubbe i en egen ruta (ui.js UI.kung)
   const RANG = { Riddare: 0, 'Hövitsman': 0, 'Riksföreståndare': 1, Hertig: 1, Kung: 2, Polen: 2, Kristina: 1 };
   V.Gustav = {
     init(scene, sort) { this.scene = scene; this.sort = sort || 'gustav'; this.kanSkida = this.sort === 'gustav'; this.rang = 0; this.g = hjalteModell(this.sort, 0); this.g.scale.setScalar(SKALA * (this.sort === 'bud' ? 1.0 : 1.18)); this.g.visible = false; scene.add(this.g); this.x = 0; this.z = 0; this.ang = 0; this.fart = 0; this.steg = 0; this.spar = []; this.initSpar(scene); },
