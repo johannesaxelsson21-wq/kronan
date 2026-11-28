@@ -382,10 +382,19 @@
   function tidNu() { try { const d = V.Game.datum(); return d.ar + (d.man - 1) / 12; } catch (e) { return arNu(); } }
   function agare(id, lon, lat) {
     const Y = tidNu(), G = V.Game, S = G && G.s, D = V.DATA, R = V.Rike;
+    // 1. spelets steg: en egen bas är din, och en fiende i ett steg vid orten som inte är gjort än håller den
     if (S && S.bas && S.bas[id]) return ['sverige', false];
-    if (S && D.UPPDRAG) for (let i = S.nasta; i < D.UPPDRAG.length; i++) { const u = D.UPPDRAG[i]; if (u.plats !== id || !u.fiende) continue; if (/[Dd]ansk|Rantzau/.test(u.fiende)) return ['danmark', true]; if (/Ryss/.test(u.fiende)) return ['ryssland', true]; break; }
+    if (S && D.UPPDRAG) for (let i = S.nasta; i < D.UPPDRAG.length; i++) { const u = D.UPPDRAG[i]; if (u.plats !== id || !u.fiende) continue; if (/[Dd]ansk|Rantzau/.test(u.fiende) || (S.varld === 1 && Y < 1523.6 && !/Dalkarl|Dacke|bönder/.test(u.fiende))) return ['danmark', true]; /* 1521–1523 är slottens knektar och fogdar kung Kristians */ if (/Ryss/.test(u.fiende)) return ['ryssland', true]; break; }
+    // samma regel som borgarnas flaggor i varld.js: i Gustavs värld håller kung Kristians folk slotten tills de tas (Åbo och Viborg till steget finland, de andra till intag)
+    if (S && S.varld === 1 && D.UPPDRAG) { const b = D.BASER.find(q => q.id === id); if (b && b.borg) { const fi = D.UPPDRAG.findIndex(u => u.id === (id === 'abo' || id === 'viborg' ? 'finland' : 'intag')); if (fi >= 0 && S.nasta <= fi) return ['danmark', true]; } }
+    // 2. kända byten under krigen (sv. Wikipedia: Älvsborgs lösen, Varbergs fästning, Kalmarkriget, Bornholm)
+    const vid = (x, y, r) => Math.abs(lon - x) < r * 2 && Math.abs(lat - y) < r;
+    if (vid(11.93, 57.69, 0.08) && Y >= 1563.7 && Y < 1571.95) return ['danmark', true];          // Älvsborg i danska händer, löses ut 1571
+    if (vid(12.25, 57.1, 0.08) && Y >= 1565.1 && Y < 1569.95) return ['sverige', false];          // Varberg i svenska händer
+    if (vid(16.36, 56.66, 0.08) && Y >= 1611.4) return ['danmark', true];          // Kalmar tas av danskarna 1611
+    if (lat < 55.35 && lon > 14.6 && lon < 15.3) return [Y >= 1525 && Y < 1576 ? 'lubeck' : 'danmark', false];          // Bornholm, pantsatt till Lübeck 1525–1576
+    // 3. landet orten ligger i
     if (lon < 10.95 || (lat > 54.5 && lat < 56.2 && lon < 12.68)) return ['danmark', false];          // Jylland och öarna
-    if (lat < 55.35 && lon > 14.6 && lon < 15.3) return ['danmark', false];          // Bornholm
     if (Y < 1658 && lat > 55.2 && lat < 56.45 && lon < 14.65) return ['danmark', false];          // Skåne
     if (Y < 1658 && lat < 56.4 && lon >= 14.65 && lon < 16.1) return ['danmark', false];          // Blekinge
     if (Y < 1645 && lon < 13.15 && lat >= 56.3 && lat < 57.55) return ['danmark', false];          // Halland
@@ -395,17 +404,21 @@
     if (lat < 54.65 && lon < 16.5) return [null, false];          // de tyska länderna: ingen flagga
     if (lat < 56.0 && lon >= 16.5) return ['polen', false];          // Preussen, Polen och Litauen
     if (lon >= 21 && lat < 59.8 && lon < 28.22) {          // Estland och Livland
+      if (Y < 1559) return ['orden', false];
+      if (lon < 23.6 && lat < 58.75 && lat > 57.9) return ['danmark', false];          // Ösel, danskt från 1559
+      if (lat < 57.9) { if (vid(24.1, 56.95, 0.15) && Y < 1582) return [null, false]; return [Y < 1561 ? 'orden' : 'polen', false]; }          // Livland; Riga är fri stad till 1582
       if (Y < 1561) return ['orden', false];
-      if (lat < 57.9) return ['polen', false];
-      if (lon > 27.5 && Y < 1581) return ['ryssland', false];          // Narva är ryskt 1558–1581
-      return ['sverige', false];
+      if (lon < 25.3 && lat > 59.2) return ['sverige', false];          // Reval och Harrien, svenska från 1561
+      if (Y < 1581) return [null, false];          // resten av Estland: krig mellan Sverige, Ryssland och Polen, ingen håller det säkert
+      return ['sverige', false];          // från 1581 också Narva och Wesenberg
     }
     if (lon >= 28.22 && lat < 60.1) return ['ryssland', false];          // Ingermanland
     if (lon >= 29.6 && lat >= 60.1) return [Y >= 1580 && Y < 1597 ? 'sverige' : 'ryssland', false];          // Kexholm
-    // Sverige och Finland. Från blodbadet tills Gustav har tagit riket håller danskarna det han inte har nått (allt som ligger långt från hans orter).
-    if (Y >= 1520.84 && Y < 1523.5) {
+    // 4. Sverige och Finland under kriget 1520–1523: Gustav håller sin trakt, kung Kristians folk håller slotten (de är egna steg i spelet).
+    // Var det stod på andra orter vet vi inte säkert, så där hissas ingen flagga hellre än en gissning (Johannes 2026-11-28: "hade danskarna jönköping 1521?").
+    if (Y >= 1520.1 && Y < 1523.5) {
       if (S && S.varld === 1 && S.bas && R) { const w = V.Geo.toWorld(lon, lat); for (const b in S.bas) if (S.bas[b] && R.P[b] && Math.hypot(R.P[b].x - w[0], R.P[b].z - w[1]) < 18) return ['sverige', false]; }
-      return ['danmark', true];
+      return [null, false];
     }
     return ['sverige', false];
   }
