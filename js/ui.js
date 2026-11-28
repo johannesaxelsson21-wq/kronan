@@ -557,7 +557,6 @@
       if (g.las && g.las.indexOf('mark') >= 0) ny.push('mark');
       if (u.id === 'sAbo') ny.push('man');
       if ((g.bas || []).some(id => G.BAS[id].slag === 'gruva')) ny.push('arb');
-      if (S.varld === 0) D.KONSTER.filter(k => k.steg0 === u.id).forEach(k => ny.push('k:' + k.id));
       if (g.las && g.las.indexOf('konster') >= 0 && S.varld !== 0) ny.push('konster');
       if (g.las && g.las.indexOf('sold') >= 0) ny.push('sold');
       if (g.las && g.las.indexOf('fogdar') >= 0) ny.push('fogde');
@@ -636,7 +635,8 @@
       const synlig = sel => { const m = document.querySelector(sel); return !!(m && m.offsetParent); };
       let sel, alt, txt;
       if (k.slice(0, 2) === 'h:') { const h = D.HANDLINGAR.find(q => q.id === k.slice(2)); if (!h) { S.nytt.shift(); return null; } sel = '#hk-' + h.id; txt = '<b>' + UI.handlNamn(h) + '</b> ' + UI.handlKort(h); }
-      else if (k.slice(0, 2) === 'k:') { const kd = D.KONSTER.find(q => q.id === k.slice(2)); if (!kd) { S.nytt.shift(); return null; } sel = '#datum'; alt = $('res-' + (kd.flik0 || 'mark')) ? '#res-' + (kd.flik0 || 'mark') : '#res-man'; txt = '<b>' + UI.konst(kd.id)[0] + '</b> ' + konstInfo(kd.id).kort; }
+      else if (k.slice(0, 2) === 'k:') { const kd = D.KONSTER.find(q => q.id === k.slice(2)); if (!kd) { S.nytt.shift(); return null; } sel = '#flik-kung'; alt = '#datum'; txt = '<b>' + UI.konst(kd.id)[0] + '</b> ' + UI.konst(kd.id)[1]; }
+      else if (k.slice(0, 2) === 'e:') { const e = G.egAlla().find(q => q.id === k.slice(2)); if (!e) { S.nytt.shift(); return null; } sel = '#flik-kung'; alt = '#datum'; txt = '<b>' + e.namn + '</b> ' + e.nar; }          // en ny egenskap under regentens flik
       else ({ mark: () => { sel = $('res-mark') ? '#res-mark' : '#kassa .ks-mark'; txt = '<b>Mark</b> är rikets pengar'; },
         man: () => { sel = '#res-man'; txt = '<b>Män</b> är din armé'; },
         arb: () => { sel = '.bas.arb'; alt = $('res-mark') ? '#res-mark' : '#res-man'; txt = '<b>Gruvarbetare</b> män gör gruvan rikare'; },
