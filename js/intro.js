@@ -100,7 +100,7 @@
       const stanna = (ben) => { const a = R.along(ben, R.length(ben)); hooks.push(dt => V.Gustav.place(a.x, a.z, a.ang, 0, tid, dt, false)); return a; };
       const a0 = R.along(ben1, 0); V.Gustav.place(a0.x, a0.z, a0.ang, 0, 0, 1, false); Scene.jump(a0.x, a0.z + 1.5, 19); UI.film.svart(0, 1.6);
       // första benet: till Rankhyttan, där han tar tjänst som dräng
-      await akFard(ben1, 0, R.length(ben1), 1.05, 'Åk', 'Tryck för att åka', { rader: [[0.3, 'Dalarna, november 1520', 'Vad som hände på vägen vet vi genom berättelser.']] });
+      await akFard(ben1, 0, R.length(ben1), 1.05, 'Åk', 'Tryck för att åka', { rader: [[0.3, 'Dalarna, november 1520', 'På vägen måste han gömma sig och byta kläder.']] });
       UI.film.knapp(null); I.tar = null; let st = stanna(ben1); plats('Rankhyttan'); text('Han tar tjänst som dräng på en gård och tröskar säd.');
       await tryckN('Tröska', 4, () => { L.spela('trumma'); Fx.damm(rank.x + 1.1, Geo.groundAt(rank.x + 1.1, rank.z) + 0.1, rank.z - 0.2, 4); }, 12);
       text('Någon känner igen honom. Han måste vidare.'); await vanta(4.5); hooks = [];
@@ -181,7 +181,7 @@
         await akFard(pts, 0, L0 - 0.3, 0.7, 'Rid in', 'Tryck för att rida in i staden', { kd: 20, ljud: 'hov', satt: (a, v) => { g.x = a.x; g.z = a.z; g.ang = a.ang; g.v = v; } });
         UI.film.knapp(null); I.tar = null; folk.forEach((u, i) => setTimeout(() => { u.y = 0.1; setTimeout(() => { u.y = 0; }, 180); }, i * 40)); L.spela('klart');
         text('Gustav rider in i staden som kung. Han är 27 år.'); await vanta(6.5);
-        text('Traditionen säger att det är midsommarafton.'); await vanta(6);
+        text('Det är midsommarafton.'); await vanta(6);
       },
       // Juni 1527. Riksdagen i Västerås, i dominikanklostrets sal. Man kallar själv in stånden, ett i taget. Sedan kommer valet.
       async riksdag() {
