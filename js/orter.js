@@ -119,19 +119,66 @@
       if (egen) { if (R.P[st[0]]) { x = R.P[st[0]].x; z = R.P[st[0]].z; } else if (L && L.ORT && L.ORT[st[0]]) [x, z] = G.toWorld(L.ORT[st[0]][0], L.ORT[st[0]][1]); else continue; }
       else { if (R.P[st[0]] || D.PLATSER[st[0]]) continue; [x, z] = G.toWorld(st[1], st[2]); if (andra.some(a => Math.hypot(a[0] - x, a[1] - z) < 1.6)) continue; }
       sett[st[0]] = 1;
-      if (egen) { platser.push({ st, x, z, egen }); continue; }
+      const ll = G.toLonLat(x, z);
+      if (egen) { platser.push({ st, x, z, egen, lon: ll[0], lat: ll[1] }); continue; }
       if (G.sdAt(x, z) < 0.8) { let bast = null; for (let r = 0.3; r < 3 && !bast; r += 0.3) for (let a = 0; a < 6.283; a += 0.5 / r) { const px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; if (G.sdAt(px, pz) > 0.8) { bast = [px, pz]; break; } } if (!bast) continue; [x, z] = bast; }
-      platser.push({ st, x, z });
+      platser.push({ st, x, z, lon: st[1], lat: st[2] });
     }
     return platser;
   }
-  // små hus i samma stil som byarna (bygge.js): en stuga för en by, några hus och en kyrka för en stad, fler för en stor stad
-  const HUS = [[0, 0, 0], [1.25, 0.55, 0.5], [-1.1, 0.7, -0.4], [0.4, -1.2, 0.2], [-0.5, 1.5, 0.9], [1.6, -0.8, -0.6], [-1.6, -0.9, 0.3]];
-  function hus(n, seed) {
-    const B = V.Bygge, mb = new V.MB(), antal = n === 1 ? 2 : n === 2 ? 4 : 7;
-    if (n >= 2) { mb.push().move(0, 0, -0.2); B.kyrka(mb); mb.pop(); }
-    for (let k = n >= 2 ? 1 : 0; k < antal; k++) { const h = HUS[k], s = 0.85 + ((seed * 7 + k * 3) % 5) * 0.05; mb.push().move(h[0] * 1.15, 0, h[1] * 1.15).rotY(h[2] + seed); B.stuga(mb, 0.95 * s, 0.62 * s, 0.36 * s, n >= 2 && k % 2 ? 'tegel' : k % 3 ? 'span' : 'torv', { skorsten: 1, ljus: 1 }); mb.pop(); }
-    const m = B.mesh(mb); m.scale.setScalar(B.K * (n === 1 ? 0.55 : 0.62)); return m;
+  // ---- stadsplanen (Johannes 2026-11-28: "Jag vill att städerna ska likna hur de såg ut på riktigt så mycket som det går med våran stil") ----
+  // Medeltidens städer växte längs en långgata parallellt med stranden, med torget vid gatan och kyrkan en bit upp från vattnet.
+  // Städer som grundades från 1580 och framåt lades ut efter plan, i raka kvarter kring ett torg (sv. Wikipedia, Stad (Sverige)).
+  // Husen var av trä; i de danska landskapen (Skåne, Halland, Blekinge) korsvirke med tegeltak. Detaljerna är förenklingar, se docs/orter.md.
+  const SKALA = 0.72;
+  function stadsplan(n, planerad, seed) {
+    const ut = [], rnd = V.Geo.rng(seed * 977 + n * 13);
+    const h = (x, z, rot) => ut.push({ x: x + (rnd() - 0.5) * 0.08, z: z + (rnd() - 0.5) * 0.08, rot: rot + (rnd() - 0.5) * 0.12, typ: 'hus' });
+    if (n === 1) {          // by eller marknadsplats: några gårdar vid vägen
+      h(-0.7, -0.35, 0); h(0.65, -0.3, 0); h(0.1, 0.55, Math.PI); if (rnd() < 0.5) h(1.2, 0.6, Math.PI);
+      return ut;
+    }
+    if (planerad) {          // rutnät: kvarter med fyra gårdar, torget i mitten, kyrkan vid torget
+      const nx = n === 3 ? 4 : 3, nz = n === 3 ? 3 : 2, B = 1.25, tx = Math.floor(nx / 2), tz = Math.floor(nz / 2);
+      for (let i = 0; i < nx; i++) for (let j = 0; j < nz; j++) {
+        const cx = (i - (nx - 1) / 2) * B * 1.35, cz = (j - (nz - 1) / 2) * B * 1.35 + 0.3;
+        if (i === tx && j === tz) { ut.push({ x: cx, z: cz, typ: 'torg' }); continue; }
+        if (i === tx && j === tz + 1 || (nz === 2 && i === tx && j === tz - 1)) { ut.push({ x: cx, z: cz, rot: j > tz ? Math.PI : 0, typ: 'kyrka' }); continue; }
+        h(cx - 0.32, cz - 0.3, 0); h(cx + 0.32, cz - 0.3, 0); h(cx - 0.32, cz + 0.3, Math.PI); h(cx + 0.32, cz + 0.3, Math.PI);
+      }
+      return ut;
+    }
+    // medeltida: långgatan längs stranden (lokal x), gårdar på båda sidor, torget mot land, kyrkan en bit upp
+    const L = n === 3 ? 3.4 : 2.3;
+    for (let x = -L; x <= L + 1e-6; x += 0.74) { h(x, -0.55, 0); if (Math.abs(x) > 0.75) h(x, 0.55, Math.PI); }
+    ut.push({ x: 0, z: 0.75, typ: 'torg' });
+    ut.push({ x: 0, z: 1.75, rot: Math.PI, typ: 'kyrka', stor: n === 3 });
+    for (const sx of [-1, 1]) { const gx = sx * (L * 0.62); h(gx - 0.42, 1.35, Math.PI / 2); h(gx + 0.42, 1.35, -Math.PI / 2); if (n === 3) { h(gx - 0.42, 2.1, Math.PI / 2); h(gx + 0.42, 2.1, -Math.PI / 2); } }          // gränder upp från gatan
+    if (n === 3) for (let x = -L * 0.8; x <= L * 0.8 + 1e-6; x += 0.74) if (Math.abs(x) > 0.9) { h(x, 2.75, 0); h(x, 3.85, Math.PI); }          // en andra gata ovanför
+    return ut;
+  }
+  // åt vilket håll vattnet ligger (stranden): stadens gata går längs den. Långt från vatten: efter fröet.
+  function landRiktning(x, z, seed) {
+    const G = V.Geo; let bx = 0, bz = 0, min = 1e9;
+    for (let k = 0; k < 16; k++) { const a = k / 16 * 6.283; for (const r of [1.5, 3, 4.5]) { const d = G.sdAt(x + Math.cos(a) * r, z + Math.sin(a) * r); if (d < min) { min = d; bx = Math.cos(a); bz = Math.sin(a); } } }
+    if (min > 1.2) { const a = seed * 2.4; return [Math.cos(a), Math.sin(a)]; }
+    return [-bx, -bz];          // bort från vattnet
+  }
+  function hus(p, n, seed) {
+    const B = V.Bygge, G = V.Geo, mb = new V.MB(), sk = B.K * SKALA, start = p.st[3][0][0] === ST ? ST : p.st[3].find(f => f[1] >= 2) ? p.st[3].find(f => f[1] >= 2)[0] : 0;
+    const planerad = !p.egen && start >= 1580, dansk = (p.lat < 56.95 && p.lon < 16.3) || (p.lon < 12.5 && p.lat < 57.55);          // Skåne, Blekinge, Halland och Danmark
+    const u = landRiktning(p.x, p.z, seed), rot = Math.atan2(u[0], u[1]), c = Math.cos(rot), s = Math.sin(rot), y0 = G.groundAt(p.x, p.z);
+    const varld = (x, z) => [p.x + (x * c + z * s) * sk, p.z + (-x * s + z * c) * sk];
+    for (const it of stadsplan(n, planerad, seed)) {
+      const w = varld(it.x, it.z); if (G.sdAt(w[0], w[1]) < 0.35 || G.riverAt(w[0], w[1]) < 0.25) continue;          // inga hus i vattnet
+      const y = (G.groundAt(w[0], w[1]) - y0) / sk;
+      if (it.typ === 'torg') { mb.push().move(it.x, y, it.z); mb.box(0, 0, 0, 1.1, 0.03, 0.8, '#9b8f78', { low: '#7d735f' }); mb.pop(); continue; }
+      if (it.typ === 'kyrka') { const k = it.stor ? 1.3 : 1; mb.push().move(it.x, y, it.z).rotY(it.rot); if (k !== 1) mb.scale(k); B.kyrka(mb); mb.pop(); continue; }
+      const r = (seed * 31 + Math.round(it.x * 7 + it.z * 13)) % 7, sz = 0.82 + (r % 4) * 0.06, opt = { skorsten: r % 2, ljus: r % 3 === 0 };
+      if (dansk) { opt.vagg = '#d6ccb4'; opt.vaggLag = '#9c907a'; opt.gavel = '#c9bea4'; }
+      mb.push().move(it.x, y, it.z).rotY(it.rot); B.stuga(mb, 0.72 * sz, 0.5 * sz, 0.34 * sz, dansk ? 'tegel' : r % 3 === 0 ? 'torv' : 'span', opt); mb.pop();
+    }
+    const m = B.mesh(mb); m.scale.setScalar(sk); m.rotation.y = rot; return m;
   }
   // orter som spelet själv ritar hus för: egna baser och orterna i den här världens steg (Varld._orter)
   function spelRitar() {
@@ -146,14 +193,14 @@
     const ar = arNu(), nyckel = ar + ':' + Object.keys(V.Game.s.bas).length + ':' + V.Game.s.varld; if (nyckel === husNyckel && grupp) return; husNyckel = nyckel; ritatAr = ar;
     if (grupp) scene.remove(grupp); grupp = new THREE.Group(); grupp.name = 'orter';
     const ritas = spelRitar();
-    lagg().forEach((p, i) => { const l = lage(p.st, ar); if (!l.n || (p.egen && ritas[p.st[0]])) return; const m = hus(l.n, i); m.position.set(p.x, V.Geo.groundAt(p.x, p.z), p.z); grupp.add(m); });
+    lagg().forEach((p, i) => { const l = lage(p.st, ar); if (!l.n || (p.egen && ritas[p.st[0]])) return; const m = hus(p, l.n, i + 1); m.position.set(p.x, V.Geo.groundAt(p.x, p.z), p.z); grupp.add(m); });
     scene.add(grupp);
   }
 
   // gläntor i skogen där städerna står (skogen ritas en gång, så alla städer får sin plats från början)
   if (V.Rike && V.Rike.clearings) {
     const fore = V.Rike.clearings;
-    V.Rike.clearings = function () { const c = fore.apply(this, arguments); try { for (const p of lagg()) c.push({ x: p.x, z: p.z, r: 2.2 }); } catch (e) { /* kartan inte klar */ } return c; };
+    V.Rike.clearings = function () { const c = fore.apply(this, arguments); try { for (const p of lagg()) { const n = Math.max(...p.st[3].map(f => f[1])); c.push({ x: p.x, z: p.z, r: n === 3 ? 3.8 : n === 2 ? 2.9 : 1.8 }); } } catch (e) { /* kartan inte klar */ } return c; };
   }
   if (V.Levande) {
     const initFore = V.Levande.init, orterFore = V.Levande.orter;
