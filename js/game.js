@@ -124,17 +124,20 @@
     kanArb(id) { return BAS[id].slag === 'gruva' && !!S.bas[id] && !G.stoppad(id) && !G.arbMax(id) && S.res.man >= G.arbPris(id); },
     kopArb(id) { if (!G.kanArb(id)) return false; S.res.man -= G.arbPris(id); if (!S.arb) S.arb = {}; S.arb[id] = G.arb(id) + 1; G.ut('arbetare', { bas: id, antal: S.arb[id] }); return true; },
     // ---- varvet (Eriks värld, Johannes 2026-11-28: "ett tidsenligt korrekt arbete att sätta män i"): män bygger skepp på Björkenäs skeppsgård norr om Kalmar,
-    // där Mars kölsträcktes 1561. Ett skepp i taget står på stapeln. Färdiga skepp tar tull av fartygen på Östersjön (Klas Horns flotta 1565–1566):
+    // där Mars kölsträcktes 1561. Lag av män arbetar där och bygger skepp efter skepp, fler män går fortare (Johannes 01:48). Färdiga skepp tar tull av fartygen på Östersjön (Klas Horns flotta 1565–1566):
     // varje skepp ger en tjugofemtedel mer mark. Männen lämnar armén, så armén har plats igen. Grunden och förenklingen står i docs/historia.md.
-    VARV_TID: 30, TULL: 0.02,
+    VARV_ARB: 45000, TULL: 0.02, SKEPP_MAX: 25,          // VARV_ARB: mansekunder för första skeppet (hela armén på 750 bygger det på en minut, ett lag på 75 på tio), varje skepp en femtedel mer
     harVarv() { return S.varld === 2 && !!S.bas.kalmar && !S.slut; },
     skepp() { return S.skepp || 0; },
-    skeppPris() { return Math.max(20, Math.ceil(25 * Math.pow(1.45, G.skepp()) / 5) * 5); },
-    skeppMax() { return G.skeppPris() > G.tak(); },
-    kanSkepp() { return G.harVarv() && !S.stapel && !G.skeppMax() && S.res.man >= G.skeppPris(); },
-    kopSkepp() { if (!G.kanSkepp()) return false; const m = G.skeppPris(); S.res.man -= m; S.stapel = { t: 0, man: m }; G.ut('stapel', { man: m, nr: G.skepp() + 1 }); return true; },
+    varvMan() { return S.varvMan || 0; },          // män som arbetar på skeppsgården. De stannar där och bygger skepp efter skepp.
+    varvLag() { return Math.max(20, Math.ceil(G.tak() * 0.1 / 5) * 5); },          // ett lag: en tiondel av vad armén rymmer
+    skeppArbete() { return G.VARV_ARB * Math.pow(1.25, G.skepp()); },
+    flottanFull() { return G.skepp() >= G.SKEPP_MAX; },          // flottan blir inte större än så (tullen högst +50 %)
+    skeppKvar() { const s = S.stapel; return s && G.varvMan() && !G.flottanFull() ? (1 - s.t) * G.skeppArbete() / G.varvMan() : Infinity; },          // sekunder kvar på skeppet som byggs
+    kanSkepp() { return G.harVarv() && !G.flottanFull() && S.res.man >= G.varvLag(); },
+    kopSkepp() { if (!G.kanSkepp()) return false; const m = G.varvLag(); S.res.man -= m; S.varvMan = G.varvMan() + m; if (!S.stapel) S.stapel = { t: 0 }; G.ut('stapel', { man: m, alla: S.varvMan }); return true; },          // ett lag till på varvet
     tullX() { return S.varld === 2 ? 1 + G.TULL * G.skepp() * (1 + 0.1 * G.eg('flotta')) : 1; },          // flottans egenskap gör varje skepp värt mer
-    _varv(dt) { const s = S.stapel; if (!s) return; s.t += dt; if (s.t >= G.VARV_TID) { S.stapel = null; S.skepp = G.skepp() + 1; G.ut('skepp', { n: S.skepp }); } },
+    _varv(dt) { const s = S.stapel; if (s && s.man && !S.varvMan) { S.varvMan = s.man; s.t = Math.min(0.99, s.t / 30); delete s.man; } if (!G.varvMan() || G.flottanFull()) return; const q = S.stapel || (S.stapel = { t: 0 }); q.t += dt * G.varvMan() / G.skeppArbete(); while (q.t >= 1 && !G.flottanFull()) { q.t -= 1; S.skepp = G.skepp() + 1; G.ut('skepp', { n: S.skepp }); } },          // äldre sparfiler: ett skepp på stapeln blir ett lag på varvet
     // ---- kungens egenskaper (Johannes 2026-11-28): tryck på kungen, så öppnas hans sida. Dyra nivåer som gör en sak mer givande, aldrig en resa kortare.
     // Varje värld har sina egna (D.EGENSKAPER[varld]), med grund i det källorna säger om regenten (docs/historia.md).
     egLista() { return (D.EGENSKAPER && D.EGENSKAPER[S.varld]) || []; },

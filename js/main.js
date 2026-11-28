@@ -45,7 +45,7 @@
     else if (typ === 'skatt') { UI.skattKlar(d.mark); const p = Varld.skattTill && Varld.pos(Varld.skattTill); if (p) UI.flyt(p.x, p.y + 1.8, p.z, 'Skatt +' + V.tal(d.mark) + ' mark', 'mark'); if (!d.auto) V.Ljud.spela('samling'); }
     else if (typ === 'samling' && !d.lopare) { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 1.8, p.z, d.res === 'mark' ? 'Skatt +' + V.tal(d.antal) + ' mark' : '+' + V.tal(d.antal) + ' män går med', d.res); V.Ljud.spela('samling'); }
     else if (typ === 'niva' && d.dubbel) UI.skylt(UI.byggnad(d.bas, d.niva));
-    else if (typ === 'stapel') { const q = Varld.varvPlats(); UI.flyt(q.x, 2.2, q.z, d.man + ' män bygger ett skepp', 'man'); }
+    else if (typ === 'stapel') { const q = Varld.varvPlats(); UI.flyt(q.x, 2.2, q.z, '+' + d.man + ' män på varvet (' + V.tal(d.alla) + ')', 'man'); }
     else if (typ === 'skepp') { const q = Varld.varvPlats(); UI.flyt(q.x, 2.2, q.z, 'Skeppet sjösätts vid Björkenäs', 'mark'); UI.skylt(d.n === 1 ? 'Ditt första skepp är sjösatt vid Björkenäs' : 'Ett skepp till är sjösatt: ' + d.n + ' i flottan'); V.Ljud.spela('dubbel'); }
     else if (typ === 'egenskap') { const e = G.egLista().find(q => q.id === d.id); if (e) UI.skylt(e.namn + ', nivå ' + d.niva); }
     else if (typ === 'arbetare') { const p = Varld.pos(d.bas); UI.flyt(p.x, p.y + 2.4, p.z, d.antal + ' lag i gruvan', 'mark'); V.Fx.damm(p.x, p.y + 0.2, p.z, 10); }
