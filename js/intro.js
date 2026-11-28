@@ -49,6 +49,17 @@
   // Sigismund i sina scener, krönt
   let SE = null;
   function sigE() { if (!SE) { SE = Object.create(V.Gustav); SE.init(Scene.scene, 'sigismund'); } SE.klad('Kung'); SE.g.visible = true; SE.utanRing = false; return SE; }
+  // En öppen plats mitt i en ort (torget, eller den största fria ytan nära mitten), för scener i orter som inte har en egen stadsplan.
+  // T.S är ortens rutnät från gator.js (allt som är ritat där), så att ingen ställs i ett hus.
+  function torgVid(id) {
+    const p = R.P[id], t = V.Varld.tomt && V.Varld.tomt[id], S = V.Gator && V.Gator.ort(id);
+    let x = p.x, z = p.z; if (t && t._plan) { x = p.x + t._plan.torg.x * B.K; z = p.z + t._plan.torg.z * B.K; }
+    if (S) { const { n, x0, z0, dist } = S.g, C = V.Filmstad.sok.C; let bv = -1e9; for (let j = 0; j < n; j += 2) for (let i = 0; i < n; i += 2) { const qx = x0 + (i + 0.5) * C, qz = z0 + (j + 0.5) * C, d = Math.hypot(qx - x, qz - z); if (d > 3.5) continue; const v = Math.min(dist[j * n + i], 14) - d * 2.2; if (v > bv) { bv = v; p._t = [qx, qz]; } } if (p._t) { x = p._t[0]; z = p._t[1]; } }
+    return { x, z, S };
+  }
+  // Kartans hjälte och bud hör inte hemma i scenen (de står ofta just där scenen spelas). Ger en funktion som tar tillbaka dem.
+  function utanHjalte() { const H = V.Gustav, Bu = V.Bud, h = H.g && H.g.visible, b = Bu.g && Bu.g.visible, d = () => { if (H.g) H.g.visible = false; if (Bu.g) Bu.g.visible = false; }; d(); hooks.push(d); return () => { hooks = hooks.filter(q => q !== d); if (H.g) H.g.visible = h; if (Bu.g) Bu.g.visible = b; }; }
+  function fritt(T, x, z) { return !T.S || V.Filmstad.sok.ledig(T.S, x, z); }
   function gustavE() { if (!GE) { GE = Object.create(V.Gustav); GE.init(Scene.scene, 'gustav'); } GE.g.visible = true; GE.utanRing = false; return GE; }
   // Spelaren trycker n gånger på knappen (eller väntar ut tiden). vid(k) körs för varje tryck. Löfte som blir klart när det är gjort.
   function tryckN(knapp, n, vid, sek) {
@@ -230,6 +241,98 @@
         for (let k = n; k < 3; k++) { text(delar[k]); await vanta(4); }
         await vanta(4); text('Sedan läses hans testamente upp.'); await vanta(6);
         text('Det är sista gången kungen talar till riksdagen.'); await vanta(6);
+      },
+      // ---- nyckelhändelser i Gustavs värld (Johannes 2026-11-28: "minnesvärda moment vid nyckelhändelser i historien") ----------------
+      // 6 juni 1523. Rikets män väljer Gustav till kung i Strängnäs. Man låter dem själv rösta, ett stånd i taget.
+      async val() {
+        const tillbaka = utanHjalte();
+        const T = torgVid('strangnas'), cx = T.x, cz = T.z; Scene.setSeason(0.43);
+        const ge = gustavE(), g = { x: cx, z: cz - 0.8 }; ge.klad && ge.klad('Hövitsman'); hooks.push(dt => ge.place(g.x, g.z, 0, 0, tid, dt, false, true)); skylt('Gustav Eriksson', () => g, 1.8);
+        const stand = [['borgare', '#2f4f8a'], ['borgare', null], ['bergsman', null], ['bonde', null], ['bonde', null]], rader = [];
+        stand.forEach((s, r) => { const rad = []; for (let i = 0; i < 6; i++) { const x = cx + (i - 2.5) * 0.36, z = cz + 0.35 + r * 0.38; if (!fritt(T, x, z)) continue; const u = Folk.add(x, z, s[0], s[1] ? { col: s[1], ang: Math.PI } : { ang: Math.PI }); rad.push(u); temp.push(u); } rader.push(rad); });
+        const lb = []; for (let i = 0; i < 2; i++) { const x = cx + 1.5, z = cz - 0.6 + i * 0.35; if (fritt(T, x, z)) { const u = Folk.add(x, z, 'borgare', { col: i ? '#f2ede2' : '#b8312a', ang: -1.2 }); lb.push(u); temp.push(u); } }
+        if (lb.length) skylt('Lübecks sändebud', () => lb[0], 1.35);
+        Scene.cam.lut = 58; Scene.jump(cx, cz + 1.3, 14); plats('Strängnäs, juni 1523');
+        await vanta(2); text('Kristian är avsatt i Danmark och har flytt. Rikets män har samlats i Strängnäs för att välja en kung.'); await vanta(7);
+        text('Tryck för att låta rikets män rösta');
+        const hylla = k => { const rad = rader[(k - 1) % rader.length] || []; rad.forEach((u, i) => setTimeout(() => { u.y = 0.1; setTimeout(() => { u.y = 0; }, 170); }, i * 50)); L.spela('sorl'); if (k === 2) text(''); };
+        const n = await tryckN('Rösta', rader.length, hylla, 20); for (let k = n + 1; k <= rader.length; k++) hylla(k);
+        await vanta(1); ge.klad && ge.klad('Kung'); Fx.guld(g.x, Geo.groundAt(g.x, g.z) + 0.7, g.z, 50, 0.5); L.spela('klart'); L.klockton && [0, 1, 2, 3].forEach(k => setTimeout(() => L.klockton(k % 2 ? 294 : 392, undefined, 0.14), k * 650));
+        text('Den 6 juni 1523 väljs Gustav Eriksson till Sveriges kung. Han är 27 år.'); await vanta(7); tillbaka();
+      },
+      // 1526. Nya testamentet trycks på svenska i Stockholm. Man drar själv pressen, ark för ark.
+      async nt() {
+        const tillbaka = utanHjalte();
+        const T = torgVid('stockholm'), cx = T.x, cz = T.z; Scene.setSeason(0.6);
+        const mb = new V.MB(); mb.snow = 0;
+        for (const s of [-1, 1]) { mb.box(s * 0.3, 0, 0, 0.07, 0.95, 0.07, '#5d4a38'); mb.box(s * 0.3, 0, 0.4, 0.07, 0.4, 0.07, '#5d4a38'); }
+        mb.box(0, 0.88, 0, 0.67, 0.09, 0.14, '#6b5743'); mb.box(0, 0.38, 0.2, 0.62, 0.05, 0.62, '#8a6a44'); mb.box(0, 0.6, 0, 0.08, 0.28, 0.08, '#7b6650'); mb.box(0.12, 0.66, 0, 0.36, 0.03, 0.03, '#3a2e24');          // pressen: ram, bord, skruv och spaken
+        const press = B.mesh(mb); press.position.set(cx, Geo.groundAt(cx, cz), cz - 0.4); press.scale.setScalar(B.K * 0.8); Scene.scene.add(press); tempM.push(press);
+        const hog = new V.MB(); hog.snow = 0; hog.box(0, 0, 0, 0.3, 0.012, 0.42, '#f2ecd8', { low: '#d8d0b8' }); const ark = [];
+        const tr = []; for (let i = 0; i < 2; i++) { const u = Folk.add(cx - 0.5 + i * 1.0, cz - 0.1, 'borgare', { ang: i ? -1.2 : 1.2 }); tr.push(u); temp.push(u); }
+        Scene.cam.lut = 64; Scene.jump(cx, cz + 0.3, 8); plats('Stockholm, 1526');
+        await vanta(2); text('Olaus Petri och Laurentius Andreae har översatt Nya testamentet till svenska.'); await vanta(7);
+        text('Tryck för att dra pressen');
+        const dra = k => { const m = B.mesh(hog), x = cx + 0.55 * B.K * 0.8, z = cz - 0.4 + 0.1; m.position.set(x, Geo.groundAt(x, z) + 0.02 + k * 0.018, z); m.rotation.y = (k % 3 - 1) * 0.08; m.scale.setScalar(B.K * 0.8); Scene.scene.add(m); tempM.push(m); ark.push(m); press.position.y = Geo.groundAt(cx, cz - 0.4) - 0.03; setTimeout(() => { press.position.y = Geo.groundAt(cx, cz - 0.4); }, 160); tr.forEach(u => { u.y = 0.06; setTimeout(() => { u.y = 0; }, 160); }); L.spela('trumma'); if (k === 2) text(''); };
+        const n = await tryckN('Tryck', 6, dra, 20); for (let k = n + 1; k <= 6; k++) dra(k);
+        L.spela('klart'); Fx.guld(cx + 0.45, Geo.groundAt(cx, cz) + 0.3, cz - 0.3, 30, 0.3);
+        text('Nu kan den som kan läsa läsa Guds ord på svenska, och präster kan läsa det högt för alla.'); await vanta(7); tillbaka();
+      },
+      // 1531. Varje sockenkyrka ska lämna en klocka till skulden i Lübeck. Man tar själv ned klockan i Leksand, och dalkarlarna kommer.
+      async klockor() {
+        const tillbaka = utanHjalte();
+        const T = torgVid('leksand'), cx = T.x, cz = T.z; Scene.setSeason(0.62);
+        const mb = new V.MB(); mb.snow = 0; for (const sx of [-0.25, 0.25]) for (const sz of [-0.25, 0.25]) mb.push().move(sx, 0, sz).rotZ(-sx * 0.25).rotX(sz * 0.25), mb.box(0, 0, 0, 0.06, 1.1, 0.06, '#5d4a38'), mb.pop();
+        mb.box(0, 1.05, 0, 0.5, 0.06, 0.5, '#4a3a2c'); mb.hip(0, 1.11, 0, 0.62, 0.4, 0.62, '#4a3e34', 0.06); const stapel = B.mesh(mb);
+        const sx0 = cx - 0.6, sz0 = cz - 0.7; stapel.position.set(sx0, Geo.groundAt(sx0, sz0), sz0); stapel.scale.setScalar(B.K * 0.8); Scene.scene.add(stapel); tempM.push(stapel);
+        const kb = new V.MB(); kb.snow = 0; kb.cone(0, 0, 0, 0.13, 0.2, 10, '#8a6a2c', { low: '#5a4418', snowLow: 0, snowTip: 0 }); kb.cyl(0, -0.02, 0, 0.14, 0.14, 0.03, 10, '#9a7a34'); const klocka = B.mesh(kb), k0 = Geo.groundAt(sx0, sz0) + 0.82 * B.K * 0.8;
+        klocka.position.set(sx0, k0, sz0); klocka.scale.setScalar(B.K * 0.8); Scene.scene.add(klocka); tempM.push(klocka);
+        const fogde = []; for (let i = 0; i < 3; i++) { const u = Folk.add(sx0 + 0.4 + i * 0.3, sz0 + 0.5, 'knekt', { pike: i !== 1, ang: -0.6 }); fogde.push(u); temp.push(u); } skylt('Kungens män', () => fogde[1], 1.3);
+        let sving = 0; hooks.push(dt => { sving += dt; klocka.rotation.z = Math.sin(sving * 2.2) * 0.06; });
+        Scene.cam.lut = 62; Scene.jump(sx0 + 0.6, sz0 + 0.5, 8.5); plats('Leksand, 1531');
+        await vanta(2); text('Skulden till Lübeck är inte betald. Kungen kräver en klocka från varje kyrka.'); await vanta(7);
+        text('Tryck för att ta ned klockan');
+        const ned = k => { klocka.position.y = k0 - k * 0.22; L.spela('klocka'); fogde.forEach(u => { u.y = 0.05; setTimeout(() => { u.y = 0; }, 150); }); if (k === 2) text(''); };
+        const n = await tryckN('Ta ned', 3, ned, 18); for (let k = n + 1; k <= 3; k++) ned(k);
+        const dal = []; for (let i = 0; i < 9; i++) { const u = Folk.add(cx + 3 + (i % 3) * 0.35, cz + 1.2 + Math.floor(i / 3) * 0.35, 'bonde', { gar: true, pike: i % 3 === 0, ang: -1.6 }); dal.push(u); temp.push(u); }
+        hooks.push(dt => dal.forEach((u, i) => { const mx = cx + 0.6 + (i % 3) * 0.32; if (u.x > mx) u.x -= dt * 0.6; else u.gar = false; }));
+        await vanta(2.5); L.spela('nej'); text('Dalkarlarna kommer. Klockan får inte tas, säger de. Kyrkan är deras.'); await vanta(7);
+        text('I Dalarna vägrar de lämna klockorna.'); await vanta(6); tillbaka();
+      },
+      // 13 januari 1544. Riksdagen i Västerås gör Sverige till ett arvrike. Man låter stånden själva sätta sina sigill.
+      async arvrike() {
+        const tillbaka = utanHjalte();
+        const T = torgVid('vasteras'), cx = T.x, cz = T.z; Scene.setSeason(0.05);
+        const ge = gustavE(), g = { x: cx - 0.3, z: cz - 0.8 }; ge.klad && ge.klad('Kung'); hooks.push(dt => ge.place(g.x, g.z, 0, 0, tid, dt, false, true)); skylt('Kung Gustav', () => g, 1.8);
+        const ek = erikE(false), e = { x: cx + 0.35, z: cz - 0.75 }; if (!ek._sk0) ek._sk0 = ek.g.scale.x; ek.g.scale.setScalar(ek._sk0 * 0.82);          // pojken hooks.push(dt => ek.place(e.x, e.z, 0, 0, tid, dt, false, true)); skylt('Erik, 10 år', () => e, 1.5);
+        const mb = new V.MB(); mb.snow = 0; mb.box(0, 0, 0, 1.0, 0.24, 0.42, '#6b4a2c', { low: '#4f3620' }); mb.box(0, 0.24, 0, 1.06, 0.03, 0.48, '#7a1f2a'); mb.box(0, 0.27, 0, 0.32, 0.005, 0.22, '#f2ecd8'); const bord = B.mesh(mb); bord.position.set(cx, Geo.groundAt(cx, cz), cz - 0.15); bord.scale.setScalar(B.K * 0.85); Scene.scene.add(bord); tempM.push(bord);
+        const stand = [['Rådet', 'borgare', '#5a2f2f'], ['Adeln', 'borgare', '#2f4f8a'], ['Prästerna', 'borgare', '#2a2a2a'], ['Borgarna', 'borgare', null], ['Bönderna', 'bonde', null]], sig = [];
+        const folk = []; stand.forEach((s, r) => { for (let i = 0; i < 4; i++) { const x = cx + (i - 1.5) * 0.36 + (r % 2) * 0.1, z = cz + 0.45 + r * 0.36; if (!fritt(T, x, z)) continue; const u = Folk.add(x, z, s[1], s[2] ? { col: s[2], ang: Math.PI } : { ang: Math.PI }); temp.push(u); (folk[r] || (folk[r] = [])).push(u); } });
+        Scene.cam.lut = 70; Scene.jump(cx, cz + 0.8, 11); plats('Västerås, januari 1544');
+        await vanta(2); text('Kungen har kallat riksdagen till Västerås. Kronan ska inte längre väljas. Den ska gå i arv.'); await vanta(7);
+        text('Tryck för att låta stånden sätta sina sigill');
+        const satt = k => { const s = stand[k - 1]; if (!s) return; const m = new V.MB(); m.snow = 0; m.cyl(0, 0, 0, 0.035, 0.035, 0.015, 8, '#b3262a'); const x = cx - 0.36 + (k - 1) * 0.18, z = cz - 0.15 + 0.05; const me = B.mesh(m); me.position.set(x, Geo.groundAt(cx, cz) + 0.25 * B.K * 0.85 + 0.01, z); me.scale.setScalar(B.K); Scene.scene.add(me); tempM.push(me); sig.push(me); (folk[k - 1] || []).forEach(u => { u.y = 0.08; setTimeout(() => { u.y = 0; }, 170); }); L.spela('trumma'); if (k === 2) text(''); };
+        const n = await tryckN('Sigill', stand.length, satt, 22); for (let k = n + 1; k <= stand.length; k++) satt(k);
+        L.spela('klart'); Fx.guld(e.x, Geo.groundAt(e.x, e.z) + 0.6, e.z, 40, 0.4);
+        text('Den 13 januari 1544 blir Sverige ett arvrike. Kronan ska gå till kungens äldste son, Erik.'); await vanta(7.5);
+        ek.g.scale.setScalar(ek._sk0); tillbaka();
+      },
+      // 1550. Helsingfors grundas vid Vanda ås mynning. Borgare från fyra städer måste flytta dit. Man bygger själv de första husen.
+      async helsingfors() {
+        const tillbaka = utanHjalte();
+        const p = R.P.helsingfors, hav = p.hav || { x: p.x + 2, z: p.z + 2 }; Scene.setSeason(0.5);
+        let cx = p.x, cz = p.z; for (let k = 0; k < 20 && Geo.sdAt(cx, cz) < 0.9; k++) { cx += (p.x - hav.x) * 0.06; cz += (p.z - hav.z) * 0.06; }
+        const skepp = []; for (let i = 0; i < 3; i++) { const s = V.skepp('sverige'); s.scale.setScalar(1.4); s.position.set(hav.x + (i - 1) * 1.3, 0.02, hav.z + (i % 2) * 0.8); s.rotation.y = Math.atan2(cx - hav.x, cz - hav.z); Scene.scene.add(s); tempM.push(s); skepp.push(s); }
+        const platser = []; for (let i = 0; i < 6; i++) platser.push([cx + (i % 3 - 1) * 0.95, cz + (Math.floor(i / 3) - 0.5) * 0.85]);
+        const stader = ['Borgå', 'Ekenäs', 'Raumo', 'Ulvsby'], folk = [];
+        Scene.cam.lut = 55; Scene.jump(cx, cz + 1.0, 13); plats('Vanda å, 1550');
+        await vanta(2); text('Handeln med Ryssland går genom Reval. Kungen vill ha en egen stad på den här sidan viken.'); await vanta(7);
+        text('Borgare från Borgå, Ekenäs, Raumo och Ulvsby måste flytta hit.'); await vanta(6);
+        text('Tryck för att bygga');
+        const bygg = k => { const q = platser[k - 1]; if (!q) return; const m = new V.MB(); B.stuga(m, 0.9 + (k % 3) * 0.12, 0.6, 0.34, k % 2 ? 'span' : 'torv', { skorsten: 1, ljus: 1 }); const me = B.mesh(m); me.position.set(q[0], Geo.groundAt(q[0], q[1]), q[1]); me.rotation.y = Math.atan2(hav.x - q[0], hav.z - q[1]); me.scale.setScalar(B.K * 0.75); Scene.scene.add(me); tempM.push(me); Fx.damm(q[0], Geo.groundAt(q[0], q[1]), q[1], 8);
+          const u = Folk.add(q[0] + 0.3, q[1] + 0.45, k % 2 ? 'borgare' : 'kvinna', { ang: 0 }); folk.push(u); temp.push(u); if (k <= 4) { const s = skylt('Från ' + stader[k - 1], () => u, 1.2); setTimeout(() => s.bort(), 3500); } L.spela('hammare'); if (k === 2) text(''); };
+        const n = await tryckN('Bygg', 6, bygg, 22); for (let k = n + 1; k <= 6; k++) bygg(k);
+        L.spela('klart'); text('Staden heter Helsingfors. Den ska ta handeln från Reval.'); await vanta(7); tillbaka();
       },
       // 1571. Riksdagen har beslutat en tiondel av allt silver, all koppar och all boskap till Älvsborgs lösen. Man tar själv emot silvret.
       async silverskatt() {
